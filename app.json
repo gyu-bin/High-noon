@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "High Noon",
+    "slug": "high-noon",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/image/Gemini_Generated_Image_lmu1xplmu1xplmu1.png",
+    "scheme": "high-noon",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/image/Gemini_Generated_Image_jxsqh1jxsqh1jxsq.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#2C1A0E"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.highnoon.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/image/Gemini_Generated_Image_lmu1xplmu1xplmu1.png",
+        "backgroundColor": "#2C1A0E"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.highnoon.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-audio"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
