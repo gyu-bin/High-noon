@@ -3,6 +3,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LocalDuelFireworks } from '@/components/game/LocalDuelFireworks';
 import { colors } from '@/constants/theme';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
+import { formatReactionMs } from '@/utils/formatReactionMs';
 
 export type NpcRoundLossReason = 'early' | 'timeout' | 'slower';
 
@@ -68,16 +69,19 @@ export function NpcRoundModal({ visible, data, onContinue, winBurstId }: Props) 
             {data.kind === 'win' ? (
               <>
                 <Text style={styles.badge}>승리</Text>
-                <Text style={styles.title}>이 라운드를 가져왔다</Text>
+                <Text style={styles.title}>라운드 승리!</Text>
                 <Text style={styles.line}>
-                  나: <Text style={styles.em}>{data.playerMs} ms</Text>
+                  나: <Text style={styles.em}>{formatReactionMs(data.playerMs)} ms</Text>
                 </Text>
                 <Text style={styles.line}>
                   {data.npcMisfire ? (
                     <Text style={styles.em}>상대 오발 — 자동 승!</Text>
                   ) : (
                     <>
-                      상대: <Text style={styles.em}>{data.npcMs ?? '—'} ms</Text>
+                      상대:{' '}
+                      <Text style={styles.em}>
+                        {data.npcMs != null ? `${formatReactionMs(data.npcMs)} ms` : '—'}
+                      </Text>
                     </>
                   )}
                 </Text>
@@ -85,19 +89,20 @@ export function NpcRoundModal({ visible, data, onContinue, winBurstId }: Props) 
             ) : (
               <>
                 <Text style={[styles.badge, styles.badgeLoss]}>패배</Text>
-                <Text style={styles.title}>
-                  {data.reason === 'early' && '너무 빨랐다 (얼리)'}
-                  {data.reason === 'timeout' && '시간 초과'}
-                  {data.reason === 'slower' && '속도에서 밀렸다'}
+                <Text style={styles.title}>라운드 패배!</Text>
+                <Text style={styles.reasonSub}>
+                  {data.reason === 'early' && '뱅 전에 쐈다 (얼리)'}
+                  {data.reason === 'timeout' && '시간 안에 쏘지 못했다'}
+                  {data.reason === 'slower' && '상대보다 늦게 쐈다'}
                 </Text>
                 {data.playerMs != null ? (
                   <Text style={styles.line}>
-                    나: <Text style={styles.em}>{data.playerMs} ms</Text>
+                    나: <Text style={styles.em}>{formatReactionMs(data.playerMs)} ms</Text>
                   </Text>
                 ) : null}
                 {data.npcMs != null && data.reason === 'slower' ? (
                   <Text style={styles.line}>
-                    상대: <Text style={styles.em}>{data.npcMs} ms</Text>
+                    상대: <Text style={styles.em}>{formatReactionMs(data.npcMs)} ms</Text>
                   </Text>
                 ) : null}
               </>
@@ -172,6 +177,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '800',
     color: colors.cream,
+  },
+  reasonSub: {
+    marginTop: 8,
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.sand,
+    opacity: 0.92,
   },
   line: {
     marginTop: 10,

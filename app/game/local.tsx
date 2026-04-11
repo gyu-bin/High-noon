@@ -34,8 +34,9 @@ import { gameImages } from '@/constants/gameImages';
 import { useProgressStore } from '@/store/progressStore';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
 import { RM_GAME } from '@/constants/reanimatedGame';
-import { play } from '@/utils/audioService';
+import { play, playBangShotDuel } from '@/utils/audioService';
 import { speakDuelCue, stopDuelSignalSpeech } from '@/utils/duelSignalSpeech';
+import { formatReactionMs } from '@/utils/formatReactionMs';
 import { trigger } from '@/utils/hapticService';
 
 export type LocalMatchTypeProp = '3' | '5' | '7';
@@ -119,7 +120,7 @@ export default function LocalGameScreen() {
       }),
     );
     speakDuelCue('bang');
-    void play('bang_shot');
+    void playBangShotDuel();
     void trigger('heavy');
   }, [redFlash]);
 
@@ -612,7 +613,7 @@ function formatRoundSummary(o: LocalRoundOutcome): {
     const tag = id === 'p1' ? 'P1' : 'P2';
     if (s.earlyTap) return `${tag}: 얼리`;
     if (s.timeout) return `${tag}: 타임아웃`;
-    if (s.reactionMs != null) return `${tag}: ${s.reactionMs.toFixed(0)} ms`;
+    if (s.reactionMs != null) return `${tag}: ${formatReactionMs(s.reactionMs)} ms`;
     return `${tag}: —`;
   };
   let title = '라운드 종료';

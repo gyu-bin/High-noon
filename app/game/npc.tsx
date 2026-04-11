@@ -39,7 +39,7 @@ import { useGameStore } from '@/store/gameStore';
 import { useProgressStore } from '@/store/progressStore';
 import { simulateNpcReaction } from '@/utils/npcAI';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
-import { play } from '@/utils/audioService';
+import { play, playBangShotDuel } from '@/utils/audioService';
 import { speakDuelCue, stopDuelSignalSpeech } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
 
@@ -148,7 +148,7 @@ export default function NpcGameScreen() {
       }),
     );
     speakDuelCue('bang');
-    void play('bang_shot');
+    void playBangShotDuel();
     void trigger('heavy');
   }, [redFlash]);
 

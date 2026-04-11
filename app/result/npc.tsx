@@ -46,7 +46,7 @@ export default function NpcResultScreen() {
       ) : null}
       <View style={styles.content}>
         <Text style={[styles.title, { fontFamily: FONT_RYE }]}>
-          {victory ? '사냥 성공' : '패배'}
+          {victory ? '사냥 성공' : '사냥 실패'}
         </Text>
         {npc ? (
           <Text style={styles.sub}>

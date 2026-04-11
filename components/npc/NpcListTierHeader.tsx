@@ -40,14 +40,16 @@ export function NpcListTierHeader({ title, revealAnimation }: Props) {
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingTop: 20,
-    paddingBottom: 10,
+    paddingTop: 26,
+    paddingBottom: 12,
     paddingHorizontal: 4,
   },
   text: {
     fontSize: 22,
     color: colors.ochre,
     letterSpacing: 3,
+    paddingTop: 2,
+    paddingBottom: 2,
   },
   line: {
     marginTop: 8,

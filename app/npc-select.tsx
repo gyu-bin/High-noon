@@ -157,6 +157,7 @@ export default function NpcSelectScreen() {
     <>
       <Stack.Screen
         options={{
+          headerTransparent: false,
           headerBackVisible: false,
           headerLeft: () => (
             <Pressable
@@ -178,6 +179,7 @@ export default function NpcSelectScreen() {
             data={rows}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
+            style={styles.listFlex}
             contentContainerStyle={styles.list}
             extraData={{ highestUnlocked, npcById, legendRevealBurst }}
           />
@@ -204,8 +206,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.darkBrown,
   },
+  listFlex: {
+    flex: 1,
+  },
   list: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    /** 네비 헤더·노치와 첫 티어(브론즈) 라벨이 겹치지 않도록 여유 */
+    paddingTop: 28,
+    paddingBottom: 12,
   },
 });

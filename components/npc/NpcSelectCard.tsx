@@ -5,6 +5,7 @@ import Animated, { FadeInRight } from 'react-native-reanimated';
 import { NpcCharacterSprite } from '@/components/game/CharacterSprites';
 import { colors } from '@/constants/theme';
 import type { NpcDefinition } from '@/types/npc';
+import { formatReactionMs } from '@/utils/formatReactionMs';
 
 type Props = {
   npc: NpcDefinition;
@@ -43,7 +44,7 @@ export function NpcSelectCard({
           목표 반응 {npc.reactionMs} ms
         </Text>
         {cleared && bestMs != null ? (
-          <Text style={styles.best}>최고 {bestMs} ms</Text>
+          <Text style={styles.best}>최고 {formatReactionMs(bestMs)} ms</Text>
         ) : null}
       </View>
 
