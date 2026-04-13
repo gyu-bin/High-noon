@@ -50,6 +50,10 @@ function resolveWinner(
 
 const BANG_TIMEOUT_MS = 2500;
 
+/**
+ * 로컬 2인 결투. 뱅은 두 명 반응 ms가 모두 쌓이거나 뱅 타임아웃까지 라운드를 유예한다.
+ * `commitLocalTouches`로 동시 터치·동시 얼리를 한 번에 반영하고, 입력은 `phaseRef`로 판정한다.
+ */
 export function useLocalDuelEngine() {
   const [phase, setPhase] = useState<DuelPhase>('대기');
   const [signalText, setSignalText] = useState('');
@@ -104,7 +108,7 @@ export function useLocalDuelEngine() {
     setSignalText('');
   }, [clearAllTimers]);
 
-  /** 뱅 라운드 종료 — 한 명만 쏴도 즉시 마감(미반응 쪽은 타임아웃) */
+  /** 뱅 라운드 종료 — 두 명 반응이 모두 찍히거나 뱅 타임아웃 시 마감 */
   const completeBangRound = useCallback(
     (seq: number) => {
       if (duelSeqRef.current !== seq) return;
@@ -148,20 +152,19 @@ export function useLocalDuelEngine() {
 
   const enterBang = useCallback(
     (seq: number) => {
-      setPhase('뱅');
-      setSignalText('Bang!');
+      if (duelSeqRef.current !== seq) return;
+
       p1MsRef.current = null;
       p2MsRef.current = null;
       bangFinalizedRef.current = false;
-
-      if (duelSeqRef.current !== seq) return;
-
-      phaseRef.current = '뱅';
       const t0 = performance.now();
       bangT0Ref.current = t0;
       bangArmedRef.current = true;
-
       bangTimeoutDeadlineRef.current = Date.now() + BANG_TIMEOUT_MS;
+      phaseRef.current = '뱅';
+      setPhase('뱅');
+      setSignalText('Bang!');
+
       bangTimeoutRef.current = setTimeout(() => {
         finalizeBangTimeout(seq);
       }, BANG_TIMEOUT_MS);
@@ -199,6 +202,7 @@ export function useLocalDuelEngine() {
 
     const seq = ++duelSeqRef.current;
     setOutcome(null);
+    phaseRef.current = '준비';
     setPhase('준비');
     setSignalText('Ready');
 
@@ -210,6 +214,7 @@ export function useLocalDuelEngine() {
     readyTimerRef.current = setTimeout(() => {
       if (duelSeqRef.current !== seq) return;
       readyDeadlineRef.current = null;
+      phaseRef.current = '집중';
       setPhase('집중');
       setSignalText('Steady');
       const dBangWait = randomDelayInclusiveMs(0, 10000);
@@ -217,36 +222,39 @@ export function useLocalDuelEngine() {
     }, readyTotalMs);
   }, [clearAllTimers, scheduleSteadyThenBang]);
 
-  const tap = useCallback(
-    (player: LocalPlayerId) => {
-      if (phase === '대기' || phase === '결과') return;
+  /**
+   * 동시 터치(changedTouches)에서 한 번에 넘길 때 사용.
+   * phase state 클로저 대신 phaseRef + 뱅 arming ref로 판정해 레이스를 줄임.
+   */
+  const commitLocalTouches = useCallback(
+    (playersInput: readonly LocalPlayerId[]) => {
+      if (playersInput.length === 0) return;
+      const players = [...new Set(playersInput)];
 
-      // 뱅 직후 한 프레임은 phase가 아직 '집중'일 수 있음 — P2가 바로 눌러도 뱅으로 처리
       if (
         bangArmedRef.current &&
         bangT0Ref.current != null &&
         !bangFinalizedRef.current
       ) {
-        if (player === 'p1' && p1MsRef.current == null) {
-          p1MsRef.current = performance.now() - bangT0Ref.current;
-        } else if (player === 'p2' && p2MsRef.current == null) {
-          p2MsRef.current = performance.now() - bangT0Ref.current;
+        for (const player of players) {
+          if (player === 'p1' && p1MsRef.current == null) {
+            p1MsRef.current = performance.now() - bangT0Ref.current;
+          } else if (player === 'p2' && p2MsRef.current == null) {
+            p2MsRef.current = performance.now() - bangT0Ref.current;
+          }
         }
-
-        const seq = duelSeqRef.current;
         if (p1MsRef.current != null && p2MsRef.current != null) {
           clearTimeoutRef(bangTimeoutRef);
           bangTimeoutDeadlineRef.current = null;
           tryFinishBang();
-        } else if (p1MsRef.current != null || p2MsRef.current != null) {
-          clearTimeoutRef(bangTimeoutRef);
-          bangTimeoutDeadlineRef.current = null;
-          completeBangRound(seq);
         }
         return;
       }
 
-      if (phase === '준비' || phase === '집중') {
+      const ph = phaseRef.current;
+      if (ph === '대기' || ph === '결과') return;
+
+      if (ph === '준비' || ph === '집중') {
         stopDuelSignalSpeech();
         clearAllTimers();
         duelSeqRef.current += 1;
@@ -255,14 +263,16 @@ export function useLocalDuelEngine() {
         steadyDeadlineRef.current = null;
         bangTimeoutDeadlineRef.current = null;
         pausePerfRef.current = null;
+        const p1Early = players.includes('p1');
+        const p2Early = players.includes('p2');
         const p1: LocalPlayerRoundState = {
           reactionMs: null,
-          earlyTap: player === 'p1',
+          earlyTap: p1Early,
           timeout: false,
         };
         const p2: LocalPlayerRoundState = {
           reactionMs: null,
-          earlyTap: player === 'p2',
+          earlyTap: p2Early,
           timeout: false,
         };
         finishRound({
@@ -273,19 +283,21 @@ export function useLocalDuelEngine() {
         return;
       }
 
-      if (phase === '뱅') {
+      if (ph === '뱅') {
         clearAllTimers();
         duelSeqRef.current += 1;
         bangTimeoutDeadlineRef.current = null;
         pausePerfRef.current = null;
+        const p1Early = players.includes('p1');
+        const p2Early = players.includes('p2');
         const p1: LocalPlayerRoundState = {
           reactionMs: null,
-          earlyTap: player === 'p1',
+          earlyTap: p1Early,
           timeout: false,
         };
         const p2: LocalPlayerRoundState = {
           reactionMs: null,
-          earlyTap: player === 'p2',
+          earlyTap: p2Early,
           timeout: false,
         };
         finishRound({
@@ -295,7 +307,14 @@ export function useLocalDuelEngine() {
         });
       }
     },
-    [phase, clearAllTimers, finishRound, tryFinishBang, completeBangRound],
+    [clearAllTimers, finishRound, tryFinishBang],
+  );
+
+  const tap = useCallback(
+    (player: LocalPlayerId) => {
+      commitLocalTouches([player]);
+    },
+    [commitLocalTouches],
   );
 
   const reset = useCallback(() => {
@@ -340,6 +359,7 @@ export function useLocalDuelEngine() {
       readyTimerRef.current = setTimeout(() => {
         if (duelSeqRef.current !== seq) return;
         readyDeadlineRef.current = null;
+        phaseRef.current = '집중';
         setPhase('집중');
         setSignalText('Steady');
         const leadIn =
@@ -381,12 +401,23 @@ export function useLocalDuelEngine() {
 
   useEffect(() => () => clearAllTimers(), [clearAllTimers]);
 
+  /** UI 피드백용 — `phase`보다 실제 뱅 반응 창과 일치 */
+  const isBangReactionArmed = useCallback(
+    () =>
+      bangArmedRef.current &&
+      bangT0Ref.current != null &&
+      !bangFinalizedRef.current,
+    [],
+  );
+
   return {
     phase,
     signalText,
     outcome,
     start,
     tap,
+    commitLocalTouches,
+    isBangReactionArmed,
     reset,
     pauseTimers,
     resumeTimers,

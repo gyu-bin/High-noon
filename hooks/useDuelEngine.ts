@@ -23,6 +23,11 @@ function clearTimeoutRef(ref: MutableRefObject<ReturnType<typeof setTimeout> | n
 
 const BANG_TIMEOUT_MS = 2500;
 
+/**
+ * NPC 1인 결투. 탭은 `bangArmedRef`·`bangStartMsRef`를 `phase` state보다 먼저 본다
+ * (뱅 직후 `phaseRef`가 한 박자 늦을 때 얼리로 오인하지 않도록).
+ * `phaseRef`는 타이머·finish·reset·enterBang과 동기에 맞춰 즉시 갱신한다.
+ */
 export function useDuelEngine() {
   const [phase, setPhase] = useState<DuelPhase>('대기');
   const [signalText, setSignalText] = useState('');
@@ -68,26 +73,29 @@ export function useDuelEngine() {
     bangTimeoutDeadlineRef.current = null;
     lastSteadyDurationRef.current = null;
     pausePerfRef.current = null;
+    phaseRef.current = '결과';
     setOutcome(next);
     setPhase('결과');
     setSignalText('');
   }, [clearAllTimers]);
 
   const enterBang = useCallback((seq: number) => {
-    setPhase('뱅');
-    setSignalText('Bang!');
-
     if (duelSeqRef.current !== seq) return;
 
     const t0 = performance.now();
     bangStartMsRef.current = t0;
     bangArmedRef.current = true;
     bangTimeoutDeadlineRef.current = Date.now() + BANG_TIMEOUT_MS;
+    phaseRef.current = '뱅';
+    setPhase('뱅');
+    setSignalText('Bang!');
+
     bangTimeoutRef.current = setTimeout(() => {
       if (duelSeqRef.current !== seq || !bangArmedRef.current) return;
       bangArmedRef.current = false;
       bangStartMsRef.current = null;
       bangTimeoutDeadlineRef.current = null;
+      phaseRef.current = '결과';
       setOutcome({ reactionMs: null, earlyTap: false, timeout: true });
       setPhase('결과');
       setSignalText('');
@@ -123,6 +131,7 @@ export function useDuelEngine() {
     const seq = ++duelSeqRef.current;
     setOutcome(null);
     setLastSteadyToBangDelayMs(null);
+    phaseRef.current = '준비';
     setPhase('준비');
     setSignalText('Ready');
 
@@ -134,6 +143,7 @@ export function useDuelEngine() {
     readyTimerRef.current = setTimeout(() => {
       if (duelSeqRef.current !== seq) return;
       readyDeadlineRef.current = null;
+      phaseRef.current = '집중';
       setPhase('집중');
       setSignalText('Steady');
       const dBangWait = randomDelayInclusiveMs(0, 10000);
@@ -142,9 +152,23 @@ export function useDuelEngine() {
   }, [clearAllTimers, scheduleSteadyThenBang]);
 
   const tap = useCallback(() => {
-    if (phase === '대기' || phase === '결과') return;
+    // phase state보다 먼저 — 뱅 직후 한 프레임에 phaseRef가 '집중'이어도 반응으로 처리
+    if (bangArmedRef.current && bangStartMsRef.current != null) {
+      bangArmedRef.current = false;
+      clearTimeoutRef(bangTimeoutRef);
+      bangTimeoutDeadlineRef.current = null;
+      pausePerfRef.current = null;
+      const reactionMs = performance.now() - bangStartMsRef.current;
+      bangStartMsRef.current = null;
+      duelSeqRef.current += 1;
+      finish({ reactionMs, earlyTap: false, timeout: false });
+      return;
+    }
 
-    if (phase === '준비' || phase === '집중') {
+    const ph = phaseRef.current;
+    if (ph === '대기' || ph === '결과') return;
+
+    if (ph === '준비' || ph === '집중') {
       stopDuelSignalSpeech();
       duelSeqRef.current += 1;
       readyDeadlineRef.current = null;
@@ -156,31 +180,13 @@ export function useDuelEngine() {
       return;
     }
 
-    if (phase === '뱅') {
-      if (!bangArmedRef.current || bangStartMsRef.current == null) {
-        duelSeqRef.current += 1;
-        bangTimeoutDeadlineRef.current = null;
-        pausePerfRef.current = null;
-        finish({ reactionMs: null, earlyTap: true, timeout: false });
-        return;
-      }
-
-      bangArmedRef.current = false;
-      clearTimeoutRef(bangTimeoutRef);
+    if (ph === '뱅') {
+      duelSeqRef.current += 1;
       bangTimeoutDeadlineRef.current = null;
       pausePerfRef.current = null;
-
-      const reactionMs = performance.now() - bangStartMsRef.current;
-      bangStartMsRef.current = null;
-      duelSeqRef.current += 1;
-
-      setOutcome({ reactionMs, earlyTap: false, timeout: false });
-      setPhase('결과');
-      setSignalText('');
-      clearTimeoutRef(readyTimerRef);
-      clearTimeoutRef(steadyTimerRef);
+      finish({ reactionMs: null, earlyTap: true, timeout: false });
     }
-  }, [phase, finish]);
+  }, [finish]);
 
   const reset = useCallback(() => {
     stopDuelSignalSpeech();
@@ -196,6 +202,7 @@ export function useDuelEngine() {
     pausePerfRef.current = null;
     setOutcome(null);
     setLastSteadyToBangDelayMs(null);
+    phaseRef.current = '대기';
     setPhase('대기');
     setSignalText('');
   }, [clearAllTimers]);
@@ -221,6 +228,7 @@ export function useDuelEngine() {
       readyTimerRef.current = setTimeout(() => {
         if (duelSeqRef.current !== seq) return;
         readyDeadlineRef.current = null;
+        phaseRef.current = '집중';
         setPhase('집중');
         setSignalText('Steady');
         const leadIn =
@@ -260,6 +268,7 @@ export function useDuelEngine() {
         bangArmedRef.current = false;
         bangStartMsRef.current = null;
         bangTimeoutDeadlineRef.current = null;
+        phaseRef.current = '결과';
         setOutcome({ reactionMs: null, earlyTap: false, timeout: true });
         setPhase('결과');
         setSignalText('');
@@ -269,6 +278,12 @@ export function useDuelEngine() {
 
   useEffect(() => () => clearAllTimers(), [clearAllTimers]);
 
+  /** UI 피드백용 — `phase` state보다 실제 뱅 반응 창과 일치 */
+  const isBangReactionArmed = useCallback(
+    () => bangArmedRef.current && bangStartMsRef.current != null,
+    [],
+  );
+
   return {
     phase,
     signalText,
@@ -276,6 +291,7 @@ export function useDuelEngine() {
     lastSteadyToBangDelayMs,
     start,
     tap,
+    isBangReactionArmed,
     reset,
     pauseTimers,
     resumeTimers,

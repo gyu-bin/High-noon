@@ -106,6 +106,7 @@ export default function NpcGameScreen() {
     lastSteadyToBangDelayMs,
     start: startDuel,
     tap,
+    isBangReactionArmed,
     reset: resetDuel,
     pauseTimers,
     resumeTimers,
@@ -467,12 +468,13 @@ export default function NpcGameScreen() {
 
   const onScreenTap = useCallback(() => {
     if (modalVisible || paused) return;
+    const bangGlow = isBangReactionArmed();
     if (phase !== '대기' && phase !== '결과') {
-      pulsePlayerTapAck(phase === '뱅' ? 'bang' : 'other');
-      void trigger(phase === '뱅' ? 'selection' : 'light');
+      pulsePlayerTapAck(bangGlow ? 'bang' : 'other');
+      void trigger(bangGlow ? 'selection' : 'light');
     }
     tap();
-  }, [modalVisible, paused, phase, pulsePlayerTapAck, tap]);
+  }, [modalVisible, paused, phase, isBangReactionArmed, pulsePlayerTapAck, tap]);
 
   const leaveToNpcSelect = useCallback(() => {
     setPaused(false);

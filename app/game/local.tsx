@@ -1,7 +1,15 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { BackHandler, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  BackHandler,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type GestureResponderEvent,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
@@ -23,6 +31,7 @@ import { NpcSignalStage } from '@/components/game/NpcSignalStage';
 import { colors } from '@/constants/theme';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
 import {
+  type LocalPlayerId,
   type LocalRoundOutcome,
   useLocalDuelEngine,
 } from '@/hooks/useLocalDuelEngine';
@@ -78,7 +87,8 @@ export default function LocalGameScreen() {
     signalText,
     outcome,
     start,
-    tap,
+    commitLocalTouches,
+    isBangReactionArmed,
     reset,
     pauseTimers,
     resumeTimers,
@@ -148,6 +158,38 @@ export default function LocalGameScreen() {
       }),
     );
   }, []);
+
+  /**
+   * 멀티터치: changedTouches를 모아 `commitLocalTouches` 한 번으로 처리
+   * (준비/집중 동시 얼리도 한 라운드로 합침).
+   */
+  const onLocalDuelTouchStart = useCallback(
+    (e: GestureResponderEvent) => {
+      if (paused) return;
+      const { changedTouches } = e.nativeEvent;
+      const raw: LocalPlayerId[] = [];
+      for (let i = 0; i < changedTouches.length; i += 1) {
+        const touch = changedTouches[i];
+        if (!touch) continue;
+        raw.push(touch.locationY < halfH ? 'p2' : 'p1');
+      }
+      if (raw.length === 0) return;
+      const uniq = [...new Set(raw)];
+      const bangGlow = isBangReactionArmed();
+      if (phase !== '대기' && phase !== '결과') {
+        for (const id of uniq) {
+          if (id === 'p2') {
+            pulseHalfTapAck(p2TapAck, bangGlow ? 'bang' : 'other');
+          } else {
+            pulseHalfTapAck(p1TapAck, bangGlow ? 'bang' : 'other');
+          }
+          void trigger(bangGlow ? 'selection' : 'light');
+        }
+      }
+      commitLocalTouches(raw);
+    },
+    [paused, phase, halfH, pulseHalfTapAck, commitLocalTouches, isBangReactionArmed],
+  );
 
   useEffect(() => {
     if (phase !== '뱅') bangHapticDone.current = false;
@@ -420,89 +462,74 @@ export default function LocalGameScreen() {
         <Ionicons name="pause-circle" size={40} color={colors.cream} />
       </Pressable>
 
-      <Pressable
-        accessibilityLabel="P2 탭"
-        disabled={paused}
-        onPress={() => {
-          if (phase !== '대기' && phase !== '결과') {
-            pulseHalfTapAck(p2TapAck, phase === '뱅' ? 'bang' : 'other');
-            void trigger(phase === '뱅' ? 'selection' : 'light');
-          }
-          tap('p2');
-        }}
-        style={[
-          styles.half,
-          styles.halfTouchable,
-          { height: halfH, width: winW, transform: [{ rotate: '180deg' }] },
-          p2Loser && styles.halfLose,
-        ]}
-      >
-        <Animated.View
+      <View style={styles.duelStack} pointerEvents="box-none">
+        <View
           pointerEvents="none"
-          style={[styles.halfTapGlow, p2TapAckStyle]}
-        />
-        <View style={styles.halfInner}>
-          <Text style={styles.playerLabel}>P2</Text>
-          <Animated.View style={p2FallStyle}>
-            <PlayerCharacterSprite
-              width={180}
-              height={100}
-              flipHorizontal
-              style={styles.localFigMatte}
-            />
-          </Animated.View>
-          <HeartStrip filled={p2Hearts} max={winsNeeded} />
-        </View>
-        <View style={styles.halfSignalOverlay} pointerEvents="none">
-          <NpcSignalStage
-            phase={phase}
-            signalText={signalText}
-            onBangPhaseEnter={triggerBangFlash}
-            wrapStyle={styles.halfSignalWrap}
+          style={[
+            styles.half,
+            { height: halfH, width: winW, transform: [{ rotate: '180deg' }] },
+            p2Loser && styles.halfLose,
+          ]}
+        >
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.halfTapGlow, p2TapAckStyle]}
           />
+          <View style={styles.halfInner}>
+            <Text style={styles.playerLabel}>P2</Text>
+            <Animated.View style={p2FallStyle}>
+              <PlayerCharacterSprite
+                width={180}
+                height={100}
+                flipHorizontal
+                style={styles.localFigMatte}
+              />
+            </Animated.View>
+            <HeartStrip filled={p2Hearts} max={winsNeeded} />
+          </View>
+          <View style={styles.halfSignalOverlay} pointerEvents="none">
+            <NpcSignalStage
+              phase={phase}
+              signalText={signalText}
+              onBangPhaseEnter={triggerBangFlash}
+              wrapStyle={styles.halfSignalWrap}
+            />
+          </View>
         </View>
-      </Pressable>
-
-      <Pressable
-        accessibilityLabel="P1 탭"
-        disabled={paused}
-        onPress={() => {
-          if (phase !== '대기' && phase !== '결과') {
-            pulseHalfTapAck(p1TapAck, phase === '뱅' ? 'bang' : 'other');
-            void trigger(phase === '뱅' ? 'selection' : 'light');
-          }
-          tap('p1');
-        }}
-        style={[
-          styles.half,
-          styles.halfTouchable,
-          { height: halfH, width: winW },
-          p1Loser && styles.halfLose,
-        ]}
-      >
-        <Animated.View
+        <View
           pointerEvents="none"
-          style={[styles.halfTapGlow, p1TapAckStyle]}
-        />
-        <View style={styles.halfInner}>
-          <Text style={styles.playerLabel}>P1</Text>
-          <Animated.View style={p1FallStyle}>
-            <PlayerCharacterSprite
-              width={180}
-              height={100}
-              style={styles.localFigMatte}
-            />
-          </Animated.View>
-          <HeartStrip filled={p1Hearts} max={winsNeeded} />
-        </View>
-        <View style={styles.halfSignalOverlay} pointerEvents="none">
-          <NpcSignalStage
-            phase={phase}
-            signalText={signalText}
-            wrapStyle={styles.halfSignalWrap}
+          style={[styles.half, { height: halfH, width: winW }, p1Loser && styles.halfLose]}
+        >
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.halfTapGlow, p1TapAckStyle]}
           />
+          <View style={styles.halfInner}>
+            <Text style={styles.playerLabel}>P1</Text>
+            <Animated.View style={p1FallStyle}>
+              <PlayerCharacterSprite
+                width={180}
+                height={100}
+                style={styles.localFigMatte}
+              />
+            </Animated.View>
+            <HeartStrip filled={p1Hearts} max={winsNeeded} />
+          </View>
+          <View style={styles.halfSignalOverlay} pointerEvents="none">
+            <NpcSignalStage
+              phase={phase}
+              signalText={signalText}
+              wrapStyle={styles.halfSignalWrap}
+            />
+          </View>
         </View>
-      </Pressable>
+        <View
+          style={styles.duelTouchLayer}
+          onTouchStart={onLocalDuelTouchStart}
+          accessible
+          accessibilityLabel="결투 영역. 화면 위쪽은 P2, 아래쪽은 P1 탭."
+        />
+      </View>
 
       <Modal
         transparent
@@ -628,11 +655,17 @@ function formatRoundSummary(o: LocalRoundOutcome): {
 }
 
 const styles = StyleSheet.create({
+  duelStack: {
+    flex: 1,
+    width: '100%',
+    position: 'relative',
+  },
+  duelTouchLayer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 32,
+  },
   half: {
     justifyContent: 'center',
-  },
-  halfTouchable: {
-    zIndex: 10,
   },
   halfLose: {
     opacity: 0.48,
