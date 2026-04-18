@@ -8,7 +8,9 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { colors } from '@/constants/theme';
+import { initAds, preloadInterstitial } from '@/utils/adService';
 import { preloadAll } from '@/utils/audioService';
+import { initPurchases } from '@/utils/purchaseService';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
 
 SplashScreen.preventAutoHideAsync();
@@ -25,6 +27,8 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
       void preloadAll();
       void preloadSceneImages();
+      void initAds().then(() => preloadInterstitial());
+      void initPurchases();
     }
   }, [ready]);
 
@@ -48,6 +52,7 @@ export default function RootLayout() {
         <Stack.Screen name="npc-select" options={{ title: 'NPC 선택' }} />
         <Stack.Screen name="local-setup" options={{ title: '2인 대결' }} />
         <Stack.Screen name="stats" options={{ title: '기록' }} />
+        <Stack.Screen name="character-select" options={{ title: '캐릭터' }} />
         <Stack.Screen name="duel" options={{ title: '결투', headerShown: true }} />
         <Stack.Screen name="game" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ headerShown: false }} />

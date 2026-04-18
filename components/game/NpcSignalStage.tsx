@@ -43,7 +43,7 @@ export function NpcSignalStage({
   }, [phase, readyOp]);
 
   useEffect(() => {
-    if (phase === '집중') {
+    if (phase === '집중' || phase === '페이크') {
       steadyPulse.value = 1;
       steadyPulse.value = withRepeat(
         withSequence(
@@ -76,7 +76,12 @@ export function NpcSignalStage({
   }, [phase, onBangPhaseEnter]);
 
   const readyStyle = useAnimatedStyle(() => ({
-    opacity: phase === '준비' ? readyOp.value : phase === '집중' || phase === '뱅' ? 1 : 0.35,
+    opacity:
+      phase === '준비'
+        ? readyOp.value
+        : phase === '집중' || phase === '뱅' || phase === '페이크'
+          ? 1
+          : 0.35,
   }));
 
   const steadyStyle = useAnimatedStyle(() => ({
@@ -86,6 +91,7 @@ export function NpcSignalStage({
   const showReady = phase === '준비' && signalText === 'Ready';
   const showSteady = phase === '집중' && signalText === 'Steady';
   const showBang = phase === '뱅' && signalText === 'Bang!';
+  const showFakeBang = phase === '페이크' && signalText === 'Bang!';
 
   return (
     <View style={[styles.wrap, wrapStyle]} pointerEvents="none">
@@ -95,7 +101,7 @@ export function NpcSignalStage({
       {showSteady ? (
         <Animated.Text style={[styles.signalText, steadyStyle]}>STEADY</Animated.Text>
       ) : null}
-      {showBang ? <Text style={styles.bangText}>BANG!</Text> : null}
+      {showBang || showFakeBang ? <Text style={styles.bangText}>BANG!</Text> : null}
       {phase === '대기' ? (
         <Text style={styles.waitText}>라운드 시작…</Text>
       ) : null}

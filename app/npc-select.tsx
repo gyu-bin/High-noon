@@ -17,10 +17,11 @@ import { NpcListTierHeader } from '@/components/npc/NpcListTierHeader';
 import { NpcSelectCard } from '@/components/npc/NpcSelectCard';
 import { colors } from '@/constants/theme';
 import { NPCS } from '@/constants/npcs';
-import { useProgressStore } from '@/store/progressStore';
+import { selectPaleRiderUnlocked, useProgressStore } from '@/store/progressStore';
 import type { NpcDefinition, NpcTier } from '@/types/npc';
 
-const MASTER_BOSS_ID = 17;
+/** 레전드 티어 공개: 마스터 보스 #18 레드 아이 오라클 클리어 후 */
+const MASTER_LEGEND_GATE_ID = 18;
 
 const TIER_ORDER: NpcTier[] = [
   'bronze',
@@ -30,6 +31,7 @@ const TIER_ORDER: NpcTier[] = [
   'diamond',
   'master',
   'legend',
+  'hidden',
 ];
 
 const TIER_TITLE: Record<NpcTier, string> = {
@@ -40,6 +42,7 @@ const TIER_TITLE: Record<NpcTier, string> = {
   diamond: '다이아',
   master: '마스터',
   legend: '레전드',
+  hidden: '???',
 };
 
 type FlatRow =
@@ -47,16 +50,30 @@ type FlatRow =
   | { type: 'npc'; key: string; npc: NpcDefinition; revealDelayMs?: number }
   | { type: 'masked'; key: string; id: number };
 
-function buildRows(masterBossCleared: boolean, legendRevealBurst: number): FlatRow[] {
+function buildRows(
+  masterLegendGateCleared: boolean,
+  legendRevealBurst: number,
+  paleUnlocked: boolean,
+): FlatRow[] {
   const rows: FlatRow[] = [];
   for (const tier of TIER_ORDER) {
-    if (tier === 'legend' && !masterBossCleared) {
+    if (tier === 'hidden') {
+      if (!paleUnlocked) continue;
+      rows.push({ type: 'header', key: 'header-hidden', title: TIER_TITLE.hidden });
+      const hidden = NPCS.filter((n) => n.tier === 'hidden');
+      for (const npc of hidden) {
+        rows.push({ type: 'npc', key: `npc-${npc.id}`, npc });
+      }
+      continue;
+    }
+
+    if (tier === 'legend' && !masterLegendGateCleared) {
       rows.push({
         type: 'header',
         key: 'header-legend-hidden',
         title: '???',
       });
-      for (const id of [18, 19, 20]) {
+      for (const id of [19, 20, 21]) {
         rows.push({ type: 'masked', key: `masked-${id}`, id });
       }
       continue;
@@ -69,14 +86,14 @@ function buildRows(masterBossCleared: boolean, legendRevealBurst: number): FlatR
           ? `header-legend-${legendRevealBurst}`
           : `header-${tier}`,
       title: TIER_TITLE[tier],
-      legendReveal: tier === 'legend' && masterBossCleared && legendRevealBurst > 0,
+      legendReveal: tier === 'legend' && masterLegendGateCleared && legendRevealBurst > 0,
     });
 
     const list = NPCS.filter((n) => n.tier === tier);
     for (const npc of list) {
       const revealDelayMs =
-        tier === 'legend' && masterBossCleared && legendRevealBurst > 0
-          ? (npc.id - 18) * 90
+        tier === 'legend' && masterLegendGateCleared && legendRevealBurst > 0
+          ? (npc.id - 19) * 90
           : undefined;
       rows.push({
         type: 'npc',
@@ -94,21 +111,22 @@ export default function NpcSelectScreen() {
   const insets = useSafeAreaInsets();
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
   const npcById = useProgressStore((s) => s.npcById);
-  const masterBossCleared = npcById[MASTER_BOSS_ID]?.cleared ?? false;
+  const paleUnlocked = useProgressStore(() => selectPaleRiderUnlocked());
+  const masterLegendGateCleared = npcById[MASTER_LEGEND_GATE_ID]?.cleared ?? false;
 
   const [legendRevealBurst, setLegendRevealBurst] = useState(0);
-  const wasLegendHiddenRef = useRef(!masterBossCleared);
+  const wasLegendHiddenRef = useRef(!masterLegendGateCleared);
 
   useEffect(() => {
-    if (wasLegendHiddenRef.current && masterBossCleared) {
+    if (wasLegendHiddenRef.current && masterLegendGateCleared) {
       setLegendRevealBurst((n) => n + 1);
     }
-    wasLegendHiddenRef.current = !masterBossCleared;
-  }, [masterBossCleared]);
+    wasLegendHiddenRef.current = !masterLegendGateCleared;
+  }, [masterLegendGateCleared]);
 
   const rows = useMemo(
-    () => buildRows(masterBossCleared, legendRevealBurst),
-    [masterBossCleared, legendRevealBurst],
+    () => buildRows(masterLegendGateCleared, legendRevealBurst, paleUnlocked),
+    [masterLegendGateCleared, legendRevealBurst, paleUnlocked],
   );
 
   const onSelect = useCallback(
@@ -133,7 +151,12 @@ export default function NpcSelectScreen() {
         return <MaskedLegendCard />;
       }
       const npc = item.npc;
-      const locked = npc.id > highestUnlocked;
+      const locked =
+        npc.id === 22
+          ? !paleUnlocked
+          : npc.secret === true
+            ? !paleUnlocked
+            : npc.id > highestUnlocked;
       const row = npcById[npc.id] ?? { cleared: false, bestReactionMs: null };
       const cleared = row.cleared;
       const bestMs = row.bestReactionMs;
@@ -148,7 +171,7 @@ export default function NpcSelectScreen() {
         />
       );
     },
-    [highestUnlocked, npcById, onSelect],
+    [highestUnlocked, npcById, onSelect, paleUnlocked],
   );
 
   const keyExtractor = useCallback((item: FlatRow) => item.key, []);
@@ -181,7 +204,7 @@ export default function NpcSelectScreen() {
             renderItem={renderItem}
             style={styles.listFlex}
             contentContainerStyle={styles.list}
-            extraData={{ highestUnlocked, npcById, legendRevealBurst }}
+            extraData={{ highestUnlocked, npcById, legendRevealBurst, paleUnlocked }}
           />
         </View>
       </PhoneStageShell>
@@ -211,7 +234,6 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: 16,
-    /** 네비 헤더·노치와 첫 티어(브론즈) 라벨이 겹치지 않도록 여유 */
     paddingTop: 28,
     paddingBottom: 12,
   },

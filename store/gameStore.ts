@@ -30,8 +30,11 @@ type GameStoreState = {
   opponentHearts: number;
   signalPhase: SignalPhase;
   lastReaction: ReactionRecord;
+  /** 캐릭터 능력(매치당 1회 등) 사용 여부 — 매치 시작 시 false */
+  abilityUsed: boolean;
   setMode: (mode: GameMode) => void;
   startMatch: (init: GameMatchInit) => void;
+  setAbilityUsed: (value: boolean) => void;
   setSignalPhase: (phase: SignalPhase) => void;
   setLastReaction: (record: ReactionRecord) => void;
   patchLastReaction: (patch: Partial<ReactionRecord>) => void;
@@ -57,6 +60,7 @@ const baseState: Omit<
   | 'nextRound'
   | 'resetSignalOnly'
   | 'resetToIdle'
+  | 'setAbilityUsed'
 > = {
   mode: 'npc',
   currentRound: 1,
@@ -66,6 +70,7 @@ const baseState: Omit<
   opponentHearts: 0,
   signalPhase: 'idle',
   lastReaction: { ...idleReaction },
+  abilityUsed: false,
 };
 
 export const useGameStore = create<GameStoreState>()(
@@ -74,6 +79,8 @@ export const useGameStore = create<GameStoreState>()(
       ...baseState,
 
       setMode: (mode) => set({ mode }),
+
+      setAbilityUsed: (abilityUsed) => set({ abilityUsed }),
 
       startMatch: (init) =>
         set(() => {
@@ -92,6 +99,7 @@ export const useGameStore = create<GameStoreState>()(
             opponentHearts: oh,
             signalPhase: 'idle',
             lastReaction: { ...idleReaction },
+            abilityUsed: false,
           };
         }),
 
@@ -120,6 +128,7 @@ export const useGameStore = create<GameStoreState>()(
         set({
           ...baseState,
           lastReaction: { ...idleReaction },
+          abilityUsed: false,
         }),
     }),
     {
@@ -134,6 +143,12 @@ export const useGameStore = create<GameStoreState>()(
         opponentHearts: s.opponentHearts,
         signalPhase: s.signalPhase,
         lastReaction: s.lastReaction,
+        abilityUsed: s.abilityUsed,
+      }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as object),
+        abilityUsed: (persisted as Partial<GameStoreState>)?.abilityUsed ?? false,
       }),
     },
   ),

@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
 
+import {
+  DUEL_DEFAULT_BANG_DELAY_MS,
+  DUEL_READY_CUE_MS,
+  DUEL_READY_PHASE_TOTAL_MS,
+  DUEL_STEADY_SCHEDULE_LEAD_MS,
+} from '@/constants/duelTiming';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
 import { stopDuelSignalSpeech } from '@/utils/duelSignalSpeech';
 
@@ -206,8 +212,11 @@ export function useLocalDuelEngine() {
     setPhase('준비');
     setSignalText('Ready');
 
-    const cueMs = randomDelayInclusiveMs(1000, 1900);
-    const betweenReadyAndSteadyMs = randomDelayInclusiveMs(500, 1100);
+    const cueMs = Math.min(DUEL_READY_CUE_MS, DUEL_READY_PHASE_TOTAL_MS - 200);
+    const betweenReadyAndSteadyMs = Math.max(
+      200,
+      DUEL_READY_PHASE_TOTAL_MS - cueMs,
+    );
     const readyTotalMs = cueMs + betweenReadyAndSteadyMs;
     readyCueDurationRef.current = cueMs;
     readyDeadlineRef.current = Date.now() + readyTotalMs;
@@ -217,8 +226,11 @@ export function useLocalDuelEngine() {
       phaseRef.current = '집중';
       setPhase('집중');
       setSignalText('Steady');
-      const dBangWait = randomDelayInclusiveMs(0, 10000);
-      scheduleSteadyThenBang(seq, cueMs, dBangWait);
+      const dBangWait = randomDelayInclusiveMs(
+        DUEL_DEFAULT_BANG_DELAY_MS.minMs,
+        DUEL_DEFAULT_BANG_DELAY_MS.maxMs,
+      );
+      scheduleSteadyThenBang(seq, DUEL_STEADY_SCHEDULE_LEAD_MS, dBangWait);
     }, readyTotalMs);
   }, [clearAllTimers, scheduleSteadyThenBang]);
 
@@ -254,7 +266,7 @@ export function useLocalDuelEngine() {
       const ph = phaseRef.current;
       if (ph === '대기' || ph === '결과') return;
 
-      if (ph === '준비' || ph === '집중') {
+      if (ph === '준비' || ph === '집중' || ph === '페이크') {
         stopDuelSignalSpeech();
         clearAllTimers();
         duelSeqRef.current += 1;
@@ -362,10 +374,11 @@ export function useLocalDuelEngine() {
         phaseRef.current = '집중';
         setPhase('집중');
         setSignalText('Steady');
-        const leadIn =
-          readyCueDurationRef.current ?? randomDelayInclusiveMs(1000, 1900);
-        const dBangWait = randomDelayInclusiveMs(0, 10000);
-        scheduleSteadyThenBang(seq, leadIn, dBangWait);
+        const dBangWait = randomDelayInclusiveMs(
+          DUEL_DEFAULT_BANG_DELAY_MS.minMs,
+          DUEL_DEFAULT_BANG_DELAY_MS.maxMs,
+        );
+        scheduleSteadyThenBang(seq, DUEL_STEADY_SCHEDULE_LEAD_MS, dBangWait);
       }, remaining);
       return;
     }

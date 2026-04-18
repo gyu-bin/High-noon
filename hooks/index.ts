@@ -1,4 +1,10 @@
-export { useDuelEngine, type DuelOutcome, type DuelPhase } from './useDuelEngine';
+export {
+  useDuelEngine,
+  DEFAULT_DUEL_TIMING,
+  type DuelOutcome,
+  type DuelPhase,
+  type DuelTimingConfig,
+} from './useDuelEngine';
 export {
   useLocalDuelEngine,
   type LocalPlayerId,

@@ -137,3 +137,11 @@ export async function play(name: SoundName): Promise<void> {
     /* 시뮬레이터·에셋 누락 등 */
   }
 }
+
+/** 결과 화면용 BGM/효과음 (전용 클립 추가 시 SOUND_NAMES에 연결) */
+export async function bgmPlay(name: 'result_win' | 'result_lose'): Promise<void> {
+  if (name === 'result_win') {
+    return play('win_fanfare');
+  }
+  return play('lose_sad');
+}

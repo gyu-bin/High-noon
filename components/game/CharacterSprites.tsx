@@ -46,6 +46,8 @@ const NPC_BY_ID: Record<number, FC<SvgProps>> = {
   18: Npc18,
   19: Npc19,
   20: Npc20,
+  21: Npc20,
+  22: Npc18,
 };
 
 const DefaultNpc = Npc01;

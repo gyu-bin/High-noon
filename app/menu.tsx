@@ -1,5 +1,6 @@
-import { useRouter } from 'expo-router';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import { useRouter, type Href } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DustParticles } from '@/components/effects/DustParticles';
@@ -10,6 +11,11 @@ import { FONT_RYE } from '@/constants/fonts';
 import { NPCS } from '@/constants/npcs';
 import { useProgressStore } from '@/store/progressStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import {
+  presentCustomerCenter,
+  presentSubscriptionPaywall,
+  restorePurchases,
+} from '@/utils/purchaseService';
 
 export default function MenuScreen() {
   const router = useRouter();
@@ -22,6 +28,38 @@ export default function MenuScreen() {
   const hapticEnabled = useSettingsStore((s) => s.hapticEnabled);
   const setSoundEnabled = useSettingsStore((s) => s.setSoundEnabled);
   const setHapticEnabled = useSettingsStore((s) => s.setHapticEnabled);
+  const isAdFree = useProgressStore((s) => s.isAdFree);
+  const [purchaseBusy, setPurchaseBusy] = useState(false);
+
+  const onOpenProPaywall = useCallback(async () => {
+    if (isAdFree || purchaseBusy) return;
+    setPurchaseBusy(true);
+    try {
+      await presentSubscriptionPaywall();
+    } finally {
+      setPurchaseBusy(false);
+    }
+  }, [isAdFree, purchaseBusy]);
+
+  const onRestorePurchases = useCallback(async () => {
+    if (purchaseBusy) return;
+    setPurchaseBusy(true);
+    try {
+      await restorePurchases();
+    } finally {
+      setPurchaseBusy(false);
+    }
+  }, [purchaseBusy]);
+
+  const onManageSubscription = useCallback(async () => {
+    if (purchaseBusy) return;
+    setPurchaseBusy(true);
+    try {
+      await presentCustomerCenter();
+    } finally {
+      setPurchaseBusy(false);
+    }
+  }, [purchaseBusy]);
 
   return (
     <PhoneStageShell>
@@ -54,6 +92,11 @@ export default function MenuScreen() {
             accessibilityHint="평균 반응 시간과 NPC 클리어 수를 봅니다"
             onPress={() => router.push('/stats')}
           />
+          <WoodButton
+            title="캐릭터"
+            accessibilityHint="플레이 캐릭터를 선택합니다"
+            onPress={() => router.push('/character-select' as Href)}
+          />
         </View>
       </View>
 
@@ -84,6 +127,60 @@ export default function MenuScreen() {
       <View style={styles.footer}>
         <Text style={styles.footerLabel}>진행 — 해금 NPC</Text>
         <Text style={styles.footerValue}>{unlockedLabel}</Text>
+      </View>
+
+      <View style={styles.adRemovalRow}>
+        {isAdFree ? (
+          <View style={styles.proRow}>
+            <Text style={styles.adFreeLabel}>High noon Pro ✓</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="구독 및 구매 관리"
+              disabled={purchaseBusy}
+              onPress={onManageSubscription}
+              style={({ pressed }) => [
+                styles.manageSubBtn,
+                pressed && styles.adRemovalBtnPressed,
+                purchaseBusy && styles.adRemovalBtnDisabled,
+              ]}
+            >
+              {purchaseBusy ? (
+                <ActivityIndicator color={colors.cream} />
+              ) : (
+                <Text style={styles.manageSubBtnText}>구독 관리</Text>
+              )}
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.proColumn}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="High noon Pro 구독"
+              disabled={purchaseBusy}
+              onPress={onOpenProPaywall}
+              style={({ pressed }) => [
+                styles.adRemovalBtn,
+                pressed && styles.adRemovalBtnPressed,
+                purchaseBusy && styles.adRemovalBtnDisabled,
+              ]}
+            >
+              {purchaseBusy ? (
+                <ActivityIndicator color={colors.darkBrown} />
+              ) : (
+                <Text style={styles.adRemovalBtnText}>High noon Pro</Text>
+              )}
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="구매 복원"
+              disabled={purchaseBusy}
+              onPress={onRestorePurchases}
+              style={({ pressed }) => [styles.restoreBtn, pressed && styles.restoreBtnPressed]}
+            >
+              <Text style={styles.restoreBtnText}>구매 복원</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
     </View>
     </PhoneStageShell>
@@ -168,5 +265,73 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.ochre,
     letterSpacing: 2,
+  },
+  adRemovalRow: {
+    marginTop: 16,
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  proRow: {
+    alignItems: 'center',
+    gap: 10,
+  },
+  proColumn: {
+    alignItems: 'center',
+    gap: 10,
+  },
+  manageSubBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(45, 28, 14, 0.95)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 165, 116, 0.45)',
+    minWidth: 160,
+    alignItems: 'center',
+  },
+  manageSubBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.cream,
+  },
+  restoreBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  restoreBtnPressed: {
+    opacity: 0.75,
+  },
+  restoreBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.sand,
+    textDecorationLine: 'underline',
+  },
+  adFreeLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.sand,
+    letterSpacing: 0.5,
+  },
+  adRemovalBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    backgroundColor: 'rgba(212, 165, 116, 0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 165, 116, 0.55)',
+    minWidth: 220,
+    alignItems: 'center',
+  },
+  adRemovalBtnPressed: {
+    opacity: 0.88,
+  },
+  adRemovalBtnDisabled: {
+    opacity: 0.55,
+  },
+  adRemovalBtnText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: colors.cream,
   },
 });

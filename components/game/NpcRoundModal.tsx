@@ -13,12 +13,16 @@ export type NpcRoundModalData =
       playerMs: number;
       npcMs: number | null;
       npcMisfire?: boolean;
+      /** 라스트 스탠드로 역전 승 */
+      lastStand?: boolean;
     }
   | {
       kind: 'loss';
       reason: NpcRoundLossReason;
       playerMs: number | null;
       npcMs: number | null;
+      /** 망령 사수 한 번 더로 하트 유지 */
+      revive?: boolean;
     };
 
 type Props = {
@@ -27,9 +31,19 @@ type Props = {
   onContinue: () => void;
   /** 승리 라운드마다 증가 → 폭죽 재생 */
   winBurstId: number;
+  /** 붉은 로사 — 승리 직후 헤드샷 선택 */
+  headshotOffered?: boolean;
+  onHeadshotPress?: () => void;
 };
 
-export function NpcRoundModal({ visible, data, onContinue, winBurstId }: Props) {
+export function NpcRoundModal({
+  visible,
+  data,
+  onContinue,
+  winBurstId,
+  headshotOffered = false,
+  onHeadshotPress,
+}: Props) {
   const m = usePhoneStageMetrics();
   const halfH = m.stageHeight / 2;
 
@@ -70,6 +84,9 @@ export function NpcRoundModal({ visible, data, onContinue, winBurstId }: Props) 
               <>
                 <Text style={styles.badge}>승리</Text>
                 <Text style={styles.title}>라운드 승리!</Text>
+                {data.lastStand ? (
+                  <Text style={styles.abilityTag}>라스트 스탠드!</Text>
+                ) : null}
                 <Text style={styles.line}>
                   나: <Text style={styles.em}>{formatReactionMs(data.playerMs)} ms</Text>
                 </Text>
@@ -90,6 +107,9 @@ export function NpcRoundModal({ visible, data, onContinue, winBurstId }: Props) 
               <>
                 <Text style={[styles.badge, styles.badgeLoss]}>패배</Text>
                 <Text style={styles.title}>라운드 패배!</Text>
+                {data.revive ? (
+                  <Text style={styles.abilityTag}>한 번 더 — 하트 유지!</Text>
+                ) : null}
                 <Text style={styles.reasonSub}>
                   {data.reason === 'early' && '뱅 전에 쐈다 (얼리)'}
                   {data.reason === 'timeout' && '시간 안에 쏘지 못했다'}
@@ -107,6 +127,16 @@ export function NpcRoundModal({ visible, data, onContinue, winBurstId }: Props) 
                 ) : null}
               </>
             )}
+            {data.kind === 'win' && headshotOffered && onHeadshotPress ? (
+              <Pressable
+                accessibilityLabel="헤드샷 사용"
+                accessibilityRole="button"
+                onPress={onHeadshotPress}
+                style={[styles.btn, styles.btnHeadshot]}
+              >
+                <Text style={styles.btnTextHeadshot}>헤드샷 사용</Text>
+              </Pressable>
+            ) : null}
             <Pressable
               accessibilityLabel="계속"
               accessibilityRole="button"
@@ -178,6 +208,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.cream,
   },
+  abilityTag: {
+    marginTop: 8,
+    fontSize: 15,
+    fontWeight: '800',
+    color: colors.ochre,
+    letterSpacing: 1,
+  },
   reasonSub: {
     marginTop: 8,
     fontSize: 15,
@@ -200,10 +237,23 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: colors.ochre,
   },
+  btnHeadshot: {
+    marginTop: 14,
+    backgroundColor: colors.rustRed,
+    borderWidth: 2,
+    borderColor: colors.cream,
+  },
   btnText: {
     textAlign: 'center',
     fontWeight: '800',
     color: colors.darkBrown,
     fontSize: 16,
+  },
+  btnTextHeadshot: {
+    textAlign: 'center',
+    fontWeight: '900',
+    color: colors.cream,
+    fontSize: 16,
+    letterSpacing: 2,
   },
 });

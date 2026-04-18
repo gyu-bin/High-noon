@@ -11,7 +11,10 @@ import {
 import { colors } from '@/constants/theme';
 
 type Props = {
-  source: ImageSourcePropType;
+  /** 배경 이미지. `solidColor`만 쓰면 생략 가능 */
+  source?: ImageSourcePropType;
+  /** 이미지 에셋 없을 때 등 단색 전체 배경 */
+  solidColor?: string;
   children: React.ReactNode;
   /** 바깥 컨테이너 — 너비·높이 지정 시 레이아웃이 더 안정적 */
   style?: StyleProp<ViewStyle>;
@@ -27,6 +30,7 @@ type Props = {
  */
 export function SceneBackground({
   source,
+  solidColor,
   children,
   style,
   dimColor = 'rgba(20, 12, 8, 0.42)',
@@ -37,17 +41,28 @@ export function SceneBackground({
   const w = contentWidth ?? dw;
   const h = contentHeight ?? dh;
 
+  const useSolid = solidColor != null && source == null;
+
   return (
-    <View style={[styles.root, { width: w, height: h }, style]}>
-      <Image
-        pointerEvents="none"
-        source={source}
-        style={[styles.bgImage, { width: w, height: h }]}
-        contentFit="cover"
-        cachePolicy="memory-disk"
-        priority="high"
-        transition={0}
-      />
+    <View
+      style={[
+        styles.root,
+        { width: w, height: h },
+        useSolid && { backgroundColor: solidColor },
+        style,
+      ]}
+    >
+      {useSolid ? null : (
+        <Image
+          pointerEvents="none"
+          source={source!}
+          style={[styles.bgImage, { width: w, height: h }]}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          priority="high"
+          transition={0}
+        />
+      )}
       <View pointerEvents="none" style={[styles.dim, { backgroundColor: dimColor }]} />
       <View style={styles.foreground} pointerEvents="box-none">
         {children}
