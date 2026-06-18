@@ -9,9 +9,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/branding/splash.png",
+      "image": "./assets/images/image/title_hero_menu.png",
       "resizeMode": "cover",
-      "backgroundColor": "#2C1A0E"
+      "backgroundColor": "#1A0C06"
     },
     "ios": {
       "supportsTablet": true,
@@ -43,9 +43,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/branding/splash.png",
+          "image": "./assets/images/image/title_hero_menu.png",
           "resizeMode": "cover",
-          "backgroundColor": "#2C1A0E"
+          "backgroundColor": "#1A0C06"
         }
       ],
       "expo-font",

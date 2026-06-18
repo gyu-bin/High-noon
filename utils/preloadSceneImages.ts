@@ -8,6 +8,13 @@ function assetUri(src: number): string | null {
   return r?.uri ?? null;
 }
 
+/** 타이틀·메뉴 배경만 먼저 — 스플래시 → 첫 화면 전환 시 깜빡임 방지 */
+export async function preloadTitleHero(): Promise<void> {
+  const uri = assetUri(gameImages.titleHero);
+  if (!uri) return;
+  await Image.prefetch(uri, { cachePolicy: 'memory-disk' }).catch(() => false);
+}
+
 /** 결투·결과 화면 배경 — 첫 라운드에서 디코딩 지연으로 빈 배경이 보이지 않도록 선캐시 */
 export async function preloadSceneImages(): Promise<void> {
   const uris = [

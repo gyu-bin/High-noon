@@ -32,7 +32,7 @@ export function WesternHomeBackground({
           contentPosition="center"
           cachePolicy="memory-disk"
           priority="high"
-          transition={200}
+          transition={0}
         />
       </View>
 

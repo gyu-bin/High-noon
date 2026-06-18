@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,11 +24,11 @@ import { useProgressStore } from '@/store/progressStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { playBgm, syncBgmWithSettings } from '@/utils/bgmService';
-import {
-  presentCustomerCenter,
-  presentSubscriptionPaywall,
-  restorePurchases,
-} from '@/utils/purchaseService';
+// import {
+//   presentCustomerCenter,
+//   presentSubscriptionPaywall,
+//   restorePurchases,
+// } from '@/utils/purchaseService';
 
 export default function MenuScreen() {
   const router = useRouter();
@@ -44,38 +43,38 @@ export default function MenuScreen() {
   const setSoundEnabled = useSettingsStore((s) => s.setSoundEnabled);
   const setMusicEnabled = useSettingsStore((s) => s.setMusicEnabled);
   const setHapticEnabled = useSettingsStore((s) => s.setHapticEnabled);
-  const isAdFree = useProgressStore((s) => s.isAdFree);
-  const [purchaseBusy, setPurchaseBusy] = useState(false);
+  // const isAdFree = useProgressStore((s) => s.isAdFree);
+  // const [purchaseBusy, setPurchaseBusy] = useState(false);
 
-  const onOpenProPaywall = useCallback(async () => {
-    if (isAdFree || purchaseBusy) return;
-    setPurchaseBusy(true);
-    try {
-      await presentSubscriptionPaywall();
-    } finally {
-      setPurchaseBusy(false);
-    }
-  }, [isAdFree, purchaseBusy]);
+  // const onOpenProPaywall = useCallback(async () => {
+  //   if (isAdFree || purchaseBusy) return;
+  //   setPurchaseBusy(true);
+  //   try {
+  //     await presentSubscriptionPaywall();
+  //   } finally {
+  //     setPurchaseBusy(false);
+  //   }
+  // }, [isAdFree, purchaseBusy]);
 
-  const onRestorePurchases = useCallback(async () => {
-    if (purchaseBusy) return;
-    setPurchaseBusy(true);
-    try {
-      await restorePurchases();
-    } finally {
-      setPurchaseBusy(false);
-    }
-  }, [purchaseBusy]);
+  // const onRestorePurchases = useCallback(async () => {
+  //   if (purchaseBusy) return;
+  //   setPurchaseBusy(true);
+  //   try {
+  //     await restorePurchases();
+  //   } finally {
+  //     setPurchaseBusy(false);
+  //   }
+  // }, [purchaseBusy]);
 
-  const onManageSubscription = useCallback(async () => {
-    if (purchaseBusy) return;
-    setPurchaseBusy(true);
-    try {
-      await presentCustomerCenter();
-    } finally {
-      setPurchaseBusy(false);
-    }
-  }, [purchaseBusy]);
+  // const onManageSubscription = useCallback(async () => {
+  //   if (purchaseBusy) return;
+  //   setPurchaseBusy(true);
+  //   try {
+  //     await presentCustomerCenter();
+  //   } finally {
+  //     setPurchaseBusy(false);
+  //   }
+  // }, [purchaseBusy]);
 
   useScreenBgm('menu');
 
@@ -190,59 +189,11 @@ export default function MenuScreen() {
             </Text>
           </View>
 
+          {/* 인앱 결제 UI 비활성화
           <View style={styles.adRemovalRow}>
-            {isAdFree ? (
-              <View style={styles.proRow}>
-                <Text style={styles.adFreeLabel}>High noon Pro ✓</Text>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="구독 및 구매 관리"
-                  disabled={purchaseBusy}
-                  onPress={onManageSubscription}
-                  style={({ pressed }) => [
-                    styles.manageSubBtn,
-                    pressed && styles.btnPressed,
-                    purchaseBusy && styles.btnDisabled,
-                  ]}
-                >
-                  {purchaseBusy ? (
-                    <ActivityIndicator color={colors.cream} />
-                  ) : (
-                    <Text style={styles.manageSubBtnText}>구독 관리</Text>
-                  )}
-                </Pressable>
-              </View>
-            ) : (
-              <View style={styles.proColumn}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="High noon Pro 구독"
-                  disabled={purchaseBusy}
-                  onPress={onOpenProPaywall}
-                  style={({ pressed }) => [
-                    styles.adRemovalBtn,
-                    pressed && styles.btnPressed,
-                    purchaseBusy && styles.btnDisabled,
-                  ]}
-                >
-                  {purchaseBusy ? (
-                    <ActivityIndicator color={colors.cream} />
-                  ) : (
-                    <Text style={styles.adRemovalBtnText}>High noon Pro</Text>
-                  )}
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="구매 복원"
-                  disabled={purchaseBusy}
-                  onPress={onRestorePurchases}
-                  style={({ pressed }) => [styles.restoreBtn, pressed && styles.btnPressed]}
-                >
-                  <Text style={styles.restoreBtnText}>구매 복원</Text>
-                </Pressable>
-              </View>
-            )}
+            ...
           </View>
+          */}
         </ScrollView>
       </View>
     </MetaScreenShell>
@@ -373,6 +324,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     ...metaTextShadow,
   },
+  /* 인앱 결제 UI 비활성화
   adRemovalRow: {
     alignItems: 'center',
     paddingTop: 2,
@@ -438,4 +390,5 @@ const styles = StyleSheet.create({
     color: colors.gold,
     ...metaTextShadow,
   },
+  */
 });
