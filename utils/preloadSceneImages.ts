@@ -11,6 +11,7 @@ function assetUri(src: number): string | null {
 /** 결투·결과 화면 배경 — 첫 라운드에서 디코딩 지연으로 빈 배경이 보이지 않도록 선캐시 */
 export async function preloadSceneImages(): Promise<void> {
   const uris = [
+    assetUri(gameImages.titleHero),
     assetUri(gameImages.duelBackground),
     assetUri(gameImages.winScreen),
     assetUri(gameImages.loseScreen),

@@ -8,6 +8,16 @@ export type NpcTier =
   | 'legend'
   | 'hidden';
 
+/** SPEED(브론즈~골드) / SKILL(플래티넘~) */
+export type NpcZone = 'speed' | 'skill';
+
+/** §3 스프라이트 아키타입 */
+export type NpcArchetype =
+  | 'brown_cowboy'
+  | 'sheriff'
+  | 'red_gunslinger'
+  | 'undead';
+
 /** 결투 타이밍 — `useDuelEngine.start`에 전달 */
 export type NpcDuelTiming = {
   readyCueMinMs: number;

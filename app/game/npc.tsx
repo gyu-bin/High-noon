@@ -1,7 +1,6 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
@@ -13,17 +12,13 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import {
-  NpcCharacterSprite,
-  PlayerCharacterSprite,
-} from '@/components/game/CharacterSprites';
-import {
-  DuelSignalBoard,
   enginePhaseToSignalBoardPhase,
 } from '@/components/game/DuelSignalBoard';
 import {
   AbilityOverlay,
   type AbilityOverlayType,
 } from '@/components/game/AbilityOverlay';
+import { DuelArenaLayout } from '@/components/game/DuelArenaLayout';
 import {
   NpcRoundModal,
   type NpcRoundModalData,
@@ -37,11 +32,11 @@ import {
   pickBattleDayNight,
 } from '@/constants/gameImages';
 import { RM_GAME } from '@/constants/reanimatedGame';
-import { colors } from '@/constants/theme';
-import { FONT_RYE } from '@/constants/fonts';
 import { getNpcById } from '@/constants/npcs';
 import { buildDuelStartParams } from '@/utils/npcDuelParams';
+import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
 import { useDuelEngine, type DuelOutcome, type DuelPhase } from '@/hooks/useDuelEngine';
+import { useScreenBgm } from '@/hooks/useScreenBgm';
 import {
   phoneStageSafeOffsets,
   usePhoneStageMetrics,
@@ -51,17 +46,18 @@ import { selectPaleRiderUnlocked, useProgressStore } from '@/store/progressStore
 import { useSettingsStore } from '@/store/settingsStore';
 import { applyAbility } from '@/utils/characterAbility';
 import { simulateNpcReaction } from '@/utils/npcAI';
+import {
+  npcSpritePoseFromPhase,
+  playerSpritePoseFromPhase,
+} from '@/utils/spritePose';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
+import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
 import { play, playBangShotDuel } from '@/utils/audioService';
 import { speakDuelCue, stopDuelSignalSpeech } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
 
 const WINS_TO_END = 3;
 const HEARTS = 3;
-/** GDD v1.2 — 상단 / 신호판 / 하단 비율 */
-const PANEL_TOP = 0.3;
-const PANEL_MID = 0.25;
-const PANEL_BOTTOM = 0.45;
 
 const TIER_KO: Record<string, string> = {
   bronze: '브론즈',
@@ -73,9 +69,6 @@ const TIER_KO: Record<string, string> = {
   legend: '레전드',
   hidden: '???',
 };
-
-const HEART_FULL = '#E11D48';
-const HEART_EMPTY = 'rgba(245, 230, 200, 0.55)';
 
 function buildLastStandWinData(
   loss: Extract<NpcRoundModalData, { kind: 'loss' }>,
@@ -101,26 +94,12 @@ function buildLastStandWinData(
   };
 }
 
-function UnicodeHeartRow({ filled, max }: { filled: number; max: number }) {
-  return (
-    <View style={styles.heartRow}>
-      {Array.from({ length: max }).map((_, i) => (
-        <Text
-          key={i}
-          style={[styles.heartGlyph, i < filled ? styles.heartFull : styles.heartEmpty]}
-        >
-          {i < filled ? '♥' : '♡'}
-        </Text>
-      ))}
-    </View>
-  );
-}
-
 export default function NpcGameScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const stage = usePhoneStageMetrics();
   const { stageWidth: winW, stageHeight: winH } = stage;
+  const selectedCharacterId = useSettingsStore((s) => s.selectedCharacterId);
   const overlayPad = useMemo(
     () =>
       phoneStageSafeOffsets(stage, {
@@ -147,6 +126,8 @@ export default function NpcGameScreen() {
     () => (Number.isFinite(npcId) ? getNpcById(npcId) : undefined),
     [npcId],
   );
+  const duelBgmTrack = npc?.bossFlag ? ('boss' as const) : ('duel' as const);
+  useScreenBgm(npc ? duelBgmTrack : null, true);
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
 
   const currentRound = useGameStore((s) => s.currentRound);
@@ -172,6 +153,8 @@ export default function NpcGameScreen() {
     resumeTimers,
   } = useDuelEngine();
 
+  useDuelBgmDuck(phase);
+
   const startRoundDuel = useCallback(() => {
     if (!npc) return;
     if (npc.id === 21) {
@@ -194,17 +177,13 @@ export default function NpcGameScreen() {
   const [abilityOverlay, setAbilityOverlay] = useState<AbilityOverlayType>(null);
   const [headshotOffered, setHeadshotOffered] = useState(false);
   const [earlyOverlay, setEarlyOverlay] = useState(false);
-  const [animatePlayerLoss, setAnimatePlayerLoss] = useState(false);
-  const [animateNpcLoss, setAnimateNpcLoss] = useState(false);
+  const [defeatedSide, setDefeatedSide] = useState<'player' | 'npc' | null>(null);
   const [paused, setPaused] = useState(false);
   /** #21 chaos 조합 적용 후 신호판 반영용 */
   const [, setChaosRenderTick] = useState(0);
   const [npcRoundWinBurstId, setNpcRoundWinBurstId] = useState(0);
+  const [playerShootFlash, setPlayerShootFlash] = useState(false);
   const wasPausedRef = useRef(false);
-
-  const topH = Math.round(winH * PANEL_TOP);
-  const midH = Math.round(winH * PANEL_MID);
-  const bottomH = Math.max(0, winH - topH - midH);
 
   const blueRing = useSharedValue(0);
   const playerTapAck = useSharedValue(0);
@@ -259,29 +238,6 @@ export default function NpcGameScreen() {
     modalDataRef.current = modal;
   }, [modal]);
 
-  const npcFall = useSharedValue(0);
-  useEffect(() => {
-    if (animateNpcLoss) {
-      npcFall.value = 0;
-      npcFall.value = withTiming(1, {
-        duration: 520,
-        easing: Easing.out(Easing.cubic),
-        reduceMotion: RM_GAME,
-      });
-    } else {
-      cancelAnimation(npcFall);
-      npcFall.value = 0;
-    }
-  }, [animateNpcLoss, npcFall]);
-
-  const npcFallStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: npcFall.value * 72 },
-      { rotate: `${npcFall.value * 88}deg` },
-    ],
-    opacity: 1 - npcFall.value * 0.22,
-  }));
-
   useEffect(() => {
     if (phase !== '뱅') {
       bangHapticDoneRef.current = false;
@@ -295,7 +251,6 @@ export default function NpcGameScreen() {
     if (npc?.id === 22) {
       return;
     }
-    speakDuelCue('bang');
     void playBangShotDuel();
     void trigger('heavy');
   }, [phase, npc?.id]);
@@ -351,8 +306,12 @@ export default function NpcGameScreen() {
       }
       let cancelled = false;
       void (async () => {
-        await preloadSceneImages();
-        if (cancelled) return;
+        const characterId = useSettingsStore.getState().selectedCharacterId;
+        await Promise.all([
+          preloadSceneImages(),
+          npc ? prefetchDuelSprites(npc.id, characterId) : Promise.resolve(),
+        ]);
+        if (cancelled || !npc) return;
         if (npc?.id !== 21) {
           chaosModeRef.current = 'none';
         }
@@ -379,15 +338,6 @@ export default function NpcGameScreen() {
       startRoundDuel,
     ]),
   );
-
-  useEffect(() => {
-    if (!animatePlayerLoss && !animateNpcLoss) return;
-    const t = setTimeout(() => {
-      setAnimatePlayerLoss(false);
-      setAnimateNpcLoss(false);
-    }, 520);
-    return () => clearTimeout(t);
-  }, [animatePlayerLoss, animateNpcLoss]);
 
   useEffect(() => {
     if (phase !== '결과' || !outcome || !npc) return;
@@ -511,13 +461,12 @@ export default function NpcGameScreen() {
 
     const effectiveWin = modalData.kind === 'win';
 
-    setAnimatePlayerLoss(false);
-    setAnimateNpcLoss(false);
+    setDefeatedSide(null);
 
     if (effectiveWin) {
       setScores(ps + 1, ns);
       if (oh > 0) {
-        setAnimateNpcLoss(true);
+        setDefeatedSide('npc');
         setHearts(ph, oh - 1);
       }
       playerStreakRef.current = streakBefore + 1;
@@ -526,13 +475,14 @@ export default function NpcGameScreen() {
       }
     } else if (reviveFlip) {
       setScores(ps, ns + 1);
+      setDefeatedSide('player');
       setHearts(1, oh);
       playerStreakRef.current = 0;
       setAbilityUsed(true);
     } else {
       setScores(ps, ns + 1);
       if (ph > 0) {
-        setAnimatePlayerLoss(true);
+        setDefeatedSide('player');
         setHearts(ph - 1, oh);
       }
       playerStreakRef.current = 0;
@@ -651,6 +601,7 @@ export default function NpcGameScreen() {
       setAbilityUsed(true);
     }
     setHeadshotOffered(false);
+    setDefeatedSide(null);
     setModalVisible(false);
     setModal(null);
 
@@ -711,10 +662,10 @@ export default function NpcGameScreen() {
     const armed = isBangReactionArmed();
     if (armed) {
       pulsePlayerTapAck('bang');
-      void trigger('heavy');
     } else {
       pulsePlayerTapAck('other');
       void trigger('light');
+      setPlayerShootFlash(true);
     }
     tap();
   }, [shootCapturesEarly, isBangReactionArmed, pulsePlayerTapAck, tap]);
@@ -732,6 +683,21 @@ export default function NpcGameScreen() {
   }, [resetDuel, router]);
 
   const tierLabel = npc ? (TIER_KO[npc.tier] ?? npc.tier) : '';
+
+  const npcPose = useMemo(() => {
+    if (defeatedSide === 'npc') return 'defeat' as const;
+    return npcSpritePoseFromPhase(phase);
+  }, [defeatedSide, phase]);
+  const playerPose = useMemo(() => {
+    if (defeatedSide === 'player') return 'defeat' as const;
+    return playerSpritePoseFromPhase(phase, playerShootFlash);
+  }, [defeatedSide, phase, playerShootFlash]);
+
+  useEffect(() => {
+    if (phase !== '뱅' && phase !== '결과') {
+      setPlayerShootFlash(false);
+    }
+  }, [phase]);
 
   const battleDayNight = useMemo(
     () => (npc ? pickBattleDayNight(npc.id) : 'day'),
@@ -767,6 +733,7 @@ export default function NpcGameScreen() {
         style={{ width: winW, height: winH }}
         contentWidth={winW}
         contentHeight={winH}
+        dimColor="rgba(12, 8, 5, 0.18)"
       >
         <Animated.View pointerEvents="none" style={[styles.blueRing, blueStyle]} />
 
@@ -785,113 +752,35 @@ export default function NpcGameScreen() {
 
         {npc ? (
           <>
-            <View style={[styles.columnRoot, { width: winW, height: winH }]}>
-              {/* 상단 30% — NPC 패널 */}
-              <View
-                style={[
-                  styles.panelTop,
-                  {
-                    height: topH,
-                    paddingTop: overlayPad.top + 6,
-                    paddingHorizontal: 14,
-                  },
-                ]}
-              >
-                <View style={styles.npcHeaderRow}>
-                  <View style={styles.npcTitleBlock}>
-                    <Text
-                      style={[styles.npcName, { fontFamily: FONT_RYE }]}
-                      numberOfLines={1}
-                    >
-                      {npc.title} {npc.name}
-                    </Text>
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{tierLabel}</Text>
-                    </View>
-                    {npc.bossFlag ? (
-                      <Ionicons name="skull" size={22} color={colors.cream} style={styles.bossSkull} />
-                    ) : null}
-                  </View>
-                </View>
-                <UnicodeHeartRow filled={opponentHearts} max={HEARTS} />
-                <View style={styles.npcFigSlot}>
-                  <Animated.View style={npcFallStyle}>
-                    <NpcCharacterSprite
-                      npcId={npc.id}
-                      width={Math.min(200, Math.floor(winW * 0.5))}
-                      height={Math.min(118, Math.floor(topH * 0.42))}
-                      flipHorizontal
-                      style={styles.duelFigMatte}
-                    />
-                  </Animated.View>
-                </View>
-              </View>
-
-              {/* 중앙 25% — 신호판 */}
-              <View style={[styles.panelMid, { height: midH, paddingHorizontal: 12 }]}>
-                <DuelSignalBoard
-                  phase={enginePhaseToSignalBoardPhase(phase)}
-                  blindBangText={blindBangText}
-                  invertSignalColors={invertSignalColors}
-                />
-              </View>
-
-              {/* 하단 45% — 플레이어 + SHOOT */}
-              <View
-                style={[
-                  styles.panelBottom,
-                  {
-                    height: bottomH,
-                    paddingBottom: insets.bottom + 10,
-                    paddingHorizontal: 14,
-                  },
-                ]}
-              >
-                <Animated.View
-                  pointerEvents="none"
-                  style={[styles.playerTapAckGlow, playerTapAckStyle]}
-                />
-                <View style={styles.playerFigSlot}>
-                  <PlayerCharacterSprite
-                    width={Math.min(200, Math.floor(winW * 0.52))}
-                    height={Math.min(124, Math.floor(bottomH * 0.38))}
-                    style={styles.duelFigMatte}
-                  />
-                </View>
-                <UnicodeHeartRow filled={playerHearts} max={HEARTS} />
-                <Text style={styles.scoreHint}>
-                  {playerScore} — {opponentScore} (선 {WINS_TO_END}승)
-                </Text>
-                <Pressable
-                  accessibilityLabel="SHOOT"
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: !shootCapturesEarly }}
-                  accessibilityHint={
-                    shootActive
-                      ? '뱅 신호 직후 반응으로 탭합니다'
-                      : '준비·집중 중 탭 시 즉시 패배합니다. 뱅 이후에만 유효합니다'
-                  }
-                  disabled={!shootCapturesEarly}
-                  onPress={onShootPress}
-                  style={[
-                    styles.shootBtn,
-                    !shootActive && styles.shootBtnDim,
-                  ]}
-                >
-                  <Text style={styles.shootBtnText}>SHOOT</Text>
-                </Pressable>
-              </View>
-            </View>
-
-            <Pressable
-              accessibilityLabel="일시정지"
-              disabled={phase === '페이크'}
-              onPress={() => setPaused(true)}
-              style={[styles.pauseBtn, { top: overlayPad.top, right: overlayPad.right }]}
-              hitSlop={12}
-            >
-              <Ionicons name="pause-circle" size={40} color={colors.cream} />
-            </Pressable>
+            <DuelArenaLayout
+              width={winW}
+              height={winH}
+              paddingTop={overlayPad.top}
+              paddingBottom={insets.bottom}
+              paddingRight={overlayPad.right}
+              npcId={npc.id}
+              npcTitle={npc.title}
+              npcName={npc.name}
+              tierLabel={tierLabel}
+              bossFlag={npc.bossFlag}
+              npcPose={npcPose}
+              playerCharacterId={selectedCharacterId}
+              playerPose={playerPose}
+              signalPhase={enginePhaseToSignalBoardPhase(phase)}
+              blindBangText={blindBangText}
+              invertSignalColors={invertSignalColors}
+              opponentHearts={opponentHearts}
+              playerHearts={playerHearts}
+              playerScore={playerScore}
+              opponentScore={opponentScore}
+              shootCapturesEarly={shootCapturesEarly}
+              shootActive={shootActive}
+              onShootPress={onShootPress}
+              onPause={() => setPaused(true)}
+              pauseDisabled={phase === '페이크'}
+              playerTapAckStyle={playerTapAckStyle}
+              hideBottomHud={modalVisible}
+            />
 
             <NpcRoundModal
               visible={modalVisible}
@@ -900,6 +789,7 @@ export default function NpcGameScreen() {
               winBurstId={npcRoundWinBurstId}
               headshotOffered={headshotOffered}
               onHeadshotPress={onHeadshotPress}
+              paddingBottom={insets.bottom}
             />
 
             <AbilityOverlay
@@ -922,132 +812,6 @@ export default function NpcGameScreen() {
 }
 
 const styles = StyleSheet.create({
-  columnRoot: {
-    flexDirection: 'column',
-    zIndex: 5,
-  },
-  panelTop: {
-    justifyContent: 'flex-start',
-    gap: 6,
-  },
-  panelMid: {
-    justifyContent: 'center',
-    alignItems: 'stretch',
-  },
-  panelBottom: {
-    justifyContent: 'flex-end',
-    gap: 10,
-    position: 'relative',
-  },
-  npcHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  npcTitleBlock: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: 8,
-  },
-  npcName: {
-    flexGrow: 1,
-    flexShrink: 1,
-    minWidth: 100,
-    fontSize: 20,
-    color: colors.ochre,
-  },
-  bossSkull: {
-    marginLeft: 2,
-  },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: '#3D2414',
-    borderWidth: 1,
-    borderColor: colors.sand,
-  },
-  badgeText: {
-    color: colors.cream,
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  heartRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 2,
-  },
-  heartGlyph: {
-    fontSize: 30,
-    lineHeight: 34,
-  },
-  heartFull: {
-    color: HEART_FULL,
-  },
-  heartEmpty: {
-    color: HEART_EMPTY,
-  },
-  npcFigSlot: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    minHeight: 0,
-  },
-  playerFigSlot: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 0,
-  },
-  duelFigMatte: {
-    borderRadius: 12,
-    backgroundColor: 'rgba(20, 12, 8, 0.45)',
-    borderWidth: 2,
-    borderColor: colors.sand,
-  },
-  scoreHint: {
-    textAlign: 'center',
-    color: colors.cream,
-    opacity: 0.88,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  shootBtn: {
-    width: '100%',
-    paddingVertical: 16,
-    borderRadius: 12,
-    backgroundColor: '#8B1A1A',
-    borderWidth: 3,
-    borderColor: colors.ochre,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  shootBtnDim: {
-    opacity: 0.4,
-  },
-  shootBtnText: {
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 6,
-    color: colors.cream,
-  },
-  playerTapAckGlow: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    top: 0,
-    backgroundColor: 'rgba(255, 236, 200, 0.82)',
-    zIndex: 2,
-  },
-  pauseBtn: {
-    position: 'absolute',
-    zIndex: 200,
-    padding: 4,
-    borderRadius: 22,
-    backgroundColor: 'rgba(20, 12, 8, 0.55)',
-  },
   paleDim: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.52)',

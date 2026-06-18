@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
 import { NpcCharacterSprite } from '@/components/game/CharacterSprites';
+import { BOSS_CARD_BORDER, TIER_BADGE } from '@/constants/npcVisual';
 import { colors } from '@/constants/theme';
 import type { NpcDefinition } from '@/types/npc';
 import { formatReactionMs } from '@/utils/formatReactionMs';
@@ -13,7 +14,6 @@ type Props = {
   cleared: boolean;
   bestMs: number | null;
   onPress?: () => void;
-  /** 레전드 해금 직후 카드 등장 딜레이(ms) */
   revealDelayMs?: number;
 };
 
@@ -26,36 +26,55 @@ export function NpcSelectCard({
   revealDelayMs,
 }: Props) {
   const boss = npc.bossFlag;
+  const badge = TIER_BADGE[npc.tier];
+  const spriteOpacity = locked ? 0.35 : cleared ? 1 : 0.8;
 
   const inner = (
-    <View style={[styles.card, boss && styles.cardBoss, locked && styles.cardLocked]}>
-      <View style={styles.iconCircle}>
-        <NpcCharacterSprite npcId={npc.id} width={44} height={44} />
-      </View>
-
-      <View style={styles.mid}>
-        <Text style={[styles.name, locked && styles.dim]} numberOfLines={1}>
-          {npc.name}
-        </Text>
-        <Text style={[styles.title, locked && styles.dim]} numberOfLines={1}>
-          {npc.title}
-        </Text>
-        <Text style={[styles.ms, locked && styles.dim]}>
-          목표 반응 {npc.reactionMs} ms
-        </Text>
-        {cleared && bestMs != null ? (
-          <Text style={styles.best}>최고 {formatReactionMs(bestMs)} ms</Text>
+    <View
+      style={[
+        styles.card,
+        boss && styles.cardBoss,
+        locked && styles.cardLocked,
+      ]}
+    >
+      <View style={[styles.spriteWrap, { opacity: spriteOpacity }]}>
+        <NpcCharacterSprite
+          npcId={npc.id}
+          width={56}
+          height={56}
+          pose="idle"
+        />
+        {boss ? (
+          <Ionicons
+            name="star"
+            size={14}
+            color={BOSS_CARD_BORDER}
+            style={styles.bossStar}
+          />
         ) : null}
       </View>
 
-      <View style={styles.right}>
-        {cleared ? (
-          <Ionicons name="checkmark-circle" size={28} color="#D4AF37" />
-        ) : null}
-        {locked ? (
-          <Ionicons name="lock-closed" size={24} color={colors.sand} style={styles.lock} />
-        ) : null}
+      <Text style={[styles.name, locked && styles.nameLocked]} numberOfLines={2}>
+        {[npc.title, npc.name].filter(Boolean).join(' ')}
+      </Text>
+
+      <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+        <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
       </View>
+
+      {!locked ? (
+        <Text style={styles.targetMs}>{npc.reactionMs} ms</Text>
+      ) : null}
+
+      {cleared && bestMs != null ? (
+        <Text style={styles.best}>✓ {formatReactionMs(bestMs)} ms</Text>
+      ) : null}
+
+      {locked ? (
+        <Ionicons name="lock-closed" size={20} color={colors.sand} style={styles.lock} />
+      ) : cleared ? (
+        <Ionicons name="checkmark-circle" size={20} color="#D4AF37" style={styles.lock} />
+      ) : null}
     </View>
   );
 
@@ -68,15 +87,16 @@ export function NpcSelectCard({
       inner
     );
 
-  const a11yName = `${npc.title} ${npc.name}`;
+  const a11yName = locked
+    ? `잠긴 NPC ${npc.title} ${npc.name}`
+    : `${npc.title} ${npc.name}`;
 
   if (locked || !onPress) {
     return (
       <View
         accessibilityRole="button"
         accessibilityState={{ disabled: true }}
-        accessibilityLabel={`${a11yName}, 잠금`}
-        accessibilityHint="이전 NPC를 클리어하면 도전할 수 있습니다"
+        accessibilityLabel={a11yName}
         style={styles.outer}
       >
         {wrapped}
@@ -88,7 +108,6 @@ export function NpcSelectCard({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${a11yName} 도전`}
-      accessibilityHint="탭하면 이 NPC와 결투를 시작합니다"
       onPress={onPress}
       style={({ pressed }) => [styles.outer, pressed && styles.pressed]}
     >
@@ -99,75 +118,80 @@ export function NpcSelectCard({
 
 const styles = StyleSheet.create({
   outer: {
-    marginBottom: 12,
+    flex: 1,
+    marginHorizontal: 4,
+    marginBottom: 10,
+    minWidth: 0,
   },
   pressed: {
     opacity: 0.92,
-    transform: [{ scale: 0.99 }],
+    transform: [{ scale: 0.98 }],
   },
   card: {
-    flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
     borderRadius: 12,
     backgroundColor: '#3D2414',
     borderWidth: 2,
     borderColor: colors.sand,
-    gap: 12,
+    minHeight: 148,
   },
   cardBoss: {
-    borderColor: colors.rustRed,
-    borderWidth: 2,
+    borderColor: BOSS_CARD_BORDER,
+    backgroundColor: '#4A2E18',
   },
   cardLocked: {
-    opacity: 0.42,
-  },
-  iconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
     backgroundColor: '#2A1810',
-    borderWidth: 2,
-    borderColor: colors.sand,
+    borderColor: '#4A3A32',
+    opacity: 0.55,
+  },
+  spriteWrap: {
+    width: 60,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
+    marginBottom: 4,
   },
-  mid: {
-    flex: 1,
-    minWidth: 0,
+  bossStar: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
   },
   name: {
-    fontSize: 18,
+    fontSize: 13,
     fontWeight: '800',
     color: colors.cream,
+    textAlign: 'center',
   },
-  title: {
-    marginTop: 2,
-    fontSize: 13,
+  nameLocked: {
     color: colors.sand,
+    opacity: 0.75,
   },
-  ms: {
+  badge: {
     marginTop: 6,
-    fontSize: 13,
-    color: colors.ochre,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  targetMs: {
+    marginTop: 4,
+    fontSize: 11,
     fontWeight: '600',
+    color: colors.ochre,
   },
   best: {
-    marginTop: 4,
-    fontSize: 12,
+    marginTop: 2,
+    fontSize: 10,
     fontWeight: '700',
     color: '#D4AF37',
   },
-  dim: {
-    color: colors.sand,
-  },
-  right: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    minWidth: 32,
-  },
   lock: {
-    marginTop: 6,
+    marginTop: 4,
   },
 });

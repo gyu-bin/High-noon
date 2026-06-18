@@ -7,6 +7,7 @@ export {
 } from './gameStore';
 export {
   selectAverageReactionMs,
+  selectNpcClearCount,
   type NpcProgressRow,
   useProgressStore,
 } from './progressStore';

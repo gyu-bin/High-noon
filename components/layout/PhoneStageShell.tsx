@@ -14,7 +14,12 @@ export function PhoneStageShell({ children, style, ...rest }: Props) {
   const { stageWidth, stageHeight } = usePhoneStageMetrics();
   return (
     <View style={[styles.outer, style]} {...rest}>
-      <View style={[styles.stage, { width: stageWidth, height: stageHeight }]}>
+      <View
+        style={[
+          styles.stage,
+          { width: stageWidth, maxHeight: stageHeight },
+        ]}
+      >
         {children}
       </View>
     </View>
@@ -25,10 +30,11 @@ const styles = StyleSheet.create({
   outer: {
     flex: 1,
     backgroundColor: colors.darkBrown,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   stage: {
+    flex: 1,
     overflow: 'hidden',
   },
 });

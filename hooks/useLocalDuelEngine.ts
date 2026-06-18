@@ -55,12 +55,26 @@ function resolveWinner(
 }
 
 const BANG_TIMEOUT_MS = 2500;
+/** 첫 반응 후 상대 동시 탭 허용 — 짧게 두고 바로 라운드 마감 */
+const BANG_OPPONENT_WINDOW_MS = 220;
+
+export type LocalBangTapEvent = {
+  player: LocalPlayerId;
+  ms: number;
+};
 
 /**
  * 로컬 2인 결투. 뱅은 두 명 반응 ms가 모두 쌓이거나 뱅 타임아웃까지 라운드를 유예한다.
  * `commitLocalTouches`로 동시 터치·동시 얼리를 한 번에 반영하고, 입력은 `phaseRef`로 판정한다.
  */
-export function useLocalDuelEngine() {
+export function useLocalDuelEngine(options?: {
+  onBangEnter?: () => void;
+  onBangTap?: (event: LocalBangTapEvent) => void;
+}) {
+  const onBangEnterRef = useRef(options?.onBangEnter);
+  const onBangTapRef = useRef(options?.onBangTap);
+  onBangEnterRef.current = options?.onBangEnter;
+  onBangTapRef.current = options?.onBangTap;
   const [phase, setPhase] = useState<DuelPhase>('대기');
   const [signalText, setSignalText] = useState('');
   const [outcome, setOutcome] = useState<LocalRoundOutcome | null>(null);
@@ -69,6 +83,7 @@ export function useLocalDuelEngine() {
   const readyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const steadyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bangTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const opponentWindowRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bangT0Ref = useRef<number | null>(null);
   const bangArmedRef = useRef(false);
@@ -93,6 +108,7 @@ export function useLocalDuelEngine() {
     clearTimeoutRef(readyTimerRef);
     clearTimeoutRef(steadyTimerRef);
     clearTimeoutRef(bangTimeoutRef);
+    clearTimeoutRef(opponentWindowRef);
   }, []);
 
   const finishRound = useCallback((next: LocalRoundOutcome) => {
@@ -163,10 +179,12 @@ export function useLocalDuelEngine() {
       p1MsRef.current = null;
       p2MsRef.current = null;
       bangFinalizedRef.current = false;
+      clearTimeoutRef(opponentWindowRef);
       const t0 = performance.now();
       bangT0Ref.current = t0;
       bangArmedRef.current = true;
       bangTimeoutDeadlineRef.current = Date.now() + BANG_TIMEOUT_MS;
+      onBangEnterRef.current?.();
       phaseRef.current = '뱅';
       setPhase('뱅');
       setSignalText('Bang!');
@@ -248,17 +266,33 @@ export function useLocalDuelEngine() {
         bangT0Ref.current != null &&
         !bangFinalizedRef.current
       ) {
+        const tTap = performance.now();
+        let anyNewTap = false;
         for (const player of players) {
           if (player === 'p1' && p1MsRef.current == null) {
-            p1MsRef.current = performance.now() - bangT0Ref.current;
+            p1MsRef.current = tTap - bangT0Ref.current;
+            anyNewTap = true;
+            onBangTapRef.current?.({ player: 'p1', ms: p1MsRef.current });
           } else if (player === 'p2' && p2MsRef.current == null) {
-            p2MsRef.current = performance.now() - bangT0Ref.current;
+            p2MsRef.current = tTap - bangT0Ref.current;
+            anyNewTap = true;
+            onBangTapRef.current?.({ player: 'p2', ms: p2MsRef.current });
           }
         }
         if (p1MsRef.current != null && p2MsRef.current != null) {
           clearTimeoutRef(bangTimeoutRef);
+          clearTimeoutRef(opponentWindowRef);
           bangTimeoutDeadlineRef.current = null;
           tryFinishBang();
+        } else if (anyNewTap && opponentWindowRef.current == null) {
+          opponentWindowRef.current = setTimeout(() => {
+            opponentWindowRef.current = null;
+            if (bangFinalizedRef.current) return;
+            if (p1MsRef.current == null && p2MsRef.current == null) return;
+            clearTimeoutRef(bangTimeoutRef);
+            bangTimeoutDeadlineRef.current = null;
+            completeBangRound(duelSeqRef.current);
+          }, BANG_OPPONENT_WINDOW_MS);
         }
         return;
       }
@@ -319,7 +353,7 @@ export function useLocalDuelEngine() {
         });
       }
     },
-    [clearAllTimers, finishRound, tryFinishBang],
+    [clearAllTimers, completeBangRound, finishRound, tryFinishBang],
   );
 
   const tap = useCallback(
@@ -359,6 +393,7 @@ export function useLocalDuelEngine() {
     clearTimeoutRef(readyTimerRef);
     clearTimeoutRef(steadyTimerRef);
     clearTimeoutRef(bangTimeoutRef);
+    clearTimeoutRef(opponentWindowRef);
   }, []);
 
   const resumeTimers = useCallback(() => {

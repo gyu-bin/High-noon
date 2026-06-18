@@ -88,5 +88,5 @@ export function getBackgroundImage(
   if (source != null) {
     return { kind: 'image', source };
   }
-  return { kind: 'solid', color: TIER_BACKGROUND_FALLBACK[tier] };
+  return { kind: 'image', source: gameImages.duelBackground };
 }

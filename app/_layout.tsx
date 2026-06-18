@@ -10,6 +10,7 @@ import 'react-native-reanimated';
 import { colors } from '@/constants/theme';
 import { initAds, preloadInterstitial } from '@/utils/adService';
 import { preloadAll } from '@/utils/audioService';
+import { preloadBgm, bootMenuBgm } from '@/utils/bgmService';
 import { initPurchases } from '@/utils/purchaseService';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
 
@@ -26,6 +27,7 @@ export default function RootLayout() {
     if (ready) {
       SplashScreen.hideAsync();
       void preloadAll();
+      void bootMenuBgm();
       void preloadSceneImages();
       void initAds().then(() => preloadInterstitial());
       void initPurchases();
@@ -44,6 +46,7 @@ export default function RootLayout() {
           headerStyle: { backgroundColor: colors.darkBrown },
           headerTintColor: colors.cream,
           headerTitleStyle: { fontWeight: '700', color: colors.cream },
+          headerBackTitle: '뒤로',
           contentStyle: { backgroundColor: colors.darkBrown },
         }}
       >

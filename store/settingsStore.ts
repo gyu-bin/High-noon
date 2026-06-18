@@ -16,11 +16,13 @@ export const LOCAL_MATCH_PRESETS: Record<
 
 type SettingsStoreState = {
   soundEnabled: boolean;
+  musicEnabled: boolean;
   hapticEnabled: boolean;
   localMatchPreset: LocalMatchPreset;
   /** 플레이어 선택 캐릭터 id (1~4) */
   selectedCharacterId: number;
   setSoundEnabled: (value: boolean) => void;
+  setMusicEnabled: (value: boolean) => void;
   setHapticEnabled: (value: boolean) => void;
   setLocalMatchPreset: (preset: LocalMatchPreset) => void;
   setSelectedCharacterId: (id: number) => void;
@@ -30,11 +32,14 @@ export const useSettingsStore = create<SettingsStoreState>()(
   persist(
     (set) => ({
       soundEnabled: true,
+      musicEnabled: true,
       hapticEnabled: true,
       localMatchPreset: 'bo5',
       selectedCharacterId: 1,
 
       setSoundEnabled: (soundEnabled) => set({ soundEnabled }),
+
+      setMusicEnabled: (musicEnabled) => set({ musicEnabled }),
 
       setHapticEnabled: (hapticEnabled) => set({ hapticEnabled }),
 
@@ -47,6 +52,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({
         soundEnabled: s.soundEnabled,
+        musicEnabled: s.musicEnabled,
         hapticEnabled: s.hapticEnabled,
         localMatchPreset: s.localMatchPreset,
         selectedCharacterId: s.selectedCharacterId,
@@ -54,6 +60,8 @@ export const useSettingsStore = create<SettingsStoreState>()(
       merge: (persisted, current) => ({
         ...current,
         ...(persisted as object),
+        musicEnabled:
+          (persisted as Partial<SettingsStoreState>)?.musicEnabled ?? true,
         selectedCharacterId:
           (persisted as Partial<SettingsStoreState>)?.selectedCharacterId ?? 1,
       }),

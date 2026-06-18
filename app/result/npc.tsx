@@ -25,6 +25,7 @@ import { colors } from '@/constants/theme';
 import { FONT_RYE } from '@/constants/fonts';
 import { getNpcById } from '@/constants/npcs';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
+import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { bgmPlay } from '@/utils/audioService';
 import { formatReactionMs } from '@/utils/formatReactionMs';
 import { initAds, preloadInterstitial, showStageCompleteAd } from '@/utils/adService';
@@ -223,6 +224,7 @@ function whoFaster(
 
 export default function NpcResultScreen() {
   const router = useRouter();
+  useScreenBgm(null, true);
   const { stageWidth: winW, stageHeight: winH } = usePhoneStageMetrics();
   const {
     npcId,

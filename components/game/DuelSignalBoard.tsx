@@ -2,7 +2,6 @@ import { useCallback, useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
-  FadeIn,
   cancelAnimation,
   runOnJS,
   useAnimatedStyle,
@@ -12,6 +11,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { DUEL_SIGNAL_SPEC } from '@/constants/npcVisual';
 import { RM_GAME } from '@/constants/reanimatedGame';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
 
@@ -24,6 +24,8 @@ export type DuelSignalBoardProps = {
   blindBangText?: boolean;
   /** #19 등 — 준비↔집중·뱅 색 교환 느낌 */
   invertSignalColors?: boolean;
+  /** panel: 나무 박스 / minimal: 배경 위 플로팅 */
+  variant?: 'panel' | 'minimal';
 };
 
 /** useDuelEngine `대기` → 보드 `idle` */
@@ -35,19 +37,17 @@ export function enginePhaseToSignalBoardPhase(phase: DuelPhase): DuelSignalBoard
 const BG = '#2C1A0E';
 const BORDER = '#C8860A';
 const CREAM = '#F5E6C8';
-const OCHRE = '#C8860A';
-const BANG_RED = '#8B1A1A';
+const BANG_RED = DUEL_SIGNAL_SPEC.bang.color;
 
 function signalLabel(phase: DuelSignalBoardPhase): string {
   switch (phase) {
     case '준비':
-      return '준비';
+      return DUEL_SIGNAL_SPEC.ready.text;
     case '집중':
-      return '집중';
+      return DUEL_SIGNAL_SPEC.steady.text;
     case '페이크':
-      return '뱅!';
     case '뱅':
-      return '뱅!';
+      return DUEL_SIGNAL_SPEC.bang.text;
     default:
       return '';
   }
@@ -61,7 +61,9 @@ export function DuelSignalBoard({
   onFlashComplete,
   blindBangText = false,
   invertSignalColors = false,
+  variant = 'panel',
 }: DuelSignalBoardProps) {
+  const minimal = variant === 'minimal';
   const flashOpacity = useSharedValue(0);
   const pulse = useSharedValue(1);
 
@@ -98,10 +100,11 @@ export function DuelSignalBoard({
 
   useEffect(() => {
     if (phase === '뱅' || phase === '페이크') {
-      flashOpacity.value = 0.4;
+      cancelAnimation(flashOpacity);
+      flashOpacity.value = minimal ? 0.36 : 0.48;
       flashOpacity.value = withTiming(
         0,
-        { duration: 300, reduceMotion: RM_GAME },
+        { duration: minimal ? 160 : 220, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME },
         (finished) => {
           if (finished) {
             runOnJS(fireComplete)();
@@ -112,7 +115,7 @@ export function DuelSignalBoard({
       cancelAnimation(flashOpacity);
       flashOpacity.value = 0;
     }
-  }, [phase, flashOpacity, fireComplete]);
+  }, [phase, flashOpacity, fireComplete, minimal]);
 
   const flashStyle = useAnimatedStyle(() => ({
     opacity: flashOpacity.value,
@@ -140,33 +143,49 @@ export function DuelSignalBoard({
     return styles.textReady;
   })();
 
+  const minimalTextShadow = minimal
+    ? {
+        textShadowColor: 'rgba(0,0,0,0.9)',
+        textShadowOffset: { width: 0, height: 3 } as const,
+        textShadowRadius: 10,
+      }
+    : null;
+  const readySize = minimal ? { fontSize: 34, letterSpacing: 3 } : styles.textReadySize;
+  const steadySize = minimal ? { fontSize: 38, letterSpacing: 3 } : styles.textSteadySize;
+  const bangSize = minimal
+    ? { fontSize: 52, letterSpacing: 4, ...minimalTextShadow }
+    : styles.textBangSize;
+
   return (
     <View style={styles.root}>
       <Animated.View
         pointerEvents="none"
         style={[styles.flashOverlay, flashStyle]}
       />
-      <View style={styles.woodPanel}>
-        <Text style={styles.duelLabel}>DUEL ★ ★</Text>
+      <View style={[styles.woodPanel, minimal && styles.woodPanelMinimal]}>
+        {!minimal ? <Text style={styles.duelLabel}>DUEL ★ ★</Text> : null}
         {showLabel ? (
-          <Animated.View
-            key={phase}
-            entering={FadeIn.duration(200)}
-            style={styles.signalBlock}
-          >
+          <Animated.View style={styles.signalBlock}>
             {phase === '집중' || phase === '페이크' ? (
               <Animated.View style={[pulseStyle, styles.pulseWrap]}>
                 <Text
                   style={[
                     textStyle,
-                    phase === '페이크' ? styles.textBangSize : styles.textSteadySize,
+                    phase === '페이크' ? bangSize : steadySize,
+                    minimalTextShadow,
                   ]}
                 >
                   {label}
                 </Text>
               </Animated.View>
             ) : (
-              <Text style={[textStyle, phase === '뱅' ? styles.textBangSize : styles.textReadySize]}>
+              <Text
+                style={[
+                  textStyle,
+                  phase === '뱅' ? bangSize : readySize,
+                  minimalTextShadow,
+                ]}
+              >
                 {label}
               </Text>
             )}
@@ -204,6 +223,12 @@ const styles = StyleSheet.create({
     gap: 8,
     zIndex: 1,
   },
+  woodPanelMinimal: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+  },
   duelLabel: {
     fontSize: 12,
     fontWeight: '800',
@@ -220,23 +245,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   textReady: {
-    color: CREAM,
+    color: DUEL_SIGNAL_SPEC.ready.color,
     fontWeight: '800',
   },
   textReadySize: {
-    fontSize: 28,
+    fontSize: DUEL_SIGNAL_SPEC.ready.fontSize,
     letterSpacing: 2,
   },
   textSteady: {
-    color: OCHRE,
+    color: DUEL_SIGNAL_SPEC.steady.color,
     fontWeight: '900',
   },
   textSteadySize: {
-    fontSize: 34,
+    fontSize: DUEL_SIGNAL_SPEC.steady.fontSize,
     letterSpacing: 2,
   },
   textBang: {
-    color: BANG_RED,
+    color: DUEL_SIGNAL_SPEC.bang.color,
     fontWeight: '900',
   },
   textBangBlind: {
@@ -244,7 +269,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   textBangSize: {
-    fontSize: 44,
+    fontSize: DUEL_SIGNAL_SPEC.bang.fontSize,
     letterSpacing: 3,
     textShadowColor: 'rgba(0,0,0,0.75)',
     textShadowOffset: { width: 0, height: 2 },

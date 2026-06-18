@@ -12,102 +12,106 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
+import { MenuBackButton } from '@/components/ui/MenuBackButton';
+import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { MaskedLegendCard } from '@/components/npc/MaskedLegendCard';
-import { NpcListTierHeader } from '@/components/npc/NpcListTierHeader';
 import { NpcSelectCard } from '@/components/npc/NpcSelectCard';
 import { colors } from '@/constants/theme';
-import { NPCS } from '@/constants/npcs';
-import { selectPaleRiderUnlocked, useProgressStore } from '@/store/progressStore';
-import type { NpcDefinition, NpcTier } from '@/types/npc';
+import { getNpcById, NPCS } from '@/constants/npcs';
+import {
+  selectPaleRiderUnlocked,
+  useProgressStore,
+} from '@/store/progressStore';
+import type { NpcDefinition } from '@/types/npc';
+import { formatReactionMs } from '@/utils/formatReactionMs';
 
-/** 레전드 티어 공개: 마스터 보스 #18 레드 아이 오라클 클리어 후 */
+/** 레전드 공개: #18 레드 아이 오라클 클리어 후 */
 const MASTER_LEGEND_GATE_ID = 18;
 
-const TIER_ORDER: NpcTier[] = [
-  'bronze',
-  'silver',
-  'gold',
-  'platinum',
-  'diamond',
-  'master',
-  'legend',
-  'hidden',
-];
+const GRID_COLUMNS = 3;
 
-const TIER_TITLE: Record<NpcTier, string> = {
-  bronze: '브론즈',
-  silver: '실버',
-  gold: '골드',
-  platinum: '플래티넘',
-  diamond: '다이아',
-  master: '마스터',
-  legend: '레전드',
-  hidden: '???',
-};
-
-type FlatRow =
-  | { type: 'header'; key: string; title: string; legendReveal?: boolean }
+type GridCell =
   | { type: 'npc'; key: string; npc: NpcDefinition; revealDelayMs?: number }
-  | { type: 'masked'; key: string; id: number };
+  | { type: 'masked'; key: string }
+  | { type: 'empty'; key: string };
 
-function buildRows(
+function buildGridCells(
   masterLegendGateCleared: boolean,
   legendRevealBurst: number,
   paleUnlocked: boolean,
-): FlatRow[] {
-  const rows: FlatRow[] = [];
-  for (const tier of TIER_ORDER) {
-    if (tier === 'hidden') {
-      if (!paleUnlocked) continue;
-      rows.push({ type: 'header', key: 'header-hidden', title: TIER_TITLE.hidden });
-      const hidden = NPCS.filter((n) => n.tier === 'hidden');
-      for (const npc of hidden) {
-        rows.push({ type: 'npc', key: `npc-${npc.id}`, npc });
-      }
-      continue;
+): GridCell[] {
+  const cells: GridCell[] = [];
+
+  for (let id = 1; id <= 18; id++) {
+    const npc = getNpcById(id);
+    if (!npc) continue;
+    cells.push({ type: 'npc', key: `npc-${id}`, npc });
+  }
+
+  if (!masterLegendGateCleared) {
+    for (const id of [19, 20, 21]) {
+      cells.push({ type: 'masked', key: `masked-${id}` });
     }
-
-    if (tier === 'legend' && !masterLegendGateCleared) {
-      rows.push({
-        type: 'header',
-        key: 'header-legend-hidden',
-        title: '???',
-      });
-      for (const id of [19, 20, 21]) {
-        rows.push({ type: 'masked', key: `masked-${id}`, id });
-      }
-      continue;
-    }
-
-    rows.push({
-      type: 'header',
-      key:
-        tier === 'legend'
-          ? `header-legend-${legendRevealBurst}`
-          : `header-${tier}`,
-      title: TIER_TITLE[tier],
-      legendReveal: tier === 'legend' && masterLegendGateCleared && legendRevealBurst > 0,
-    });
-
-    const list = NPCS.filter((n) => n.tier === tier);
-    for (const npc of list) {
-      const revealDelayMs =
-        tier === 'legend' && masterLegendGateCleared && legendRevealBurst > 0
-          ? (npc.id - 19) * 90
-          : undefined;
-      rows.push({
+  } else {
+    for (let id = 19; id <= 21; id++) {
+      const npc = getNpcById(id)!;
+      cells.push({
         type: 'npc',
-        key: `npc-${npc.id}`,
+        key: `npc-${id}`,
         npc,
-        revealDelayMs,
+        revealDelayMs:
+          legendRevealBurst > 0 ? (id - 19) * 90 : undefined,
       });
     }
   }
-  return rows;
+
+  if (paleUnlocked) {
+    const pale = getNpcById(22);
+    if (pale) cells.push({ type: 'npc', key: 'npc-22', npc: pale });
+  }
+
+  while (cells.length % GRID_COLUMNS !== 0) {
+    cells.push({ type: 'empty', key: `empty-${cells.length}` });
+  }
+
+  return cells;
+}
+
+function NpcSelectStatsHeader({ paleUnlocked }: { paleUnlocked: boolean }) {
+  const avg = useProgressStore((s) => {
+    if (s.reactionAggregate.count <= 0) return null;
+    return s.reactionAggregate.sumMs / s.reactionAggregate.count;
+  });
+  const clearCount = useProgressStore((s) => {
+    let n = 0;
+    for (const npc of NPCS) {
+      if (s.npcById[npc.id]?.cleared) n += 1;
+    }
+    return n;
+  });
+  const total = paleUnlocked ? NPCS.length : NPCS.length - 1;
+
+  return (
+    <View style={styles.statsBar}>
+      <Text style={styles.statsText}>
+        평균 반응{' '}
+        <Text style={styles.statsValue}>
+          {avg != null ? `${formatReactionMs(avg)} ms` : '—'}
+        </Text>
+      </Text>
+      <Text style={styles.statsText}>
+        클리어{' '}
+        <Text style={styles.statsValue}>
+          {clearCount} / {total}
+        </Text>
+      </Text>
+    </View>
+  );
 }
 
 export default function NpcSelectScreen() {
   const router = useRouter();
+  useScreenBgm('menu');
   const insets = useSafeAreaInsets();
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
   const npcById = useProgressStore((s) => s.npcById);
@@ -124,8 +128,8 @@ export default function NpcSelectScreen() {
     wasLegendHiddenRef.current = !masterLegendGateCleared;
   }, [masterLegendGateCleared]);
 
-  const rows = useMemo(
-    () => buildRows(masterLegendGateCleared, legendRevealBurst, paleUnlocked),
+  const cells = useMemo(
+    () => buildGridCells(masterLegendGateCleared, legendRevealBurst, paleUnlocked),
     [masterLegendGateCleared, legendRevealBurst, paleUnlocked],
   );
 
@@ -139,13 +143,10 @@ export default function NpcSelectScreen() {
     [router],
   );
 
-  const renderItem: ListRenderItem<FlatRow> = useCallback(
+  const renderItem: ListRenderItem<GridCell> = useCallback(
     ({ item }) => {
-      if (item.type === 'header') {
-        const reveal = item.legendReveal ? 'spring' : undefined;
-        return (
-          <NpcListTierHeader title={item.title} revealAnimation={reveal} />
-        );
+      if (item.type === 'empty') {
+        return <View style={styles.emptyCell} />;
       }
       if (item.type === 'masked') {
         return <MaskedLegendCard />;
@@ -158,14 +159,12 @@ export default function NpcSelectScreen() {
             ? !paleUnlocked
             : npc.id > highestUnlocked;
       const row = npcById[npc.id] ?? { cleared: false, bestReactionMs: null };
-      const cleared = row.cleared;
-      const bestMs = row.bestReactionMs;
       return (
         <NpcSelectCard
           npc={npc}
           locked={locked}
-          cleared={cleared}
-          bestMs={bestMs}
+          cleared={row.cleared}
+          bestMs={row.bestReactionMs}
           revealDelayMs={item.revealDelayMs}
           onPress={locked ? undefined : () => onSelect(npc)}
         />
@@ -174,7 +173,7 @@ export default function NpcSelectScreen() {
     [highestUnlocked, npcById, onSelect, paleUnlocked],
   );
 
-  const keyExtractor = useCallback((item: FlatRow) => item.key, []);
+  const keyExtractor = useCallback((item: GridCell) => item.key, []);
 
   return (
     <>
@@ -182,28 +181,20 @@ export default function NpcSelectScreen() {
         options={{
           headerTransparent: false,
           headerBackVisible: false,
-          headerLeft: () => (
-            <Pressable
-              onPress={() => router.back()}
-              hitSlop={12}
-              style={styles.headerBack}
-              accessibilityRole="button"
-              accessibilityLabel="뒤로, 이전 화면"
-            >
-              <Ionicons name="chevron-back" size={22} color={colors.cream} />
-              <Text style={styles.headerBackLabel}>메뉴</Text>
-            </Pressable>
-          ),
+          headerLeft: () => <MenuBackButton onPress={() => router.back()} />,
         }}
       />
       <PhoneStageShell>
         <View style={[styles.root, { paddingBottom: insets.bottom + 16 }]}>
+          <NpcSelectStatsHeader paleUnlocked={paleUnlocked} />
           <FlatList
-            data={rows}
+            data={cells}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
+            numColumns={GRID_COLUMNS}
             style={styles.listFlex}
             contentContainerStyle={styles.list}
+            columnWrapperStyle={styles.row}
             extraData={{ highestUnlocked, npcById, legendRevealBurst, paleUnlocked }}
           />
         </View>
@@ -213,18 +204,6 @@ export default function NpcSelectScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerBack: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingRight: 10,
-    marginLeft: 4,
-  },
-  headerBackLabel: {
-    color: colors.cream,
-    fontSize: 17,
-    fontWeight: '600',
-  },
   root: {
     flex: 1,
     backgroundColor: colors.darkBrown,
@@ -233,8 +212,40 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   list: {
-    paddingHorizontal: 16,
-    paddingTop: 28,
+    paddingHorizontal: 8,
+    paddingTop: 4,
     paddingBottom: 12,
+  },
+  row: {
+    justifyContent: 'flex-start',
+  },
+  emptyCell: {
+    flex: 1,
+    marginHorizontal: 4,
+    marginBottom: 10,
+    minHeight: 148,
+  },
+  statsBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: 8,
+    marginTop: 10,
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: 'rgba(60, 36, 20, 0.92)',
+    borderWidth: 1,
+    borderColor: colors.sand,
+  },
+  statsText: {
+    fontSize: 15,
+    color: colors.cream,
+    fontWeight: '600',
+  },
+  statsValue: {
+    color: colors.ochre,
+    fontWeight: '800',
   },
 });

@@ -30,6 +30,11 @@ yarn-error.*
 .env
 .env*.local
 
+# Python sprite pipeline
+.venv/
+output/
+reference_sprite.png
+
 # TypeScript
 *.tsbuildinfo
 

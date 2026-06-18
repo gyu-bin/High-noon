@@ -38,9 +38,10 @@ export function stopDuelSignalSpeech(): void {
   }
 }
 
-/** Ready / Steady / Bang! TTS (효과음 설정 off 시 생략) */
+/** Ready / Steady TTS · Bang은 총성 SFX에 맡김 (TTS 겹침·스톨 방지) */
 export function speakDuelCue(cue: DuelSpeakCue): void {
   if (!useSettingsStore.getState().soundEnabled) return;
+  if (cue === 'bang') return;
   try {
     Speech.stop();
     const text = PHRASES[cue];

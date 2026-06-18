@@ -11,6 +11,8 @@ import { FONT_RYE } from '@/constants/fonts';
 import { NPCS } from '@/constants/npcs';
 import { useProgressStore } from '@/store/progressStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useScreenBgm } from '@/hooks/useScreenBgm';
+import { playBgm, syncBgmWithSettings } from '@/utils/bgmService';
 import {
   presentCustomerCenter,
   presentSubscriptionPaywall,
@@ -25,8 +27,10 @@ export default function MenuScreen() {
   const unlockedLabel = `${Math.min(highestUnlocked, maxId)} / ${maxId}`;
 
   const soundEnabled = useSettingsStore((s) => s.soundEnabled);
+  const musicEnabled = useSettingsStore((s) => s.musicEnabled);
   const hapticEnabled = useSettingsStore((s) => s.hapticEnabled);
   const setSoundEnabled = useSettingsStore((s) => s.setSoundEnabled);
+  const setMusicEnabled = useSettingsStore((s) => s.setMusicEnabled);
   const setHapticEnabled = useSettingsStore((s) => s.setHapticEnabled);
   const isAdFree = useProgressStore((s) => s.isAdFree);
   const [purchaseBusy, setPurchaseBusy] = useState(false);
@@ -60,6 +64,17 @@ export default function MenuScreen() {
       setPurchaseBusy(false);
     }
   }, [purchaseBusy]);
+
+  useScreenBgm('menu');
+
+  const onMusicToggle = useCallback(
+    (value: boolean) => {
+      setMusicEnabled(value);
+      syncBgmWithSettings();
+      if (value) playBgm('menu');
+    },
+    [setMusicEnabled],
+  );
 
   return (
     <PhoneStageShell>
@@ -102,6 +117,16 @@ export default function MenuScreen() {
 
       <View style={styles.settingsCard}>
         <Text style={styles.settingsTitle}>플레이 설정</Text>
+        <View style={styles.settingRow}>
+          <Text style={styles.settingLabel}>배경음악</Text>
+          <Switch
+            accessibilityLabel="배경음악"
+            value={musicEnabled}
+            onValueChange={onMusicToggle}
+            trackColor={{ false: '#2A1810', true: 'rgba(212, 165, 116, 0.45)' }}
+            thumbColor={musicEnabled ? colors.ochre : colors.sand}
+          />
+        </View>
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>효과음</Text>
           <Switch

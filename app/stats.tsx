@@ -1,12 +1,26 @@
+import { Stack, useRouter } from 'expo-router';
+import { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
+import { MenuBackButton } from '@/components/ui/MenuBackButton';
+import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { colors } from '@/constants/theme';
 import { FONT_RYE } from '@/constants/fonts';
 import { NPCS } from '@/constants/npcs';
 import { useProgressStore } from '@/store/progressStore';
 
 export default function StatsScreen() {
+  useScreenBgm('menu');
+  const router = useRouter();
+  const onBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/menu');
+    }
+  }, [router]);
+
   const npcById = useProgressStore((s) => s.npcById);
   const aggregate = useProgressStore((s) => s.reactionAggregate);
   const clearedCount = NPCS.filter((n) => npcById[n.id]?.cleared).length;
@@ -14,7 +28,14 @@ export default function StatsScreen() {
     aggregate.count > 0 ? aggregate.sumMs / aggregate.count : null;
 
   return (
-    <PhoneStageShell>
+    <>
+      <Stack.Screen
+        options={{
+          headerBackVisible: false,
+          headerLeft: () => <MenuBackButton onPress={onBack} />,
+        }}
+      />
+      <PhoneStageShell>
     <View style={styles.root}>
       <Text style={[styles.head, { fontFamily: FONT_RYE }]}>기록</Text>
 
@@ -34,7 +55,8 @@ export default function StatsScreen() {
         vs NPC·2인 대결에서 반응이 기록될 때마다 평균이 갱신됩니다.
       </Text>
     </View>
-    </PhoneStageShell>
+      </PhoneStageShell>
+    </>
   );
 }
 

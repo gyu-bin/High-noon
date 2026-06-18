@@ -1,5 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Modal,
@@ -13,6 +12,10 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
+import { CharacterSelectCard } from '@/components/character/CharacterSelectCard';
+import { PlayerCharacterSprite } from '@/components/game/CharacterSprites';
+import { MenuBackButton } from '@/components/ui/MenuBackButton';
+import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { CHARACTERS, getCharacterById } from '@/constants/characters';
 import { colors } from '@/constants/theme';
 import { FONT_RYE } from '@/constants/fonts';
@@ -23,6 +26,8 @@ import { checkUnlockConditions } from '@/utils/characterAbility';
 type RevealPhase = 'idle' | 'black' | 'eyes' | 'popup' | 'reveal' | 'done';
 
 export default function CharacterSelectScreen() {
+  useScreenBgm('menu');
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const hiddenCharUnlocked = useProgressStore((s) => s.hiddenCharUnlocked);
   const unlockedIds = useProgressStore((s) => s.unlockedCharacterIds);
@@ -78,7 +83,14 @@ export default function CharacterSelectScreen() {
   const ghost = getCharacterById(4);
 
   return (
-    <PhoneStageShell>
+    <>
+      <Stack.Screen
+        options={{
+          headerBackVisible: false,
+          headerLeft: () => <MenuBackButton onPress={() => router.back()} />,
+        }}
+      />
+      <PhoneStageShell>
       <View
         style={[
           styles.root,
@@ -96,38 +108,13 @@ export default function CharacterSelectScreen() {
             const unlocked = unlockedIds.includes(c.id);
             const selected = selectedCharacterId === c.id;
             return (
-              <Pressable
+              <CharacterSelectCard
                 key={c.id}
-                accessibilityRole="button"
-                accessibilityState={{ disabled: !unlocked, selected }}
+                character={c}
+                unlocked={unlocked}
+                selected={selected}
                 onPress={() => selectCharacter(c.id)}
-                style={[
-                  styles.card,
-                  !unlocked && styles.cardLocked,
-                  selected && unlocked && styles.cardSelected,
-                ]}
-              >
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardId}>0{c.id}</Text>
-                  {unlocked ? null : (
-                    <Ionicons name="lock-closed" size={20} color={colors.sand} />
-                  )}
-                </View>
-                <Text style={styles.cardName} numberOfLines={2}>
-                  {c.name}
-                </Text>
-                {c.abilityName ? (
-                  <Text style={styles.abilityTag}>「{c.abilityName}」</Text>
-                ) : (
-                  <Text style={styles.abilityNone}>능력 없음</Text>
-                )}
-                {!unlocked ? (
-                  <Text style={styles.lockHint}>{c.unlockCondition}</Text>
-                ) : null}
-                {selected && unlocked ? (
-                  <Text style={styles.selectedBadge}>선택됨</Text>
-                ) : null}
-              </Pressable>
+              />
             );
           })}
         </ScrollView>
@@ -174,6 +161,9 @@ export default function CharacterSelectScreen() {
         <View style={styles.revealSpotlight} pointerEvents="none">
           {ghost ? (
             <Animated.View entering={FadeIn.duration(500)} style={styles.ghostCard}>
+              <View style={styles.ghostPortrait}>
+                <PlayerCharacterSprite characterId={4} width={110} height={124} pose="idle" />
+              </View>
               <Text style={styles.ghostCardId}>04</Text>
               <Text style={styles.ghostCardName}>{ghost.name}</Text>
               <Text style={styles.ghostAbility}>「{ghost.abilityName}」</Text>
@@ -181,7 +171,8 @@ export default function CharacterSelectScreen() {
           ) : null}
         </View>
       ) : null}
-    </PhoneStageShell>
+      </PhoneStageShell>
+    </>
   );
 }
 
@@ -208,72 +199,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
     paddingBottom: 24,
-  },
-  card: {
-    width: '47%',
-    minWidth: 150,
-    flexGrow: 1,
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: '#3D2414',
-    borderWidth: 2,
-    borderColor: colors.sand,
-  },
-  cardLocked: {
-    opacity: 0.48,
-    borderColor: 'rgba(212, 165, 112, 0.35)',
-  },
-  cardSelected: {
-    borderColor: colors.ochre,
-    backgroundColor: 'rgba(200, 134, 10, 0.12)',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardId: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.sand,
-    letterSpacing: 2,
-  },
-  cardName: {
-    marginTop: 8,
-    fontSize: 17,
-    fontWeight: '800',
-    color: colors.cream,
-  },
-  abilityTag: {
-    marginTop: 6,
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.ochre,
-  },
-  abilityNone: {
-    marginTop: 6,
-    fontSize: 13,
-    color: colors.sand,
-    opacity: 0.75,
-  },
-  lockHint: {
-    marginTop: 10,
-    fontSize: 11,
-    lineHeight: 15,
-    color: colors.sand,
-    opacity: 0.85,
-  },
-  selectedBadge: {
-    marginTop: 10,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    overflow: 'hidden',
-    backgroundColor: colors.ochre,
-    color: colors.darkBrown,
-    fontWeight: '800',
-    fontSize: 11,
   },
   revealBlack: {
     ...StyleSheet.absoluteFillObject,
@@ -347,13 +272,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.55)',
   },
   ghostCard: {
-    padding: 24,
+    padding: 20,
     borderRadius: 16,
     backgroundColor: '#3D2414',
     borderWidth: 2,
     borderColor: colors.rustRed,
     alignItems: 'center',
-    minWidth: 220,
+    minWidth: 240,
+  },
+  ghostPortrait: {
+    height: 130,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: 8,
   },
   ghostCardId: {
     fontSize: 12,

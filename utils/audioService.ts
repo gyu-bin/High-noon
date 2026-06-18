@@ -66,6 +66,9 @@ export async function preloadAll(): Promise<void> {
           cache.set(name, player);
         }),
       );
+      if (!bangShotAlt) {
+        bangShotAlt = createAudioPlayer(SOURCES.bang_shot, PLAYER_OPTIONS);
+      }
     } catch {
       for (const p of cache.values()) {
         p.remove();
@@ -82,60 +85,65 @@ export async function preloadAll(): Promise<void> {
 
 async function playFromPlayer(player: AudioPlayer | undefined): Promise<void> {
   if (!player) return;
-  player.pause();
-  await player.seekTo(0);
-  player.play();
+  try {
+    player.pause();
+    void player.seekTo(0);
+    player.play();
+  } catch {
+    /* ignore */
+  }
 }
 
 /**
  * 뱅 시점 — 두 명이 동시에 쏘는 느낌으로 같은 클립을 짧게 어긋나 재생.
  * (로컬 2인은 `onBangPhaseEnter`가 한 번만 살아남아도 두 발이 나가게 함)
  */
-export async function playBangShotDuel(staggerMs = 52): Promise<void> {
+export function playBangShotDuel(staggerMs = 52): void {
   if (!useSettingsStore.getState().soundEnabled) return;
-  try {
-    await ensureAudioMode();
-    let main = cache.get('bang_shot');
-    if (!main) {
-      await preloadAll();
-      main = cache.get('bang_shot');
-    }
-    if (!main) return;
-    await playFromPlayer(main);
+
+  const fireAlt = () => {
+    if (!useSettingsStore.getState().soundEnabled) return;
     if (!bangShotAlt) {
       bangShotAlt = createAudioPlayer(SOURCES.bang_shot, PLAYER_OPTIONS);
     }
-    const alt = bangShotAlt;
-    setTimeout(() => {
-      void (async () => {
-        try {
-          if (!useSettingsStore.getState().soundEnabled) return;
-          await playFromPlayer(alt);
-        } catch {
-          /* 시뮬레이터·에셋 누락 등 */
-        }
-      })();
-    }, staggerMs);
-  } catch {
-    /* 시뮬레이터·에셋 누락 등 */
+    void playFromPlayer(bangShotAlt);
+  };
+
+  const main = cache.get('bang_shot');
+  if (main) {
+    void playFromPlayer(main);
+    setTimeout(fireAlt, staggerMs);
+    return;
   }
+
+  void preloadAll().then(() => {
+    const loaded = cache.get('bang_shot');
+    if (!loaded) return;
+    void playFromPlayer(loaded);
+    setTimeout(fireAlt, staggerMs);
+  });
 }
 
 /** 짧은 효과음 재생 (설정 off 시 무시) */
-export async function play(name: SoundName): Promise<void> {
+export function play(name: SoundName): void {
   if (!useSettingsStore.getState().soundEnabled) return;
-  try {
-    await ensureAudioMode();
-    let player = cache.get(name);
-    if (!player) {
-      await preloadAll();
-      player = cache.get(name);
+
+  const run = async () => {
+    try {
+      await ensureAudioMode();
+      let player = cache.get(name);
+      if (!player) {
+        await preloadAll();
+        player = cache.get(name);
+      }
+      if (!player) return;
+      void playFromPlayer(player);
+    } catch {
+      /* 시뮬레이터·에셋 누락 등 */
     }
-    if (!player) return;
-    await playFromPlayer(player);
-  } catch {
-    /* 시뮬레이터·에셋 누락 등 */
-  }
+  };
+
+  void run();
 }
 
 /** 결과 화면용 BGM/효과음 (전용 클립 추가 시 SOUND_NAMES에 연결) */

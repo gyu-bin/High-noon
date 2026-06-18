@@ -208,3 +208,13 @@ export function selectAverageReactionMs(): number | null {
   if (count <= 0) return null;
   return sumMs / count;
 }
+
+/** 클리어한 NPC 수 (#22 포함) */
+export function selectNpcClearCount(): number {
+  const { npcById } = useProgressStore.getState();
+  let n = 0;
+  for (const npc of NPCS) {
+    if (npcById[npc.id]?.cleared) n += 1;
+  }
+  return n;
+}

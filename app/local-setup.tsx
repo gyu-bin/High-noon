@@ -1,7 +1,10 @@
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
+import { MenuBackButton } from '@/components/ui/MenuBackButton';
+import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { WoodButton } from '@/components/ui/WoodButton';
 import { colors } from '@/constants/theme';
 import { FONT_RYE } from '@/constants/fonts';
@@ -13,6 +16,11 @@ import {
 
 export default function LocalSetupScreen() {
   const router = useRouter();
+  useScreenBgm('menu');
+  const onBack = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/menu');
+  }, [router]);
   const preset = useSettingsStore((s) => s.localMatchPreset);
   const setPreset = useSettingsStore((s) => s.setLocalMatchPreset);
 
@@ -33,7 +41,14 @@ export default function LocalSetupScreen() {
   const activeCfg = LOCAL_MATCH_PRESETS[preset];
 
   return (
-    <PhoneStageShell>
+    <>
+      <Stack.Screen
+        options={{
+          headerBackVisible: false,
+          headerLeft: () => <MenuBackButton onPress={onBack} />,
+        }}
+      />
+      <PhoneStageShell>
     <View style={styles.root}>
       <Text style={[styles.title, { fontFamily: FONT_RYE }]}>판수 선택</Text>
       <Text style={styles.sub}>
@@ -59,7 +74,8 @@ export default function LocalSetupScreen() {
         })}
       </View>
     </View>
-    </PhoneStageShell>
+      </PhoneStageShell>
+    </>
   );
 }
 
