@@ -4,12 +4,12 @@
     "slug": "high-noon",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/image/Gemini_Generated_Image_lmu1xplmu1xplmu1.png",
+    "icon": "./assets/branding/icon.png",
     "scheme": "high-noon",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/image/Gemini_Generated_Image_jxsqh1jxsqh1jxsq.png",
+      "image": "./assets/branding/splash.png",
       "resizeMode": "cover",
       "backgroundColor": "#2C1A0E"
     },
@@ -22,8 +22,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/image/Gemini_Generated_Image_lmu1xplmu1xplmu1.png",
-        "backgroundColor": "#2C1A0E"
+        "foregroundImage": "./assets/branding/adaptive-icon.png",
+        "backgroundColor": "#FAF4EA"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -36,10 +36,18 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/branding/favicon.png"
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/branding/splash.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#2C1A0E"
+        }
+      ],
       "expo-font",
       "expo-audio",
       [

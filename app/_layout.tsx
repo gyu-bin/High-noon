@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { colors } from '@/constants/theme';
+import { WESTERN_HERO_FALLBACK } from '@/constants/westernBackground';
 import { initAds, preloadInterstitial } from '@/utils/adService';
 import { preloadAll } from '@/utils/audioService';
 import { preloadBgm, bootMenuBgm } from '@/utils/bgmService';
@@ -47,7 +48,7 @@ export default function RootLayout() {
           headerTintColor: colors.cream,
           headerTitleStyle: { fontWeight: '700', color: colors.cream },
           headerBackTitle: '뒤로',
-          contentStyle: { backgroundColor: colors.darkBrown },
+          contentStyle: { backgroundColor: WESTERN_HERO_FALLBACK },
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />

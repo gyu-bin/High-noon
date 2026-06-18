@@ -13,6 +13,12 @@ export async function preloadSceneImages(): Promise<void> {
   const uris = [
     assetUri(gameImages.titleHero),
     assetUri(gameImages.duelBackground),
+    assetUri(gameImages.duelBgDayFull),
+    assetUri(gameImages.duelBgNightFull),
+    assetUri(gameImages.duelBgDayTop),
+    assetUri(gameImages.duelBgDayBottom),
+    assetUri(gameImages.duelBgNightTop),
+    assetUri(gameImages.duelBgNightBottom),
     assetUri(gameImages.winScreen),
     assetUri(gameImages.loseScreen),
   ].filter((u): u is string => Boolean(u));

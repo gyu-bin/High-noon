@@ -5,7 +5,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
+    "android": "expo run:android",
     "ios": "bash scripts/ensure-iphone-17-pro.sh && expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint"

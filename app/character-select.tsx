@@ -11,7 +11,7 @@ import {
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
+import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { CharacterSelectCard } from '@/components/character/CharacterSelectCard';
 import { PlayerCharacterSprite } from '@/components/game/CharacterSprites';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
@@ -90,7 +90,7 @@ export default function CharacterSelectScreen() {
           headerLeft: () => <MenuBackButton onPress={() => router.back()} />,
         }}
       />
-      <PhoneStageShell>
+      <MetaScreenShell>
       <View
         style={[
           styles.root,
@@ -171,7 +171,7 @@ export default function CharacterSelectScreen() {
           ) : null}
         </View>
       ) : null}
-      </PhoneStageShell>
+      </MetaScreenShell>
     </>
   );
 }
@@ -180,7 +180,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     paddingHorizontal: 18,
-    backgroundColor: colors.darkBrown,
   },
   title: {
     fontSize: 26,

@@ -1,7 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
-
-import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -107,10 +105,10 @@ function DustDot({ spec }: { spec: ParticleSpec }) {
 }
 
 export function DustParticles() {
-  const { stageWidth, stageHeight } = usePhoneStageMetrics();
+  const { width, height } = useWindowDimensions();
   const specs = useMemo(
-    () => buildParticles(stageWidth, stageHeight, 48),
-    [stageWidth, stageHeight],
+    () => buildParticles(width, height, 48),
+    [width, height],
   );
 
   return (

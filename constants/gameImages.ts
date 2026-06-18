@@ -6,8 +6,16 @@ import type { NpcTier } from '@/types/npc';
 export const STRIP_3_ASPECT = 1408 / 768;
 
 export const gameImages = {
-  titleHero: require('@/assets/images/image/Gemini_Generated_Image_jxsqh1jxsqh1jxsq.png'),
+  titleHero: require('@/assets/images/image/title_hero_menu.png'),
   duelBackground: require('@/assets/images/image/Gemini_Generated_Image_mjdc8xmjdc8xmjdc.png'),
+  /** NPC 결투 — 단일 전체 화면 */
+  duelBgDayFull: require('@/assets/images/image/duel_bg_day_full.png'),
+  duelBgNightFull: require('@/assets/images/image/duel_bg_night_full.png'),
+  /** 로컬 2P — variant별 상·하 반쪽 */
+  duelBgDayTop: require('@/assets/images/image/duel_bg_day_sky_half.png'),
+  duelBgDayBottom: require('@/assets/images/image/duel_bg_day_half.png'),
+  duelBgNightTop: require('@/assets/images/image/duel_bg_night_half.png'),
+  duelBgNightBottom: require('@/assets/images/image/duel_bg_night_street_half.png'),
   signalStrip: require('@/assets/images/image/Gemini_Generated_Image_arapwwarapwwarap.png'),
   winScreen: require('@/assets/images/image/Gemini_Generated_Image_2v7c1x2v7c1x2v7c.png'),
   loseScreen: require('@/assets/images/image/Gemini_Generated_Image_srtkdksrtkdksrtk.png'),
@@ -50,7 +58,8 @@ const BG_BY_TIER_VARIANT: Partial<Record<string, ImageSourcePropType>> = {
 
 export type BattleBackgroundSource =
   | { kind: 'image'; source: ImageSourcePropType }
-  | { kind: 'solid'; color: string };
+  | { kind: 'solid'; color: string }
+  | { kind: 'full'; variant: 'day' | 'night' };
 
 /**
  * 매 전투(해당 NPC 매치) 시작 시 한 번만 호출해 같은 매치의 모든 라운드에 재사용하세요.
@@ -88,5 +97,5 @@ export function getBackgroundImage(
   if (source != null) {
     return { kind: 'image', source };
   }
-  return { kind: 'image', source: gameImages.duelBackground };
+  return { kind: 'full', variant: dayNight };
 }

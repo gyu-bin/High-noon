@@ -72,7 +72,7 @@ const NPC_BY_ID: Record<number, FC<SvgProps>> = {
 
 const DefaultNpc = Npc01;
 const POSE_FADE_MS = 36;
-const SHOOT_CROSSFADE_MS = 56;
+const SHOOT_CROSSFADE_MS = 120;
 const SHOOT_IN_MS = 0;
 
 type BaseProps = {

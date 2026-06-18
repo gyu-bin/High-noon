@@ -18,3 +18,13 @@ export function playerSpritePoseFromPhase(
   if (phase === '집중' || phase === '페이크') return 'aim';
   return 'idle';
 }
+
+/** 로컬 2P — 뱅 탭한 플레이어만 shoot 프레임 재생 */
+export function localPlayerSpritePoseFromPhase(
+  phase: DuelPhase,
+  shootAckActive: boolean,
+): SpritePose {
+  if (shootAckActive) return 'shoot';
+  if (phase === '집중' || phase === '페이크' || phase === '뱅') return 'aim';
+  return 'idle';
+}

@@ -20,7 +20,8 @@ import { LocalDuelArenaLayout } from '@/components/game/LocalDuelArenaLayout';
 import { LocalMatchModal } from '@/components/game/LocalMatchModal';
 import { LocalRoundModal } from '@/components/game/LocalRoundModal';
 import { PauseMenuModal } from '@/components/game/PauseMenuModal';
-import { SceneBackground } from '@/components/game/SceneBackground';
+import { DuelSplitBackground } from '@/components/game/DuelSplitBackground';
+import { pickBattleDayNight } from '@/constants/gameImages';
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
 import {
@@ -34,7 +35,6 @@ import {
 } from '@/hooks/usePhoneStageMetrics';
 import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
-import { gameImages } from '@/constants/gameImages';
 import { useProgressStore } from '@/store/progressStore';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
 import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
@@ -42,7 +42,7 @@ import { RM_GAME } from '@/constants/reanimatedGame';
 import { play, playBangShotDuel } from '@/utils/audioService';
 import { speakDuelCue, stopDuelSignalSpeech } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
-import { playerSpritePoseFromPhase } from '@/utils/spritePose';
+import { localPlayerSpritePoseFromPhase } from '@/utils/spritePose';
 import { useSettingsStore } from '@/store/settingsStore';
 
 export type LocalMatchTypeProp = '3' | '5' | '7';
@@ -403,19 +403,24 @@ export default function LocalGameScreen() {
 
   const p1Pose = useMemo(() => {
     if (roundDefeated === 'p1') return 'defeat' as const;
-    return playerSpritePoseFromPhase(phase, p1ShootFlash);
+    return localPlayerSpritePoseFromPhase(phase, p1ShootFlash);
   }, [roundDefeated, phase, p1ShootFlash]);
   const p2Pose = useMemo(() => {
     if (roundDefeated === 'p2') return 'defeat' as const;
-    return playerSpritePoseFromPhase(phase, p2ShootFlash);
+    return localPlayerSpritePoseFromPhase(phase, p2ShootFlash);
   }, [roundDefeated, phase, p2ShootFlash]);
 
   const hideBottomHud = modalStep != null;
 
+  const battleDayNight = useMemo(
+    () => pickBattleDayNight(0),
+    [matchType],
+  );
+
   return (
     <PhoneStageShell>
-    <SceneBackground
-      source={gameImages.duelBackground}
+    <DuelSplitBackground
+      variant={battleDayNight}
       style={{ width: winW, height: winH }}
       contentWidth={winW}
       contentHeight={winH}
@@ -475,7 +480,7 @@ export default function LocalGameScreen() {
         secondaryLabel="대결 나가기"
         onMainMenu={leaveToMainMenu}
       />
-    </SceneBackground>
+    </DuelSplitBackground>
     </PhoneStageShell>
   );
 }

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
+import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { MaskedLegendCard } from '@/components/npc/MaskedLegendCard';
@@ -184,7 +184,7 @@ export default function NpcSelectScreen() {
           headerLeft: () => <MenuBackButton onPress={() => router.back()} />,
         }}
       />
-      <PhoneStageShell>
+      <MetaScreenShell>
         <View style={[styles.root, { paddingBottom: insets.bottom + 16 }]}>
           <NpcSelectStatsHeader paleUnlocked={paleUnlocked} />
           <FlatList
@@ -198,7 +198,7 @@ export default function NpcSelectScreen() {
             extraData={{ highestUnlocked, npcById, legendRevealBurst, paleUnlocked }}
           />
         </View>
-      </PhoneStageShell>
+      </MetaScreenShell>
     </>
   );
 }
@@ -206,7 +206,6 @@ export default function NpcSelectScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.darkBrown,
   },
   listFlex: {
     flex: 1,

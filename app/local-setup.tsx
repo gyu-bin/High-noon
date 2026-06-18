@@ -2,7 +2,7 @@ import { Stack, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
+import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { WoodButton } from '@/components/ui/WoodButton';
@@ -48,7 +48,7 @@ export default function LocalSetupScreen() {
           headerLeft: () => <MenuBackButton onPress={onBack} />,
         }}
       />
-      <PhoneStageShell>
+      <MetaScreenShell>
     <View style={styles.root}>
       <Text style={[styles.title, { fontFamily: FONT_RYE }]}>판수 선택</Text>
       <Text style={styles.sub}>
@@ -74,7 +74,7 @@ export default function LocalSetupScreen() {
         })}
       </View>
     </View>
-      </PhoneStageShell>
+      </MetaScreenShell>
     </>
   );
 }
@@ -82,7 +82,6 @@ export default function LocalSetupScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.darkBrown,
     padding: 24,
     gap: 16,
   },

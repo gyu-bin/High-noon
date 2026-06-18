@@ -4,15 +4,17 @@
 
 export const colors = {
   /** 황토 — 메인 액센트 */
-  ochre: '#C8860A',
-  /** 다크 브라운 — 배경/텍스트 베이스 */
+  ochre: '#D4A017',
+  /** 하이라이트 골드 */
+  gold: '#E8C547',
+  /** 다크 브라운 — 헤더·카드·결투 */
   darkBrown: '#2C1A0E',
-  /** 크림 — 카드/본문 배경 */
-  cream: '#F5E6C8',
-  /** 레드 — BANG / 위험 / 패배 강조 */
-  rustRed: '#8B1A1A',
-  /** 모래 — 보조 표면/보더 */
+  /** 크림 — 본문 */
+  cream: '#F0E6D2',
+  /** 모래 — 보조 텍스트·보더 */
   sand: '#D4AA70',
+  /** 레드 — 위험·패배 */
+  rustRed: '#DC2626',
 } as const;
 
 export const theme = {

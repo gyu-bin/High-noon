@@ -24,10 +24,10 @@ import {
   type NpcRoundModalData,
 } from '@/components/game/NpcRoundModal';
 import { PauseMenuModal } from '@/components/game/PauseMenuModal';
+import { DuelFullBackground } from '@/components/game/DuelFullBackground';
 import { SceneBackground } from '@/components/game/SceneBackground';
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
 import {
-  gameImages,
   getBackgroundImage,
   pickBattleDayNight,
 } from '@/constants/gameImages';
@@ -706,7 +706,7 @@ export default function NpcGameScreen() {
 
   const duelBg = useMemo(() => {
     if (!npc) {
-      return { kind: 'image' as const, source: gameImages.duelBackground };
+      return { kind: 'full' as const, variant: 'day' as const };
     }
     return getBackgroundImage(npc.tier, npc.id, battleDayNight);
   }, [npc, battleDayNight]);
@@ -725,88 +725,111 @@ export default function NpcGameScreen() {
       (npc.id === 21 &&
         (chaosModeRef.current === 'inverted' || chaosModeRef.current === 'combo')));
 
+  const arenaShellProps = {
+    style: { width: winW, height: winH } as const,
+    contentWidth: winW,
+    contentHeight: winH,
+  };
+
+  const arenaBody = (
+    <>
+      <Animated.View pointerEvents="none" style={[styles.blueRing, blueStyle]} />
+
+      {npc?.id === 22 && (phase === '집중' || phase === '페이크') ? (
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFillObject, styles.paleDim]}
+        />
+      ) : null}
+
+      {earlyOverlay ? (
+        <View pointerEvents="none" style={styles.earlyLabelWrap}>
+          <Text style={styles.earlyLabel}>EARLY!</Text>
+        </View>
+      ) : null}
+
+      {npc ? (
+        <>
+          <DuelArenaLayout
+            width={winW}
+            height={winH}
+            paddingTop={overlayPad.top}
+            paddingBottom={insets.bottom}
+            paddingRight={overlayPad.right}
+            npcId={npc.id}
+            npcTitle={npc.title}
+            npcName={npc.name}
+            tierLabel={tierLabel}
+            bossFlag={npc.bossFlag}
+            npcPose={npcPose}
+            playerCharacterId={selectedCharacterId}
+            playerPose={playerPose}
+            signalPhase={enginePhaseToSignalBoardPhase(phase)}
+            blindBangText={blindBangText}
+            invertSignalColors={invertSignalColors}
+            opponentHearts={opponentHearts}
+            playerHearts={playerHearts}
+            playerScore={playerScore}
+            opponentScore={opponentScore}
+            shootCapturesEarly={shootCapturesEarly}
+            shootActive={shootActive}
+            onShootPress={onShootPress}
+            onPause={() => setPaused(true)}
+            pauseDisabled={phase === '페이크'}
+            playerTapAckStyle={playerTapAckStyle}
+            hideBottomHud={modalVisible}
+          />
+
+          <NpcRoundModal
+            visible={modalVisible}
+            data={modal}
+            onContinue={onContinue}
+            winBurstId={npcRoundWinBurstId}
+            headshotOffered={headshotOffered}
+            onHeadshotPress={onHeadshotPress}
+            paddingBottom={insets.bottom}
+          />
+
+          <AbilityOverlay
+            abilityType={abilityOverlay}
+            onComplete={handleAbilityOverlayComplete}
+          />
+
+          <PauseMenuModal
+            visible={paused}
+            onResume={() => setPaused(false)}
+            onSecondaryExit={leaveToNpcSelect}
+            secondaryLabel="NPC 선택으로"
+            onMainMenu={leaveToMainMenu}
+          />
+        </>
+      ) : null}
+    </>
+  );
+
   return (
     <PhoneStageShell>
-      <SceneBackground
-        source={duelBg.kind === 'image' ? duelBg.source : undefined}
-        solidColor={duelBg.kind === 'solid' ? duelBg.color : undefined}
-        style={{ width: winW, height: winH }}
-        contentWidth={winW}
-        contentHeight={winH}
-        dimColor="rgba(12, 8, 5, 0.18)"
-      >
-        <Animated.View pointerEvents="none" style={[styles.blueRing, blueStyle]} />
-
-        {npc?.id === 22 && (phase === '집중' || phase === '페이크') ? (
-          <View
-            pointerEvents="none"
-            style={[StyleSheet.absoluteFillObject, styles.paleDim]}
-          />
-        ) : null}
-
-        {earlyOverlay ? (
-          <View pointerEvents="none" style={styles.earlyLabelWrap}>
-            <Text style={styles.earlyLabel}>EARLY!</Text>
-          </View>
-        ) : null}
-
-        {npc ? (
-          <>
-            <DuelArenaLayout
-              width={winW}
-              height={winH}
-              paddingTop={overlayPad.top}
-              paddingBottom={insets.bottom}
-              paddingRight={overlayPad.right}
-              npcId={npc.id}
-              npcTitle={npc.title}
-              npcName={npc.name}
-              tierLabel={tierLabel}
-              bossFlag={npc.bossFlag}
-              npcPose={npcPose}
-              playerCharacterId={selectedCharacterId}
-              playerPose={playerPose}
-              signalPhase={enginePhaseToSignalBoardPhase(phase)}
-              blindBangText={blindBangText}
-              invertSignalColors={invertSignalColors}
-              opponentHearts={opponentHearts}
-              playerHearts={playerHearts}
-              playerScore={playerScore}
-              opponentScore={opponentScore}
-              shootCapturesEarly={shootCapturesEarly}
-              shootActive={shootActive}
-              onShootPress={onShootPress}
-              onPause={() => setPaused(true)}
-              pauseDisabled={phase === '페이크'}
-              playerTapAckStyle={playerTapAckStyle}
-              hideBottomHud={modalVisible}
-            />
-
-            <NpcRoundModal
-              visible={modalVisible}
-              data={modal}
-              onContinue={onContinue}
-              winBurstId={npcRoundWinBurstId}
-              headshotOffered={headshotOffered}
-              onHeadshotPress={onHeadshotPress}
-              paddingBottom={insets.bottom}
-            />
-
-            <AbilityOverlay
-              abilityType={abilityOverlay}
-              onComplete={handleAbilityOverlayComplete}
-            />
-
-            <PauseMenuModal
-              visible={paused}
-              onResume={() => setPaused(false)}
-              onSecondaryExit={leaveToNpcSelect}
-              secondaryLabel="NPC 선택으로"
-              onMainMenu={leaveToMainMenu}
-            />
-          </>
-        ) : null}
-      </SceneBackground>
+      {duelBg.kind === 'solid' ? (
+        <SceneBackground
+          {...arenaShellProps}
+          solidColor={duelBg.color}
+          dimColor="rgba(12, 8, 5, 0.18)"
+        >
+          {arenaBody}
+        </SceneBackground>
+      ) : duelBg.kind === 'full' ? (
+        <DuelFullBackground {...arenaShellProps} variant={duelBg.variant}>
+          {arenaBody}
+        </DuelFullBackground>
+      ) : (
+        <SceneBackground
+          {...arenaShellProps}
+          source={duelBg.source}
+          dimColor="rgba(12, 8, 5, 0.18)"
+        >
+          {arenaBody}
+        </SceneBackground>
+      )}
     </PhoneStageShell>
   );
 }
