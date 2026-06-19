@@ -2,24 +2,29 @@ import { useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import Animated, {
   Easing,
-  FadeIn,
+  FadeInDown,
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
 
-import { SceneBackground } from '@/components/game/SceneBackground';
+import { OutcomeBackdrop } from '@/components/result/OutcomeBackdrop';
+import { ReactionStatsCard } from '@/components/result/ReactionStatsCard';
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
-import { gameImages } from '@/constants/gameImages';
+import { WoodButton } from '@/components/ui/WoodButton';
+import {
+  OUTCOME_DEFEAT,
+  OUTCOME_PANEL,
+  OUTCOME_VICTORY,
+  outcomeTextShadow,
+} from '@/constants/outcomeTheme';
 import { RM_GAME } from '@/constants/reanimatedGame';
 import { colors } from '@/constants/theme';
 import { FONT_RYE } from '@/constants/fonts';
@@ -27,7 +32,6 @@ import { getNpcById } from '@/constants/npcs';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { bgmPlay } from '@/utils/audioService';
-import { formatReactionMs } from '@/utils/formatReactionMs';
 import { initAds, preloadInterstitial, showStageCompleteAd } from '@/utils/adService';
 import { trigger } from '@/utils/hapticService';
 
@@ -41,159 +45,63 @@ function hashSeed(s: string): number {
   return Math.abs(h) || 1;
 }
 
-function GoldenStar({
-  winH,
+function Sparkle({
   left,
   delay,
-  duration,
+  top,
 }: {
-  winH: number;
   left: number;
   delay: number;
-  duration: number;
+  top: number;
 }) {
-  const y = useSharedValue(-40);
   const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.6);
 
   useEffect(() => {
-    y.value = -40;
     opacity.value = 0;
-    opacity.value = withDelay(
-      delay,
-      withSequence(
-        withTiming(1, { duration: 220, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME }),
-        withTiming(0.75, {
-          duration: Math.max(400, duration - 400),
-          easing: Easing.linear,
-          reduceMotion: RM_GAME,
-        }),
-        withTiming(0, { duration: 280, easing: Easing.in(Easing.quad), reduceMotion: RM_GAME }),
-      ),
+    scale.value = 0.6;
+    opacity.value = withSequence(
+      withTiming(0, { duration: delay, reduceMotion: RM_GAME }),
+      withTiming(1, { duration: 280, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME }),
+      withTiming(0, { duration: 700, easing: Easing.in(Easing.quad), reduceMotion: RM_GAME }),
     );
-    y.value = withDelay(
-      delay,
-      withTiming(winH + 60, {
-        duration,
-        easing: Easing.linear,
-        reduceMotion: RM_GAME,
-      }),
+    scale.value = withSequence(
+      withTiming(0.6, { duration: delay, reduceMotion: RM_GAME }),
+      withTiming(1.1, { duration: 400, easing: Easing.out(Easing.back(1.2)), reduceMotion: RM_GAME }),
+      withTiming(0.8, { duration: 580, reduceMotion: RM_GAME }),
     );
-  }, [winH, delay, duration, y, opacity]);
+  }, [delay, opacity, scale]);
 
   const anim = useAnimatedStyle(() => ({
-    transform: [{ translateY: y.value }],
     opacity: opacity.value,
+    transform: [{ scale: scale.value }],
   }));
 
   return (
-    <Animated.Text
-      style={[styles.starGlyph, { left }, anim]}
-      pointerEvents="none"
-    >
-      ★
+    <Animated.Text style={[styles.sparkle, { left, top }, anim]} pointerEvents="none">
+      ✦
     </Animated.Text>
   );
 }
 
-function GoldenParticles({
-  winW,
-  winH,
-  seed,
-}: {
-  winW: number;
-  winH: number;
-  seed: string;
-}) {
+function VictorySparkles({ width, seed }: { width: number; seed: string }) {
   const h = hashSeed(seed);
-  const stars = useMemo(() => {
-    const count = 10 + (h % 6);
-    return Array.from({ length: count }, (_, i) => {
-      const t = h * (i + 3) * 9301 + 49297;
-      const left = 8 + (t % Math.max(1, winW - 32));
-      const delay = (t % 380) + i * 45;
-      const duration = 2200 + (t % 900) + i * 40;
-      return { id: i, left, delay, duration };
+  const items = useMemo(() => {
+    return Array.from({ length: 8 }, (_, i) => {
+      const t = h * (i + 5) * 7919;
+      return {
+        id: i,
+        left: 12 + (t % Math.max(1, width - 36)),
+        top: 48 + ((t >> 4) % 120),
+        delay: (t % 500) + i * 80,
+      };
     });
-  }, [h, winW]);
+  }, [h, width]);
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {stars.map((s) => (
-        <GoldenStar key={s.id} winH={winH} left={s.left} delay={s.delay} duration={s.duration} />
-      ))}
-    </View>
-  );
-}
-
-function DustParticle({
-  left,
-  delay,
-  size,
-  rise,
-}: {
-  left: number;
-  delay: number;
-  size: number;
-  rise: number;
-}) {
-  const translateY = useSharedValue(8);
-  const opacity = useSharedValue(0);
-
-  useEffect(() => {
-    translateY.value = 8;
-    opacity.value = 0;
-    opacity.value = withDelay(
-      delay,
-      withSequence(
-        withTiming(0.5, { duration: 200, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME }),
-        withTiming(0, { duration: 900, easing: Easing.in(Easing.quad), reduceMotion: RM_GAME }),
-      ),
-    );
-    translateY.value = withDelay(
-      delay,
-      withTiming(-rise, {
-        duration: 1150,
-        easing: Easing.out(Easing.cubic),
-        reduceMotion: RM_GAME,
-      }),
-    );
-  }, [delay, rise, translateY, opacity]);
-
-  const anim = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-    opacity: opacity.value,
-  }));
-
-  return (
-    <Animated.View
-      style={[
-        styles.dustDot,
-        { left, width: size, height: size, borderRadius: size / 2, bottom: 36 },
-        anim,
-      ]}
-      pointerEvents="none"
-    />
-  );
-}
-
-function DustRise({ winW, seed }: { winW: number; seed: string }) {
-  const h = hashSeed(seed + 'dust');
-  const parts = useMemo(() => {
-    const n = 5 + (h % 4);
-    return Array.from({ length: n }, (_, i) => {
-      const t = h * (i + 11) * 1103515245;
-      const left = 10 + (t % Math.max(1, winW - 24));
-      const delay = (t % 200) + i * 70;
-      const size = 4 + (t % 5);
-      const rise = 120 + (t % 140);
-      return { id: i, left, delay, size, rise };
-    });
-  }, [h, winW]);
-
-  return (
-    <View style={[StyleSheet.absoluteFill, { zIndex: 2 }]} pointerEvents="none">
-      {parts.map((p) => (
-        <DustParticle key={p.id} {...p} />
+      {items.map((s) => (
+        <Sparkle key={s.id} left={s.left} top={s.top} delay={s.delay} />
       ))}
     </View>
   );
@@ -202,11 +110,11 @@ function DustRise({ winW, seed }: { winW: number; seed: string }) {
 function lossReasonLabel(reason: LossReason): string {
   switch (reason) {
     case 'early':
-      return '얼리 탭 — 뱅 전에 발사했습니다';
+      return '뱅 신호 전에 발사했습니다';
     case 'timeout':
-      return '타임아웃 — 제한 시간 내에 쏘지 못했습니다';
+      return '제한 시간 안에 쏘지 못했습니다';
     case 'slower':
-      return '반응 속도 패배 — 상대보다 늦게 쐈습니다';
+      return '상대보다 늦게 반응했습니다';
     default:
       return '';
   }
@@ -225,7 +133,7 @@ function whoFaster(
 export default function NpcResultScreen() {
   const router = useRouter();
   useScreenBgm(null, true);
-  const { stageWidth: winW, stageHeight: winH } = usePhoneStageMetrics();
+  const { windowWidth: winW, windowHeight: winH } = usePhoneStageMetrics();
   const {
     npcId,
     won,
@@ -235,6 +143,7 @@ export default function NpcResultScreen() {
     playerMs: playerMsParam,
     npcMs: npcMsParam,
     lossReason: lossReasonParam,
+    dayNight: dayNightParam,
   } = useLocalSearchParams<{
     npcId?: string;
     won?: string;
@@ -244,12 +153,14 @@ export default function NpcResultScreen() {
     playerMs?: string;
     npcMs?: string;
     lossReason?: string;
+    dayNight?: string;
   }>();
 
   const id = Number(npcId);
   const npc = getNpcById(id);
   const victory = won === '1';
-  const bg = victory ? gameImages.winScreen : gameImages.loseScreen;
+  const dayNight = dayNightParam === 'night' ? 'night' : 'day';
+  const theme = victory ? OUTCOME_VICTORY : OUTCOME_DEFEAT;
 
   const playerMsRaw =
     playerMsParam != null && playerMsParam !== '' ? Number(playerMsParam) : NaN;
@@ -263,17 +174,8 @@ export default function NpcResultScreen() {
   const adHandledKeyRef = useRef<string | null>(null);
   const resultSessionKey = `${npcId ?? ''}-${won ?? ''}-${playerWins ?? ''}-${npcWins ?? ''}-${completionStamp ?? ''}`;
 
-  const titleScale = useSharedValue(victory ? 0 : 1);
-  const shakeX = useSharedValue(0);
+  const titleScale = useSharedValue(victory ? 0.85 : 1);
   const fxStartedRef = useRef(false);
-  const victoryAnimRan = useRef(false);
-  const shakeAnimRan = useRef(false);
-
-  useEffect(() => {
-    fxStartedRef.current = false;
-    victoryAnimRan.current = false;
-    shakeAnimRan.current = false;
-  }, [completionStamp]);
 
   useFocusEffect(
     useCallback(() => {
@@ -290,9 +192,7 @@ export default function NpcResultScreen() {
       let cancelled = false;
       void initAds().then(() => preloadInterstitial());
       void showStageCompleteAd().then(() => {
-        if (!cancelled) {
-          setAdFlowComplete(true);
-        }
+        if (!cancelled) setAdFlowComplete(true);
       });
       return () => {
         cancelled = true;
@@ -301,39 +201,17 @@ export default function NpcResultScreen() {
   );
 
   useEffect(() => {
-    if (!adFlowComplete) return;
-    if (victory) {
-      if (victoryAnimRan.current) return;
-      victoryAnimRan.current = true;
-      titleScale.value = 0;
-      titleScale.value = withSequence(
-        withTiming(1.2, {
-          duration: 320,
-          easing: Easing.out(Easing.back(1.35)),
-          reduceMotion: RM_GAME,
-        }),
-        withTiming(1, {
-          duration: 180,
-          easing: Easing.out(Easing.quad),
-          reduceMotion: RM_GAME,
-        }),
-      );
-    } else {
-      if (shakeAnimRan.current) return;
-      shakeAnimRan.current = true;
-      shakeX.value = withSequence(
-        withTiming(8, { duration: 45, reduceMotion: RM_GAME }),
-        withTiming(-8, { duration: 45, reduceMotion: RM_GAME }),
-        withTiming(8, { duration: 45, reduceMotion: RM_GAME }),
-        withTiming(-8, { duration: 45, reduceMotion: RM_GAME }),
-        withTiming(8, { duration: 45, reduceMotion: RM_GAME }),
-        withTiming(-8, { duration: 45, reduceMotion: RM_GAME }),
-        withTiming(8, { duration: 45, reduceMotion: RM_GAME }),
-        withTiming(-8, { duration: 45, reduceMotion: RM_GAME }),
-        withTiming(0, { duration: 50, reduceMotion: RM_GAME }),
-      );
-    }
-  }, [adFlowComplete, victory, titleScale, shakeX]);
+    if (!adFlowComplete || !victory) return;
+    titleScale.value = 0.85;
+    titleScale.value = withSequence(
+      withTiming(1.08, {
+        duration: 340,
+        easing: Easing.out(Easing.back(1.3)),
+        reduceMotion: RM_GAME,
+      }),
+      withTiming(1, { duration: 200, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME }),
+    );
+  }, [adFlowComplete, victory, titleScale]);
 
   useEffect(() => {
     if (!adFlowComplete) return;
@@ -352,10 +230,6 @@ export default function NpcResultScreen() {
     transform: [{ scale: titleScale.value }],
   }));
 
-  const shakeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: shakeX.value }],
-  }));
-
   const onRetry = useCallback(() => {
     if (!Number.isFinite(id)) return;
     router.replace({
@@ -368,111 +242,87 @@ export default function NpcResultScreen() {
     router.dismissTo('/npc-select');
   }, [router]);
 
-  const showFx = adFlowComplete;
+  const showContent = adFlowComplete;
 
   return (
-    <PhoneStageShell>
-      <SceneBackground
-        source={bg}
-        style={{ width: winW, height: winH }}
-        contentWidth={winW}
-        contentHeight={winH}
-        dimColor="rgba(20, 12, 8, 0.5)"
-      >
+    <PhoneStageShell edgeToEdge>
+      <OutcomeBackdrop variant={dayNight} width={winW} height={winH}>
         {!adFlowComplete ? (
           <View style={styles.adLoading} pointerEvents="auto">
             <ActivityIndicator size="large" color={colors.cream} />
-            <Text style={styles.adLoadingText}>로딩 중…</Text>
+            <Text style={styles.adLoadingText}>잠시만요…</Text>
           </View>
         ) : null}
 
-        {showFx && victory ? (
-          <GoldenParticles winW={winW} winH={winH} seed={completionStamp ?? 'win'} />
+        {showContent && victory ? (
+          <VictorySparkles width={winW} seed={completionStamp ?? 'win'} />
         ) : null}
 
-        {showFx && !victory ? (
-          <DustRise winW={winW} seed={completionStamp ?? 'lose'} />
-        ) : null}
+        <View style={[styles.content, !showContent && styles.contentHidden]}>
+          <Animated.View
+            entering={FadeInDown.duration(420).springify().damping(18)}
+            style={[styles.panel, { borderColor: theme.badgeBorder }]}
+          >
+            <View style={[styles.accentBar, { backgroundColor: theme.accent }]} />
 
-        <Animated.View
-          style={[
-            styles.shakeWrap,
-            { width: winW, height: winH },
-            !victory && showFx ? shakeStyle : undefined,
-          ]}
-        >
-          <View style={[styles.content, !adFlowComplete && styles.contentHidden]}>
             {victory ? (
-              <Animated.Text style={[styles.youWin, titleAnimatedStyle]}>YOU WIN</Animated.Text>
+              <Animated.Text
+                style={[
+                  styles.title,
+                  { fontFamily: FONT_RYE, color: theme.title },
+                  titleAnimatedStyle,
+                ]}
+              >
+                승리
+              </Animated.Text>
             ) : (
-              <Animated.Text entering={FadeIn.duration(420)} style={styles.youLose}>
-                YOU LOSE
+              <Animated.Text
+                entering={FadeInDown.duration(380)}
+                style={[styles.title, { fontFamily: FONT_RYE, color: theme.title }]}
+              >
+                패배
               </Animated.Text>
             )}
 
             {!victory && lossReason ? (
               <Text style={styles.lossReason}>{lossReasonLabel(lossReason)}</Text>
+            ) : victory ? (
+              <Text style={styles.winSubtitle}>결투에서 이겼습니다</Text>
             ) : null}
 
             {npc ? (
-              <Text style={styles.sub}>
-                vs {npc.title} {npc.name}
-              </Text>
+              <View style={styles.opponentRow}>
+                <Text style={styles.opponentLabel}>상대</Text>
+                <Text style={styles.opponentName}>
+                  {npc.title} {npc.name}
+                </Text>
+              </View>
             ) : null}
 
-            <Text style={styles.score}>
-              점수 {playerWins ?? '0'} — {npcWins ?? '0'}
-            </Text>
-
-            <View style={styles.reactionRow}>
-              <View style={styles.reactionCol}>
-                <Text style={styles.reactionLabel}>나 (ms)</Text>
-                <Text
-                  style={[
-                    styles.reactionValue,
-                    faster === 'player' && styles.reactionValueWin,
-                  ]}
-                >
-                  {playerMs != null ? formatReactionMs(playerMs) : '—'}
-                </Text>
-              </View>
-              <Text style={styles.reactionVs}>vs</Text>
-              <View style={styles.reactionCol}>
-                <Text style={styles.reactionLabel}>NPC (ms)</Text>
-                <Text
-                  style={[
-                    styles.reactionValue,
-                    faster === 'npc' && styles.reactionValueWin,
-                  ]}
-                >
-                  {npcMs != null ? formatReactionMs(npcMs) : '—'}
-                </Text>
-              </View>
+            <View style={styles.scorePill}>
+              <Text style={styles.scoreLabel}>최종 스코어</Text>
+              <Text style={[styles.scoreValue, { fontFamily: FONT_RYE }]}>
+                {playerWins ?? '0'} — {npcWins ?? '0'}
+              </Text>
             </View>
 
-            <View style={styles.btnRow}>
-              <Pressable
-                onPress={onRetry}
-                style={({ pressed }) => [styles.btnSecondary, pressed && styles.btnPressed]}
-              >
-                <Text style={styles.btnSecondaryText}>다시 도전</Text>
-              </Pressable>
-              <Pressable
+            <ReactionStatsCard playerMs={playerMs} npcMs={npcMs} faster={faster} />
+
+            <View style={styles.btnCol}>
+              <WoodButton title="다시 도전" onPress={onRetry} style={styles.btn} />
+              <WoodButton
+                title="대결상대 선택으로"
                 onPress={onNpcSelect}
-                style={({ pressed }) => [styles.btn, pressed && styles.btnPressed]}
-              >
-                <Text style={styles.btnText}>NPC 선택으로</Text>
-              </Pressable>
+                style={styles.btnSecondary}
+                textStyle={styles.btnSecondaryText}
+              />
             </View>
-          </View>
-        </Animated.View>
-      </SceneBackground>
+          </Animated.View>
+        </View>
+      </OutcomeBackdrop>
     </PhoneStageShell>
   );
 }
-
-const GOLD = '#E8C547';
-const LOSE_TITLE = '#4A1515';
 
 const styles = StyleSheet.create({
   adLoading: {
@@ -480,151 +330,125 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 30,
-    backgroundColor: 'rgba(20, 12, 8, 0.35)',
+    backgroundColor: 'rgba(8, 4, 2, 0.45)',
   },
   adLoadingText: {
     marginTop: 12,
     color: colors.sand,
     fontSize: 14,
     fontWeight: '600',
-  },
-  shakeWrap: {
-    zIndex: 5,
+    ...outcomeTextShadow,
   },
   content: {
     flex: 1,
-    padding: 28,
     justifyContent: 'center',
-    gap: 12,
+    paddingHorizontal: 22,
+    paddingVertical: 28,
     zIndex: 6,
   },
   contentHidden: {
     opacity: 0,
   },
-  starGlyph: {
+  sparkle: {
     position: 'absolute',
-    top: 0,
-    fontSize: 22,
-    color: GOLD,
-    textShadowColor: 'rgba(255, 220, 120, 0.9)',
+    fontSize: 18,
+    color: OUTCOME_VICTORY.title,
+    textShadowColor: 'rgba(255, 220, 120, 0.85)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadowRadius: 8,
   },
-  dustDot: {
-    position: 'absolute',
-    backgroundColor: 'rgba(120, 118, 115, 0.75)',
+  panel: {
+    borderRadius: OUTCOME_PANEL.borderRadius,
+    backgroundColor: OUTCOME_PANEL.background,
+    borderWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 0,
+    paddingBottom: 22,
+    gap: 14,
+    overflow: 'hidden',
   },
-  youWin: {
-    fontSize: 40,
-    fontWeight: '900',
-    color: GOLD,
-    letterSpacing: 4,
+  accentBar: {
+    height: 3,
+    marginHorizontal: -20,
+    marginBottom: 4,
+  },
+  title: {
+    fontSize: 44,
     textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.85)',
-    textShadowOffset: { width: 0, height: 3 },
-    textShadowRadius: 10,
-  },
-  youLose: {
-    fontSize: 38,
-    fontWeight: '900',
-    color: LOSE_TITLE,
     letterSpacing: 3,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
+    marginTop: 8,
+    ...outcomeTextShadow,
   },
-  lossReason: {
+  winSubtitle: {
+    textAlign: 'center',
     fontSize: 15,
     fontWeight: '600',
     color: colors.sand,
+    letterSpacing: 0.4,
+    ...outcomeTextShadow,
+  },
+  lossReason: {
     textAlign: 'center',
-    lineHeight: 22,
-    opacity: 0.95,
-  },
-  sub: {
-    fontSize: 17,
-    color: colors.cream,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.55)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-  score: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.sand,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  reactionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
-    marginTop: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: 'rgba(20, 12, 8, 0.45)',
-    borderWidth: 1,
-    borderColor: 'rgba(212, 165, 116, 0.35)',
-  },
-  reactionCol: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 6,
-  },
-  reactionLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.sand,
-    letterSpacing: 0.5,
-  },
-  reactionValue: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.cream,
-  },
-  reactionValueWin: {
-    color: GOLD,
-    fontWeight: '900',
-    fontSize: 24,
-  },
-  reactionVs: {
     fontSize: 14,
+    fontWeight: '600',
+    color: '#E8C4C4',
+    lineHeight: 21,
+    ...outcomeTextShadow,
+  },
+  opponentRow: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  opponentLabel: {
+    fontSize: 11,
     fontWeight: '800',
-    color: colors.ochre,
+    color: colors.sand,
+    letterSpacing: 1.4,
     opacity: 0.85,
   },
-  btnRow: {
-    marginTop: 24,
-    gap: 12,
+  opponentName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colors.cream,
+    textAlign: 'center',
+    ...outcomeTextShadow,
+  },
+  scorePill: {
+    alignSelf: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 22,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0, 0, 0, 0.28)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 165, 116, 0.3)',
+    gap: 2,
+  },
+  scoreLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.sand,
+    letterSpacing: 1.2,
+  },
+  scoreValue: {
+    fontSize: 24,
+    color: colors.gold,
+    letterSpacing: 2,
+    ...outcomeTextShadow,
+  },
+  btnCol: {
+    marginTop: 4,
+    gap: 10,
   },
   btn: {
     paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: colors.ochre,
   },
   btnSecondary: {
     paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: 'rgba(45, 28, 14, 0.92)',
-    borderWidth: 2,
-    borderColor: colors.sand,
-  },
-  btnPressed: {
-    opacity: 0.9,
-  },
-  btnText: {
-    textAlign: 'center',
-    fontWeight: '800',
-    color: colors.darkBrown,
-    fontSize: 16,
+    backgroundColor: 'rgba(28, 16, 8, 0.95)',
+    borderColor: 'rgba(212, 165, 116, 0.45)',
   },
   btnSecondaryText: {
-    textAlign: 'center',
-    fontWeight: '800',
     color: colors.cream,
     fontSize: 16,
   },

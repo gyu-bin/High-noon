@@ -67,7 +67,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="menu" options={{ headerShown: false }} />
-        <Stack.Screen name="npc-select" options={{ title: 'NPC 선택' }} />
+        <Stack.Screen name="npc-select" options={{ title: '대결상대 선택' }} />
         <Stack.Screen name="local-setup" options={{ title: '2인 대결' }} />
         <Stack.Screen name="stats" options={{ title: '기록' }} />
         <Stack.Screen name="character-select" options={{ title: '캐릭터' }} />

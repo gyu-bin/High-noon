@@ -32,13 +32,13 @@ import {
   pickBattleDayNight,
 } from '@/constants/gameImages';
 import { RM_GAME } from '@/constants/reanimatedGame';
+import { DEV_UNLOCK_ALL_NPCS } from '@/constants/devFlags';
 import { getNpcById } from '@/constants/npcs';
 import { buildDuelStartParams } from '@/utils/npcDuelParams';
 import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
 import { useDuelEngine, type DuelOutcome, type DuelPhase } from '@/hooks/useDuelEngine';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import {
-  phoneStageSafeOffsets,
   usePhoneStageMetrics,
 } from '@/hooks/usePhoneStageMetrics';
 import { useGameStore } from '@/store/gameStore';
@@ -98,17 +98,16 @@ export default function NpcGameScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const stage = usePhoneStageMetrics();
-  const { stageWidth: winW, stageHeight: winH } = stage;
+  const winW = stage.windowWidth;
+  const winH = stage.windowHeight;
   const selectedCharacterId = useSettingsStore((s) => s.selectedCharacterId);
   const overlayPad = useMemo(
-    () =>
-      phoneStageSafeOffsets(stage, {
-        top: insets.top,
-        right: insets.right,
-        bottom: insets.bottom,
-        left: insets.left,
-      }),
-    [stage, insets.top, insets.right, insets.bottom, insets.left],
+    () => ({
+      top: insets.top + 6,
+      right: 12 + insets.right,
+      left: 12 + insets.left,
+    }),
+    [insets.top, insets.right, insets.left],
   );
   const { npcId: npcIdRaw } = useLocalSearchParams<{ npcId?: string | string[] }>();
   const npcIdStr = useMemo(() => {
@@ -126,6 +125,16 @@ export default function NpcGameScreen() {
     () => (Number.isFinite(npcId) ? getNpcById(npcId) : undefined),
     [npcId],
   );
+  const battleDayNight = useMemo(
+    () => (npc ? pickBattleDayNight(npc.id) : 'day'),
+    [npc?.id],
+  );
+  const duelBg = useMemo(() => {
+    if (!npc) {
+      return { kind: 'full' as const, variant: 'day' as const };
+    }
+    return getBackgroundImage(npc.tier, npc.id, battleDayNight);
+  }, [npc, battleDayNight]);
   const duelBgmTrack = npc?.bossFlag ? ('boss' as const) : ('duel' as const);
   useScreenBgm(npc ? duelBgmTrack : null, true);
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
@@ -296,10 +305,11 @@ export default function NpcGameScreen() {
         };
       }
       const canAccess =
-        npc &&
-        Number.isFinite(npcId) &&
-        npcId >= 1 &&
-        (npcId === 22 ? selectPaleRiderUnlocked() : npcId <= highestUnlocked);
+        DEV_UNLOCK_ALL_NPCS ||
+        (npc &&
+          Number.isFinite(npcId) &&
+          npcId >= 1 &&
+          (npcId === 22 ? selectPaleRiderUnlocked() : npcId <= highestUnlocked));
       if (!canAccess) {
         router.replace('/npc-select');
         return undefined;
@@ -461,12 +471,19 @@ export default function NpcGameScreen() {
 
     const effectiveWin = modalData.kind === 'win';
 
-    setDefeatedSide(null);
+    const nextDefeatedSide: 'player' | 'npc' | null = effectiveWin
+      ? oh > 0
+        ? 'npc'
+        : null
+      : reviveFlip
+        ? 'player'
+        : ph > 0
+          ? 'player'
+          : null;
 
     if (effectiveWin) {
       setScores(ps + 1, ns);
       if (oh > 0) {
-        setDefeatedSide('npc');
         setHearts(ph, oh - 1);
       }
       playerStreakRef.current = streakBefore + 1;
@@ -475,18 +492,18 @@ export default function NpcGameScreen() {
       }
     } else if (reviveFlip) {
       setScores(ps, ns + 1);
-      setDefeatedSide('player');
       setHearts(1, oh);
       playerStreakRef.current = 0;
       setAbilityUsed(true);
     } else {
       setScores(ps, ns + 1);
       if (ph > 0) {
-        setDefeatedSide('player');
         setHearts(ph - 1, oh);
       }
       playerStreakRef.current = 0;
     }
+
+    setDefeatedSide(nextDefeatedSide);
 
     const ohAfterWin = effectiveWin && oh > 0 ? oh - 1 : oh;
     const phAfterWin = ph;
@@ -511,10 +528,12 @@ export default function NpcGameScreen() {
     if (o.reactionMs != null) {
       prevPlayerBangMsRef.current = o.reactionMs;
       const ms = o.reactionMs;
-      const { recordGlobalReactionSample, recordNpcBestReaction } =
-        useProgressStore.getState();
-      recordGlobalReactionSample(ms);
-      recordNpcBestReaction(npc.id, ms);
+      queueMicrotask(() => {
+        const { recordGlobalReactionSample, recordNpcBestReaction } =
+          useProgressStore.getState();
+        recordGlobalReactionSample(ms);
+        recordNpcBestReaction(npc.id, ms);
+      });
     }
 
     if (o.earlyTap) {
@@ -636,6 +655,7 @@ export default function NpcGameScreen() {
           playerMs: playerMsStr,
           npcMs: npcMsStr,
           lossReason,
+          dayNight: battleDayNight,
         },
       });
       return;
@@ -645,7 +665,7 @@ export default function NpcGameScreen() {
     nextRound();
     resetDuel();
     startRoundDuel();
-  }, [npc, nextRound, resetDuel, router, startRoundDuel, headshotOffered, setAbilityUsed]);
+  }, [npc, nextRound, resetDuel, router, startRoundDuel, headshotOffered, setAbilityUsed, battleDayNight]);
 
   /** 뱅 이전에도 탭을 엔진으로 넘겨 얼리 즉시 패배(누르고 있다가 뱅 때 손 떼면 이기는 버그 방지) */
   const shootCapturesEarly =
@@ -686,10 +706,12 @@ export default function NpcGameScreen() {
 
   const npcPose = useMemo(() => {
     if (defeatedSide === 'npc') return 'defeat' as const;
+    if (defeatedSide === 'player') return 'idle' as const;
     return npcSpritePoseFromPhase(phase);
   }, [defeatedSide, phase]);
   const playerPose = useMemo(() => {
     if (defeatedSide === 'player') return 'defeat' as const;
+    if (defeatedSide === 'npc') return 'idle' as const;
     return playerSpritePoseFromPhase(phase, playerShootFlash);
   }, [defeatedSide, phase, playerShootFlash]);
 
@@ -698,18 +720,6 @@ export default function NpcGameScreen() {
       setPlayerShootFlash(false);
     }
   }, [phase]);
-
-  const battleDayNight = useMemo(
-    () => (npc ? pickBattleDayNight(npc.id) : 'day'),
-    [npc?.id],
-  );
-
-  const duelBg = useMemo(() => {
-    if (!npc) {
-      return { kind: 'full' as const, variant: 'day' as const };
-    }
-    return getBackgroundImage(npc.tier, npc.id, battleDayNight);
-  }, [npc, battleDayNight]);
 
   const blindBangText =
     !!npc &&
@@ -762,6 +772,8 @@ export default function NpcGameScreen() {
             tierLabel={tierLabel}
             bossFlag={npc.bossFlag}
             npcPose={npcPose}
+            npcVictoryActive={defeatedSide === 'player'}
+            playerVictoryActive={defeatedSide === 'npc'}
             playerCharacterId={selectedCharacterId}
             playerPose={playerPose}
             signalPhase={enginePhaseToSignalBoardPhase(phase)}
@@ -799,7 +811,7 @@ export default function NpcGameScreen() {
             visible={paused}
             onResume={() => setPaused(false)}
             onSecondaryExit={leaveToNpcSelect}
-            secondaryLabel="NPC 선택으로"
+            secondaryLabel="대결상대 선택으로"
             onMainMenu={leaveToMainMenu}
           />
         </>
@@ -808,7 +820,7 @@ export default function NpcGameScreen() {
   );
 
   return (
-    <PhoneStageShell>
+    <PhoneStageShell edgeToEdge>
       {duelBg.kind === 'solid' ? (
         <SceneBackground
           {...arenaShellProps}

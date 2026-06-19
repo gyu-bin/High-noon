@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 """
-sprite-gen + Pollinations 로 duel 4프레임( idle→aim→fire→recoil ) 생성.
+sprite-gen + duel_sprite_library 로 duel 포즈 생성.
 
-1. tools/sprite-gen prepare_sprite_run → raw/duel.png 프롬프트·레이아웃
-2. Pollinations → 가로 4칸 스트립 생성
-3. extract_sprite_row_frames → 프레임 분리
-4. assets/sprites/ 에 aim.png, shoot.png + shoot 시퀀스 등록
+기본(--backend auto|library): scripts/duel_sprite_library.py — idle → aim/shoot
+선택(--backend pollinations): Pollinations AI 4프레임
 
 사용:
-  python scripts/generate_duel_animation.py player_01
-  python scripts/generate_duel_animation.py --all
-  python scripts/generate_duel_animation.py --all --regen-ts
+  python scripts/generate_duel_animation.py npc_04
+  python scripts/generate_duel_animation.py npc_04 --backend pollinations
+  python scripts/duel_sprite_library.py npc_04
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import subprocess
 import sys
@@ -22,12 +21,21 @@ import time
 from io import BytesIO
 from pathlib import Path
 
+import numpy as np
 import requests
-from PIL import Image
+from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from highnoon_sprite_generator import fit_center_sprite, remove_background  # noqa: E402
+from highnoon_sprite_generator import (  # noqa: E402
+    NPC_DATA,
+    PLAYER_DATA,
+    fit_center_sprite,
+    load_env_file,
+    remove_background,
+)
+
+load_env_file(ROOT / ".env")
 
 SG = ROOT / "tools" / "sprite-gen"
 OUT_RUNS = ROOT / "output" / "sprite-gen"
@@ -90,18 +98,166 @@ def char_paths(char_id: str) -> tuple[Path, Path, Path]:
 
 DUEL_FRAME_PROMPTS = [
     "standing idle hands near holster three-quarter view facing upper-right",
-    "quick draw aiming revolver diagonally upper-right toward opponent",
-    "firing pistol diagonally upper-right with bright muzzle flash on gun",
-    "recoil pose arm raised diagonally upper-right with smoke on gun",
+    "quick draw both hands gripping revolver aiming diagonally upper-right, gun in RIGHT half of frame",
+    (
+        "firing revolver arm fully extended toward upper-right, bright orange muzzle flash "
+        "on RIGHT side of image, dynamic shoot pose NOT neutral standing"
+    ),
+    (
+        "recoil after shot arm raised upper-right with gray smoke on gun, "
+        "muzzle on RIGHT side, dynamic pose NOT neutral standing"
+    ),
 ]
+
+DEFEAT_HINT = (
+    "lying horizontally flat on back on ground knocked out defeated, "
+    "full body parallel to ground, arms spread wide, eyes closed, "
+    "NOT standing upright"
+)
+
+REFERENCE_SKIP = {"npc_01", "player_01"}
+
+# idle 스프라이트 실제 외형 (NPC_DATA와 다를 수 있음)
+IDLE_OUTFIT_OVERRIDES: dict[str, str] = {
+    "npc_02": (
+        "wide black cowboy hat, deep red maroon poncho draped over shoulders, "
+        "dark brown tunic with gold buttons, large gold belt buckle, "
+        "purple magenta gauntlets and tall boots, dark charcoal pants, "
+        "silver revolver holster"
+    ),
+    "npc_03": (
+        "tan skin stern face visible under hat brim, wide dark brown cowboy hat "
+        "with black crow feather in hat band, long dark brown western duster coat "
+        "with bright gold yellow trim on collar lapels and coat edges, "
+        "dark charcoal vest with gold buttons over black shirt, black neck bandana, "
+        "black leather gloves, brown gun belt with large gold rectangular buckle, "
+        "dark trousers, brown leather cowboy boots, black crow feather ornament on shoulder, "
+        "boss gunslinger menacing sharp eyes"
+    ),
+    "npc_04": (
+        "orange brown cowboy hat, sandy tan fur-trimmed coat, narrow amber eyes, "
+        "desert fox motif belt, agile gunslinger, tan and orange outfit"
+    ),
+    "npc_05": (
+        "dark gray cowboy hat, silver metal half-mask on jaw, gray armored military coat, "
+        "charcoal pants, iron plates on shoulders, expressionless gunslinger"
+    ),
+    "npc_06": (
+        "female bounty hunter, dark navy cowboy hat, ice-blue eyes, sleek black leather duster, "
+        "dual holsters, calm cold expression, charcoal outfit"
+    ),
+    "npc_07": (
+        "brown cowboy hat with small green cactus pin, green-accent brown vest, "
+        "cactus spike pattern on tan shirt, brown pants, desert gunslinger"
+    ),
+    "npc_08": (
+        "golden brown cowboy hat, ornate gold trim red-brown coat, dual silver holsters, "
+        "confident gunslinger, gold decorations, tan pants"
+    ),
+    "npc_09": (
+        "dark cowboy hat with gold skull emblem, dark brown coat with gold skull chest badge, "
+        "golden revolver holster, boss gunslinger gold and charcoal outfit"
+    ),
+    "npc_10": (
+        "dark gray hat with eagle emblem, heavy charcoal shoulder armor plates, "
+        "sheriff star badge, eagle wing decoration, platinum gray armored gunslinger"
+    ),
+    "npc_11": (
+        "black wide-brim hat, massive bulky all-black iron armor body, "
+        "steam-punk iron plating, intimidating large silhouette, silent gunslinger"
+    ),
+    "npc_12": (
+        "pitch black hat, full black iron armor boss, silver trim on armor edges, "
+        "most imposing heavy platinum gunslinger, dark silhouette"
+    ),
+    "npc_13": (
+        "female gunslinger, red bandana headband, crimson red shirt and vest, "
+        "black pants, mirrored glass belt buckle, agile duelist"
+    ),
+    "npc_14": (
+        "female gunslinger, red cowboy hat, crimson outfit with yellow lightning bolt motif, "
+        "electric blue accents, dynamic energy duelist"
+    ),
+    "npc_15": (
+        "female boss, dark red wide hat, long dark crimson duster coat, "
+        "shadow pattern black trim, shadow hunter gunslinger"
+    ),
+    "npc_16": (
+        "female gunslinger, dark red hat, crimson coat with toxic green vial accents, "
+        "poison green trim, sinister expression, venom theme"
+    ),
+    "npc_17": (
+        "female boss Dryden, black hat, very dark crimson long coat, "
+        "charcoal outfit, night-themed gunslinger charms on belt"
+    ),
+    "npc_18": (
+        "female boss, dark crimson long coat, glowing supernatural red eyes, "
+        "darkest red outfit, red-eye gunslinger"
+    ),
+    "npc_19": (
+        "purple hooded void gunslinger, purple and black mystical outfit, "
+        "otherworldly purple aura, void theme"
+    ),
+    "npc_20": (
+        "black outfit gunslinger, ghostly cyan echo aura around body, "
+        "cyan afterimage effect, echo theme dark figure"
+    ),
+    "npc_21": (
+        "all black undertaker gunslinger boss, skull emblem on black hat, "
+        "orange-red accent trim on coat, ominous legend gunslinger"
+    ),
+    "npc_22": (
+        "large black wide-brim hat with skull, purple-black long supernatural coat, "
+        "glowing cyan eyes, cyan mystical flame on hands, hidden boss Pale Rider"
+    ),
+}
+
+
+def uses_outfit_lock(char_id: str) -> bool:
+    if not char_id.startswith("npc_"):
+        return False
+    return int(char_id.split("_")[1]) >= 3
+
+
+def character_desc(char_id: str) -> str:
+    if char_id in IDLE_OUTFIT_OVERRIDES:
+        return IDLE_OUTFIT_OVERRIDES[char_id]
+    if char_id.startswith("npc_"):
+        nid = int(char_id.split("_")[1])
+        for npc in NPC_DATA:
+            if npc["id"] == nid:
+                return npc["desc"]
+    if char_id.startswith("player_"):
+        num = int(char_id.split("_")[1])
+        pid = f"p{num}"
+        for player in PLAYER_DATA:
+            if player["id"] == pid:
+                return player["desc"]
+    return "western gunslinger cowboy"
 
 
 def short_duel_prompt(char_id: str, frame_hint: str | None = None) -> str:
-    base = (
-        f"{HIGH_NOON_STYLE}, western gunslinger {char_id}, "
-        f"full body front view, {frame_hint or 'duel pose'}"
+    desc = character_desc(char_id)
+    hint = frame_hint or "duel pose"
+    lock = (
+        "EXACT same character as idle reference, identical outfit colors and accessories, "
+        if uses_outfit_lock(char_id)
+        else ""
     )
-    return base
+    return (
+        f"{HIGH_NOON_STYLE}, {desc}, "
+        f"{lock}"
+        f"full body three-quarter view facing upper-right, {hint}, "
+        "same character outfit colors, pixel art game sprite"
+    )
+
+
+def defeat_prompt(char_id: str) -> str:
+    desc = character_desc(char_id)
+    return (
+        f"{HIGH_NOON_STYLE}, {desc}, {DEFEAT_HINT}, "
+        "full body horizontal side view on ground, pixel art game sprite"
+    )
 
 
 def prepare_run(char_id: str, idle_path: Path, run_dir: Path) -> None:
@@ -131,7 +287,7 @@ def prepare_run(char_id: str, idle_path: Path, run_dir: Path) -> None:
 
 
 def pollinations_image(prompt: str, width: int, height: int, seed: int) -> Image.Image:
-    short = prompt[:280]
+    short = prompt[:400]
     url = "https://image.pollinations.ai/prompt/" + requests.utils.quote(short)
     for attempt in range(5):
         resp = requests.get(
@@ -149,22 +305,178 @@ def pollinations_image(prompt: str, width: int, height: int, seed: int) -> Image
     raise RuntimeError("Pollinations rate limit — 잠시 후 다시 시도하세요")
 
 
-def generate_duel_strip(char_id: str, seed: int) -> Image.Image:
-    """4프레임 개별 생성 후 가로 스트립으로 합침 (sprite-gen extract 호환)."""
+def generate_duel_from_library(char_id: str, *, include_reference: bool = False) -> bool:
+    """scripts/duel_sprite_library — idle 기반 aim/shoot procedural 포즈."""
+    from scripts.duel_sprite_library import export_character
+
+    skip_reference = char_id in REFERENCE_SKIP and not include_reference
+    print("  duel_sprite_library (idle → aim/shoot)…")
+    return export_character(char_id, skip_reference=skip_reference)
+
+
+def normalize_duel_aim_right(img: Image.Image) -> Image.Image:
+    """먼지바람 기준 — 밝은(머즐) 픽셀이 왼쪽에 몰리면 좌우 반전."""
+    a = np.array(img.convert("RGBA"))
+    w = img.width
+    alpha = a[:, :, 3] > 40
+    bright = alpha & (a[:, :, :3].max(axis=2) > 175)
+    if bright.sum() < 80:
+        return img
+    bl = int(bright[:, : w // 2].sum())
+    br = int(bright[:, w // 2 :].sum())
+    if bl > br * 1.35 and br < bl:
+        return ImageOps.mirror(img)
+    return img
+
+
+def content_bbox_metrics(img: Image.Image) -> tuple[float, float, float]:
+    """cy (0=top), width ratio, height ratio"""
+    a = np.array(img.convert("RGBA"))
+    mask = a[:, :, 3] > 32
+    if not mask.any():
+        return 0.5, 0.5, 1.0
+    ys, xs = np.where(mask)
+    h = (ys.max() - ys.min() + 1) / img.height
+    w = (xs.max() - xs.min() + 1) / img.width
+    cy = float(ys.mean()) / img.height
+    return cy, w, h
+
+
+def is_valid_shoot_pose(img: Image.Image, idle: Image.Image) -> bool:
+    ic = content_bbox_metrics(idle)
+    sc = content_bbox_metrics(img)
+    return sc[1] > ic[1] * 1.06 or sc[0] < ic[0] - 0.03
+
+
+def is_valid_defeat_pose(img: Image.Image, idle: Image.Image) -> bool:
+    ic = content_bbox_metrics(idle)
+    dc = content_bbox_metrics(img)
+    # 쓰러짐: 가로로 넓거나(누움) 실루엣 높이가 확 줄어듦
+    if dc[1] > dc[2] * 1.12:
+        return True
+    if dc[2] < ic[2] * 0.72 and dc[0] > ic[0] + 0.06:
+        return True
+    return False
+
+
+def generate_pose_frame(
+    char_id: str,
+    hint: str,
+    seed: int,
+    *,
+    idle: Image.Image | None = None,
+    validate: str | None = None,
+    max_tries: int = 4,
+    defeat: bool = False,
+) -> Image.Image:
     cell = 256
+    best: Image.Image | None = None
+    for attempt in range(max_tries):
+        prompt = defeat_prompt(char_id) if defeat else short_duel_prompt(char_id, hint)
+        frame = fit_center_sprite(remove_background(pollinations_image(prompt, cell, cell, seed=seed + attempt)))
+        if idle is None or validate is None:
+            return frame
+        ok = is_valid_shoot_pose(frame, idle) if validate == "shoot" else is_valid_defeat_pose(frame, idle)
+        if ok:
+            if attempt:
+                print(f"      ✓ {validate} 포즈 {attempt + 1}회차")
+            return frame
+        best = frame
+        print(f"      ↻ {validate} 포즈 재시도 ({attempt + 1}/{max_tries})")
+        time.sleep(4)
+    return best if best is not None else frame
+
+
+def generate_duel_strip_per_frame(char_id: str, seed: int) -> Image.Image:
+    """프레임별 생성 폴백 — 동일 캐릭터 보장이 약함."""
+    cell = 256
+    idle_path, _, _ = char_paths(char_id)
+    idle_ref = fit_center_sprite(Image.open(idle_path).convert("RGBA"))
     frames: list[Image.Image] = []
     for i, hint in enumerate(DUEL_FRAME_PROMPTS):
-        prompt = short_duel_prompt(char_id, hint)
         print(f"    frame {i + 1}/4...")
-        frame = pollinations_image(prompt, cell, cell, seed=seed + i)
-        frame = fit_center_sprite(remove_background(frame))
+        validate = None
+        if i >= 2:
+            validate = "shoot"
+        frame = generate_pose_frame(
+            char_id,
+            hint,
+            seed + i * 10,
+            idle=idle_ref,
+            validate=validate,
+        )
         frames.append(frame)
-        time.sleep(8)
+        time.sleep(6)
 
     strip = Image.new("RGBA", (cell * 4, cell), (255, 0, 255, 255))
     for i, frame in enumerate(frames):
         strip.paste(frame, (i * cell, 0))
     return strip
+
+
+def strip_has_pose_variety(strip: Image.Image, cell: int = 256) -> bool:
+    """4칸 스트립이 서로 다른 실루엣인지 간단 검사."""
+    metrics: list[tuple[float, float]] = []
+    for i in range(4):
+        frame = strip.crop((i * cell, 0, (i + 1) * cell, cell))
+        cy, w, _h = content_bbox_metrics(frame)
+        metrics.append((w, cy))
+    if metrics[1][0] <= metrics[0][0] * 1.02 and metrics[2][0] <= metrics[0][0] * 1.02:
+        return False
+    if abs(metrics[1][1] - metrics[0][1]) < 0.01 and abs(metrics[2][1] - metrics[0][1]) < 0.01:
+        return False
+    return True
+
+
+def generate_duel_strip(
+    char_id: str,
+    seed: int,
+    *,
+    backend: str = "auto",
+) -> Image.Image:
+    """4프레임 duel 스트립 (Pollinations 전용)."""
+    if backend == "pollinations":
+        return generate_duel_strip_per_frame(char_id, seed)
+    if backend == "pollinations-strip":
+        return generate_duel_strip_pollinations_strip(char_id, seed)
+    return generate_duel_strip_pollinations_strip(char_id, seed)
+
+
+def generate_duel_strip_pollinations_strip(char_id: str, seed: int) -> Image.Image:
+    """Pollinations 가로 스트립 단일 생성."""
+    cell = 256
+    desc = character_desc(char_id)
+    action = DUEL_REQUEST["states"]["duel"]["action"]
+    prompt = (
+        f"{HIGH_NOON_STYLE}, {desc}, "
+        "one horizontal sprite strip exactly 4 equal frames left to right, "
+        f"magenta background FF00FF, {action}, "
+        "same character outfit colors in every frame, pixel art game sprite"
+    )
+
+    for attempt in range(4):
+        print(f"    Pollinations strip ({attempt + 1}/4)...")
+        try:
+            raw = pollinations_image(prompt, cell * 4, cell, seed=seed + attempt * 137)
+            strip = remove_background(raw)
+            if strip.height != cell:
+                strip = strip.resize(
+                    (int(strip.width * (cell / strip.height)), cell),
+                    Image.LANCZOS,
+                )
+            if strip.width != cell * 4:
+                strip = strip.resize((cell * 4, cell), Image.LANCZOS)
+            if not strip_has_pose_variety(strip, cell):
+                print("      ↻ 포즈 변화 부족 — 재시도")
+                time.sleep(6)
+                continue
+            return strip
+        except Exception as exc:
+            print(f"      ↻ {exc}")
+            time.sleep(8)
+
+    print("    [fallback] frame-by-frame 생성")
+    return generate_duel_strip_per_frame(char_id, seed)
 
 
 def extract_frames(run_dir: Path) -> None:
@@ -198,7 +510,8 @@ def export_to_assets(char_id: str, run_dir: Path) -> list[str]:
             print(f"  [건너뜀] {src.name}")
             continue
         img = Image.open(src).convert("RGBA")
-
+        if pose in ("aim", "shoot"):
+            img = normalize_duel_aim_right(img)
         if pose is None:
             continue
 
@@ -255,33 +568,111 @@ def poses_from_idle_fallback(idle_path: Path, assets_dir: Path, prefix: str) -> 
     print(f"  [fallback] idle → aim/shoot placeholder")
 
 
-def generate_one(char_id: str) -> bool:
+def procedural_defeat_from_idle(idle: Image.Image, cell: int = 256) -> Image.Image:
+    """idle → 누운 실루엣 (Pollinations defeat 실패 시 폴백)."""
+    from highnoon_sprite_generator import trim_alpha
+
+    base = trim_alpha(idle.convert("RGBA"))
+    if base.width == 0 or base.height == 0:
+        return fit_center_sprite(idle, cell)
+
+    laid = base.rotate(-90, resample=Image.BICUBIC, expand=True)
+    laid = trim_alpha(laid)
+    canvas = Image.new("RGBA", (cell, cell), (0, 0, 0, 0))
+    target_w = int(cell * 0.9)
+    scale = target_w / max(laid.width, 1)
+    nw = max(1, int(laid.width * scale))
+    nh = max(1, int(laid.height * scale))
+    laid = laid.resize((nw, nh), Image.LANCZOS)
+    ox = (cell - nw) // 2 - int(cell * 0.02)
+    oy = cell - nh - int(cell * 0.06)
+    canvas.paste(laid, (ox, oy), laid)
+    return fit_center_sprite(canvas, cell)
+
+
+def export_defeat(char_id: str, img: Image.Image) -> Path:
+    _, assets_dir, prefix = char_paths(char_id)
+    dest = assets_dir / f"{prefix}_defeat.png"
+    img.save(dest, "PNG")
+    print(f"  → {dest.relative_to(ROOT)}")
+    return dest
+
+
+def generate_defeat_pose(char_id: str, seed: int) -> Image.Image:
+    print("  Pollinations defeat pose...")
+    idle_path, _, _ = char_paths(char_id)
+    idle_ref = fit_center_sprite(Image.open(idle_path).convert("RGBA"))
+    return generate_pose_frame(
+        char_id,
+        DEFEAT_HINT,
+        seed + 40,
+        idle=idle_ref,
+        validate="defeat",
+        max_tries=5,
+        defeat=True,
+    )
+
+
+def generate_one(
+    char_id: str,
+    *,
+    with_defeat: bool = True,
+    with_duel: bool = True,
+    backend: str = "auto",
+    allow_idle_fallback: bool = True,
+    include_reference: bool = False,
+) -> bool:
     print(f"\n{'=' * 40}\n[{char_id}] duel 애니메이션 생성")
     idle, _, _ = char_paths(char_id)
     if not idle.exists():
         print(f"  [스킵] idle 없음: {idle}")
         return False
 
-    run_dir = OUT_RUNS / char_id
-    try:
-        prepare_run(char_id, idle, run_dir)
-        print("  Pollinations 4-frame strip...")
-        strip = generate_duel_strip(char_id, seed=seed_for(char_id))
-    except Exception as e:
-        print(f"  [Pollinations 실패] {e}")
-        _, assets_dir, prefix = char_paths(char_id)
-        poses_from_idle_fallback(idle, assets_dir, prefix)
-        return True
+    seed = seed_for(char_id)
+    ok = False
 
-    raw = run_dir / "raw" / "duel.png"
-    raw.parent.mkdir(parents=True, exist_ok=True)
-    strip.save(raw, "PNG")
-    print(f"  raw 저장: {raw.relative_to(ROOT)}")
+    if with_duel:
+        if backend in ("library", "auto"):
+            ok = generate_duel_from_library(char_id, include_reference=include_reference)
+        elif backend in ("pollinations", "pollinations-strip"):
+            run_dir = OUT_RUNS / char_id
+            try:
+                prepare_run(char_id, idle, run_dir)
+                print("  duel 4-frame strip (Pollinations)…")
+                strip = generate_duel_strip(char_id, seed=seed, backend=backend)
+            except Exception as e:
+                print(f"  [strip 실패] {e}")
+                try:
+                    print("  Pollinations frame-by-frame 재시도...")
+                    strip = generate_duel_strip_per_frame(char_id, seed)
+                except Exception as e2:
+                    print(f"  [frame-by-frame 실패] {e2}")
+                    if not allow_idle_fallback or char_id in REFERENCE_SKIP:
+                        return ok
+                    _, assets_dir, prefix = char_paths(char_id)
+                    poses_from_idle_fallback(idle, assets_dir, prefix)
+                    return True
+            else:
+                raw = run_dir / "raw" / "duel.png"
+                raw.parent.mkdir(parents=True, exist_ok=True)
+                strip.save(raw, "PNG")
+                print(f"  raw 저장: {raw.relative_to(ROOT)}")
 
-    print("  sprite-gen extract...")
-    extract_frames(run_dir)
-    export_to_assets(char_id, run_dir)
-    return True
+                print("  sprite-gen extract...")
+                extract_frames(run_dir)
+                export_to_assets(char_id, run_dir)
+                ok = True
+
+    if with_defeat and char_id not in REFERENCE_SKIP:
+        try:
+            defeat = generate_defeat_pose(char_id, seed)
+            export_defeat(char_id, defeat)
+            ok = True
+            time.sleep(4)
+        except Exception as e:
+            print(f"  [defeat 실패] {e}")
+
+    return ok
 
 
 def all_char_ids() -> list[str]:
@@ -388,30 +779,78 @@ def main() -> None:
     if not SG.exists():
         sys.exit("tools/sprite-gen 없음 — git clone 필요")
 
-    args = sys.argv[1:]
-    regen_ts = "--regen-ts" in args
-    args = [a for a in args if a != "--regen-ts"]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("targets", nargs="*", help="npc_02 또는 player_02 (비우면 npc_02+ 전체)")
+    parser.add_argument("--all", action="store_true", help="player 포함 전체 idle 캐릭터")
+    parser.add_argument("--regen-ts", action="store_true")
+    parser.add_argument("--include-reference", action="store_true", help="npc_01/player_01 포함")
+    parser.add_argument("--defeat-only", action="store_true")
+    parser.add_argument("--duel-only", action="store_true")
+    parser.add_argument(
+        "--npc-range",
+        metavar="FROM-TO",
+        help="npc_03-22 형식으로 범위 지정 (예: 3-22)",
+    )
+    parser.add_argument(
+        "--backend",
+        choices=["auto", "library", "pollinations", "pollinations-strip"],
+        default="auto",
+        help="auto/library=duel_sprite_library, pollinations=AI 생성",
+    )
+    parser.add_argument(
+        "--no-fallback",
+        action="store_true",
+        help="실패 시 idle placeholder 생성 안 함",
+    )
+    args = parser.parse_args()
 
-    if not args or args[0] == "--all":
+    if args.regen_ts and not args.targets and not args.all and not args.npc_range:
+        regenerate_sprite_assets_ts()
+        return
+
+    if args.npc_range:
+        lo_s, hi_s = args.npc_range.split("-", 1)
+        lo, hi = int(lo_s), int(hi_s)
+        targets = [f"npc_{i:02d}" for i in range(lo, hi + 1)]
+        print(f"NPC {lo}~{hi} ({len(targets)}명) 결투 포즈 생성")
+    elif args.all or (not args.targets and not args.regen_ts):
         targets = all_char_ids()
-        print(f"전체 {len(targets)}명 duel 애니메이션 생성")
-    elif args[0] == "--regen-ts":
+        if not args.include_reference:
+            targets = [t for t in targets if t not in REFERENCE_SKIP]
+        if not args.all:
+            targets = [t for t in targets if t.startswith("npc_")]
+        label = "전체" if args.all else "NPC"
+        print(f"{label} {len(targets)}명 결투 포즈 생성 (duel_sprite_library)")
+    elif args.regen_ts and not args.targets:
         regenerate_sprite_assets_ts()
         return
     else:
-        targets = args
+        targets = args.targets
+
+    with_defeat = not args.duel_only
+    with_duel = not args.defeat_only
 
     ok = 0
     for char_id in targets:
+        if not args.include_reference and char_id in REFERENCE_SKIP:
+            print(f"  [스킵] 기준 캐릭터 {char_id}")
+            continue
         try:
-            if generate_one(char_id):
+            if generate_one(
+                char_id,
+                with_defeat=with_defeat,
+                with_duel=with_duel,
+                backend=args.backend,
+                allow_idle_fallback=not args.no_fallback,
+                include_reference=args.include_reference,
+            ):
                 ok += 1
             time.sleep(4)
         except Exception as e:
             print(f"  [오류] {char_id}: {e}")
 
     print(f"\n완료: {ok}/{len(targets)}")
-    if regen_ts or ok:
+    if args.regen_ts or ok:
         regenerate_sprite_assets_ts()
 
 

@@ -17,6 +17,7 @@ import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { MaskedLegendCard } from '@/components/npc/MaskedLegendCard';
 import { NpcSelectCard } from '@/components/npc/NpcSelectCard';
 import { colors } from '@/constants/theme';
+import { DEV_UNLOCK_ALL_NPCS } from '@/constants/devFlags';
 import { getNpcById, NPCS } from '@/constants/npcs';
 import {
   selectPaleRiderUnlocked,
@@ -40,6 +41,8 @@ function buildGridCells(
   legendRevealBurst: number,
   paleUnlocked: boolean,
 ): GridCell[] {
+  const legendOpen = DEV_UNLOCK_ALL_NPCS || masterLegendGateCleared;
+  const paleOpen = DEV_UNLOCK_ALL_NPCS || paleUnlocked;
   const cells: GridCell[] = [];
 
   for (let id = 1; id <= 18; id++) {
@@ -48,7 +51,7 @@ function buildGridCells(
     cells.push({ type: 'npc', key: `npc-${id}`, npc });
   }
 
-  if (!masterLegendGateCleared) {
+  if (!legendOpen) {
     for (const id of [19, 20, 21]) {
       cells.push({ type: 'masked', key: `masked-${id}` });
     }
@@ -65,7 +68,7 @@ function buildGridCells(
     }
   }
 
-  if (paleUnlocked) {
+  if (paleOpen) {
     const pale = getNpcById(22);
     if (pale) cells.push({ type: 'npc', key: 'npc-22', npc: pale });
   }
@@ -89,7 +92,7 @@ function NpcSelectStatsHeader({ paleUnlocked }: { paleUnlocked: boolean }) {
     }
     return n;
   });
-  const total = paleUnlocked ? NPCS.length : NPCS.length - 1;
+  const total = DEV_UNLOCK_ALL_NPCS || paleUnlocked ? NPCS.length : NPCS.length - 1;
 
   return (
     <View style={styles.statsBar}>
@@ -152,8 +155,9 @@ export default function NpcSelectScreen() {
         return <MaskedLegendCard />;
       }
       const npc = item.npc;
-      const locked =
-        npc.id === 22
+      const locked = DEV_UNLOCK_ALL_NPCS
+        ? false
+        : npc.id === 22
           ? !paleUnlocked
           : npc.secret === true
             ? !paleUnlocked

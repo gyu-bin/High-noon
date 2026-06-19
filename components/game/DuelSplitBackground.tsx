@@ -1,7 +1,7 @@
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { DuelCoverImage } from '@/components/game/DuelCoverImage';
 import {
   DUEL_BG_VARIANT,
   type DuelBackgroundVariant,
@@ -31,30 +31,19 @@ export function DuelSplitBackground({
   return (
     <View style={[styles.root, { width: w, height: h }, style]}>
       <View style={[styles.halfClip, { height: halfH }]}>
-        <Image
-          pointerEvents="none"
+        <DuelCoverImage
           source={cfg.top}
-          style={[styles.fullBleedImage, { width: w, height: h }]}
-          contentFit="cover"
-          contentPosition={cfg.topContentPosition ?? 'bottom'}
-          cachePolicy="memory-disk"
-          priority="high"
-          transition={0}
+          width={w}
+          height={h}
+          bleed={1.24}
         />
         <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.topDim }]} />
       </View>
 
       <View style={[styles.halfClip, styles.bottomHalf, { height: halfH }]}>
-        <Image
-          pointerEvents="none"
-          source={cfg.bottom}
-          style={[styles.fullBleedImage, { width: w, height: h, top: -halfH }]}
-          contentFit="cover"
-          contentPosition={cfg.bottomContentPosition ?? 'top'}
-          cachePolicy="memory-disk"
-          priority="high"
-          transition={0}
-        />
+        <View style={{ position: 'absolute', left: 0, top: -halfH, width: w, height: h }}>
+          <DuelCoverImage source={cfg.bottom} width={w} height={h} bleed={1.24} />
+        </View>
         <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.bottomDim }]} />
       </View>
 
@@ -95,11 +84,6 @@ const styles = StyleSheet.create({
   bottomHalf: {
     top: undefined,
     bottom: 0,
-  },
-  fullBleedImage: {
-    position: 'absolute',
-    left: 0,
-    zIndex: 0,
   },
   halfDim: {
     ...StyleSheet.absoluteFillObject,

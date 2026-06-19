@@ -7,6 +7,8 @@ type Props = ViewProps & {
   children: React.ReactNode;
   /** true면 기기 전체 높이를 채움 (메뉴 등) */
   fullHeight?: boolean;
+  /** true면 가로도 기기 전체 — 결투 배경 레터박스 방지 */
+  edgeToEdge?: boolean;
   backgroundColor?: string;
 };
 
@@ -17,20 +19,29 @@ export function PhoneStageShell({
   children,
   style,
   fullHeight = false,
+  edgeToEdge = false,
   backgroundColor = colors.darkBrown,
   ...rest
 }: Props) {
-  const { stageWidth, stageHeight, windowHeight } = usePhoneStageMetrics();
-  const stageH = fullHeight ? windowHeight : Math.min(windowHeight, stageHeight);
+  const { stageWidth, stageHeight, windowWidth, windowHeight } = usePhoneStageMetrics();
+  const stageW = edgeToEdge ? windowWidth : stageWidth;
+  const stageH = edgeToEdge
+    ? windowHeight
+    : fullHeight
+      ? windowHeight
+      : Math.min(windowHeight, stageHeight);
 
   return (
-    <View style={[styles.outer, { backgroundColor }, style]} {...rest}>
-      <View
-        style={[
-          styles.stage,
-          { width: stageWidth, height: stageH },
-        ]}
-      >
+    <View
+      style={[
+        styles.outer,
+        { backgroundColor },
+        edgeToEdge && styles.outerEdge,
+        style,
+      ]}
+      {...rest}
+    >
+      <View style={[styles.stage, { width: stageW, height: stageH }]}>
         {children}
       </View>
     </View>
@@ -43,6 +54,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.darkBrown,
     alignItems: 'center',
     justifyContent: 'flex-start',
+  },
+  outerEdge: {
+    alignItems: 'stretch',
   },
   stage: {
     overflow: 'hidden',

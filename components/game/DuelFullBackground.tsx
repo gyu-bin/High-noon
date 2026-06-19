@@ -1,9 +1,8 @@
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { DuelCoverImage } from '@/components/game/DuelCoverImage';
 import { gameImages } from '@/constants/gameImages';
-import { colors } from '@/constants/theme';
 import type { DuelBackgroundVariant } from '@/constants/duelBackgroundVariants';
 
 type Props = {
@@ -18,6 +17,7 @@ type Props = {
 const FULL_BG = {
   day: {
     source: gameImages.duelBgDayFull,
+    root: '#1A0C06',
     dim: 'rgba(30, 16, 4, 0.2)',
     vignette: [
       'rgba(30, 16, 4, 0.38)',
@@ -28,6 +28,7 @@ const FULL_BG = {
   },
   night: {
     source: gameImages.duelBgNightFull,
+    root: '#0C0618',
     dim: 'rgba(8, 6, 24, 0.28)',
     vignette: [
       'rgba(8, 6, 28, 0.52)',
@@ -49,16 +50,8 @@ export function DuelFullBackground({
   const cfg = FULL_BG[variant];
 
   return (
-    <View style={[styles.root, { width: w, height: h }, style]}>
-      <Image
-        pointerEvents="none"
-        source={cfg.source}
-        style={[styles.bgImage, { width: w, height: h }]}
-        contentFit="cover"
-        cachePolicy="memory-disk"
-        priority="high"
-        transition={0}
-      />
+    <View style={[styles.root, { width: w, height: h, backgroundColor: cfg.root }, style]}>
+      <DuelCoverImage source={cfg.source} width={w} height={h} />
 
       <View pointerEvents="none" style={[styles.dim, { backgroundColor: cfg.dim }]} />
 
@@ -79,14 +72,7 @@ export function DuelFullBackground({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.darkBrown,
     overflow: 'hidden',
-  },
-  bgImage: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    zIndex: 0,
   },
   dim: {
     ...StyleSheet.absoluteFillObject,

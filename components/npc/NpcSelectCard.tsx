@@ -7,6 +7,7 @@ import { BOSS_CARD_BORDER, TIER_BADGE } from '@/constants/npcVisual';
 import { colors } from '@/constants/theme';
 import type { NpcDefinition } from '@/types/npc';
 import { formatReactionMs } from '@/utils/formatReactionMs';
+import { npcDisplayName } from '@/utils/npcDisplayName';
 
 type Props = {
   npc: NpcDefinition;
@@ -40,8 +41,8 @@ export function NpcSelectCard({
       <View style={[styles.spriteWrap, { opacity: spriteOpacity }]}>
         <NpcCharacterSprite
           npcId={npc.id}
-          width={56}
-          height={56}
+          width={64}
+          height={72}
           pose="idle"
         />
         {boss ? (
@@ -55,16 +56,12 @@ export function NpcSelectCard({
       </View>
 
       <Text style={[styles.name, locked && styles.nameLocked]} numberOfLines={2}>
-        {[npc.title, npc.name].filter(Boolean).join(' ')}
+        {npcDisplayName(npc)}
       </Text>
 
       <View style={[styles.badge, { backgroundColor: badge.bg }]}>
         <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
       </View>
-
-      {!locked ? (
-        <Text style={styles.targetMs}>{npc.reactionMs} ms</Text>
-      ) : null}
 
       {cleared && bestMs != null ? (
         <Text style={styles.best}>✓ {formatReactionMs(bestMs)} ms</Text>
@@ -88,8 +85,8 @@ export function NpcSelectCard({
     );
 
   const a11yName = locked
-    ? `잠긴 NPC ${npc.title} ${npc.name}`
-    : `${npc.title} ${npc.name}`;
+    ? `잠긴 대결상대 ${npcDisplayName(npc)}`
+    : npcDisplayName(npc);
 
   if (locked || !onPress) {
     return (
@@ -135,7 +132,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3D2414',
     borderWidth: 2,
     borderColor: colors.sand,
-    minHeight: 148,
+    minHeight: 140,
   },
   cardBoss: {
     borderColor: BOSS_CARD_BORDER,
@@ -147,11 +144,12 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   spriteWrap: {
-    width: 60,
-    height: 60,
+    width: 68,
+    height: 76,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
+    justifyContent: 'flex-end',
+    marginBottom: 2,
+    overflow: 'visible',
   },
   bossStar: {
     position: 'absolute',
@@ -178,12 +176,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.5,
-  },
-  targetMs: {
-    marginTop: 4,
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.ochre,
   },
   best: {
     marginTop: 2,

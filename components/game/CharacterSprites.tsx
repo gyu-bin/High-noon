@@ -1,27 +1,24 @@
 import { Image } from 'expo-image';
-import { memo, useEffect, type FC } from 'react';
+import { memo, type FC } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { View } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-  type SharedValue,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import type { SvgProps } from 'react-native-svg';
 
+import { getNpcSpriteSource, getPlayerSpriteSource } from '@/constants/spriteAssets';
 import {
-  getNpcShootFrames,
-  getNpcSpriteSource,
-  getPlayerShootFrames,
-  getPlayerSpriteSource,
-} from '@/constants/spriteAssets';
-import {
+  SPRITE_CACHE_REVISION,
   SPRITE_POSE_TRANSFORM,
   type SpritePose,
 } from '@/constants/sprites';
-import { RM_GAME } from '@/constants/reanimatedGame';
+import {
+  MuzzleFlashOverlay,
+  resolveDuelSpriteLayers,
+  spriteDisplayPose,
+  useDuelSpriteMotion,
+  usePoseOpacity,
+  VictoryEffectsOverlay,
+} from '@/lib/duelSprite';
 
 import Npc01 from '@/assets/images/characters/npc_01_clay.svg';
 import Npc02 from '@/assets/images/characters/npc_02_doug.svg';
@@ -71,9 +68,6 @@ const NPC_BY_ID: Record<number, FC<SvgProps>> = {
 };
 
 const DefaultNpc = Npc01;
-const POSE_FADE_MS = 36;
-const SHOOT_CROSSFADE_MS = 120;
-const SHOOT_IN_MS = 0;
 
 type BaseProps = {
   width: number;
@@ -109,135 +103,77 @@ const SpriteLayer = memo(function SpriteLayer({
         cachePolicy="memory-disk"
         priority="high"
         transition={0}
-        recyclingKey={String(source)}
+        recyclingKey={`${String(source)}-r${SPRITE_CACHE_REVISION}`}
       />
     </Animated.View>
   );
 });
 
-function usePoseOpacity(pose: SpritePose) {
-  const idle = useSharedValue(pose === 'idle' ? 1 : 0);
-  const aim = useSharedValue(pose === 'aim' ? 1 : 0);
-  const defeat = useSharedValue(pose === 'defeat' ? 1 : 0);
-  const shoot = useSharedValue(pose === 'shoot' ? 1 : 0);
-  const shootFrame = useSharedValue(0);
-
-  useEffect(() => {
-    const cfg = { duration: POSE_FADE_MS, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME };
-    const shootIn = { duration: SHOOT_IN_MS, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME };
-    idle.value = withTiming(pose === 'idle' ? 1 : 0, pose === 'shoot' ? shootIn : cfg);
-    aim.value = withTiming(pose === 'aim' ? 1 : 0, pose === 'shoot' ? shootIn : cfg);
-    defeat.value = withTiming(pose === 'defeat' ? 1 : 0, pose === 'shoot' ? shootIn : cfg);
-    shoot.value = withTiming(pose === 'shoot' ? 1 : 0, shootIn);
-    if (pose === 'shoot') {
-      shootFrame.value = 0;
-      shootFrame.value = withTiming(1, {
-        duration: SHOOT_CROSSFADE_MS,
-        easing: Easing.out(Easing.cubic),
-        reduceMotion: RM_GAME,
-      });
-    } else {
-      shootFrame.value = 0;
-    }
-  }, [pose, idle, aim, defeat, shoot, shootFrame]);
-
-  const shootFrame0Style = useAnimatedStyle(() => ({
-    opacity: shoot.value * (1 - shootFrame.value),
-  }));
-  const shootFrame1Style = useAnimatedStyle(() => ({
-    opacity: shoot.value * shootFrame.value,
-  }));
-  const singleShootStyle = useAnimatedStyle(() => ({
-    opacity: shoot.value,
-  }));
-
-  return {
-    idle,
-    aim,
-    defeat,
-    shootFrame0Style,
-    shootFrame1Style,
-    singleShootStyle,
-  };
-}
-
-function PngSpriteStack({
-  npcId,
-  characterId,
+function DuelSpriteStack({
+  mode,
+  id,
   width,
   height,
   pose,
-  mode,
 }: {
-  npcId?: number;
-  characterId?: number;
+  mode: 'npc' | 'player';
+  id: number;
   width: number;
   height: number;
   pose: SpritePose;
-  mode: 'npc' | 'player';
 }) {
-  const idleSrc =
-    mode === 'npc' ? getNpcSpriteSource(npcId!, 'idle') : getPlayerSpriteSource(characterId!, 'idle');
-  const aimSrc =
-    mode === 'npc' ? getNpcSpriteSource(npcId!, 'aim') : getPlayerSpriteSource(characterId!, 'aim');
-  const defeatSrc =
-    mode === 'npc'
-      ? getNpcSpriteSource(npcId!, 'defeat')
-      : getPlayerSpriteSource(characterId!, 'defeat');
-  const shootSrc =
-    mode === 'npc'
-      ? getNpcSpriteSource(npcId!, 'shoot')
-      : getPlayerSpriteSource(characterId!, 'shoot');
-  const shootFrames =
-    mode === 'npc' ? getNpcShootFrames(npcId!) : getPlayerShootFrames(characterId!);
-
-  const op = usePoseOpacity(pose);
-  const frame0 = shootFrames?.[0] ?? shootSrc;
-  const frame1 = shootFrames?.[1];
-  const useDualFrames = frame1 != null && frame0 != null;
+  const layers = resolveDuelSpriteLayers(mode, id);
+  const displayPose = spriteDisplayPose(pose);
+  const op = usePoseOpacity(displayPose);
+  const showAimLayer = displayPose === 'aim' && layers.aim !== layers.idle;
+  const showShootLayer = displayPose === 'shoot';
 
   return (
     <View style={{ width, height }}>
-      {idleSrc ? <SpriteLayer source={idleSrc} width={width} height={height} opacity={op.idle} /> : null}
-      {aimSrc ? <SpriteLayer source={aimSrc} width={width} height={height} opacity={op.aim} /> : null}
-      {defeatSrc ? (
-        <SpriteLayer source={defeatSrc} width={width} height={height} opacity={op.defeat} />
+      {layers.idle ? (
+        <SpriteLayer source={layers.idle} width={width} height={height} opacity={op.idle} />
       ) : null}
-      {useDualFrames ? (
+      {showAimLayer ? (
+        <SpriteLayer source={layers.aim} width={width} height={height} opacity={op.aim} />
+      ) : null}
+      {layers.defeat ? (
+        <SpriteLayer source={layers.defeat} width={width} height={height} opacity={op.defeat} />
+      ) : null}
+      {showShootLayer && layers.useDualShootFrames && layers.shootFrame0 && layers.shootFrame1 ? (
         <>
           <Animated.View pointerEvents="none" style={[layerStyles.absolute, op.shootFrame0Style]}>
             <Image
-              source={frame0}
+              source={layers.shootFrame0}
               style={{ width, height, backgroundColor: 'transparent' }}
               contentFit="contain"
               cachePolicy="memory-disk"
               priority="high"
               transition={0}
-              recyclingKey={`${mode}-shoot-0-${frame0}`}
+              recyclingKey={`${String(layers.shootFrame0)}-r${SPRITE_CACHE_REVISION}-0`}
             />
           </Animated.View>
           <Animated.View pointerEvents="none" style={[layerStyles.absolute, op.shootFrame1Style]}>
             <Image
-              source={frame1}
+              source={layers.shootFrame1}
               style={{ width, height, backgroundColor: 'transparent' }}
               contentFit="contain"
               cachePolicy="memory-disk"
               priority="high"
               transition={0}
-              recyclingKey={`${mode}-shoot-1-${frame1}`}
+              recyclingKey={`${String(layers.shootFrame1)}-r${SPRITE_CACHE_REVISION}-1`}
             />
           </Animated.View>
         </>
-      ) : frame0 ? (
+      ) : showShootLayer && layers.shootFrame0 ? (
         <Animated.View pointerEvents="none" style={[layerStyles.absolute, op.singleShootStyle]}>
           <Image
-            source={frame0}
+            source={layers.shootFrame0}
             style={{ width, height, backgroundColor: 'transparent' }}
             contentFit="contain"
             cachePolicy="memory-disk"
             priority="high"
             transition={0}
-            recyclingKey={`${mode}-shoot-${frame0}`}
+            recyclingKey={`${String(layers.shootFrame0)}-r${SPRITE_CACHE_REVISION}`}
           />
         </Animated.View>
       ) : null}
@@ -259,10 +195,10 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
   flipHorizontal,
   style,
   pose = 'idle',
-}: BaseProps & { npcId: number }) {
-  const idleSrc = getNpcSpriteSource(npcId, 'idle');
-  const hasPng = !!idleSrc;
-  const Cmp = NPC_BY_ID[npcId] ?? DefaultNpc;
+  victoryActive = false,
+}: BaseProps & { npcId: number; victoryActive?: boolean }) {
+  const hasPng = !!getNpcSpriteSource(npcId, 'idle');
+  const motionStyle = useDuelSpriteMotion(pose, victoryActive);
 
   return (
     <View
@@ -272,19 +208,31 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
           height,
           alignItems: 'center',
           justifyContent: 'center',
-          overflow: 'hidden',
+          overflow: 'visible',
         },
         flipHorizontal ? { transform: [{ scaleX: -1 }] } : null,
         style,
       ]}
     >
-      {hasPng ? (
-        <PngSpriteStack mode="npc" npcId={npcId} width={width} height={height} pose={pose} />
-      ) : (
-        <View style={svgPoseStyle(pose)}>
-          <Cmp width={width} height={height} />
-        </View>
-      )}
+      <Animated.View style={[{ width, height }, motionStyle]}>
+        {hasPng ? (
+          <DuelSpriteStack mode="npc" id={npcId} width={width} height={height} pose={pose} />
+        ) : (
+          <View style={{ width, height }} />
+        )}
+        {pose === 'shoot' && !victoryActive ? (
+          <MuzzleFlashOverlay width={width} height={height} active />
+        ) : null}
+        {victoryActive ? (
+          <VictoryEffectsOverlay
+            mode="npc"
+            id={npcId}
+            width={width}
+            height={height}
+            active
+          />
+        ) : null}
+      </Animated.View>
     </View>
   );
 });
@@ -296,9 +244,10 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
   flipHorizontal,
   style,
   pose = 'idle',
-}: BaseProps & { characterId?: number }) {
-  const idleSrc = getPlayerSpriteSource(characterId, 'idle');
-  const hasPng = !!idleSrc;
+  victoryActive = false,
+}: BaseProps & { characterId?: number; victoryActive?: boolean }) {
+  const hasPng = !!getPlayerSpriteSource(characterId, 'idle');
+  const motionStyle = useDuelSpriteMotion(pose, victoryActive);
 
   return (
     <View
@@ -308,25 +257,39 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
           height,
           alignItems: 'center',
           justifyContent: 'center',
-          overflow: 'hidden',
+          overflow: 'visible',
         },
         flipHorizontal ? { transform: [{ scaleX: -1 }] } : null,
         style,
       ]}
     >
-      {hasPng ? (
-        <PngSpriteStack
-          mode="player"
-          characterId={characterId}
-          width={width}
-          height={height}
-          pose={pose}
-        />
-      ) : (
-        <View style={svgPoseStyle(pose)}>
-          <PlayerSvg width={width} height={height} />
-        </View>
-      )}
+      <Animated.View style={[{ width, height }, motionStyle]}>
+        {hasPng ? (
+          <DuelSpriteStack
+            mode="player"
+            id={characterId}
+            width={width}
+            height={height}
+            pose={pose}
+          />
+        ) : (
+          <View style={svgPoseStyle(pose)}>
+            <PlayerSvg width={width} height={height} />
+          </View>
+        )}
+        {pose === 'shoot' && !victoryActive ? (
+          <MuzzleFlashOverlay width={width} height={height} active />
+        ) : null}
+        {victoryActive ? (
+          <VictoryEffectsOverlay
+            mode="player"
+            id={characterId}
+            width={width}
+            height={height}
+            active
+          />
+        ) : null}
+      </Animated.View>
     </View>
   );
 });

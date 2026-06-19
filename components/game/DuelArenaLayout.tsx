@@ -22,6 +22,7 @@ import {
   type DuelCorner,
 } from '@/constants/duelArena';
 import { colors } from '@/constants/theme';
+import { npcDisplayName } from '@/utils/npcDisplayName';
 
 const HEART_FULL = '#E11D48';
 const HEART_EMPTY = 'rgba(245, 230, 200, 0.55)';
@@ -54,6 +55,8 @@ type Props = {
   tierLabel: string;
   bossFlag: boolean;
   npcPose: SpritePose;
+  npcVictoryActive?: boolean;
+  playerVictoryActive?: boolean;
   playerCharacterId: number;
   playerPose: SpritePose;
   signalPhase: DuelSignalBoardPhase;
@@ -84,6 +87,8 @@ export function DuelArenaLayout({
   tierLabel,
   bossFlag,
   npcPose,
+  npcVictoryActive = false,
+  playerVictoryActive = false,
   playerCharacterId,
   playerPose,
   signalPhase,
@@ -105,6 +110,7 @@ export function DuelArenaLayout({
 
   const npcCorner: DuelCorner = 'topRight';
   const playerCorner: DuelCorner = 'bottomLeft';
+  const npcLabel = npcDisplayName({ title: npcTitle, name: npcName });
 
   return (
     <View style={[styles.root, { width, height }]}>
@@ -131,7 +137,7 @@ export function DuelArenaLayout({
 
       {/* NPC — 우상단, 플레이어 쪽을 향해 대각선 */}
       <View pointerEvents="none" style={[styles.npcZone, { width, height: height * 0.52 }]}>
-        <View style={styles.groundShadowNpc} />
+        {npcPose !== 'defeat' ? <View style={styles.groundShadowNpc} /> : null}
         <View style={{ transform: duelFigureTransform(npcCorner, npcPose) }}>
           <NpcCharacterSprite
             npcId={npcId}
@@ -139,6 +145,7 @@ export function DuelArenaLayout({
             height={figH}
             flipHorizontal={duelFlipHorizontal(npcCorner)}
             pose={npcPose}
+            victoryActive={npcVictoryActive}
           />
         </View>
       </View>
@@ -156,6 +163,7 @@ export function DuelArenaLayout({
             height={figH}
             flipHorizontal={duelFlipHorizontal(playerCorner)}
             pose={playerPose}
+            victoryActive={playerVictoryActive}
           />
         </View>
       </View>
@@ -177,7 +185,7 @@ export function DuelArenaLayout({
       >
         <View style={styles.nameRow}>
           <Text style={[styles.npcName, { fontFamily: FONT_RYE }]} numberOfLines={1}>
-            {npcTitle} {npcName}
+            {npcLabel}
           </Text>
           {bossFlag ? (
             <Ionicons name="skull" size={20} color={colors.cream} style={styles.bossSkull} />
@@ -244,7 +252,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'flex-end',
     paddingLeft: 4,
-    paddingBottom: 64,
+    paddingBottom: 108,
   },
   groundShadowNpc: {
     position: 'absolute',
@@ -259,7 +267,7 @@ const styles = StyleSheet.create({
   groundShadowPlayer: {
     position: 'absolute',
     left: 24,
-    bottom: 52,
+    bottom: 96,
     width: 120,
     height: 22,
     borderRadius: 999,

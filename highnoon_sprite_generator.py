@@ -3,10 +3,11 @@ High Noon — 스프라이트 생성 파이프라인
 ======================================
 1. --concept      컨셉 시트에서 HQ 4명 추출 (무료, 즉시)
 2. --pollinations  Pollinations AI로 나머지 생성 (무료, API 키 불필요)
-3. (기본)         Replicate SDXL img2img — 크레딧 필요
 
 sprite-gen (tools/sprite-gen): 추출된 idle PNG → idle/attack atlas 후처리
   ./scripts/run_sprite_gen_atlas.sh player_01
+
+결투 aim/shoot 포즈: scripts/duel_sprite_library.py (idle 기반 procedural)
 
 사용법:
   python highnoon_sprite_generator.py --concept
@@ -18,9 +19,7 @@ import os
 import re
 import sys
 import time
-import base64
 import requests
-import replicate
 from pathlib import Path
 from PIL import Image
 from io import BytesIO
@@ -33,7 +32,7 @@ ASSETS_PLAYER_DIR = Path("assets/sprites/player")
 SPRITE_SIZE = 256
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# 컨셉 시트에 이미 있는 캐릭터 (Pollinations/Replicate 스킵)
+# 컨셉 시트에 이미 있는 캐릭터 (Pollinations 스킵)
 CONCEPT_PLAYER_IDS = {1, 4}
 CONCEPT_NPC_IDS = {3, 22}
 
@@ -66,27 +65,6 @@ def load_env_file(path: Path = Path(".env")) -> None:
 
 
 load_env_file()
-
-
-def get_replicate_client() -> replicate.Client:
-    token = os.environ.get("REPLICATE_API_TOKEN", "").strip()
-    if not token or token == "YOUR_TOKEN_HERE":
-        raise RuntimeError(
-            "REPLICATE_API_TOKEN이 없습니다.\n"
-            "  export REPLICATE_API_TOKEN=r8_xxx\n"
-            "  또는 프로젝트 루트에 .env 파일을 만드세요."
-        )
-    return replicate.Client(api_token=token)
-
-
-REPLICATE_CLIENT = None
-
-
-def replicate_client() -> replicate.Client:
-    global REPLICATE_CLIENT
-    if REPLICATE_CLIENT is None:
-        REPLICATE_CLIENT = get_replicate_client()
-    return REPLICATE_CLIENT
 
 
 def safe_filename(name: str) -> str:
@@ -288,22 +266,203 @@ def chroma_to_alpha(img: Image.Image, key=(255, 0, 255), tolerance: int = 72) ->
 
 
 def multi_chroma_to_alpha(img: Image.Image) -> Image.Image:
-    """마젠타 크로마만 제거 (갈색/보라 키는 캐릭터 픽셀까지 지움)."""
-    return chroma_to_alpha(img, (255, 0, 255), 96)
+    """마젠타·빨강 크로마 제거 (갈색/보라 키는 캐릭터 픽셀까지 지울 수 있어 rembg 폴백)."""
+    out = chroma_to_alpha(img, (255, 0, 255), 96)
+    return chroma_to_alpha(out, (255, 0, 0), 72)
+
+
+def flood_remove_magenta(img: Image.Image, *, tol: int = 60) -> Image.Image:
+    """가장자리 연결 마젠타만 제거 — 망토·검은 옷 rembg 오인 방지."""
+    from collections import deque
+
+    import numpy as np
+    from scipy import ndimage
+
+    a = np.array(img.convert("RGBA"))
+    h, w = a.shape[:2]
+
+    def is_magenta(rgb: tuple[int, ...]) -> bool:
+        r, g, b = rgb[:3]
+        return r > 200 and b > 200 and g < tol
+
+    bg = np.zeros((h, w), dtype=bool)
+    q: deque[tuple[int, int]] = deque()
+    for x in range(w):
+        for y in (0, h - 1):
+            if is_magenta(tuple(a[y, x, :3])) and not bg[y, x]:
+                bg[y, x] = True
+                q.append((x, y))
+    for y in range(h):
+        for x in (0, w - 1):
+            if is_magenta(tuple(a[y, x, :3])) and not bg[y, x]:
+                bg[y, x] = True
+                q.append((x, y))
+    while q:
+        x, y = q.popleft()
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h and not bg[ny, nx] and is_magenta(tuple(a[ny, nx, :3])):
+                bg[ny, nx] = True
+                q.append((nx, ny))
+
+    out = a.copy()
+    out[bg, 3] = 0
+    mask = out[:, :, 3] > 48
+    if mask.any():
+        filled = ndimage.binary_fill_holes(mask)
+        ys, xs = np.where(mask)
+        region = np.zeros_like(filled)
+        region[ys.min() : ys.max() + 1, xs.min() : xs.max() + 1] = True
+        filled &= region
+        hole = filled & (out[:, :, 3] < 48)
+        for c, val in enumerate((120, 30, 40)):
+            ch = out[:, :, c]
+            ch[hole & (ch < 10)] = val
+            out[:, :, c] = ch
+        out[:, :, 3] = np.where(filled, np.maximum(out[:, :, 3], 255), out[:, :, 3])
+    return Image.fromarray(out.astype(np.uint8))
+
+
+def flood_remove_edge_background(img: Image.Image, *, tol: int = 48) -> Image.Image:
+    """가장자리 대표색(마젠타·단색 배경)을 연결 제거."""
+    from collections import deque
+
+    import numpy as np
+
+    a = np.array(img.convert("RGBA"))
+    h, w = a.shape[:2]
+    samples = [
+        a[0, 0, :3],
+        a[0, w - 1, :3],
+        a[h - 1, 0, :3],
+        a[h - 1, w - 1, :3],
+        a[0, w // 2, :3],
+        a[h - 1, w // 2, :3],
+    ]
+    bg = np.median(np.stack(samples), axis=0).astype(np.int16)
+
+    def matches(rgb: tuple[int, ...]) -> bool:
+        r, g, b = (int(rgb[0]), int(rgb[1]), int(rgb[2]))
+        return (
+            abs(r - bg[0]) <= tol
+            and abs(g - bg[1]) <= tol
+            and abs(b - bg[2]) <= tol
+        )
+
+    mask = np.zeros((h, w), dtype=bool)
+    q: deque[tuple[int, int]] = deque()
+    for x in range(w):
+        for y in (0, h - 1):
+            if matches(tuple(a[y, x, :3])) and not mask[y, x]:
+                mask[y, x] = True
+                q.append((x, y))
+    for y in range(h):
+        for x in (0, w - 1):
+            if matches(tuple(a[y, x, :3])) and not mask[y, x]:
+                mask[y, x] = True
+                q.append((x, y))
+    while q:
+        x, y = q.popleft()
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h and not mask[ny, nx] and matches(tuple(a[ny, nx, :3])):
+                mask[ny, nx] = True
+                q.append((nx, ny))
+
+    out = a.copy()
+    out[mask, 3] = 0
+    return Image.fromarray(out.astype(np.uint8))
+
+
+def _opaque_ratio(img: Image.Image) -> float:
+    w, h = img.size
+    px = img.load()
+    return sum(1 for y in range(h) for x in range(w) if px[x, y][3] > 48) / (w * h)
+
+
+def _magenta_fraction_at_edges(img: Image.Image, *, tol: int = 60) -> float:
+    import numpy as np
+
+    a = np.array(img.convert("RGBA"))
+    h, w = a.shape[:2]
+
+    def is_magenta(rgb: tuple[int, ...]) -> bool:
+        r, g, b = rgb[:3]
+        return r > 200 and b > 200 and g < tol
+
+    edge_idx = []
+    for x in range(w):
+        edge_idx.append((0, x))
+        edge_idx.append((h - 1, x))
+    for y in range(h):
+        edge_idx.append((y, 0))
+        edge_idx.append((y, w - 1))
+    hits = sum(1 for y, x in edge_idx if is_magenta(tuple(a[y, x, :3])))
+    return hits / max(1, len(edge_idx))
+
+
+def _median_corner_rgb(img: Image.Image) -> tuple[int, int, int]:
+    import numpy as np
+
+    a = np.array(img.convert("RGB"))
+    h, w = a.shape[:2]
+    samples = np.stack(
+        [a[0, 0], a[0, w - 1], a[h - 1, 0], a[h - 1, w - 1], a[0, w // 2], a[h - 1, w // 2]],
+        axis=0,
+    )
+    return tuple(int(v) for v in np.median(samples, axis=0))
+
+
+def strip_magenta_pixels(img: Image.Image) -> Image.Image:
+    """잔여 FF00FF 마젠타·핑크 크로마 키 제거 (캐릭터 보라/자주는 보존)."""
+    import numpy as np
+
+    a = np.array(img.convert("RGBA"))
+    rgb = a[:, :, :3].astype(np.int16)
+    strict = (rgb[:, :, 0] > 215) & (rgb[:, :, 1] < 90) & (rgb[:, :, 2] > 215)
+    fringe = (
+        (rgb[:, :, 0] > 185)
+        & (rgb[:, :, 1] < 115)
+        & (rgb[:, :, 2] > 185)
+        & (a[:, :, 3] > 0)
+        & (a[:, :, 3] < 250)
+    )
+    a[strict | fringe, 3] = 0
+    return Image.fromarray(a.astype(np.uint8))
+
+
+def remove_sprite_background(img: Image.Image) -> Image.Image:
+    """마젠타 가장자리 → flood 제거. 단색 배경은 좁은 edge flood만 (의상 색 먹음 방지)."""
+    if _magenta_fraction_at_edges(img) >= 0.35:
+        out = flood_remove_magenta(img)
+        if _opaque_ratio(out) < 0.58:
+            return out
+
+    out = flood_remove_edge_background(img, tol=22)
+    if _opaque_ratio(out) < 0.58:
+        return out
+
+    bg = _median_corner_rgb(img)
+    keyed = chroma_to_alpha(img, bg, tolerance=24)
+    if _opaque_ratio(keyed) < 0.62:
+        return strip_magenta_pixels(keyed)
+    return strip_magenta_pixels(out)
 
 
 def remove_background(img: Image.Image) -> Image.Image:
-    """크로마 다중 키 → rembg 순으로 배경 제거."""
+    """크로마 키 → 불투명 비율이 높으면 rembg로 배경 제거."""
     keyed = multi_chroma_to_alpha(img)
     w, h = keyed.size
     px = keyed.load()
-    corners = [(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)]
-    if all(px[c][3] < 32 for c in corners):
+    opaque_ratio = sum(1 for y in range(h) for x in range(w) if px[x, y][3] > 48) / (w * h)
+    if opaque_ratio < 0.32:
         return keyed
     try:
         from rembg import remove
 
         out = remove(img.convert("RGB"))
+        if isinstance(out, Image.Image):
+            return out.convert("RGBA")
         return Image.open(BytesIO(out)).convert("RGBA")
     except Exception:
         return keyed
@@ -429,59 +588,6 @@ def generate_all_sprites_pollinations(skip_concept: bool = True) -> None:
     print("=" * 50)
 
 
-def image_to_base64(image_path: str) -> str:
-    with open(image_path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
-
-
-def generate_sprite(
-    character: dict,
-    reference_image_b64: str,
-    strength: float = 0.65,
-) -> Image.Image | None:
-    name = character.get("name", "unknown")
-    char_id = character.get("id", "?")
-    desc = character.get("desc", "")
-    tier = character.get("tier", "")
-    is_boss = character.get("boss", False)
-
-    prompt = BASE_PROMPT.format(character_desc=desc)
-    if is_boss:
-        prompt += ", boss character, extra detailed, more imposing"
-
-    print(f"\n[{char_id}] {name} ({tier}) 생성 중...")
-    print(f"  프롬프트: {prompt[:80]}...")
-
-    try:
-        output = replicate_client().run(
-            "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-            input={
-                "prompt": prompt,
-                "negative_prompt": NEGATIVE_PROMPT,
-                "image": f"data:image/jpeg;base64,{reference_image_b64}",
-                "strength": strength,
-                "num_inference_steps": 40,
-                "guidance_scale": 8.5,
-                "width": 512,
-                "height": 512,
-                "scheduler": "K_EULER_ANCESTRAL",
-            }
-        )
-
-        if output and len(output) > 0:
-            image_url = output[0]
-            response = requests.get(image_url, timeout=30)
-            img = Image.open(BytesIO(response.content))
-            return img
-        else:
-            print(f"  [오류] 출력 없음")
-            return None
-
-    except Exception as e:
-        print(f"  [오류] {e}")
-        return None
-
-
 def save_sprite(img: Image.Image, filename: str, *, assets_idle_name: str | None = None):
     img = fit_center_sprite(img.convert("RGBA"))
     path = OUTPUT_DIR / filename
@@ -496,61 +602,6 @@ def save_sprite(img: Image.Image, filename: str, *, assets_idle_name: str | None
         assets_path.parent.mkdir(parents=True, exist_ok=True)
         img.save(assets_path, "PNG")
         print(f"  앱 에셋: {assets_path}")
-
-
-def generate_all_sprites(reference_path: str):
-    print("=" * 50)
-    print("High Noon 스프라이트 생성 시작")
-    print("=" * 50)
-
-    replicate_client()
-
-    if not os.path.exists(reference_path):
-        print(f"[오류] 레퍼런스 이미지 없음: {reference_path}")
-        print("reference_sprite.png 파일을 같은 폴더에 넣어주세요.")
-        return
-
-    ref_b64 = image_to_base64(reference_path)
-    print(f"레퍼런스 이미지 로드 완료: {reference_path}")
-
-    print("\n--- 플레이어 캐릭터 4명 ---")
-    for player in PLAYER_DATA:
-        img = generate_sprite(player, ref_b64, strength=0.6)
-        if img:
-            player_num = int(str(player["id"]).lstrip("pP"))
-            save_sprite(
-                img,
-                f"player_{player['id']}_{player['name']}.png",
-                assets_idle_name=f"player_{player_num:02d}_idle.png",
-            )
-        time.sleep(2)
-
-    print("\n--- NPC 22명 ---")
-    for npc in NPC_DATA:
-        tier_strength = {
-            "BRONZE": 0.65,
-            "SILVER": 0.65,
-            "GOLD": 0.68,
-            "PLATINUM": 0.70,
-            "DIAMOND": 0.72,
-            "MASTER": 0.74,
-            "LEGEND": 0.76,
-            "HIDDEN": 0.78,
-        }.get(npc["tier"], 0.65)
-
-        img = generate_sprite(npc, ref_b64, strength=tier_strength)
-        if img:
-            filename = f"npc_{npc['id']:02d}_{safe_filename(npc['name'])}.png"
-            save_sprite(
-                img,
-                filename,
-                assets_idle_name=f"npc_{npc['id']:02d}_idle.png",
-            )
-        time.sleep(2)
-
-    print("\n" + "=" * 50)
-    print(f"완료! 스프라이트 저장 위치: {OUTPUT_DIR.resolve()}")
-    print("=" * 50)
 
 
 def normalize_name(name: str) -> str:
@@ -584,18 +635,14 @@ def find_character(char_name: str) -> dict | None:
     return None
 
 
-def generate_single(char_name: str, reference_path: str, *, backend: str = "replicate"):
+def generate_single(char_name: str, *, backend: str = "pollinations"):
     target = find_character(char_name)
     if not target:
         print(f"캐릭터 '{char_name}' 를 찾을 수 없어요.")
         print("예: 황야의까마귀, 까마귀, Pale Rider, The Pale Rider")
         return
 
-    if backend == "pollinations":
-        img = generate_sprite_pollinations(target)
-    else:
-        ref_b64 = image_to_base64(reference_path)
-        img = generate_sprite(target, ref_b64)
+    img = generate_sprite_pollinations(target)
 
     if img:
         if "tier" in target:
@@ -620,7 +667,7 @@ if __name__ == "__main__":
     elif len(sys.argv) > 1 and sys.argv[1] in ("--pollinations", "--free", "-f"):
         name = sys.argv[2] if len(sys.argv) > 2 else None
         if name:
-            generate_single(name, REFERENCE_IMAGE_PATH, backend="pollinations")
+            generate_single(name)
         else:
             generate_all_sprites_pollinations()
     elif len(sys.argv) > 1 and sys.argv[1] in ("--local", "-l"):
@@ -629,6 +676,9 @@ if __name__ == "__main__":
         print("  python highnoon_sprite_generator.py --pollinations")
         sys.exit(1)
     elif len(sys.argv) > 1:
-        generate_single(sys.argv[1], REFERENCE_IMAGE_PATH)
+        generate_single(sys.argv[1])
     else:
-        generate_all_sprites(REFERENCE_IMAGE_PATH)
+        print("사용법:")
+        print("  python highnoon_sprite_generator.py --concept")
+        print("  python highnoon_sprite_generator.py --pollinations [캐릭터이름]")
+        sys.exit(1)

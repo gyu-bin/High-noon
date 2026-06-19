@@ -1,13 +1,6 @@
-import { Image } from 'expo-image';
-import {
-  StyleSheet,
-  View,
-  useWindowDimensions,
-  type ImageSourcePropType,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
+import { StyleSheet, View, useWindowDimensions, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 
+import { DuelCoverImage } from '@/components/game/DuelCoverImage';
 import { colors } from '@/constants/theme';
 
 type Props = {
@@ -53,15 +46,7 @@ export function SceneBackground({
       ]}
     >
       {useSolid ? null : (
-        <Image
-          pointerEvents="none"
-          source={source!}
-          style={[styles.bgImage, { width: w, height: h }]}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          priority="high"
-          transition={0}
-        />
+        <DuelCoverImage source={source!} width={w} height={h} />
       )}
       <View pointerEvents="none" style={[styles.dim, { backgroundColor: dimColor }]} />
       <View style={styles.foreground} pointerEvents="box-none">
@@ -75,12 +60,7 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.darkBrown,
-  },
-  bgImage: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    zIndex: 0,
+    overflow: 'hidden',
   },
   dim: {
     ...StyleSheet.absoluteFillObject,

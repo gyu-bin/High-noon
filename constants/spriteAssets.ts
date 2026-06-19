@@ -14,106 +14,127 @@ const NPC_SPRITES: Partial<Record<number, PoseMap>> = {
   },
   2: {
     aim: require('@/assets/sprites/npc/npc_02_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_02_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_02_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_02_shoot.png'),
   },
   3: {
     aim: require('@/assets/sprites/npc/npc_03_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_03_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_03_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_03_shoot.png'),
   },
   4: {
     aim: require('@/assets/sprites/npc/npc_04_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_04_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_04_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_04_shoot.png'),
   },
   5: {
     aim: require('@/assets/sprites/npc/npc_05_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_05_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_05_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_05_shoot.png'),
   },
   6: {
     aim: require('@/assets/sprites/npc/npc_06_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_06_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_06_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_06_shoot.png'),
   },
   7: {
     aim: require('@/assets/sprites/npc/npc_07_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_07_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_07_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_07_shoot.png'),
   },
   8: {
     aim: require('@/assets/sprites/npc/npc_08_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_08_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_08_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_08_shoot.png'),
   },
   9: {
     aim: require('@/assets/sprites/npc/npc_09_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_09_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_09_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_09_shoot.png'),
   },
   10: {
     aim: require('@/assets/sprites/npc/npc_10_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_10_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_10_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_10_shoot.png'),
   },
   11: {
     aim: require('@/assets/sprites/npc/npc_11_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_11_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_11_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_11_shoot.png'),
   },
   12: {
     aim: require('@/assets/sprites/npc/npc_12_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_12_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_12_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_12_shoot.png'),
   },
   13: {
     aim: require('@/assets/sprites/npc/npc_13_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_13_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_13_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_13_shoot.png'),
   },
   14: {
     aim: require('@/assets/sprites/npc/npc_14_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_14_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_14_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_14_shoot.png'),
   },
   15: {
     aim: require('@/assets/sprites/npc/npc_15_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_15_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_15_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_15_shoot.png'),
   },
   16: {
     aim: require('@/assets/sprites/npc/npc_16_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_16_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_16_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_16_shoot.png'),
   },
   17: {
     aim: require('@/assets/sprites/npc/npc_17_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_17_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_17_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_17_shoot.png'),
   },
   18: {
     aim: require('@/assets/sprites/npc/npc_18_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_18_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_18_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_18_shoot.png'),
   },
   19: {
     aim: require('@/assets/sprites/npc/npc_19_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_19_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_19_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_19_shoot.png'),
   },
   20: {
     aim: require('@/assets/sprites/npc/npc_20_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_20_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_20_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_20_shoot.png'),
   },
   21: {
     aim: require('@/assets/sprites/npc/npc_21_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_21_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_21_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_21_shoot.png'),
   },
   22: {
     aim: require('@/assets/sprites/npc/npc_22_aim.png'),
+    defeat: require('@/assets/sprites/npc/npc_22_defeat.png'),
     idle: require('@/assets/sprites/npc/npc_22_idle.png'),
     shoot: require('@/assets/sprites/npc/npc_22_shoot.png'),
   },
@@ -125,21 +146,6 @@ const PLAYER_SPRITES: Partial<Record<number, PoseMap>> = {
     defeat: require('@/assets/sprites/player/player_01_defeat.png'),
     idle: require('@/assets/sprites/player/player_01_idle.png'),
     shoot: require('@/assets/sprites/player/player_01_shoot.png'),
-  },
-  2: {
-    aim: require('@/assets/sprites/player/player_02_aim.png'),
-    idle: require('@/assets/sprites/player/player_02_idle.png'),
-    shoot: require('@/assets/sprites/player/player_02_shoot.png'),
-  },
-  3: {
-    aim: require('@/assets/sprites/player/player_03_aim.png'),
-    idle: require('@/assets/sprites/player/player_03_idle.png'),
-    shoot: require('@/assets/sprites/player/player_03_shoot.png'),
-  },
-  4: {
-    aim: require('@/assets/sprites/player/player_04_aim.png'),
-    idle: require('@/assets/sprites/player/player_04_idle.png'),
-    shoot: require('@/assets/sprites/player/player_04_shoot.png'),
   },
 };
 
@@ -170,9 +176,6 @@ const NPC_SHOOT_FRAMES: Partial<Record<number, ShootSeq>> = {
 
 const PLAYER_SHOOT_FRAMES: Partial<Record<number, ShootSeq>> = {
   1: [require('@/assets/sprites/player/player_01_shoot_00.png'), require('@/assets/sprites/player/player_01_shoot_01.png')],
-  2: [require('@/assets/sprites/player/player_02_shoot_00.png'), require('@/assets/sprites/player/player_02_shoot_01.png')],
-  3: [require('@/assets/sprites/player/player_03_shoot_00.png'), require('@/assets/sprites/player/player_03_shoot_01.png')],
-  4: [require('@/assets/sprites/player/player_04_shoot_00.png'), require('@/assets/sprites/player/player_04_shoot_01.png')],
 };
 
 function pickPose(map: Partial<Record<number, PoseMap>>, id: number, pose: SpritePose) {

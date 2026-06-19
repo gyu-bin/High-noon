@@ -1,6 +1,12 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 import { LocalDuelFireworks } from '@/components/game/LocalDuelFireworks';
+import {
+  OUTCOME_DEFEAT,
+  OUTCOME_VICTORY,
+  outcomeTextShadow,
+} from '@/constants/outcomeTheme';
 import { FONT_RYE } from '@/constants/fonts';
 import { colors } from '@/constants/theme';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
@@ -47,12 +53,19 @@ function bottomStatsLine(data: NpcRoundModalData): string {
   const playerPart =
     data.playerMs != null ? `나 ${formatReactionMs(data.playerMs)} ms` : '나 —';
   const npcPart =
-    data.npcMs != null && data.reason === 'slower'
-      ? `상대 ${formatReactionMs(data.npcMs)} ms`
-      : data.npcMs != null
-        ? `상대 ${formatReactionMs(data.npcMs)} ms`
-        : '상대 —';
+    data.npcMs != null ? `상대 ${formatReactionMs(data.npcMs)} ms` : '상대 —';
   return `${playerPart}  ·  ${npcPart}`;
+}
+
+function lossReasonShort(reason: NpcRoundLossReason): string {
+  switch (reason) {
+    case 'early':
+      return '얼리 탭';
+    case 'timeout':
+      return '시간 초과';
+    case 'slower':
+      return '더 느림';
+  }
 }
 
 export function NpcRoundModal({
@@ -67,19 +80,19 @@ export function NpcRoundModal({
   const m = usePhoneStageMetrics();
   const halfH = m.stageHeight / 2;
 
-  if (!data) return null;
+  if (!visible || !data) return null;
 
   const showWinFx = data.kind === 'win' && winBurstId > 0;
   const playerWon = data.kind === 'win';
+  const theme = playerWon ? OUTCOME_VICTORY : OUTCOME_DEFEAT;
 
   return (
-    <Modal transparent animationType="fade" visible={visible} onRequestClose={onContinue}>
-      <Pressable
-        accessibilityLabel="탭하여 계속"
-        accessibilityRole="button"
-        onPress={onContinue}
-        style={styles.root}
-      >
+    <Pressable
+      accessibilityLabel="탭하여 계속"
+      accessibilityRole="button"
+      onPress={onContinue}
+      style={styles.root}
+    >
         <View
           pointerEvents="box-none"
           style={[
@@ -104,34 +117,52 @@ export function NpcRoundModal({
             </View>
           ) : null}
 
-          {/* 이긴 쪽 / 패배 쪽 짧은 라벨 */}
-          <View pointerEvents="none" style={styles.labelsLayer}>
+          <View pointerEvents="none" style={styles.badgesLayer}>
             {playerWon ? (
-              <Text style={[styles.outcomeLabel, styles.playerLabel]}>승리!</Text>
+              <Animated.View
+                entering={ZoomIn.springify().damping(14).stiffness(180)}
+                style={[styles.badge, styles.playerBadge, { borderColor: theme.badgeBorder, backgroundColor: theme.badgeBg }]}
+              >
+                <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: theme.title }]}>승리</Text>
+                {data.kind === 'win' && data.lastStand ? (
+                  <Text style={styles.badgeHint}>라스트 스탠드</Text>
+                ) : null}
+              </Animated.View>
             ) : (
-              <Text style={[styles.outcomeLabel, styles.npcLabel]}>승리!</Text>
+              <Animated.View
+                entering={FadeInDown.duration(280)}
+                style={[styles.badge, styles.npcBadge, { borderColor: theme.badgeBorder, backgroundColor: theme.badgeBg }]}
+              >
+                <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: theme.title }]}>패배</Text>
+                {data.kind === 'loss' ? (
+                  <Text style={styles.badgeHint}>{lossReasonShort(data.reason)}</Text>
+                ) : null}
+              </Animated.View>
             )}
-            {data.kind === 'win' && data.lastStand ? (
-              <Text style={[styles.abilityHint, styles.playerLabel]}>라스트 스탠드!</Text>
-            ) : null}
-            {data.kind === 'loss' && data.revive ? (
-              <Text style={[styles.abilityHint, styles.playerLabel]}>한 번 더!</Text>
-            ) : null}
-            {data.kind === 'loss' ? (
-              <Text style={[styles.lossReason, styles.lossReasonPos]}>
-                {data.reason === 'early' && '얼리 탭'}
-                {data.reason === 'timeout' && '시간 초과'}
-                {data.reason === 'slower' && '더 느림'}
-              </Text>
-            ) : null}
+
+            {!playerWon ? (
+              <Animated.View
+                entering={FadeInDown.delay(120).duration(300)}
+                style={[styles.badge, styles.npcWinBadge, { borderColor: OUTCOME_VICTORY.badgeBorder, backgroundColor: OUTCOME_VICTORY.badgeBg }]}
+              >
+                <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: OUTCOME_VICTORY.title }]}>
+                  승리
+                </Text>
+              </Animated.View>
+            ) : (
+              <Animated.View
+                entering={FadeInDown.delay(120).duration(300)}
+                style={[styles.badge, styles.npcDefeatBadge, { borderColor: OUTCOME_DEFEAT.badgeBorder, backgroundColor: OUTCOME_DEFEAT.badgeBg }]}
+              >
+                <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: OUTCOME_DEFEAT.title }]}>
+                  패배
+                </Text>
+              </Animated.View>
+            )}
           </View>
 
-          {/* 하단 반응속도 — 결투 HUD와 분리 */}
-          <View
-            pointerEvents="box-none"
-            style={[styles.bottomBar, { paddingBottom: Math.max(paddingBottom, 8) + 12 }]}
-          >
-            {headshotOffered && onHeadshotPress ? (
+          {headshotOffered && onHeadshotPress ? (
+            <View pointerEvents="box-none" style={styles.headshotWrap}>
               <Pressable
                 accessibilityLabel="헤드샷 사용"
                 accessibilityRole="button"
@@ -143,19 +174,30 @@ export function NpcRoundModal({
               >
                 <Text style={styles.headshotText}>헤드샷</Text>
               </Pressable>
-            ) : null}
-            <Text style={styles.statsLine}>{bottomStatsLine(data)}</Text>
+            </View>
+          ) : null}
+
+          <View
+            pointerEvents="none"
+            style={[styles.bottomPanel, { paddingBottom: Math.max(paddingBottom, 4) + 2 }]}
+          >
+            <View style={styles.statsCard}>
+              <Text style={styles.statsLine}>
+                <Text style={styles.statsHeading}>이번 라운드  </Text>
+                {bottomStatsLine(data)}
+              </Text>
+            </View>
             <Text style={styles.continueHint}>탭하여 계속</Text>
           </View>
         </View>
       </Pressable>
-    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 40,
   },
   stageFrame: {
     position: 'absolute',
@@ -165,88 +207,110 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
   },
-  labelsLayer: {
+  badgesLayer: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 2,
   },
-  outcomeLabel: {
+  badge: {
     position: 'absolute',
-    fontFamily: FONT_RYE,
-    fontSize: 34,
-    letterSpacing: 1,
-    color: colors.ochre,
-    textShadowColor: 'rgba(0,0,0,0.9)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    borderWidth: 1,
+    minWidth: 120,
+    gap: 4,
   },
-  playerLabel: {
-    left: '8%',
-    bottom: '38%',
+  playerBadge: {
+    left: '7%',
+    bottom: '42%',
   },
-  npcLabel: {
+  npcBadge: {
+    left: '7%',
+    bottom: '30%',
+  },
+  npcWinBadge: {
+    right: '6%',
+    top: '36%',
+    minWidth: 108,
+    paddingVertical: 10,
+  },
+  npcDefeatBadge: {
     right: '8%',
-    top: '30%',
-    textAlign: 'right',
+    top: '47%',
+    minWidth: 108,
+    paddingVertical: 10,
   },
-  abilityHint: {
-    position: 'absolute',
-    left: '8%',
-    bottom: '33%',
-    fontSize: 13,
-    fontWeight: '800',
-    color: colors.ochre,
-    letterSpacing: 0.6,
-    textShadowColor: 'rgba(0,0,0,0.85)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
+  badgeTitle: {
+    fontSize: 32,
+    letterSpacing: 2,
+    ...outcomeTextShadow,
   },
-  lossReason: {
-    position: 'absolute',
-    left: '8%',
-    bottom: '33%',
+  badgeTitleSmall: {
+    fontSize: 22,
+    letterSpacing: 1.5,
+    ...outcomeTextShadow,
+  },
+  badgeHint: {
     fontSize: 12,
     fontWeight: '700',
     color: colors.sand,
-    opacity: 0.9,
-    letterSpacing: 0.4,
-    textShadowColor: 'rgba(0,0,0,0.85)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
+    letterSpacing: 0.5,
+    ...outcomeTextShadow,
   },
-  lossReasonPos: {
-    bottom: '33%',
+  headshotWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 72,
+    zIndex: 3,
+    alignItems: 'center',
   },
-  bottomBar: {
+  bottomPanel: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
     zIndex: 3,
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    backgroundColor: 'rgba(12, 8, 5, 0.96)',
+    gap: 2,
+    paddingHorizontal: 10,
+    paddingTop: 6,
+    backgroundColor: 'rgba(8, 5, 3, 0.92)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(212, 165, 116, 0.35)',
+    borderTopColor: 'rgba(212, 165, 116, 0.28)',
+  },
+  statsCard: {
+    width: '100%',
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+  },
+  statsHeading: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: colors.sand,
+    letterSpacing: 0.8,
+    ...outcomeTextShadow,
   },
   statsLine: {
     color: colors.cream,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
     textAlign: 'center',
+    ...outcomeTextShadow,
   },
   continueHint: {
-    marginTop: 4,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
-    color: 'rgba(245, 230, 200, 0.55)',
+    color: 'rgba(245, 230, 200, 0.5)',
     letterSpacing: 0.8,
+    marginBottom: 2,
   },
   headshotBtn: {
-    marginBottom: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
     borderRadius: 999,
     backgroundColor: colors.rustRed,
     borderWidth: 1,
