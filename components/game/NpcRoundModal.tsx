@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { LocalDuelFireworks } from '@/components/game/LocalDuelFireworks';
 import {
@@ -120,7 +120,7 @@ export function NpcRoundModal({
           <View pointerEvents="none" style={styles.badgesLayer}>
             {playerWon ? (
               <Animated.View
-                entering={ZoomIn.springify().damping(14).stiffness(180)}
+                entering={FadeIn.duration(220)}
                 style={[styles.badge, styles.playerBadge, { borderColor: theme.badgeBorder, backgroundColor: theme.badgeBg }]}
               >
                 <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: theme.title }]}>승리</Text>
@@ -130,7 +130,7 @@ export function NpcRoundModal({
               </Animated.View>
             ) : (
               <Animated.View
-                entering={FadeInDown.duration(280)}
+                entering={FadeInDown.duration(220)}
                 style={[styles.badge, styles.npcBadge, { borderColor: theme.badgeBorder, backgroundColor: theme.badgeBg }]}
               >
                 <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: theme.title }]}>패배</Text>
@@ -142,7 +142,7 @@ export function NpcRoundModal({
 
             {!playerWon ? (
               <Animated.View
-                entering={FadeInDown.delay(120).duration(300)}
+                entering={FadeInDown.delay(80).duration(220)}
                 style={[styles.badge, styles.npcWinBadge, { borderColor: OUTCOME_VICTORY.badgeBorder, backgroundColor: OUTCOME_VICTORY.badgeBg }]}
               >
                 <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: OUTCOME_VICTORY.title }]}>
@@ -151,7 +151,7 @@ export function NpcRoundModal({
               </Animated.View>
             ) : (
               <Animated.View
-                entering={FadeInDown.delay(120).duration(300)}
+                entering={FadeInDown.delay(80).duration(220)}
                 style={[styles.badge, styles.npcDefeatBadge, { borderColor: OUTCOME_DEFEAT.badgeBorder, backgroundColor: OUTCOME_DEFEAT.badgeBg }]}
               >
                 <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: OUTCOME_DEFEAT.title }]}>

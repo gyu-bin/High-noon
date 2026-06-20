@@ -9,6 +9,7 @@ import {
   PlayerCharacterSprite,
   type SpritePose,
 } from '@/components/game/CharacterSprites';
+import { DuelFigureSlot } from '@/components/game/DuelFigureSlot';
 import {
   DuelSignalBoard,
   enginePhaseToSignalBoardPhase,
@@ -18,10 +19,9 @@ import { HeartStrip } from '@/components/game/HeartStrip';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import {
   duelFigureSize,
-  duelFigureTransform,
   duelFlipHorizontal,
-  localDuelTopHalfFigureTransform,
 } from '@/constants/duelArena';
+import { DUEL_ARENA_SHADE } from '@/constants/duelPresentation';
 import { colors } from '@/constants/theme';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
 import type { LocalPlayerId } from '@/hooks/useLocalDuelEngine';
@@ -34,6 +34,7 @@ type Props = {
   paddingLeft: number;
   paddingRight: number;
   phase: DuelPhase;
+  signalPhase?: DuelSignalBoardPhase;
   p1CharacterId: number;
   p2CharacterId: number;
   p1Pose: SpritePose;
@@ -61,6 +62,7 @@ export function LocalDuelArenaLayout({
   paddingLeft,
   paddingRight,
   phase,
+  signalPhase,
   p1CharacterId,
   p2CharacterId,
   p1Pose,
@@ -80,14 +82,14 @@ export function LocalDuelArenaLayout({
   onPause,
 }: Props) {
   const { width: figW, height: figH } = duelFigureSize(width);
-  const signalPhase: DuelSignalBoardPhase = enginePhaseToSignalBoardPhase(phase);
+  const boardPhase = signalPhase ?? enginePhaseToSignalBoardPhase(phase);
 
   return (
     <View style={[styles.root, { width, height }]}>
       <LinearGradient
         pointerEvents="none"
-        colors={['rgba(8, 4, 2, 0.45)', 'rgba(8, 4, 2, 0.04)', 'rgba(8, 4, 2, 0.04)', 'rgba(8, 4, 2, 0.5)']}
-        locations={[0, 0.22, 0.72, 1]}
+        colors={[...DUEL_ARENA_SHADE.colors]}
+        locations={[...DUEL_ARENA_SHADE.locations]}
         style={StyleSheet.absoluteFill}
       />
 
@@ -99,8 +101,7 @@ export function LocalDuelArenaLayout({
       <View pointerEvents="none" style={styles.topHalfRotated}>
         <View style={styles.topHalfInner}>
           <View style={styles.p2Zone}>
-            <View style={styles.groundShadowP2} />
-            <View style={{ transform: localDuelTopHalfFigureTransform(p2Pose) }}>
+            <DuelFigureSlot corner="bottomLeft" pose={p2Pose} figW={figW} figH={figH}>
               <PlayerCharacterSprite
                 characterId={p2CharacterId}
                 width={figW}
@@ -108,11 +109,11 @@ export function LocalDuelArenaLayout({
                 flipHorizontal={duelFlipHorizontal('bottomLeft')}
                 pose={p2Pose}
               />
-            </View>
+            </DuelFigureSlot>
           </View>
 
           <View style={styles.p2SignalWrap}>
-            <DuelSignalBoard variant="minimal" phase={signalPhase} />
+            <DuelSignalBoard variant="minimal" phase={boardPhase} />
           </View>
 
           <View style={[styles.hudP2Inner, { paddingTop: paddingTop + 4 }]}>
@@ -133,8 +134,7 @@ export function LocalDuelArenaLayout({
       {/* P1 — 하단 50% 정상 방향 */}
       <View pointerEvents="none" style={styles.bottomHalfShell}>
         <View style={styles.p1Zone}>
-          <View style={styles.groundShadowP1} />
-          <View style={{ transform: duelFigureTransform('bottomLeft', p1Pose) }}>
+          <DuelFigureSlot corner="bottomLeft" pose={p1Pose} figW={figW} figH={figH}>
             <PlayerCharacterSprite
               characterId={p1CharacterId}
               width={figW}
@@ -142,11 +142,11 @@ export function LocalDuelArenaLayout({
               flipHorizontal={duelFlipHorizontal('bottomLeft')}
               pose={p1Pose}
             />
-          </View>
+          </DuelFigureSlot>
         </View>
 
         <View style={styles.p1SignalWrap}>
-          <DuelSignalBoard variant="minimal" phase={signalPhase} />
+          <DuelSignalBoard variant="minimal" phase={boardPhase} />
         </View>
 
         <View
@@ -248,8 +248,8 @@ const styles = StyleSheet.create({
     top: 0,
     alignItems: 'flex-start',
     justifyContent: 'flex-end',
-    paddingLeft: 4,
-    paddingBottom: 96,
+    paddingLeft: 8,
+    paddingBottom: 72,
   },
   p1Zone: {
     position: 'absolute',
@@ -259,28 +259,8 @@ const styles = StyleSheet.create({
     top: 0,
     alignItems: 'flex-start',
     justifyContent: 'flex-end',
-    paddingLeft: 4,
-    paddingBottom: 40,
-  },
-  groundShadowP2: {
-    position: 'absolute',
-    left: 24,
-    bottom: 92,
-    width: 120,
-    height: 22,
-    borderRadius: 999,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    transform: [{ scaleX: 1.4 }],
-  },
-  groundShadowP1: {
-    position: 'absolute',
-    left: 24,
-    bottom: 36,
-    width: 120,
-    height: 22,
-    borderRadius: 999,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    transform: [{ scaleX: 1.4 }],
+    paddingLeft: 8,
+    paddingBottom: 28,
   },
   hudP2Inner: {
     position: 'absolute',

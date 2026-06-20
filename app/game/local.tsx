@@ -17,6 +17,10 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { LocalDuelArenaLayout } from '@/components/game/LocalDuelArenaLayout';
+import {
+  enginePhaseToSignalBoardPhase,
+  type DuelSignalBoardPhase,
+} from '@/components/game/DuelSignalBoard';
 import { LocalMatchModal } from '@/components/game/LocalMatchModal';
 import { LocalRoundModal } from '@/components/game/LocalRoundModal';
 import { PauseMenuModal } from '@/components/game/PauseMenuModal';
@@ -91,6 +95,7 @@ export default function LocalGameScreen() {
   const [p1LiveMs, setP1LiveMs] = useState<number | null>(null);
   const [p2LiveMs, setP2LiveMs] = useState<number | null>(null);
   const [roundDefeated, setRoundDefeated] = useState<'p1' | 'p2' | null>(null);
+  const [signalBoardPhase, setSignalBoardPhase] = useState<DuelSignalBoardPhase>('idle');
   const wasPausedRef = useRef(false);
   const pausedRef = useRef(false);
   const phaseRef = useRef<DuelPhase>('대기');
@@ -216,6 +221,7 @@ export default function LocalGameScreen() {
   );
 
   const prevPhaseRef = useRef<DuelPhase>(phase);
+  const spokenCuesRef = useRef({ ready: false, steady: false });
 
   useScreenBgm('duel', true);
   useDuelBgmDuck(phase);
@@ -247,14 +253,27 @@ export default function LocalGameScreen() {
   useEffect(() => {
     const prev = prevPhaseRef.current;
     if (phase === '준비' && prev !== '준비') {
+      spokenCuesRef.current = { ready: false, steady: false };
+    }
+    if (phase === '준비' && prev !== '준비' && !spokenCuesRef.current.ready) {
+      spokenCuesRef.current.ready = true;
       speakDuelCue('ready');
       void trigger('light');
     }
-    if (phase === '집중' && prev !== '집중') {
+    if (phase === '집중' && prev === '준비' && !spokenCuesRef.current.steady) {
+      spokenCuesRef.current.steady = true;
       speakDuelCue('steady');
       void trigger('light');
     }
     prevPhaseRef.current = phase;
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase === '결과') {
+      setSignalBoardPhase('결과');
+      return;
+    }
+    setSignalBoardPhase(enginePhaseToSignalBoardPhase(phase));
   }, [phase]);
 
   useEffect(() => {
@@ -401,14 +420,16 @@ export default function LocalGameScreen() {
     router.replace('/menu');
   }, [reset, router]);
 
+  const holdResultShoot = phase === '결과' && roundDefeated == null;
+
   const p1Pose = useMemo(() => {
     if (roundDefeated === 'p1') return 'defeat' as const;
-    return localPlayerSpritePoseFromPhase(phase, p1ShootFlash);
-  }, [roundDefeated, phase, p1ShootFlash]);
+    return localPlayerSpritePoseFromPhase(phase, p1ShootFlash, holdResultShoot);
+  }, [roundDefeated, phase, p1ShootFlash, holdResultShoot]);
   const p2Pose = useMemo(() => {
     if (roundDefeated === 'p2') return 'defeat' as const;
-    return localPlayerSpritePoseFromPhase(phase, p2ShootFlash);
-  }, [roundDefeated, phase, p2ShootFlash]);
+    return localPlayerSpritePoseFromPhase(phase, p2ShootFlash, holdResultShoot);
+  }, [roundDefeated, phase, p2ShootFlash, holdResultShoot]);
 
   const hideBottomHud = modalStep != null;
 
@@ -435,6 +456,7 @@ export default function LocalGameScreen() {
         paddingLeft={overlayPad.left}
         paddingRight={overlayPad.right}
         phase={phase}
+        signalPhase={signalBoardPhase}
         p1CharacterId={selectedCharacterId}
         p2CharacterId={selectedCharacterId}
         p1Pose={p1Pose}

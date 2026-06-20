@@ -6,7 +6,7 @@
 export type SpritePose = 'idle' | 'aim' | 'shoot' | 'defeat';
 
 /** PNG 교체 시 Expo Image 디스크 캐시 무효화용 — 스프라이트 재설치마다 +1 */
-export const SPRITE_CACHE_REVISION = 3;
+export const SPRITE_CACHE_REVISION = 4;
 
 export function npcSpriteAssetKey(npcId: number, pose: SpritePose): string {
   const id = String(npcId).padStart(2, '0');

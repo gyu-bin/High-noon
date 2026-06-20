@@ -120,6 +120,7 @@ export function useDuelEngine() {
   const readyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const steadyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bangTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const opponentShotTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bangStartMsRef = useRef<number | null>(null);
   const bangArmedRef = useRef(false);
@@ -133,6 +134,7 @@ export function useDuelEngine() {
   const readyCueDurationRef = useRef<number | null>(null);
   const steadyDeadlineRef = useRef<number | null>(null);
   const bangTimeoutDeadlineRef = useRef<number | null>(null);
+  const opponentShotDeadlineRef = useRef<number | null>(null);
   const lastSteadyDurationRef = useRef<number | null>(null);
   const pausePerfRef = useRef<number | null>(null);
   const lastTimingRef = useRef<DuelTimingConfig>(DEFAULT_DUEL_TIMING);
@@ -141,24 +143,64 @@ export function useDuelEngine() {
     clearTimeoutRef(readyTimerRef);
     clearTimeoutRef(steadyTimerRef);
     clearTimeoutRef(bangTimeoutRef);
+    clearTimeoutRef(opponentShotTimerRef);
+    opponentShotDeadlineRef.current = null;
   }, []);
 
-  const finish = useCallback((next: DuelOutcome) => {
-    stopDuelSignalSpeech();
-    clearAllTimers();
-    bangArmedRef.current = false;
-    bangStartMsRef.current = null;
-    readyDeadlineRef.current = null;
-    readyCueDurationRef.current = null;
-    steadyDeadlineRef.current = null;
-    bangTimeoutDeadlineRef.current = null;
-    lastSteadyDurationRef.current = null;
-    pausePerfRef.current = null;
-    phaseRef.current = '결과';
-    setOutcome(next);
-    setPhase('결과');
-    setSignalText('');
-  }, [clearAllTimers]);
+  const resolveBangLoss = useCallback(
+    (next: DuelOutcome) => {
+      stopDuelSignalSpeech();
+      clearAllTimers();
+      bangArmedRef.current = false;
+      bangStartMsRef.current = null;
+      readyDeadlineRef.current = null;
+      readyCueDurationRef.current = null;
+      steadyDeadlineRef.current = null;
+      bangTimeoutDeadlineRef.current = null;
+      opponentShotDeadlineRef.current = null;
+      lastSteadyDurationRef.current = null;
+      pausePerfRef.current = null;
+      phaseRef.current = '결과';
+      setOutcome(next);
+      setPhase('결과');
+      setSignalText('');
+    },
+    [clearAllTimers],
+  );
+
+  const finish = useCallback(
+    (next: DuelOutcome) => {
+      resolveBangLoss(next);
+    },
+    [resolveBangLoss],
+  );
+
+  const forceTimeout = useCallback(() => {
+    if (!bangArmedRef.current) return;
+    duelSeqRef.current += 1;
+    resolveBangLoss({ reactionMs: null, earlyTap: false, timeout: true });
+  }, [resolveBangLoss]);
+
+  const scheduleOpponentShot = useCallback(
+    (ms: number) => {
+      clearTimeoutRef(opponentShotTimerRef);
+      opponentShotDeadlineRef.current = null;
+      if (!bangArmedRef.current || ms <= 0) return;
+      const seq = duelSeqRef.current;
+      opponentShotDeadlineRef.current = Date.now() + ms;
+      opponentShotTimerRef.current = setTimeout(() => {
+        if (duelSeqRef.current !== seq || !bangArmedRef.current) return;
+        opponentShotDeadlineRef.current = null;
+        forceTimeout();
+      }, ms);
+    },
+    [forceTimeout],
+  );
+
+  const clearOpponentShot = useCallback(() => {
+    clearTimeoutRef(opponentShotTimerRef);
+    opponentShotDeadlineRef.current = null;
+  }, []);
 
   const enterBang = useCallback((seq: number) => {
     if (duelSeqRef.current !== seq) return;
@@ -173,15 +215,10 @@ export function useDuelEngine() {
 
     bangTimeoutRef.current = setTimeout(() => {
       if (duelSeqRef.current !== seq || !bangArmedRef.current) return;
-      bangArmedRef.current = false;
-      bangStartMsRef.current = null;
-      bangTimeoutDeadlineRef.current = null;
-      phaseRef.current = '결과';
-      setOutcome({ reactionMs: null, earlyTap: false, timeout: true });
-      setPhase('결과');
-      setSignalText('');
+      duelSeqRef.current += 1;
+      resolveBangLoss({ reactionMs: null, earlyTap: false, timeout: true });
     }, BANG_TIMEOUT_MS);
-  }, []);
+  }, [resolveBangLoss]);
 
   const scheduleSteadyThenBang = useCallback(
     (seq: number, leadInMs: number, bangWaitMs: number) => {
@@ -368,6 +405,7 @@ export function useDuelEngine() {
     clearTimeoutRef(readyTimerRef);
     clearTimeoutRef(steadyTimerRef);
     clearTimeoutRef(bangTimeoutRef);
+    clearTimeoutRef(opponentShotTimerRef);
   }, []);
 
   const resumeTimers = useCallback(() => {
@@ -426,16 +464,21 @@ export function useDuelEngine() {
       bangTimeoutDeadlineRef.current = Date.now() + remaining;
       bangTimeoutRef.current = setTimeout(() => {
         if (duelSeqRef.current !== seq || !bangArmedRef.current) return;
-        bangArmedRef.current = false;
-        bangStartMsRef.current = null;
-        bangTimeoutDeadlineRef.current = null;
-        phaseRef.current = '결과';
-        setOutcome({ reactionMs: null, earlyTap: false, timeout: true });
-        setPhase('결과');
-        setSignalText('');
+        duelSeqRef.current += 1;
+        resolveBangLoss({ reactionMs: null, earlyTap: false, timeout: true });
       }, remaining);
+
+      if (opponentShotDeadlineRef.current != null) {
+        const oppRemaining = Math.max(0, opponentShotDeadlineRef.current - Date.now());
+        opponentShotDeadlineRef.current = Date.now() + oppRemaining;
+        opponentShotTimerRef.current = setTimeout(() => {
+          if (duelSeqRef.current !== seq || !bangArmedRef.current) return;
+          opponentShotDeadlineRef.current = null;
+          forceTimeout();
+        }, oppRemaining);
+      }
     }
-  }, [enterBang, scheduleSteadyThenBang]);
+  }, [enterBang, scheduleSteadyThenBang, resolveBangLoss, forceTimeout]);
 
   useEffect(() => () => clearAllTimers(), [clearAllTimers]);
 
@@ -452,6 +495,9 @@ export function useDuelEngine() {
     start,
     tap,
     isBangReactionArmed,
+    forceBangTimeout: forceTimeout,
+    scheduleOpponentShot,
+    clearOpponentShot,
     reset,
     pauseTimers,
     resumeTimers,

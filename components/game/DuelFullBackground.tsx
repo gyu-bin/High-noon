@@ -18,23 +18,23 @@ const FULL_BG = {
   day: {
     source: gameImages.duelBgDayFull,
     root: '#1A0C06',
-    dim: 'rgba(30, 16, 4, 0.2)',
+    dim: 'rgba(30, 16, 4, 0.14)',
     vignette: [
-      'rgba(30, 16, 4, 0.38)',
+      'rgba(30, 16, 4, 0.28)',
+      'rgba(20, 10, 2, 0.04)',
       'rgba(20, 10, 2, 0.06)',
-      'rgba(20, 10, 2, 0.1)',
-      'rgba(30, 16, 4, 0.45)',
+      'rgba(30, 16, 4, 0.32)',
     ] as const,
   },
   night: {
     source: gameImages.duelBgNightFull,
     root: '#0C0618',
-    dim: 'rgba(8, 6, 24, 0.28)',
+    dim: 'rgba(8, 6, 24, 0.14)',
     vignette: [
-      'rgba(8, 6, 28, 0.52)',
-      'rgba(8, 6, 28, 0.08)',
-      'rgba(8, 6, 28, 0.12)',
-      'rgba(6, 4, 20, 0.5)',
+      'rgba(8, 6, 28, 0.3)',
+      'rgba(8, 6, 28, 0.04)',
+      'rgba(8, 6, 28, 0.06)',
+      'rgba(6, 4, 20, 0.28)',
     ] as const,
   },
 } as const;

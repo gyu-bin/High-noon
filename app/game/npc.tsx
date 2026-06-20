@@ -1,5 +1,5 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -13,6 +13,7 @@ import Animated, {
 
 import {
   enginePhaseToSignalBoardPhase,
+  type DuelSignalBoardPhase,
 } from '@/components/game/DuelSignalBoard';
 import {
   AbilityOverlay,
@@ -45,7 +46,7 @@ import { useGameStore } from '@/store/gameStore';
 import { selectPaleRiderUnlocked, useProgressStore } from '@/store/progressStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { applyAbility } from '@/utils/characterAbility';
-import { simulateNpcReaction } from '@/utils/npcAI';
+import { simulateNpcReaction, type NpcReactionSimulation } from '@/utils/npcAI';
 import {
   npcSpritePoseFromPhase,
   playerSpritePoseFromPhase,
@@ -58,6 +59,7 @@ import { trigger } from '@/utils/hapticService';
 
 const WINS_TO_END = 3;
 const HEARTS = 3;
+import { DUEL_EARLY_MODAL_DELAY_MS } from '@/constants/duelPresentation';
 
 const TIER_KO: Record<string, string> = {
   bronze: '브론즈',
@@ -157,6 +159,8 @@ export default function NpcGameScreen() {
     start: startDuelEngine,
     tap,
     isBangReactionArmed,
+    scheduleOpponentShot,
+    clearOpponentShot,
     reset: resetDuel,
     pauseTimers,
     resumeTimers,
@@ -202,6 +206,13 @@ export default function NpcGameScreen() {
   const processedOutcomeKey = useRef<string>('');
   const bangHapticDoneRef = useRef(false);
   const prevPhaseRef = useRef<DuelPhase>(phase);
+  const spokenCuesRef = useRef({ ready: false, steady: false });
+  const signalHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const outcomeRevealTimersRef = useRef<{
+    defeat: ReturnType<typeof setTimeout> | null;
+    modal: ReturnType<typeof setTimeout> | null;
+  }>({ defeat: null, modal: null });
+  const [signalBoardPhase, setSignalBoardPhase] = useState<DuelSignalBoardPhase>('idle');
   /** #13 미러 잭 — 직전 라운드 플레이어 유효 반응(ms) */
   const prevPlayerBangMsRef = useRef<number | null>(null);
   /** #21 Undertaker — 라운드마다 랜덤 교란(반전 / 블라인드 / 복합 / 없음) */
@@ -211,6 +222,7 @@ export default function NpcGameScreen() {
     headshotOffered: boolean;
   } | null>(null);
   const headshotApplyPendingRef = useRef(false);
+  const npcRoundSimRef = useRef<NpcReactionSimulation | null>(null);
 
   const blueStyle = useAnimatedStyle(() => ({
     opacity: blueRing.value,
@@ -253,38 +265,81 @@ export default function NpcGameScreen() {
     }
   }, [phase]);
 
+  useLayoutEffect(() => {
+    if (phase !== '뱅' || !npc) {
+      clearOpponentShot();
+      if (phase !== '뱅') {
+        npcRoundSimRef.current = null;
+      }
+      return;
+    }
+
+    const sim = simulateNpcReaction({
+      npc,
+      previousSteadyToBangDelayMs: prevBangDelayRef.current,
+      mirrorPlayerMs: npc.id === 13 ? prevPlayerBangMsRef.current : null,
+    });
+    npcRoundSimRef.current = sim;
+
+    if (sim.reactionMs != null && !sim.npcEarlyTap) {
+      scheduleOpponentShot(sim.reactionMs);
+    } else {
+      clearOpponentShot();
+    }
+
+    return clearOpponentShot;
+  }, [phase, npc?.id, scheduleOpponentShot, clearOpponentShot]);
+
   useEffect(() => {
     if (phase !== '뱅') return;
     if (bangHapticDoneRef.current) return;
     bangHapticDoneRef.current = true;
-    if (npc?.id === 22) {
-      return;
-    }
     void playBangShotDuel();
     void trigger('heavy');
-  }, [phase, npc?.id]);
+  }, [phase]);
 
   useEffect(() => {
     const prev = prevPhaseRef.current;
-    if (npc?.id === 22) {
-      prevPhaseRef.current = phase;
-      return;
-    }
     if (phase === '준비' && prev !== '준비') {
+      spokenCuesRef.current = { ready: false, steady: false };
+    }
+    if (phase === '준비' && prev !== '준비' && !spokenCuesRef.current.ready) {
+      spokenCuesRef.current.ready = true;
       speakDuelCue('ready');
       void trigger('light');
-      if (npc?.id === 20) {
-        setTimeout(() => {
-          speakDuelCue('ready');
-        }, 420);
-      }
     }
-    if (phase === '집중' && prev !== '집중') {
+    if (phase === '집중' && prev === '준비' && !spokenCuesRef.current.steady) {
+      spokenCuesRef.current.steady = true;
       speakDuelCue('steady');
       void trigger('light');
     }
     prevPhaseRef.current = phase;
-  }, [phase, npc?.id]);
+  }, [phase]);
+
+  useEffect(() => {
+    if (signalHoldTimerRef.current != null) {
+      clearTimeout(signalHoldTimerRef.current);
+      signalHoldTimerRef.current = null;
+    }
+    if (phase === '결과') {
+      setSignalBoardPhase('결과');
+      return;
+    }
+    setSignalBoardPhase(enginePhaseToSignalBoardPhase(phase));
+  }, [phase]);
+
+  useEffect(
+    () => () => {
+      if (outcomeRevealTimersRef.current.defeat != null) {
+        clearTimeout(outcomeRevealTimersRef.current.defeat);
+      }
+      if (outcomeRevealTimersRef.current.modal != null) {
+        clearTimeout(outcomeRevealTimersRef.current.modal);
+      }
+      outcomeRevealTimersRef.current = { defeat: null, modal: null };
+    },
+    [],
+  );
 
   useEffect(() => {
     if (paused) {
@@ -358,11 +413,13 @@ export default function NpcGameScreen() {
 
     const o = outcome;
     const streakBefore = playerStreakRef.current;
-    const npcSim = simulateNpcReaction({
-      npc,
-      previousSteadyToBangDelayMs: prevBangDelayRef.current,
-      mirrorPlayerMs: npc.id === 13 ? prevPlayerBangMsRef.current : null,
-    });
+    const npcSim =
+      npcRoundSimRef.current ??
+      simulateNpcReaction({
+        npc,
+        previousSteadyToBangDelayMs: prevBangDelayRef.current,
+        mirrorPlayerMs: npc.id === 13 ? prevPlayerBangMsRef.current : null,
+      });
 
     let data: NpcRoundModalData;
 
@@ -503,6 +560,17 @@ export default function NpcGameScreen() {
       playerStreakRef.current = 0;
     }
 
+    const modalDelay = o.earlyTap ? DUEL_EARLY_MODAL_DELAY_MS : 0;
+
+    if (outcomeRevealTimersRef.current.defeat != null) {
+      clearTimeout(outcomeRevealTimersRef.current.defeat);
+      outcomeRevealTimersRef.current.defeat = null;
+    }
+    if (outcomeRevealTimersRef.current.modal != null) {
+      clearTimeout(outcomeRevealTimersRef.current.modal);
+      outcomeRevealTimersRef.current.modal = null;
+    }
+
     setDefeatedSide(nextDefeatedSide);
 
     const ohAfterWin = effectiveWin && oh > 0 ? oh - 1 : oh;
@@ -564,7 +632,12 @@ export default function NpcGameScreen() {
       setModalVisible(false);
       setModal(null);
       setAbilityOverlay('last_stand');
-      return;
+      return () => {
+        if (outcomeRevealTimersRef.current.defeat != null) {
+          clearTimeout(outcomeRevealTimersRef.current.defeat);
+          outcomeRevealTimersRef.current.defeat = null;
+        }
+      };
     }
 
     if (reviveFlip && data.kind === 'loss') {
@@ -574,12 +647,33 @@ export default function NpcGameScreen() {
       setModalVisible(false);
       setModal(null);
       setAbilityOverlay('revive');
-      return;
+      return () => {
+        if (outcomeRevealTimersRef.current.defeat != null) {
+          clearTimeout(outcomeRevealTimersRef.current.defeat);
+          outcomeRevealTimersRef.current.defeat = null;
+        }
+      };
     }
 
-    setModal(modalData);
-    setModalVisible(true);
-    setHeadshotOffered(offerHeadshot);
+    if (modalDelay > 0) {
+      outcomeRevealTimersRef.current.modal = setTimeout(() => {
+        setModal(modalData);
+        setModalVisible(true);
+        setHeadshotOffered(offerHeadshot);
+        outcomeRevealTimersRef.current.modal = null;
+      }, modalDelay);
+    } else {
+      setModal(modalData);
+      setModalVisible(true);
+      setHeadshotOffered(offerHeadshot);
+    }
+
+    return () => {
+      if (outcomeRevealTimersRef.current.modal != null) {
+        clearTimeout(outcomeRevealTimersRef.current.modal);
+        outcomeRevealTimersRef.current.modal = null;
+      }
+    };
   }, [
     phase,
     outcome,
@@ -616,6 +710,14 @@ export default function NpcGameScreen() {
   }, []);
 
   const onContinue = useCallback(() => {
+    if (outcomeRevealTimersRef.current.defeat != null) {
+      clearTimeout(outcomeRevealTimersRef.current.defeat);
+      outcomeRevealTimersRef.current.defeat = null;
+    }
+    if (outcomeRevealTimersRef.current.modal != null) {
+      clearTimeout(outcomeRevealTimersRef.current.modal);
+      outcomeRevealTimersRef.current.modal = null;
+    }
     if (headshotOffered) {
       setAbilityUsed(true);
     }
@@ -704,16 +806,18 @@ export default function NpcGameScreen() {
 
   const tierLabel = npc ? (TIER_KO[npc.tier] ?? npc.tier) : '';
 
+  const holdResultShoot = phase === '결과' && defeatedSide == null;
+
   const npcPose = useMemo(() => {
     if (defeatedSide === 'npc') return 'defeat' as const;
     if (defeatedSide === 'player') return 'idle' as const;
-    return npcSpritePoseFromPhase(phase);
-  }, [defeatedSide, phase]);
+    return npcSpritePoseFromPhase(phase, holdResultShoot);
+  }, [defeatedSide, phase, holdResultShoot]);
   const playerPose = useMemo(() => {
     if (defeatedSide === 'player') return 'defeat' as const;
     if (defeatedSide === 'npc') return 'idle' as const;
-    return playerSpritePoseFromPhase(phase, playerShootFlash);
-  }, [defeatedSide, phase, playerShootFlash]);
+    return playerSpritePoseFromPhase(phase, playerShootFlash, holdResultShoot);
+  }, [defeatedSide, phase, playerShootFlash, holdResultShoot]);
 
   useEffect(() => {
     if (phase !== '뱅' && phase !== '결과') {
@@ -776,9 +880,10 @@ export default function NpcGameScreen() {
             playerVictoryActive={defeatedSide === 'npc'}
             playerCharacterId={selectedCharacterId}
             playerPose={playerPose}
-            signalPhase={enginePhaseToSignalBoardPhase(phase)}
+            signalPhase={signalBoardPhase}
             blindBangText={blindBangText}
             invertSignalColors={invertSignalColors}
+            echoReadySignal={npc.specialAbility === 'echoReady'}
             opponentHearts={opponentHearts}
             playerHearts={playerHearts}
             playerScore={playerScore}
@@ -825,7 +930,11 @@ export default function NpcGameScreen() {
         <SceneBackground
           {...arenaShellProps}
           solidColor={duelBg.color}
-          dimColor="rgba(12, 8, 5, 0.18)"
+          dimColor={
+            battleDayNight === 'night'
+              ? 'rgba(12, 8, 5, 0.1)'
+              : 'rgba(12, 8, 5, 0.16)'
+          }
         >
           {arenaBody}
         </SceneBackground>
@@ -837,7 +946,11 @@ export default function NpcGameScreen() {
         <SceneBackground
           {...arenaShellProps}
           source={duelBg.source}
-          dimColor="rgba(12, 8, 5, 0.18)"
+          dimColor={
+            battleDayNight === 'night'
+              ? 'rgba(12, 8, 5, 0.1)'
+              : 'rgba(12, 8, 5, 0.16)'
+          }
         >
           {arenaBody}
         </SceneBackground>
@@ -849,7 +962,7 @@ export default function NpcGameScreen() {
 const styles = StyleSheet.create({
   paleDim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.52)',
+    backgroundColor: 'rgba(22, 18, 42, 0.1)',
     zIndex: 4,
   },
   blueRing: {

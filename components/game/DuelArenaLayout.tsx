@@ -14,13 +14,14 @@ import {
   DuelSignalBoard,
   type DuelSignalBoardPhase,
 } from '@/components/game/DuelSignalBoard';
+import { DuelFigureSlot } from '@/components/game/DuelFigureSlot';
 import { FONT_RYE } from '@/constants/fonts';
 import {
   duelFigureSize,
-  duelFigureTransform,
   duelFlipHorizontal,
   type DuelCorner,
 } from '@/constants/duelArena';
+import { DUEL_ARENA_SHADE } from '@/constants/duelPresentation';
 import { colors } from '@/constants/theme';
 import { npcDisplayName } from '@/utils/npcDisplayName';
 
@@ -62,6 +63,7 @@ type Props = {
   signalPhase: DuelSignalBoardPhase;
   blindBangText: boolean;
   invertSignalColors: boolean;
+  echoReadySignal?: boolean;
   opponentHearts: number;
   playerHearts: number;
   playerScore: number;
@@ -94,6 +96,7 @@ export function DuelArenaLayout({
   signalPhase,
   blindBangText,
   invertSignalColors,
+  echoReadySignal = false,
   opponentHearts,
   playerHearts,
   playerScore,
@@ -130,15 +133,14 @@ export function DuelArenaLayout({
 
       <LinearGradient
         pointerEvents="none"
-        colors={['rgba(8, 4, 2, 0.45)', 'rgba(8, 4, 2, 0.04)', 'rgba(8, 4, 2, 0.04)', 'rgba(8, 4, 2, 0.5)']}
-        locations={[0, 0.22, 0.72, 1]}
+        colors={[...DUEL_ARENA_SHADE.colors]}
+        locations={[...DUEL_ARENA_SHADE.locations]}
         style={StyleSheet.absoluteFill}
       />
 
       {/* NPC — 우상단, 플레이어 쪽을 향해 대각선 */}
       <View pointerEvents="none" style={[styles.npcZone, { width, height: height * 0.52 }]}>
-        {npcPose !== 'defeat' ? <View style={styles.groundShadowNpc} /> : null}
-        <View style={{ transform: duelFigureTransform(npcCorner, npcPose) }}>
+        <DuelFigureSlot corner={npcCorner} pose={npcPose} figW={figW} figH={figH}>
           <NpcCharacterSprite
             npcId={npcId}
             width={figW}
@@ -147,7 +149,7 @@ export function DuelArenaLayout({
             pose={npcPose}
             victoryActive={npcVictoryActive}
           />
-        </View>
+        </DuelFigureSlot>
       </View>
 
       {/* 플레이어 — 좌하단, NPC 쪽을 향해 대각선 */}
@@ -155,8 +157,7 @@ export function DuelArenaLayout({
         pointerEvents="none"
         style={[styles.playerZone, { width, height: height * 0.52, bottom: 0 }]}
       >
-        <View style={styles.groundShadowPlayer} />
-        <View style={{ transform: duelFigureTransform(playerCorner, playerPose) }}>
+        <DuelFigureSlot corner={playerCorner} pose={playerPose} figW={figW} figH={figH}>
           <PlayerCharacterSprite
             characterId={playerCharacterId}
             width={figW}
@@ -165,7 +166,7 @@ export function DuelArenaLayout({
             pose={playerPose}
             victoryActive={playerVictoryActive}
           />
-        </View>
+        </DuelFigureSlot>
       </View>
 
       {/* 중앙 신호 */}
@@ -175,6 +176,7 @@ export function DuelArenaLayout({
           phase={signalPhase}
           blindBangText={blindBangText}
           invertSignalColors={invertSignalColors}
+          echoReady={echoReadySignal}
         />
       </View>
 
@@ -243,36 +245,16 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'flex-end',
     justifyContent: 'flex-end',
-    paddingRight: 4,
-    paddingTop: 72,
+    paddingRight: 10,
+    paddingTop: 48,
   },
   playerZone: {
     position: 'absolute',
     left: 0,
     alignItems: 'flex-start',
     justifyContent: 'flex-end',
-    paddingLeft: 4,
-    paddingBottom: 108,
-  },
-  groundShadowNpc: {
-    position: 'absolute',
-    right: 28,
-    bottom: 18,
-    width: 120,
-    height: 22,
-    borderRadius: 999,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    transform: [{ scaleX: 1.4 }],
-  },
-  groundShadowPlayer: {
-    position: 'absolute',
-    left: 24,
-    bottom: 96,
-    width: 120,
-    height: 22,
-    borderRadius: 999,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    transform: [{ scaleX: 1.4 }],
+    paddingLeft: 8,
+    paddingBottom: 96,
   },
   signalWrap: {
     position: 'absolute',

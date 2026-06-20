@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -24,6 +24,8 @@ export type DuelSignalBoardProps = {
   blindBangText?: boolean;
   /** #19 등 — 준비↔집중·뱅 색 교환 느낌 */
   invertSignalColors?: boolean;
+  /** #20 에코팬텀 — READY 잔상 (TTS 이중 재생 대신) */
+  echoReady?: boolean;
   /** panel: 나무 박스 / minimal: 배경 위 플로팅 */
   variant?: 'panel' | 'minimal';
 };
@@ -44,8 +46,8 @@ function signalLabel(phase: DuelSignalBoardPhase): string {
     case '준비':
       return DUEL_SIGNAL_SPEC.ready.text;
     case '집중':
-      return DUEL_SIGNAL_SPEC.steady.text;
     case '페이크':
+      return DUEL_SIGNAL_SPEC.steady.text;
     case '뱅':
       return DUEL_SIGNAL_SPEC.bang.text;
     default:
@@ -61,18 +63,24 @@ export function DuelSignalBoard({
   onFlashComplete,
   blindBangText = false,
   invertSignalColors = false,
+  echoReady = false,
   variant = 'panel',
 }: DuelSignalBoardProps) {
   const minimal = variant === 'minimal';
   const flashOpacity = useSharedValue(0);
   const pulse = useSharedValue(1);
+  const echoOpacity = useSharedValue(0);
+  const prevPhaseRef = useRef(phase);
 
   const fireComplete = useCallback(() => {
     onFlashComplete?.();
   }, [onFlashComplete]);
 
   useEffect(() => {
-    if (phase === '집중' || phase === '페이크') {
+    const prev = prevPhaseRef.current;
+    prevPhaseRef.current = phase;
+
+    if (phase === '집중' && prev === '준비') {
       pulse.value = 1;
       pulse.value = withRepeat(
         withSequence(
@@ -92,21 +100,37 @@ export function DuelSignalBoard({
         undefined,
         RM_GAME,
       );
-    } else {
+    } else if (phase !== '집중' && phase !== '페이크') {
       cancelAnimation(pulse);
       pulse.value = 1;
     }
   }, [phase, pulse]);
 
   useEffect(() => {
+    if (!echoReady || phase !== '준비') {
+      cancelAnimation(echoOpacity);
+      echoOpacity.value = 0;
+      return;
+    }
+    echoOpacity.value = 0;
+    echoOpacity.value = withSequence(
+      withTiming(0, { duration: 420, reduceMotion: RM_GAME }),
+      withTiming(0.42, { duration: 180, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME }),
+      withTiming(0, { duration: 520, easing: Easing.in(Easing.quad), reduceMotion: RM_GAME }),
+    );
+  }, [echoReady, phase, echoOpacity]);
+
+  useEffect(() => {
     if (phase === '뱅' || phase === '페이크') {
       cancelAnimation(flashOpacity);
-      flashOpacity.value = minimal ? 0.36 : 0.48;
+      const peak = phase === '페이크' ? (minimal ? 0.22 : 0.3) : minimal ? 0.36 : 0.48;
+      const dur = phase === '페이크' ? (minimal ? 110 : 140) : minimal ? 160 : 220;
+      flashOpacity.value = peak;
       flashOpacity.value = withTiming(
         0,
-        { duration: minimal ? 160 : 220, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME },
+        { duration: dur, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME },
         (finished) => {
-          if (finished) {
+          if (finished && phase === '뱅') {
             runOnJS(fireComplete)();
           }
         },
@@ -125,6 +149,11 @@ export function DuelSignalBoard({
     transform: [{ scale: pulse.value }],
   }));
 
+  const echoStyle = useAnimatedStyle(() => ({
+    opacity: echoOpacity.value,
+    transform: [{ translateX: 6 }, { scale: 1.04 }],
+  }));
+
   const label = signalLabel(phase);
   const showLabel = label.length > 0;
 
@@ -135,11 +164,11 @@ export function DuelSignalBoard({
         : styles.textBang;
     if (invertSignalColors) {
       if (phase === '준비') return styles.textSteady;
-      if (phase === '집중') return styles.textReady;
-      if (phase === '뱅' || phase === '페이크') return styles.textReady;
+      if (phase === '집중' || phase === '페이크') return styles.textReady;
+      if (phase === '뱅') return styles.textReady;
     }
-    if (phase === '뱅' || phase === '페이크') return bangStyle;
-    if (phase === '집중') return styles.textSteady;
+    if (phase === '뱅') return bangStyle;
+    if (phase === '집중' || phase === '페이크') return styles.textSteady;
     return styles.textReady;
   })();
 
@@ -168,15 +197,7 @@ export function DuelSignalBoard({
           <Animated.View style={styles.signalBlock}>
             {phase === '집중' || phase === '페이크' ? (
               <Animated.View style={[pulseStyle, styles.pulseWrap]}>
-                <Text
-                  style={[
-                    textStyle,
-                    phase === '페이크' ? bangSize : steadySize,
-                    minimalTextShadow,
-                  ]}
-                >
-                  {label}
-                </Text>
+                <Text style={[textStyle, steadySize, minimalTextShadow]}>{label}</Text>
               </Animated.View>
             ) : (
               <Text
@@ -189,6 +210,20 @@ export function DuelSignalBoard({
                 {label}
               </Text>
             )}
+            {echoReady && phase === '준비' ? (
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  textStyle,
+                  readySize,
+                  minimalTextShadow,
+                  styles.echoReady,
+                  echoStyle,
+                ]}
+              >
+                {label}
+              </Animated.Text>
+            ) : null}
           </Animated.View>
         ) : (
           <View style={styles.placeholder} />
@@ -243,6 +278,9 @@ const styles = StyleSheet.create({
   pulseWrap: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  echoReady: {
+    position: 'absolute',
   },
   textReady: {
     color: DUEL_SIGNAL_SPEC.ready.color,

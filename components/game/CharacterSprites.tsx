@@ -129,7 +129,7 @@ function DuelSpriteStack({
   const showShootLayer = displayPose === 'shoot';
 
   return (
-    <View style={{ width, height }}>
+    <View style={{ width, height, backgroundColor: 'transparent' }}>
       {layers.idle ? (
         <SpriteLayer source={layers.idle} width={width} height={height} opacity={op.idle} />
       ) : null}

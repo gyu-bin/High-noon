@@ -2,7 +2,11 @@ import type { SpritePose } from '@/constants/sprites';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
 
 /** NPC — READY idle / STEADY·페이크 aim / BANG shoot / 승리 idle+연기 */
-export function npcSpritePoseFromPhase(phase: DuelPhase): SpritePose {
+export function npcSpritePoseFromPhase(
+  phase: DuelPhase,
+  holdShootOnResult = false,
+): SpritePose {
+  if (holdShootOnResult && phase === '결과') return 'shoot';
   if (phase === '뱅') return 'shoot';
   if (phase === '집중' || phase === '페이크') return 'aim';
   return 'idle';
@@ -12,7 +16,9 @@ export function npcSpritePoseFromPhase(phase: DuelPhase): SpritePose {
 export function playerSpritePoseFromPhase(
   phase: DuelPhase,
   shootAckActive: boolean,
+  holdShootOnResult = false,
 ): SpritePose {
+  if (holdShootOnResult && phase === '결과') return 'shoot';
   if (shootAckActive) return 'shoot';
   if (phase === '뱅') return 'shoot';
   if (phase === '집중' || phase === '페이크') return 'aim';
@@ -23,7 +29,9 @@ export function playerSpritePoseFromPhase(
 export function localPlayerSpritePoseFromPhase(
   phase: DuelPhase,
   shootAckActive: boolean,
+  holdShootOnResult = false,
 ): SpritePose {
+  if (holdShootOnResult && phase === '결과') return 'shoot';
   if (shootAckActive) return 'shoot';
   if (phase === '집중' || phase === '페이크' || phase === '뱅') return 'aim';
   return 'idle';

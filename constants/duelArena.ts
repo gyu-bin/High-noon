@@ -20,9 +20,9 @@ export function duelFigureTransform(
     return [{ scaleX: -1 }, { translateY: -22 }, { translateX: 6 }];
   }
   if (corner === 'bottomLeft') {
-    return [{ translateY: 22 }];
+    return [{ translateY: 14 }, { scale: 0.98 }];
   }
-  return [{ scaleX: -1 }, { translateY: 8 }];
+  return [{ scaleX: -1 }, { translateY: 2 }, { scale: 0.96 }];
 }
 
 export function duelFlipHorizontal(_corner: DuelCorner): boolean {
@@ -40,9 +40,9 @@ export function localDuelTopHalfFigureTransform(
 }
 
 export const DUEL_FIGURE_SIZE = {
-  widthRatio: 0.58,
-  maxWidth: 240,
-  heightRatio: 1.15,
+  widthRatio: 0.54,
+  maxWidth: 228,
+  heightRatio: 1.08,
 } as const;
 
 export function duelFigureSize(stageWidth: number): { width: number; height: number } {
