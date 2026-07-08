@@ -25,7 +25,7 @@ import { LocalMatchModal } from '@/components/game/LocalMatchModal';
 import { LocalRoundModal } from '@/components/game/LocalRoundModal';
 import { PauseMenuModal } from '@/components/game/PauseMenuModal';
 import { DuelSplitBackground } from '@/components/game/DuelSplitBackground';
-import { pickBattleDayNight } from '@/constants/gameImages';
+import { DUEL_DEFEAT_REVEAL_DELAY_MS } from '@/constants/duelPresentation';
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
 import {
@@ -112,6 +112,7 @@ export default function LocalGameScreen() {
   const bangHapticDone = useRef(false);
   const processedKey = useRef('');
   const roundIdx = useRef(0);
+  const defeatRevealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const triggerBangFlash = useCallback(() => {
     if (bangHapticDone.current) return;
@@ -375,14 +376,29 @@ export default function LocalGameScreen() {
       setMatchWinner(winsRef.current.p1 >= winsNeeded ? 'p1' : 'p2');
       setModalStep('match');
     } else {
-      if (outcome.winner === 'p1') setRoundDefeated('p2');
-      else if (outcome.winner === 'p2') setRoundDefeated('p1');
-      else setRoundDefeated(null);
+      const nextRoundDefeated =
+        outcome.winner === 'p1' ? ('p2' as const) : outcome.winner === 'p2' ? ('p1' as const) : null;
+      if (defeatRevealTimerRef.current != null) {
+        clearTimeout(defeatRevealTimerRef.current);
+        defeatRevealTimerRef.current = null;
+      }
+      if (nextRoundDefeated == null) {
+        setRoundDefeated(null);
+      } else {
+        defeatRevealTimerRef.current = setTimeout(() => {
+          setRoundDefeated(nextRoundDefeated);
+          defeatRevealTimerRef.current = null;
+        }, DUEL_DEFEAT_REVEAL_DELAY_MS);
+      }
       setModalStep('round');
     }
   }, [phase, outcome, winsNeeded, p1Hearts, p2Hearts]);
 
   const continueAfterRound = useCallback(() => {
+    if (defeatRevealTimerRef.current != null) {
+      clearTimeout(defeatRevealTimerRef.current);
+      defeatRevealTimerRef.current = null;
+    }
     setModalStep(null);
     setRoundDefeated(null);
     roundIdx.current += 1;

@@ -25,3 +25,6 @@ export const DUEL_FIGURE_SHADOW = {
 
 /** 얼리 탭만 짧은 모달 지연 */
 export const DUEL_EARLY_MODAL_DELAY_MS = 80;
+
+/** 결과 직후 shoot 포즈 유지 → defeat 전환 전 피격 순간 */
+export const DUEL_DEFEAT_REVEAL_DELAY_MS = 300;

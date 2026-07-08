@@ -6,6 +6,7 @@ import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reani
 import type { SvgProps } from 'react-native-svg';
 
 import { getNpcSpriteSource, getPlayerSpriteSource } from '@/constants/spriteAssets';
+import type { DuelCorner } from '@/constants/duelArena';
 import {
   SPRITE_CACHE_REVISION,
   SPRITE_POSE_TRANSFORM,
@@ -126,7 +127,7 @@ function DuelSpriteStack({
   const displayPose = spriteDisplayPose(pose);
   const op = usePoseOpacity(displayPose);
   const showAimLayer = displayPose === 'aim' && layers.aim !== layers.idle;
-  const showShootLayer = displayPose === 'shoot';
+  const showShootLayer = displayPose === 'shoot' || displayPose === 'defeat';
 
   return (
     <View style={{ width, height, backgroundColor: 'transparent' }}>
@@ -196,9 +197,10 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
   style,
   pose = 'idle',
   victoryActive = false,
-}: BaseProps & { npcId: number; victoryActive?: boolean }) {
+  duelCorner = 'topRight',
+}: BaseProps & { npcId: number; victoryActive?: boolean; duelCorner?: DuelCorner }) {
   const hasPng = !!getNpcSpriteSource(npcId, 'idle');
-  const motionStyle = useDuelSpriteMotion(pose, victoryActive);
+  const motionStyle = useDuelSpriteMotion(pose, victoryActive, duelCorner);
 
   return (
     <View
@@ -245,9 +247,10 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
   style,
   pose = 'idle',
   victoryActive = false,
-}: BaseProps & { characterId?: number; victoryActive?: boolean }) {
+  duelCorner = 'bottomLeft',
+}: BaseProps & { characterId?: number; victoryActive?: boolean; duelCorner?: DuelCorner }) {
   const hasPng = !!getPlayerSpriteSource(characterId, 'idle');
-  const motionStyle = useDuelSpriteMotion(pose, victoryActive);
+  const motionStyle = useDuelSpriteMotion(pose, victoryActive, duelCorner);
 
   return (
     <View

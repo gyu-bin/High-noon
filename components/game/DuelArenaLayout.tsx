@@ -148,6 +148,7 @@ export function DuelArenaLayout({
             flipHorizontal={duelFlipHorizontal(npcCorner)}
             pose={npcPose}
             victoryActive={npcVictoryActive}
+            duelCorner={npcCorner}
           />
         </DuelFigureSlot>
       </View>
@@ -165,6 +166,7 @@ export function DuelArenaLayout({
             flipHorizontal={duelFlipHorizontal(playerCorner)}
             pose={playerPose}
             victoryActive={playerVictoryActive}
+            duelCorner={playerCorner}
           />
         </DuelFigureSlot>
       </View>

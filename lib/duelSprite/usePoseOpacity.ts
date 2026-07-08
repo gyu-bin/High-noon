@@ -16,22 +16,24 @@ export function usePoseOpacity(pose: SpritePose) {
   const shootFrame = useSharedValue(0);
 
   useEffect(() => {
-    const cfg = {
-      duration: T.poseFadeMs,
-      easing: Easing.out(Easing.quad),
-      reduceMotion: RM_GAME,
-    };
     const shootIn = {
       duration: T.shootInMs,
       easing: Easing.out(Easing.quad),
       reduceMotion: RM_GAME,
     };
     const isShoot = pose === 'shoot';
+    const toDefeat = pose === 'defeat';
+    const fadeMs = toDefeat ? T.defeatCrossfadeMs : T.poseFadeMs;
+    const fadeCfg = {
+      duration: fadeMs,
+      easing: Easing.out(Easing.quad),
+      reduceMotion: RM_GAME,
+    };
 
-    idle.value = withTiming(pose === 'idle' ? 1 : 0, isShoot ? shootIn : cfg);
-    aim.value = withTiming(pose === 'aim' ? 1 : 0, isShoot ? shootIn : cfg);
-    defeat.value = withTiming(pose === 'defeat' ? 1 : 0, isShoot ? shootIn : cfg);
-    shoot.value = withTiming(isShoot ? 1 : 0, shootIn);
+    idle.value = withTiming(pose === 'idle' ? 1 : 0, isShoot ? shootIn : fadeCfg);
+    aim.value = withTiming(pose === 'aim' ? 1 : 0, isShoot ? shootIn : fadeCfg);
+    defeat.value = withTiming(toDefeat ? 1 : 0, fadeCfg);
+    shoot.value = withTiming(isShoot ? 1 : 0, toDefeat ? fadeCfg : shootIn);
 
     if (isShoot) {
       shootFrame.value = 0;
@@ -43,7 +45,7 @@ export function usePoseOpacity(pose: SpritePose) {
     } else {
       shootFrame.value = 0;
     }
-  }, [pose, idle, aim, defeat, shoot, shootFrame, T.poseFadeMs, T.shootCrossfadeMs, T.shootInMs]);
+  }, [pose, idle, aim, defeat, shoot, shootFrame, T.poseFadeMs, T.defeatCrossfadeMs, T.shootCrossfadeMs, T.shootInMs]);
 
   const shootFrame0Style = useAnimatedStyle(() => ({
     opacity: shoot.value * (1 - shootFrame.value),

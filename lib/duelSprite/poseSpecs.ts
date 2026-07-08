@@ -28,7 +28,9 @@ export const DUEL_SPRITE_TIMING = {
   aimPulseMs: 900,
   shootKickInMs: 70,
   shootKickHoldMs: 180,
-  defeatInMs: 220,
+  defeatCrossfadeMs: 320,
+  defeatInMs: 720,
+  defeatKnockbackPeak: 0.32,
   victoryHolsterMs: 520,
   victoryPulseMs: 1100,
 } as const;

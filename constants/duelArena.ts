@@ -29,6 +29,14 @@ export function duelFlipHorizontal(_corner: DuelCorner): boolean {
   return false;
 }
 
+/** 패배 시 코너 바깥(상대 반대)으로 넉백 후 바닥으로 쓰러짐 */
+export function duelDefeatKnockback(corner: DuelCorner): { x: number; y: number; rotate: number } {
+  if (corner === 'topRight') {
+    return { x: 12, y: -16, rotate: -11 };
+  }
+  return { x: -12, y: 10, rotate: 11 };
+}
+
 /**
  * 로컬 2P 상단 구역(180° 회전) — `bottomLeft`와 같은 조준.
  * 부모 회전과 합쳐지면 화면상 아래(P1) 쪽을 향한다.
