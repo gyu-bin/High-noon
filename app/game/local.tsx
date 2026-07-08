@@ -25,7 +25,11 @@ import { LocalMatchModal } from '@/components/game/LocalMatchModal';
 import { LocalRoundModal } from '@/components/game/LocalRoundModal';
 import { PauseMenuModal } from '@/components/game/PauseMenuModal';
 import { DuelSplitBackground } from '@/components/game/DuelSplitBackground';
-import { DUEL_DEFEAT_REVEAL_DELAY_MS } from '@/constants/duelPresentation';
+import {
+  DUEL_DEFEAT_MODAL_DELAY_MS,
+  DUEL_DEFEAT_REVEAL_DELAY_MS,
+} from '@/constants/duelPresentation';
+import { pickBattleDayNight } from '@/constants/gameImages';
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
 import {
@@ -113,6 +117,7 @@ export default function LocalGameScreen() {
   const processedKey = useRef('');
   const roundIdx = useRef(0);
   const defeatRevealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const roundModalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const triggerBangFlash = useCallback(() => {
     if (bangHapticDone.current) return;
@@ -312,6 +317,14 @@ export default function LocalGameScreen() {
       })();
       return () => {
         cancelled = true;
+        if (defeatRevealTimerRef.current != null) {
+          clearTimeout(defeatRevealTimerRef.current);
+          defeatRevealTimerRef.current = null;
+        }
+        if (roundModalTimerRef.current != null) {
+          clearTimeout(roundModalTimerRef.current);
+          roundModalTimerRef.current = null;
+        }
         reset();
       };
     }, [matchType, reset, start, selectedCharacterId]),
@@ -370,27 +383,49 @@ export default function LocalGameScreen() {
       void trigger('success');
     }
 
+    const nextRoundDefeated =
+      outcome.winner === 'p1' ? ('p2' as const) : outcome.winner === 'p2' ? ('p1' as const) : null;
+    if (defeatRevealTimerRef.current != null) {
+      clearTimeout(defeatRevealTimerRef.current);
+      defeatRevealTimerRef.current = null;
+    }
+    if (roundModalTimerRef.current != null) {
+      clearTimeout(roundModalTimerRef.current);
+      roundModalTimerRef.current = null;
+    }
+
     if (matchOver) {
       void play('level_clear');
       void trigger('success');
       setMatchWinner(winsRef.current.p1 >= winsNeeded ? 'p1' : 'p2');
-      setModalStep('match');
-    } else {
-      const nextRoundDefeated =
-        outcome.winner === 'p1' ? ('p2' as const) : outcome.winner === 'p2' ? ('p1' as const) : null;
-      if (defeatRevealTimerRef.current != null) {
-        clearTimeout(defeatRevealTimerRef.current);
-        defeatRevealTimerRef.current = null;
+      if (nextRoundDefeated == null) {
+        setModalStep('match');
+      } else {
+        // 마지막 라운드도 쓰러지는 연출을 보여준 뒤 매치 모달
+        defeatRevealTimerRef.current = setTimeout(() => {
+          setRoundDefeated(nextRoundDefeated);
+          defeatRevealTimerRef.current = null;
+        }, DUEL_DEFEAT_REVEAL_DELAY_MS);
+        roundModalTimerRef.current = setTimeout(() => {
+          setModalStep('match');
+          roundModalTimerRef.current = null;
+        }, DUEL_DEFEAT_MODAL_DELAY_MS);
       }
+    } else {
       if (nextRoundDefeated == null) {
         setRoundDefeated(null);
+        setModalStep('round');
       } else {
         defeatRevealTimerRef.current = setTimeout(() => {
           setRoundDefeated(nextRoundDefeated);
           defeatRevealTimerRef.current = null;
         }, DUEL_DEFEAT_REVEAL_DELAY_MS);
+        // 쓰러지는 연출이 끝난 뒤 라운드 모달
+        roundModalTimerRef.current = setTimeout(() => {
+          setModalStep('round');
+          roundModalTimerRef.current = null;
+        }, DUEL_DEFEAT_MODAL_DELAY_MS);
       }
-      setModalStep('round');
     }
   }, [phase, outcome, winsNeeded, p1Hearts, p2Hearts]);
 
@@ -398,6 +433,10 @@ export default function LocalGameScreen() {
     if (defeatRevealTimerRef.current != null) {
       clearTimeout(defeatRevealTimerRef.current);
       defeatRevealTimerRef.current = null;
+    }
+    if (roundModalTimerRef.current != null) {
+      clearTimeout(roundModalTimerRef.current);
+      roundModalTimerRef.current = null;
     }
     setModalStep(null);
     setRoundDefeated(null);

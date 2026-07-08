@@ -2,8 +2,10 @@ import { Image } from 'expo-image';
 import { Image as RNImage, type ImageSourcePropType } from 'react-native';
 
 import {
+  getNpcDownSource,
   getNpcShootFrames,
   getNpcSpriteSource,
+  getPlayerDownSource,
   getPlayerShootFrames,
   getPlayerSpriteSource,
 } from '@/constants/spriteAssets';
@@ -36,6 +38,8 @@ export async function prefetchDuelSprites(
     push(getNpcSpriteSource(npcId, pose));
     push(getPlayerSpriteSource(characterId, pose));
   }
+  push(getNpcDownSource(npcId));
+  push(getPlayerDownSource(characterId));
   getNpcShootFrames(npcId)?.forEach(push);
   getPlayerShootFrames(characterId)?.forEach(push);
 

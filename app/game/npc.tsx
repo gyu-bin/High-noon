@@ -59,7 +59,11 @@ import { trigger } from '@/utils/hapticService';
 
 const WINS_TO_END = 3;
 const HEARTS = 3;
-import { DUEL_DEFEAT_REVEAL_DELAY_MS, DUEL_EARLY_MODAL_DELAY_MS } from '@/constants/duelPresentation';
+import {
+  DUEL_DEFEAT_MODAL_DELAY_MS,
+  DUEL_DEFEAT_REVEAL_DELAY_MS,
+  DUEL_EARLY_MODAL_DELAY_MS,
+} from '@/constants/duelPresentation';
 
 const TIER_KO: Record<string, string> = {
   bronze: '브론즈',
@@ -560,7 +564,11 @@ export default function NpcGameScreen() {
       playerStreakRef.current = 0;
     }
 
-    const modalDelay = o.earlyTap ? DUEL_EARLY_MODAL_DELAY_MS : 0;
+    const modalDelay = o.earlyTap
+      ? DUEL_EARLY_MODAL_DELAY_MS
+      : nextDefeatedSide != null
+        ? DUEL_DEFEAT_MODAL_DELAY_MS
+        : 0;
 
     if (outcomeRevealTimersRef.current.defeat != null) {
       clearTimeout(outcomeRevealTimersRef.current.defeat);

@@ -5,7 +5,11 @@ import { View } from 'react-native';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import type { SvgProps } from 'react-native-svg';
 
-import { getNpcSpriteSource, getPlayerSpriteSource } from '@/constants/spriteAssets';
+import {
+  getNpcSpriteSource,
+  getPlayerDownSource,
+  getPlayerSpriteSource,
+} from '@/constants/spriteAssets';
 import type { DuelCorner } from '@/constants/duelArena';
 import {
   SPRITE_CACHE_REVISION,
@@ -13,6 +17,8 @@ import {
   type SpritePose,
 } from '@/constants/sprites';
 import {
+  DefeatDustOverlay,
+  defeatImpactDelayMs,
   MuzzleFlashOverlay,
   resolveDuelSpriteLayers,
   spriteDisplayPose,
@@ -125,7 +131,7 @@ function DuelSpriteStack({
 }) {
   const layers = resolveDuelSpriteLayers(mode, id);
   const displayPose = spriteDisplayPose(pose);
-  const op = usePoseOpacity(displayPose);
+  const op = usePoseOpacity(displayPose, layers.down != null);
   const showAimLayer = displayPose === 'aim' && layers.aim !== layers.idle;
   const showShootLayer = displayPose === 'shoot' || displayPose === 'defeat';
 
@@ -134,11 +140,14 @@ function DuelSpriteStack({
       {layers.idle ? (
         <SpriteLayer source={layers.idle} width={width} height={height} opacity={op.idle} />
       ) : null}
-      {showAimLayer ? (
+      {showAimLayer && layers.aim ? (
         <SpriteLayer source={layers.aim} width={width} height={height} opacity={op.aim} />
       ) : null}
       {layers.defeat ? (
         <SpriteLayer source={layers.defeat} width={width} height={height} opacity={op.defeat} />
+      ) : null}
+      {layers.down ? (
+        <SpriteLayer source={layers.down} width={width} height={height} opacity={op.down} />
       ) : null}
       {showShootLayer && layers.useDualShootFrames && layers.shootFrame0 && layers.shootFrame1 ? (
         <>
@@ -200,7 +209,7 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
   duelCorner = 'topRight',
 }: BaseProps & { npcId: number; victoryActive?: boolean; duelCorner?: DuelCorner }) {
   const hasPng = !!getNpcSpriteSource(npcId, 'idle');
-  const motionStyle = useDuelSpriteMotion(pose, victoryActive, duelCorner);
+  const motionStyle = useDuelSpriteMotion(pose, victoryActive, duelCorner, 'topple', height);
 
   return (
     <View
@@ -235,6 +244,13 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
           />
         ) : null}
       </Animated.View>
+      <DefeatDustOverlay
+        width={width}
+        height={height}
+        active={pose === 'defeat'}
+        impactDelayMs={defeatImpactDelayMs('topple')}
+        groundOffsetY={height * 0.05}
+      />
     </View>
   );
 });
@@ -250,7 +266,14 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
   duelCorner = 'bottomLeft',
 }: BaseProps & { characterId?: number; victoryActive?: boolean; duelCorner?: DuelCorner }) {
   const hasPng = !!getPlayerSpriteSource(characterId, 'idle');
-  const motionStyle = useDuelSpriteMotion(pose, victoryActive, duelCorner);
+  const hasDown = !!getPlayerDownSource(characterId);
+  const motionStyle = useDuelSpriteMotion(
+    pose,
+    victoryActive,
+    duelCorner,
+    hasDown ? 'topple' : 'collapse',
+    height,
+  );
 
   return (
     <View
@@ -293,6 +316,13 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
           />
         ) : null}
       </Animated.View>
+      <DefeatDustOverlay
+        width={width}
+        height={height}
+        active={pose === 'defeat'}
+        impactDelayMs={defeatImpactDelayMs(hasDown ? 'topple' : 'collapse')}
+        groundOffsetY={height * (hasDown ? 0.05 : 0.17)}
+      />
     </View>
   );
 });

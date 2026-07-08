@@ -13,17 +13,22 @@ import { duelDefeatKnockback } from '@/constants/duelArena';
 import type { SpritePose } from '@/constants/sprites';
 import { RM_GAME } from '@/constants/reanimatedGame';
 
-import { DUEL_SPRITE_TIMING } from './poseSpecs';
+import { DUEL_SPRITE_TIMING, type DuelDefeatMotion } from './poseSpecs';
 
 /** 결투 캐릭터 공통 procedural 모션 — 포즈별 스프라이트와 합쳐 먼지바람과 동일한 느낌 */
 export function useDuelSpriteMotion(
   pose: SpritePose,
   victoryActive = false,
   corner: DuelCorner = 'bottomLeft',
+  defeatMotion: DuelDefeatMotion = 'collapse',
+  figureHeight = 220,
 ) {
   const phase = useSharedValue(0);
   const T = DUEL_SPRITE_TIMING;
   const knock = duelDefeatKnockback(corner);
+  const defeatMs = defeatMotion === 'topple' ? T.defeatToppleMs : T.defeatCollapseMs;
+  const landFrac =
+    defeatMotion === 'topple' ? T.defeatToppleLandFrac : T.defeatCollapseLandFrac;
 
   useEffect(() => {
     if (victoryActive && pose === 'idle') {
@@ -110,10 +115,11 @@ export function useDuelSpriteMotion(
       return;
     }
     if (pose === 'defeat') {
+      // 선형 드라이버 — 휘청/낙하/착지 곡선은 worklet에서 구간별로 계산
       phase.value = 0;
       phase.value = withTiming(1, {
-        duration: T.defeatInMs,
-        easing: Easing.out(Easing.cubic),
+        duration: defeatMs,
+        easing: Easing.linear,
         reduceMotion: RM_GAME,
       });
       return;
@@ -128,8 +134,8 @@ export function useDuelSpriteMotion(
     pose,
     victoryActive,
     corner,
+    defeatMs,
     T.aimPulseMs,
-    T.defeatInMs,
     T.idleBobMs,
     T.poseFadeMs,
     T.shootKickHoldMs,
@@ -178,23 +184,61 @@ export function useDuelSpriteMotion(
     }
     if (pose === 'defeat') {
       const p = phase.value;
-      const peak = T.defeatKnockbackPeak;
-      const knockT = p < peak ? p / peak : 1;
-      const knockEase = Math.sin(knockT * Math.PI * 0.5);
-      const fallT = p < peak * 0.55 ? 0 : Math.min(1, (p - peak * 0.55) / (1 - peak * 0.55));
-      const fallEase = fallT * fallT;
+      const staggerEnd = defeatMotion === 'topple' ? 0.2 : 0.26;
+
+      // 1) 피격 휘청 — 뒤로 젖혀지는 넉백
+      const sT = Math.min(1, p / staggerEnd);
+      const sE = Math.sin(sT * Math.PI * 0.5);
+
+      // 2) 낙하 — 중력 가속으로 바닥까지
+      const fT =
+        p <= staggerEnd ? 0 : Math.min(1, (p - staggerEnd) / (landFrac - staggerEnd));
+      const fE = fT * fT;
+
+      // 3) 착지 — 짧은 바운스 후 정지
+      const bT = p <= landFrac ? 0 : Math.min(1, (p - landFrac) / (1 - landFrac));
+      const bounce = Math.sin(bT * Math.PI) * (1 - 0.55 * bT);
+
+      const dir = knock.rotate >= 0 ? 1 : -1;
+
+      if (defeatMotion === 'topple') {
+        // 휘청(defeat 아트)이 기울다가, 착지 직전 down(누움) 아트로 교체되며
+        // 컨테이너 회전은 0 근처로 복귀 — 실제 눕는 모습은 베이크된 에셋이 표현
+        const tipDeg = dir * 30;
+        const restDeg = dir * 3;
+        const fallX = dir * Math.abs(knock.x) * 1.6;
+        const fallY = figureHeight * 0.05;
+        // 착지 후 기울기 복귀 — 몸이 바닥에 탁 떨어지는 느낌
+        const settleT = Math.min(1, bT / 0.55);
+        const rot =
+          knock.rotate * sE + (tipDeg - knock.rotate) * fE - (tipDeg - restDeg) * settleT;
+
+        return {
+          transform: [
+            { translateX: knock.x * sE + fallX * fE },
+            { translateY: knock.y * sE + fallY * fE - 7 * bounce },
+            { rotate: `${rot}deg` },
+            { scale: 1 - 0.03 * fE },
+          ],
+          opacity: 1 - 0.04 * fE,
+        };
+      }
+
+      // collapse — 이미 누운 defeat 아트로 크로스페이드하며 낙하·착지
+      const fallY = figureHeight * 0.17;
+      const rotPeak = dir * 13;
+      const rotRest = dir * 7;
+      const rot =
+        knock.rotate * sE + (rotPeak - knock.rotate) * fE - (rotPeak - rotRest) * bT;
 
       return {
         transform: [
-          { translateX: knock.x * knockEase + knock.x * 0.25 * fallEase },
-          {
-            translateY:
-              knock.y * knockEase + 34 * fallEase + (corner === 'topRight' ? 8 * fallEase : 0),
-          },
-          { rotate: `${knock.rotate * knockEase + knock.rotate * 0.45 * fallEase}deg` },
-          { scale: 1 - 0.07 * fallEase },
+          { translateX: knock.x * sE + knock.x * 1.2 * fE },
+          { translateY: knock.y * sE + fallY * fE - 6 * bounce },
+          { rotate: `${rot}deg` },
+          { scale: 1 - 0.045 * fE },
         ],
-        opacity: 0.96 - 0.1 * fallEase,
+        opacity: 1 - 0.05 * fE,
       };
     }
     return {};

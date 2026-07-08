@@ -1,8 +1,10 @@
 import type { ImageSourcePropType } from 'react-native';
 
 import {
+  getNpcDownSource,
   getNpcShootFrames,
   getNpcSpriteSource,
+  getPlayerDownSource,
   getPlayerShootFrames,
   getPlayerSpriteSource,
 } from '@/constants/spriteAssets';
@@ -14,6 +16,8 @@ export type DuelSpriteLayers = {
   idle: ImageSourcePropType | undefined;
   aim: ImageSourcePropType | undefined;
   defeat: ImageSourcePropType | undefined;
+  /** defeat(휘청) 뒤 바닥에 누운 프레임 — 없으면 defeat 유지 */
+  down: ImageSourcePropType | undefined;
   shootFrame0: ImageSourcePropType | undefined;
   shootFrame1: ImageSourcePropType | undefined;
   useDualShootFrames: boolean;
@@ -45,6 +49,7 @@ export function resolveDuelSpriteLayers(
   const idle = pickPose(mode, id, 'idle');
   const aim = pickPose(mode, id, 'aim') ?? idle;
   const defeat = pickPose(mode, id, 'defeat');
+  const down = mode === 'npc' ? getNpcDownSource(id) : getPlayerDownSource(id);
   const shoot =
     mode === 'npc'
       ? getNpcSpriteSource(id, 'shoot')
@@ -60,6 +65,7 @@ export function resolveDuelSpriteLayers(
     idle,
     aim,
     defeat,
+    down,
     shootFrame0: frame0,
     shootFrame1: useDualShootFrames ? frame1 : undefined,
     useDualShootFrames,

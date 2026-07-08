@@ -178,6 +178,32 @@ const PLAYER_SHOOT_FRAMES: Partial<Record<number, ShootSeq>> = {
   1: [require('@/assets/sprites/player/player_01_shoot_00.png'), require('@/assets/sprites/player/player_01_shoot_01.png')],
 };
 
+/** defeat(휘청) 뒤에 이어지는 바닥에 누운 프레임 — scripts/make_down_sprites.py */
+const NPC_DOWN_SPRITES: Partial<Record<number, ImageSourcePropType>> = {
+  1: require('@/assets/sprites/npc/npc_01_down.png'),
+  2: require('@/assets/sprites/npc/npc_02_down.png'),
+  3: require('@/assets/sprites/npc/npc_03_down.png'),
+  4: require('@/assets/sprites/npc/npc_04_down.png'),
+  5: require('@/assets/sprites/npc/npc_05_down.png'),
+  6: require('@/assets/sprites/npc/npc_06_down.png'),
+  7: require('@/assets/sprites/npc/npc_07_down.png'),
+  8: require('@/assets/sprites/npc/npc_08_down.png'),
+  9: require('@/assets/sprites/npc/npc_09_down.png'),
+  10: require('@/assets/sprites/npc/npc_10_down.png'),
+  11: require('@/assets/sprites/npc/npc_11_down.png'),
+  12: require('@/assets/sprites/npc/npc_12_down.png'),
+  13: require('@/assets/sprites/npc/npc_13_down.png'),
+  14: require('@/assets/sprites/npc/npc_14_down.png'),
+  15: require('@/assets/sprites/npc/npc_15_down.png'),
+  16: require('@/assets/sprites/npc/npc_16_down.png'),
+  17: require('@/assets/sprites/npc/npc_17_down.png'),
+  18: require('@/assets/sprites/npc/npc_18_down.png'),
+  19: require('@/assets/sprites/npc/npc_19_down.png'),
+  20: require('@/assets/sprites/npc/npc_20_down.png'),
+  21: require('@/assets/sprites/npc/npc_21_down.png'),
+  22: require('@/assets/sprites/npc/npc_22_down.png'),
+};
+
 function pickPose(map: Partial<Record<number, PoseMap>>, id: number, pose: SpritePose) {
   const entry = map[id];
   if (!entry) return undefined;
@@ -190,6 +216,21 @@ export function getNpcSpriteSource(npcId: number, pose: SpritePose) {
 
 export function getPlayerSpriteSource(characterId: number, pose: SpritePose) {
   return pickPose(PLAYER_SPRITES, characterId, pose);
+}
+
+/** defeat(휘청) 뒤에 이어지는 바닥에 누운 프레임 — scripts/make_down_sprites.py */
+const PLAYER_DOWN_SPRITES: Partial<Record<number, ImageSourcePropType>> = {
+  1: require('@/assets/sprites/player/player_01_down.png'),
+};
+
+export function getNpcDownSource(npcId: number): ImageSourcePropType | undefined {
+  return NPC_DOWN_SPRITES[npcId];
+}
+
+export function getPlayerDownSource(
+  characterId: number,
+): ImageSourcePropType | undefined {
+  return PLAYER_DOWN_SPRITES[characterId];
 }
 
 export function getNpcShootFrames(npcId: number): ShootSeq | undefined {

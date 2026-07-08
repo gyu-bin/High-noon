@@ -29,8 +29,25 @@ export const DUEL_SPRITE_TIMING = {
   shootKickInMs: 70,
   shootKickHoldMs: 180,
   defeatCrossfadeMs: 320,
-  defeatInMs: 720,
-  defeatKnockbackPeak: 0.32,
+  /** topple — defeat(휘청) 아트로 기울다 down(누움) 아트로 착지 (NPC) */
+  defeatToppleMs: 1050,
+  defeatToppleLandFrac: 0.68,
+  /** defeat → down 크로스페이드 시작 시점(topple 진행률)과 길이 */
+  defeatDownSwapFrac: 0.42,
+  defeatDownSwapMs: 260,
+  /** collapse — 이미 누운 defeat 아트로 낙하·착지 (플레이어) */
+  defeatCollapseMs: 880,
+  defeatCollapseLandFrac: 0.6,
   victoryHolsterMs: 520,
   victoryPulseMs: 1100,
 } as const;
+
+/** defeat 시작 → 바닥 착지(먼지 타이밍)까지 ms */
+export type DuelDefeatMotion = 'topple' | 'collapse';
+
+export function defeatImpactDelayMs(motion: DuelDefeatMotion): number {
+  const T = DUEL_SPRITE_TIMING;
+  return motion === 'topple'
+    ? Math.round(T.defeatToppleMs * T.defeatToppleLandFrac)
+    : Math.round(T.defeatCollapseMs * T.defeatCollapseLandFrac);
+}

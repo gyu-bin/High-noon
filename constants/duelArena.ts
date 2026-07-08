@@ -11,14 +11,9 @@ export type DuelCorner = 'bottomLeft' | 'topRight';
  */
 export function duelFigureTransform(
   corner: DuelCorner,
-  pose: SpritePose = 'idle',
+  _pose: SpritePose = 'idle',
 ): NonNullable<ViewStyle['transform']> {
-  if (pose === 'defeat') {
-    if (corner === 'bottomLeft') {
-      return [{ translateY: 20 }, { translateX: -8 }];
-    }
-    return [{ scaleX: -1 }, { translateY: -22 }, { translateX: 6 }];
-  }
+  // defeat도 idle과 같은 기준 트랜스폼 — 쓰러짐은 useDuelSpriteMotion이 연속 애니메이션으로 처리
   if (corner === 'bottomLeft') {
     return [{ translateY: 14 }, { scale: 0.98 }];
   }
