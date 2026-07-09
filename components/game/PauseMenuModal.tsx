@@ -1,4 +1,5 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/constants/theme';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
@@ -19,19 +20,35 @@ export function PauseMenuModal({
   secondaryLabel,
   onMainMenu,
 }: Props) {
-  const { stageWidth } = usePhoneStageMetrics();
-  const cardWidth = Math.min(380, Math.max(260, stageWidth - 40));
+  const m = usePhoneStageMetrics();
+  const landscape = m.windowWidth > m.windowHeight;
+
+  useEffect(() => {
+    if (!visible) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onResume();
+      return true;
+    });
+    return () => sub.remove();
+  }, [visible, onResume]);
+
+  if (!visible) return null;
+
+  const cardWidth = landscape
+    ? Math.min(480, Math.max(300, m.windowWidth * 0.44))
+    : Math.min(380, Math.max(260, m.stageWidth - 40));
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onResume}
-    >
+    <View style={styles.root} pointerEvents="box-none">
       <View style={styles.backdrop}>
-        <View style={[styles.card, { width: cardWidth, alignSelf: 'center' }]}>
-          <Text style={styles.title}>일시정지</Text>
+        <View
+          style={[
+            styles.card,
+            landscape && styles.cardLandscape,
+            { width: cardWidth, alignSelf: 'center' },
+          ]}
+        >
+          <Text style={[styles.title, landscape && styles.titleLandscape]}>일시정지</Text>
           <Pressable
             accessibilityLabel="계속하기"
             accessibilityRole="button"
@@ -61,16 +78,21 @@ export function PauseMenuModal({
           </Pressable>
         </View>
       </View>
-    </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 50,
+  },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.72)',
     justifyContent: 'center',
-    padding: 28,
+    alignItems: 'center',
+    padding: 24,
   },
   card: {
     borderRadius: 16,
@@ -80,12 +102,21 @@ const styles = StyleSheet.create({
     borderColor: colors.sand,
     gap: 12,
   },
+  cardLandscape: {
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    gap: 10,
+  },
   title: {
     fontSize: 22,
     fontWeight: '800',
     color: colors.ochre,
     marginBottom: 6,
     textAlign: 'center',
+  },
+  titleLandscape: {
+    fontSize: 20,
+    marginBottom: 4,
   },
   btnPrimary: {
     paddingVertical: 14,

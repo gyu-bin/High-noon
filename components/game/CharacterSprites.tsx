@@ -249,7 +249,7 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
         height={height}
         active={pose === 'defeat'}
         impactDelayMs={defeatImpactDelayMs('topple')}
-        groundOffsetY={height * 0.05}
+        groundOffsetY={height * 0.3}
       />
     </View>
   );
@@ -321,7 +321,7 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
         height={height}
         active={pose === 'defeat'}
         impactDelayMs={defeatImpactDelayMs(hasDown ? 'topple' : 'collapse')}
-        groundOffsetY={height * (hasDown ? 0.05 : 0.17)}
+        groundOffsetY={height * (hasDown ? 0.3 : 0.38)}
       />
     </View>
   );

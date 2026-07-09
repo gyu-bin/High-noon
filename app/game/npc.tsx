@@ -65,6 +65,15 @@ import {
   DUEL_EARLY_MODAL_DELAY_MS,
 } from '@/constants/duelPresentation';
 
+// 네이티브 모듈 미포함 구버전 빌드에서도 동작하도록 lazy 로드
+let ScreenOrientation: typeof import('expo-screen-orientation') | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  ScreenOrientation = require('expo-screen-orientation');
+} catch {
+  ScreenOrientation = null;
+}
+
 const TIER_KO: Record<string, string> = {
   bronze: '브론즈',
   silver: '실버',
@@ -106,7 +115,17 @@ export default function NpcGameScreen() {
   const stage = usePhoneStageMetrics();
   const winW = stage.windowWidth;
   const winH = stage.windowHeight;
+  const isLandscape = winW > winH;
   const selectedCharacterId = useSettingsStore((s) => s.selectedCharacterId);
+
+  // 전 화면 회전 허용 — 결투 화면도 잠금 없이 유지
+  useFocusEffect(
+    useCallback(() => {
+      const so = ScreenOrientation;
+      if (!so) return;
+      void so.unlockAsync().catch(() => {});
+    }, []),
+  );
   const overlayPad = useMemo(
     () => ({
       top: insets.top + 6,
@@ -910,6 +929,7 @@ export default function NpcGameScreen() {
             pauseDisabled={phase === '페이크'}
             playerTapAckStyle={playerTapAckStyle}
             hideBottomHud={modalVisible}
+            orientation={isLandscape ? 'landscape' : 'portrait'}
           />
 
           <NpcRoundModal

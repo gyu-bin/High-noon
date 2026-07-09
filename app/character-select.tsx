@@ -17,6 +17,7 @@ import { PlayerCharacterSprite } from '@/components/game/CharacterSprites';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { CHARACTERS, getCharacterById } from '@/constants/characters';
+import { DEV_UNLOCK_ALL_CHARACTERS } from '@/constants/devFlags';
 import { colors } from '@/constants/theme';
 import { FONT_RYE } from '@/constants/fonts';
 import { useProgressStore } from '@/store/progressStore';
@@ -37,12 +38,19 @@ export default function CharacterSelectScreen() {
   const [revealPhase, setRevealPhase] = useState<RevealPhase>('idle');
 
   const visibleCharacters = useMemo(
-    () => CHARACTERS.filter((c) => !c.isHidden || hiddenCharUnlocked),
+    () =>
+      DEV_UNLOCK_ALL_CHARACTERS
+        ? [...CHARACTERS]
+        : CHARACTERS.filter((c) => !c.isHidden || hiddenCharUnlocked),
     [hiddenCharUnlocked],
   );
 
   useFocusEffect(
     useCallback(() => {
+      if (DEV_UNLOCK_ALL_CHARACTERS) {
+        checkUnlockConditions();
+        return;
+      }
       const had4 = useProgressStore.getState().unlockedCharacterIds.includes(4);
       checkUnlockConditions();
       const has4 = useProgressStore.getState().unlockedCharacterIds.includes(4);
@@ -74,7 +82,7 @@ export default function CharacterSelectScreen() {
 
   const selectCharacter = useCallback(
     (id: number) => {
-      if (!unlockedIds.includes(id)) return;
+      if (!DEV_UNLOCK_ALL_CHARACTERS && !unlockedIds.includes(id)) return;
       setSelectedCharacterId(id);
     },
     [unlockedIds, setSelectedCharacterId],
@@ -105,7 +113,7 @@ export default function CharacterSelectScreen() {
           showsVerticalScrollIndicator={false}
         >
           {visibleCharacters.map((c) => {
-            const unlocked = unlockedIds.includes(c.id);
+            const unlocked = DEV_UNLOCK_ALL_CHARACTERS || unlockedIds.includes(c.id);
             const selected = selectedCharacterId === c.id;
             return (
               <CharacterSelectCard

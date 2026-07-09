@@ -78,13 +78,23 @@ export function NpcRoundModal({
   paddingBottom = 0,
 }: Props) {
   const m = usePhoneStageMetrics();
-  const halfH = m.stageHeight / 2;
 
   if (!visible || !data) return null;
 
   const showWinFx = data.kind === 'win' && winBurstId > 0;
   const playerWon = data.kind === 'win';
   const theme = playerWon ? OUTCOME_VICTORY : OUTCOME_DEFEAT;
+
+  // 가로모드 — 스테이지 프레임 대신 전체 화면 기준, 배지를 좌/우 캐릭터 위로
+  const landscape = m.windowWidth > m.windowHeight;
+  const frame = landscape
+    ? { left: 0, top: 0, width: m.windowWidth, height: m.windowHeight }
+    : {
+        left: m.offsetX,
+        top: m.offsetY,
+        width: m.stageWidth,
+        height: m.stageHeight,
+      };
 
   return (
     <Pressable
@@ -95,23 +105,15 @@ export function NpcRoundModal({
     >
         <View
           pointerEvents="box-none"
-          style={[
-            styles.stageFrame,
-            {
-              left: m.offsetX,
-              top: m.offsetY,
-              width: m.stageWidth,
-              height: m.stageHeight,
-            },
-          ]}
+          style={[styles.stageFrame, frame]}
         >
           {showWinFx ? (
             <View style={styles.fxLayer} pointerEvents="none">
               <LocalDuelFireworks
                 origin="bottom"
-                width={m.stageWidth}
-                height={m.stageHeight}
-                halfH={halfH}
+                width={frame.width}
+                height={frame.height}
+                halfH={frame.height / 2}
                 burstId={winBurstId}
               />
             </View>
@@ -121,7 +123,7 @@ export function NpcRoundModal({
             {playerWon ? (
               <Animated.View
                 entering={FadeIn.duration(220)}
-                style={[styles.badge, styles.playerBadge, { borderColor: theme.badgeBorder, backgroundColor: theme.badgeBg }]}
+                style={[styles.badge, styles.playerBadge, landscape && styles.playerBadgeLandscape, { borderColor: theme.badgeBorder, backgroundColor: theme.badgeBg }]}
               >
                 <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: theme.title }]}>승리</Text>
                 {data.kind === 'win' && data.lastStand ? (
@@ -131,7 +133,7 @@ export function NpcRoundModal({
             ) : (
               <Animated.View
                 entering={FadeInDown.duration(220)}
-                style={[styles.badge, styles.npcBadge, { borderColor: theme.badgeBorder, backgroundColor: theme.badgeBg }]}
+                style={[styles.badge, styles.npcBadge, landscape && styles.playerBadgeLandscape, { borderColor: theme.badgeBorder, backgroundColor: theme.badgeBg }]}
               >
                 <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: theme.title }]}>패배</Text>
                 {data.kind === 'loss' ? (
@@ -143,7 +145,7 @@ export function NpcRoundModal({
             {!playerWon ? (
               <Animated.View
                 entering={FadeInDown.delay(80).duration(220)}
-                style={[styles.badge, styles.npcWinBadge, { borderColor: OUTCOME_VICTORY.badgeBorder, backgroundColor: OUTCOME_VICTORY.badgeBg }]}
+                style={[styles.badge, styles.npcWinBadge, landscape && styles.npcBadgeLandscape, { borderColor: OUTCOME_VICTORY.badgeBorder, backgroundColor: OUTCOME_VICTORY.badgeBg }]}
               >
                 <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: OUTCOME_VICTORY.title }]}>
                   승리
@@ -152,7 +154,7 @@ export function NpcRoundModal({
             ) : (
               <Animated.View
                 entering={FadeInDown.delay(80).duration(220)}
-                style={[styles.badge, styles.npcDefeatBadge, { borderColor: OUTCOME_DEFEAT.badgeBorder, backgroundColor: OUTCOME_DEFEAT.badgeBg }]}
+                style={[styles.badge, styles.npcDefeatBadge, landscape && styles.npcBadgeLandscape, { borderColor: OUTCOME_DEFEAT.badgeBorder, backgroundColor: OUTCOME_DEFEAT.badgeBg }]}
               >
                 <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: OUTCOME_DEFEAT.title }]}>
                   패배
@@ -240,6 +242,19 @@ const styles = StyleSheet.create({
     top: '47%',
     minWidth: 108,
     paddingVertical: 10,
+  },
+  /* 가로모드 — 배지를 좌(플레이어)·우(NPC) 캐릭터 머리 위로 */
+  playerBadgeLandscape: {
+    left: '8%',
+    right: undefined,
+    top: undefined,
+    bottom: '60%',
+  },
+  npcBadgeLandscape: {
+    right: '8%',
+    left: undefined,
+    top: '14%',
+    bottom: undefined,
   },
   badgeTitle: {
     fontSize: 32,

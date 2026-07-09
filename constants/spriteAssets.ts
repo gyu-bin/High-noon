@@ -147,6 +147,24 @@ const PLAYER_SPRITES: Partial<Record<number, PoseMap>> = {
     idle: require('@/assets/sprites/player/player_01_idle.png'),
     shoot: require('@/assets/sprites/player/player_01_shoot.png'),
   },
+  2: {
+    aim: require('@/assets/sprites/player/player_02_aim.png'),
+    defeat: require('@/assets/sprites/player/player_02_defeat.png'),
+    idle: require('@/assets/sprites/player/player_02_idle.png'),
+    shoot: require('@/assets/sprites/player/player_02_shoot.png'),
+  },
+  3: {
+    aim: require('@/assets/sprites/player/player_03_aim.png'),
+    defeat: require('@/assets/sprites/player/player_03_defeat.png'),
+    idle: require('@/assets/sprites/player/player_03_idle.png'),
+    shoot: require('@/assets/sprites/player/player_03_shoot.png'),
+  },
+  4: {
+    aim: require('@/assets/sprites/player/player_04_aim.png'),
+    defeat: require('@/assets/sprites/player/player_04_defeat.png'),
+    idle: require('@/assets/sprites/player/player_04_idle.png'),
+    shoot: require('@/assets/sprites/player/player_04_shoot.png'),
+  },
 };
 
 const NPC_SHOOT_FRAMES: Partial<Record<number, ShootSeq>> = {
@@ -176,6 +194,9 @@ const NPC_SHOOT_FRAMES: Partial<Record<number, ShootSeq>> = {
 
 const PLAYER_SHOOT_FRAMES: Partial<Record<number, ShootSeq>> = {
   1: [require('@/assets/sprites/player/player_01_shoot_00.png'), require('@/assets/sprites/player/player_01_shoot_01.png')],
+  2: [require('@/assets/sprites/player/player_02_shoot_00.png'), require('@/assets/sprites/player/player_02_shoot_01.png')],
+  3: [require('@/assets/sprites/player/player_03_shoot_00.png'), require('@/assets/sprites/player/player_03_shoot_01.png')],
+  4: [require('@/assets/sprites/player/player_04_shoot_00.png'), require('@/assets/sprites/player/player_04_shoot_01.png')],
 };
 
 /** defeat(휘청) 뒤에 이어지는 바닥에 누운 프레임 — scripts/make_down_sprites.py */
@@ -221,6 +242,9 @@ export function getPlayerSpriteSource(characterId: number, pose: SpritePose) {
 /** defeat(휘청) 뒤에 이어지는 바닥에 누운 프레임 — scripts/make_down_sprites.py */
 const PLAYER_DOWN_SPRITES: Partial<Record<number, ImageSourcePropType>> = {
   1: require('@/assets/sprites/player/player_01_down.png'),
+  2: require('@/assets/sprites/player/player_02_down.png'),
+  3: require('@/assets/sprites/player/player_03_down.png'),
+  4: require('@/assets/sprites/player/player_04_down.png'),
 };
 
 export function getNpcDownSource(npcId: number): ImageSourcePropType | undefined {

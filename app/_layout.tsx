@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
 import { colors } from '@/constants/theme';
+import { DEV_UNLOCK_ALL_CHARACTERS } from '@/constants/devFlags';
+import { checkUnlockConditions } from '@/utils/characterAbility';
 import { WESTERN_HERO_FALLBACK } from '@/constants/westernBackground';
 import { initAds, preloadInterstitial } from '@/utils/adService';
 import { preloadAll } from '@/utils/audioService';
@@ -25,6 +27,17 @@ export default function RootLayout() {
   const ready = fontsLoaded || fontError != null;
   const [appReady, setAppReady] = useState(false);
 
+  // 전 화면 회전 허용 — 이전 실행에서 잠긴 방향이 남아있을 수 있어 해제
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const so: typeof import('expo-screen-orientation') = require('expo-screen-orientation');
+      void so.unlockAsync().catch(() => {});
+    } catch {
+      // 네이티브 모듈 미포함 빌드 — app.json orientation 설정에 의존
+    }
+  }, []);
+
   useEffect(() => {
     if (!ready) return;
 
@@ -33,6 +46,9 @@ export default function RootLayout() {
     async function prepare() {
       await preloadTitleHero();
       if (cancelled) return;
+      if (DEV_UNLOCK_ALL_CHARACTERS) {
+        checkUnlockConditions();
+      }
       setAppReady(true);
       await SplashScreen.hideAsync();
       void preloadAll();

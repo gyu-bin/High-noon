@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     height: '50%',
     transform: [{ rotate: '180deg' }],
     zIndex: 4,
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   topHalfInner: {
     flex: 1,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     right: 0,
     height: '50%',
     zIndex: 4,
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   p2Zone: {
     position: 'absolute',
@@ -250,6 +250,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingLeft: 8,
     paddingBottom: 72,
+    overflow: 'visible',
   },
   p1Zone: {
     position: 'absolute',
@@ -261,6 +262,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingLeft: 8,
     paddingBottom: 28,
+    overflow: 'visible',
   },
   hudP2Inner: {
     position: 'absolute',

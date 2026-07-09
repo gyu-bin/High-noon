@@ -3,7 +3,7 @@
     "name": "High Noon",
     "slug": "high-noon",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/branding/icon.png",
     "scheme": "high-noon",
     "userInterfaceStyle": "automatic",

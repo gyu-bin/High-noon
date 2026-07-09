@@ -1,4 +1,5 @@
-import { CHARACTER_UNLOCK, type PlayerCharacterId } from '@/constants/characters';
+import { CHARACTER_UNLOCK, CHARACTERS, type PlayerCharacterId } from '@/constants/characters';
+import { DEV_UNLOCK_ALL_CHARACTERS } from '@/constants/devFlags';
 import { NPCS } from '@/constants/npcs';
 import type { DuelOutcome } from '@/hooks/useDuelEngine';
 import { selectAverageReactionMs, useProgressStore } from '@/store/progressStore';
@@ -50,6 +51,12 @@ function allNpcCleared(
 export function checkUnlockConditions(): void {
   const { npcById, unlockedCharacterIds, setUnlockedCharacterIds, setHiddenCharUnlocked } =
     useProgressStore.getState();
+
+  if (DEV_UNLOCK_ALL_CHARACTERS) {
+    setUnlockedCharacterIds(CHARACTERS.map((c) => c.id));
+    setHiddenCharUnlocked(true);
+    return;
+  }
 
   const clears = countNpcClears(npcById);
   const avg = selectAverageReactionMs();

@@ -18,6 +18,7 @@ import { DuelFigureSlot } from '@/components/game/DuelFigureSlot';
 import { FONT_RYE } from '@/constants/fonts';
 import {
   duelFigureSize,
+  duelFigureSizeLandscape,
   duelFlipHorizontal,
   type DuelCorner,
 } from '@/constants/duelArena';
@@ -75,6 +76,8 @@ type Props = {
   pauseDisabled: boolean;
   playerTapAckStyle: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
   hideBottomHud?: boolean;
+  /** landscape — 좌우 정면 대치 (기본 portrait 대각선) */
+  orientation?: 'portrait' | 'landscape';
 };
 
 export function DuelArenaLayout({
@@ -108,12 +111,19 @@ export function DuelArenaLayout({
   pauseDisabled,
   playerTapAckStyle,
   hideBottomHud = false,
+  orientation = 'portrait',
 }: Props) {
-  const { width: figW, height: figH } = duelFigureSize(width);
+  const landscape = orientation === 'landscape';
+  const { width: figW, height: figH } = landscape
+    ? duelFigureSizeLandscape(height)
+    : duelFigureSize(width);
 
   const npcCorner: DuelCorner = 'topRight';
   const playerCorner: DuelCorner = 'bottomLeft';
   const npcLabel = npcDisplayName({ title: npcTitle, name: npcName });
+  // 가로 — 서부극 정면 대치: 같은 지면선, 좌(플레이어)·우(NPC)
+  const groundBottom = Math.max(paddingBottom + 30, Math.round(height * 0.09));
+  const sideInset = Math.round(width * 0.07);
 
   return (
     <View style={[styles.root, { width, height }]}>
@@ -138,8 +148,15 @@ export function DuelArenaLayout({
         style={StyleSheet.absoluteFill}
       />
 
-      {/* NPC — 우상단, 플레이어 쪽을 향해 대각선 */}
-      <View pointerEvents="none" style={[styles.npcZone, { width, height: height * 0.52 }]}>
+      {/* NPC — portrait 우상단 대각선 · landscape 우측 정면 */}
+      <View
+        pointerEvents="none"
+        style={
+          landscape
+            ? [styles.npcZoneLandscape, { paddingRight: sideInset, paddingBottom: groundBottom }]
+            : [styles.npcZone, { width, height: height * 0.52 }]
+        }
+      >
         <DuelFigureSlot corner={npcCorner} pose={npcPose} figW={figW} figH={figH}>
           <NpcCharacterSprite
             npcId={npcId}
@@ -153,10 +170,17 @@ export function DuelArenaLayout({
         </DuelFigureSlot>
       </View>
 
-      {/* 플레이어 — 좌하단, NPC 쪽을 향해 대각선 */}
+      {/* 플레이어 — portrait 좌하단 대각선 · landscape 좌측 정면 */}
       <View
         pointerEvents="none"
-        style={[styles.playerZone, { width, height: height * 0.52, bottom: 0 }]}
+        style={
+          landscape
+            ? [
+                styles.playerZoneLandscape,
+                { paddingLeft: sideInset, paddingBottom: groundBottom },
+              ]
+            : [styles.playerZone, { width, height: height * 0.52, bottom: 0 }]
+        }
       >
         <DuelFigureSlot corner={playerCorner} pose={playerPose} figW={figW} figH={figH}>
           <PlayerCharacterSprite
@@ -172,7 +196,10 @@ export function DuelArenaLayout({
       </View>
 
       {/* 중앙 신호 */}
-      <View pointerEvents="none" style={styles.signalWrap}>
+      <View
+        pointerEvents="none"
+        style={landscape ? styles.signalWrapLandscape : styles.signalWrap}
+      >
         <DuelSignalBoard
           variant="minimal"
           phase={signalPhase}
@@ -249,6 +276,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingRight: 10,
     paddingTop: 48,
+    overflow: 'visible',
   },
   playerZone: {
     position: 'absolute',
@@ -257,6 +285,23 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingLeft: 8,
     paddingBottom: 96,
+    overflow: 'visible',
+  },
+  npcZoneLandscape: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+  },
+  playerZoneLandscape: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    alignItems: 'flex-start',
+    justifyContent: 'flex-end',
   },
   signalWrap: {
     position: 'absolute',
@@ -264,6 +309,14 @@ const styles = StyleSheet.create({
     right: '8%',
     top: '38%',
     height: 120,
+    zIndex: 6,
+  },
+  signalWrapLandscape: {
+    position: 'absolute',
+    left: '30%',
+    right: '30%',
+    top: '16%',
+    height: 110,
     zIndex: 6,
   },
   hudTop: {

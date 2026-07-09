@@ -77,8 +77,9 @@ def strip_ground_shadow(img: Image.Image, strong: bool = False) -> Image.Image:
     g = a[:, :, 1].astype(int)
     b = a[:, :, 2].astype(int)
     magenta_like = (r > g + 22) & (b > g + 8)
+    greenish = (g > r + 22) & (g > b + 22)  # 그린스크린 잔여물 (시안은 b도 높아 안전)
     neutral = (np.abs(r - g) < 16) & (np.abs(g - b) < 16)
-    kill_color = magenta_like | neutral
+    kill_color = magenta_like | greenish | neutral
     if strong:
         pinkish = (r > g + 10) & (b >= g - 8)
         kill_color = kill_color | pinkish
@@ -123,6 +124,44 @@ def remove_salt_noise(img: Image.Image, passes: int = 2) -> Image.Image:
     return Image.fromarray(a, "RGBA")
 
 
+def remove_floor_debris(img: Image.Image) -> Image.Image:
+    """본체와 안 이어진 하단 밴드의 그림자 부스러기 컴포넌트 제거 (색 무관)."""
+    a = np.array(img.convert("RGBA"))
+    mask = a[:, :, 3] > 40
+    if not mask.any():
+        return img
+    h, w = mask.shape
+    labels = np.zeros((h, w), dtype=int)
+    cur = 0
+    for sy, sx in zip(*np.where(mask)):
+        if labels[sy, sx]:
+            continue
+        cur += 1
+        stack = [(sy, sx)]
+        labels[sy, sx] = cur
+        while stack:
+            y, x = stack.pop()
+            for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                if 0 <= ny < h and 0 <= nx < w and mask[ny, nx] and not labels[ny, nx]:
+                    labels[ny, nx] = cur
+                    stack.append((ny, nx))
+    sizes = np.bincount(labels.ravel())
+    sizes[0] = 0
+    main = sizes.argmax()
+    ys = np.where(mask)[0]
+    band_top = ys.max() - max(1, int((ys.max() - ys.min()) * 0.15))
+    for lab in range(1, cur + 1):
+        if lab == main or sizes[lab] >= sizes[main] * 0.1:
+            continue
+        if sizes[lab] < 30:  # 위치 무관 부유 노이즈 점
+            a[:, :, 3][labels == lab] = 0
+            continue
+        lys = np.where(labels == lab)[0]
+        if lys.min() >= band_top:
+            a[:, :, 3][labels == lab] = 0
+    return Image.fromarray(a, "RGBA")
+
+
 def alpha_bottom(img: Image.Image) -> int:
     ys, _ = np.where(np.array(img.convert("RGBA"))[:, :, 3] > 40)
     return int(ys.max()) if len(ys) else img.height - 1
@@ -136,7 +175,7 @@ def process(pose: str, cand_name: str, mirror: bool) -> Image.Image:
     cut = strip_ground_shadow(cut, strong=strong)
     out = crisp_downscale(cut, SPRITE_SIZE)
     out = strip_ground_shadow(remove_salt_noise(out), strong=strong)
-    out = remove_salt_noise(out)
+    out = remove_floor_debris(remove_salt_noise(out))
     max_w, max_h = LIMITS[pose]
     out = normalize_sprite_bbox(out, max_w=max_w, max_h=max_h)
     if mirror:
@@ -163,8 +202,14 @@ def kick_frame(base: Image.Image, rot: float, dx: int, dy: int) -> Image.Image:
 
 
 def main() -> None:
+    char = 1
     picks: dict[str, tuple[str, bool]] = {}
-    for arg in sys.argv[1:]:
+    args = sys.argv[1:]
+    if "--char" in args:
+        i = args.index("--char")
+        char = int(args[i + 1])
+        args = args[:i] + args[i + 2 :]
+    for arg in args:
         pose, cand = arg.split("=", 1)
         mirror = cand.endswith("!")
         picks[pose] = (cand.rstrip("!"), mirror)
@@ -173,11 +218,15 @@ def main() -> None:
         print("idle=<후보명> 은 필수")
         sys.exit(1)
 
+    global CAND
+    CAND = CAND / f"p{char:02d}" if (CAND / f"p{char:02d}").exists() else CAND
+    prefix = f"player_{char:02d}"
+
     idle = process("idle", *picks["idle"])
-    idle_path = PLAYER_DIR / "player_01_idle.png"
+    idle_path = PLAYER_DIR / f"{prefix}_idle.png"
     idle.save(idle_path, "PNG")
     baseline = alpha_bottom(idle)
-    print(f"→ player_01_idle.png  ({picks['idle'][0]}, baseline y={baseline})")
+    print(f"→ {prefix}_idle.png  ({picks['idle'][0]}, baseline y={baseline})")
 
     # aim 아트가 있으면 shoot/defeat 파생의 베이스로 사용 (총 뽑은 상태 유지)
     if "aim" in picks:
@@ -186,8 +235,8 @@ def main() -> None:
     else:
         aim = despeckle_alpha(render_pose(idle, POSE_SPECS["aim"]))
         aim_src = "procedural(idle)"
-    aim.save(PLAYER_DIR / "player_01_aim.png", "PNG")
-    print(f"→ player_01_aim.png  ({aim_src})")
+    aim.save(PLAYER_DIR / f"{prefix}_aim.png", "PNG")
+    print(f"→ {prefix}_aim.png  ({aim_src})")
     derived_base = aim if "aim" in picks else idle
 
     if "shoot" in picks:
@@ -196,12 +245,12 @@ def main() -> None:
     else:
         shoot = kick_frame(derived_base, rot=2.5, dx=1, dy=-2)
         shoot_src = "kick(aim)" if "aim" in picks else "kick(idle)"
-    shoot.save(PLAYER_DIR / "player_01_shoot.png", "PNG")
-    shoot.save(PLAYER_DIR / "player_01_shoot_00.png", "PNG")
+    shoot.save(PLAYER_DIR / f"{prefix}_shoot.png", "PNG")
+    shoot.save(PLAYER_DIR / f"{prefix}_shoot_00.png", "PNG")
     kick_frame(shoot, rot=2.5, dx=2, dy=-3).save(
-        PLAYER_DIR / "player_01_shoot_01.png", "PNG"
+        PLAYER_DIR / f"{prefix}_shoot_01.png", "PNG"
     )
-    print(f"→ player_01_shoot{{,_00,_01}}.png  ({shoot_src})")
+    print(f"→ {prefix}_shoot{{,_00,_01}}.png  ({shoot_src})")
 
     if "defeat" in picks:
         defeat = process("defeat", *picks["defeat"])
@@ -210,21 +259,21 @@ def main() -> None:
         defeat = despeckle_alpha(render_pose(derived_base, POSE_SPECS["defeat"]))
         defeat = remove_salt_noise(strip_ground_shadow(defeat), passes=3)
         defeat_src = "procedural"
-    defeat.save(PLAYER_DIR / "player_01_defeat.png", "PNG")
-    print(f"→ player_01_defeat.png  ({defeat_src})")
+    defeat.save(PLAYER_DIR / f"{prefix}_defeat.png", "PNG")
+    print(f"→ {prefix}_defeat.png  ({defeat_src})")
 
     if "dead" in picks:
         dead = process("dead", *picks["dead"])
         dead = align_to_baseline(dead, baseline)
-        dead.save(PLAYER_DIR / "player_01_down.png", "PNG")
-        print(f"→ player_01_down.png  ({picks['dead'][0]}, 접지 y={baseline})")
+        dead.save(PLAYER_DIR / f"{prefix}_down.png", "PNG")
+        print(f"→ {prefix}_down.png  ({picks['dead'][0]}, 접지 y={baseline})")
     else:
         info = bake_down(
-            PLAYER_DIR / "player_01_defeat.png",
+            PLAYER_DIR / f"{prefix}_defeat.png",
             idle_path,
-            PLAYER_DIR / "player_01_down.png",
+            PLAYER_DIR / f"{prefix}_down.png",
         )
-        print(f"→ player_01_down.png  (defeat 회전 베이크: {info})")
+        print(f"→ {prefix}_down.png  (defeat 회전 베이크: {info})")
 
 
 if __name__ == "__main__":

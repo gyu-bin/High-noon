@@ -27,9 +27,9 @@ export function duelFlipHorizontal(_corner: DuelCorner): boolean {
 /** 패배 시 코너 바깥(상대 반대)으로 넉백 후 바닥으로 쓰러짐 */
 export function duelDefeatKnockback(corner: DuelCorner): { x: number; y: number; rotate: number } {
   if (corner === 'topRight') {
-    return { x: 12, y: -16, rotate: -11 };
+    return { x: 22, y: -8, rotate: -16 };
   }
-  return { x: -12, y: 10, rotate: 11 };
+  return { x: -22, y: 6, rotate: 16 };
 }
 
 /**
@@ -54,4 +54,13 @@ export function duelFigureSize(stageWidth: number): { width: number; height: num
     DUEL_FIGURE_SIZE.maxWidth,
   );
   return { width, height: Math.floor(width * DUEL_FIGURE_SIZE.heightRatio) };
+}
+
+/** 가로모드 정면 대치 — 화면 높이 기준으로 캐릭터 크기 결정 */
+export function duelFigureSizeLandscape(
+  stageHeight: number,
+): { width: number; height: number } {
+  const maxHeight = Math.floor(DUEL_FIGURE_SIZE.maxWidth * DUEL_FIGURE_SIZE.heightRatio);
+  const height = Math.min(Math.floor(stageHeight * 0.56), maxHeight);
+  return { width: Math.floor(height / DUEL_FIGURE_SIZE.heightRatio), height };
 }

@@ -29,15 +29,15 @@ export const DUEL_SPRITE_TIMING = {
   shootKickInMs: 70,
   shootKickHoldMs: 180,
   defeatCrossfadeMs: 320,
-  /** topple — defeat(휘청) 아트로 기울다 down(누움) 아트로 착지 (NPC) */
-  defeatToppleMs: 1050,
-  defeatToppleLandFrac: 0.68,
+  /** topple — defeat(휘청) 아트로 기울다 down(누움) 아트로 착지 */
+  defeatToppleMs: 1100,
+  defeatToppleLandFrac: 0.72,
   /** defeat → down 크로스페이드 시작 시점(topple 진행률)과 길이 */
-  defeatDownSwapFrac: 0.42,
-  defeatDownSwapMs: 260,
-  /** collapse — 이미 누운 defeat 아트로 낙하·착지 (플레이어) */
-  defeatCollapseMs: 880,
-  defeatCollapseLandFrac: 0.6,
+  defeatDownSwapFrac: 0.44,
+  defeatDownSwapMs: 220,
+  /** collapse — down 없을 때 defeat 아트로 낙하·착지 */
+  defeatCollapseMs: 920,
+  defeatCollapseLandFrac: 0.62,
   victoryHolsterMs: 520,
   victoryPulseMs: 1100,
 } as const;
@@ -47,7 +47,8 @@ export type DuelDefeatMotion = 'topple' | 'collapse';
 
 export function defeatImpactDelayMs(motion: DuelDefeatMotion): number {
   const T = DUEL_SPRITE_TIMING;
+  // topple: down 스프라이트로 교체되는 순간 = 바닥 착지
   return motion === 'topple'
-    ? Math.round(T.defeatToppleMs * T.defeatToppleLandFrac)
+    ? Math.round(T.defeatToppleMs * T.defeatDownSwapFrac)
     : Math.round(T.defeatCollapseMs * T.defeatCollapseLandFrac);
 }

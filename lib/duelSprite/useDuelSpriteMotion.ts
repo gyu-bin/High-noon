@@ -27,8 +27,6 @@ export function useDuelSpriteMotion(
   const T = DUEL_SPRITE_TIMING;
   const knock = duelDefeatKnockback(corner);
   const defeatMs = defeatMotion === 'topple' ? T.defeatToppleMs : T.defeatCollapseMs;
-  const landFrac =
-    defeatMotion === 'topple' ? T.defeatToppleLandFrac : T.defeatCollapseLandFrac;
 
   useEffect(() => {
     if (victoryActive && pose === 'idle') {
@@ -115,7 +113,6 @@ export function useDuelSpriteMotion(
       return;
     }
     if (pose === 'defeat') {
-      // 선형 드라이버 — 휘청/낙하/착지 곡선은 worklet에서 구간별로 계산
       phase.value = 0;
       phase.value = withTiming(1, {
         duration: defeatMs,
@@ -184,61 +181,83 @@ export function useDuelSpriteMotion(
     }
     if (pose === 'defeat') {
       const p = phase.value;
-      const staggerEnd = defeatMotion === 'topple' ? 0.2 : 0.26;
-
-      // 1) 피격 휘청 — 뒤로 젖혀지는 넉백
-      const sT = Math.min(1, p / staggerEnd);
-      const sE = Math.sin(sT * Math.PI * 0.5);
-
-      // 2) 낙하 — 중력 가속으로 바닥까지
-      const fT =
-        p <= staggerEnd ? 0 : Math.min(1, (p - staggerEnd) / (landFrac - staggerEnd));
-      const fE = fT * fT;
-
-      // 3) 착지 — 짧은 바운스 후 정지
-      const bT = p <= landFrac ? 0 : Math.min(1, (p - landFrac) / (1 - landFrac));
-      const bounce = Math.sin(bT * Math.PI) * (1 - 0.55 * bT);
-
       const dir = knock.rotate >= 0 ? 1 : -1;
 
+      // ── 공통 구간 ──
+      // 1) 피격 휘청 (0 → hitEnd)
+      const hitEnd = 0.17;
+      const hitT = Math.min(1, p / hitEnd);
+      const hitE = 1 - (1 - hitT) * (1 - hitT);
+
+      // 2) topple: defeat 아트로 기울며 낙하 (hitEnd → swapAt)
+      const swapAt = T.defeatDownSwapFrac;
+      const fallT = p <= hitEnd ? 0 : Math.min(1, (p - hitEnd) / Math.max(0.001, swapAt - hitEnd));
+      const fallE = fallT * fallT;
+
+      // 3) down 아트 착지 후 바닥에 안착 (swapAt → 1)
+      const groundT = p <= swapAt ? 0 : Math.min(1, (p - swapAt) / Math.max(0.001, 1 - swapAt));
+      const settleE = 1 - (1 - groundT) * (1 - groundT);
+      const bounce =
+        groundT > 0 ? Math.sin(Math.min(1, groundT * 3.2) * Math.PI) * (1 - groundT * 0.7) * 0.55 : 0;
+
       if (defeatMotion === 'topple') {
-        // 휘청(defeat 아트)이 기울다가, 착지 직전 down(누움) 아트로 교체되며
-        // 컨테이너 회전은 0 근처로 복귀 — 실제 눕는 모습은 베이크된 에셋이 표현
-        const tipDeg = dir * 30;
-        const restDeg = dir * 3;
-        const fallX = dir * Math.abs(knock.x) * 1.6;
-        const fallY = figureHeight * 0.05;
-        // 착지 후 기울기 복귀 — 몸이 바닥에 탁 떨어지는 느낌
-        const settleT = Math.min(1, bT / 0.55);
-        const rot =
-          knock.rotate * sE + (tipDeg - knock.rotate) * fE - (tipDeg - restDeg) * settleT;
+        const tipDeg = dir * 44;
+        const peakFallY = figureHeight * 0.34;
+        const fallX = dir * 32;
+
+        // defeat 아트: 피격 → 기울며 떨어짐 / down 아트: 회전 0으로 복귀하며 바닥에 누움
+        const rotDuringFall = knock.rotate + (tipDeg - knock.rotate) * (hitE * 0.55 + fallE * 0.45);
+        const flattenT = p <= swapAt ? 0 : Math.min(1, (p - swapAt) / 0.16);
+        const rot = rotDuringFall * (1 - flattenT);
+
+        const ty =
+          knock.y * hitE +
+          peakFallY * (fallE * 0.88 + settleE * 0.12) -
+          12 * bounce;
+        const tx = knock.x * hitE + fallX * (fallE * 0.92 + settleE * 0.08);
 
         return {
           transform: [
-            { translateX: knock.x * sE + fallX * fE },
-            { translateY: knock.y * sE + fallY * fE - 7 * bounce },
+            { translateX: tx },
+            { translateY: ty },
             { rotate: `${rot}deg` },
-            { scale: 1 - 0.03 * fE },
+            { scale: 1 - 0.05 * fallE },
           ],
-          opacity: 1 - 0.04 * fE,
+          opacity: 1 - 0.04 * fallE,
         };
       }
 
-      // collapse — 이미 누운 defeat 아트로 크로스페이드하며 낙하·착지
-      const fallY = figureHeight * 0.17;
-      const rotPeak = dir * 13;
-      const rotRest = dir * 7;
-      const rot =
-        knock.rotate * sE + (rotPeak - knock.rotate) * fE - (rotPeak - rotRest) * bT;
+      // collapse — down 에셋 없을 때 defeat 아트로 통째로 낙하
+      const peakFallY = figureHeight * 0.4;
+      const fallX = dir * 26;
+      const tipDeg = dir * 22;
+      const landAt = T.defeatCollapseLandFrac;
+
+      const collapseFallT =
+        p <= hitEnd ? 0 : Math.min(1, (p - hitEnd) / Math.max(0.001, landAt - hitEnd));
+      const collapseFallE = collapseFallT * collapseFallT;
+      const collapseGroundT =
+        p <= landAt ? 0 : Math.min(1, (p - landAt) / Math.max(0.001, 1 - landAt));
+      const collapseBounce =
+        collapseGroundT > 0
+          ? Math.sin(Math.min(1, collapseGroundT * 3) * Math.PI) *
+            (1 - collapseGroundT * 0.65) *
+            0.5
+          : 0;
+
+      const rot = knock.rotate * hitE + (tipDeg - knock.rotate) * collapseFallE;
+      const ty =
+        knock.y * hitE + peakFallY * collapseFallE - 10 * collapseBounce;
+      const tx = knock.x * hitE + fallX * collapseFallE;
 
       return {
         transform: [
-          { translateX: knock.x * sE + knock.x * 1.2 * fE },
-          { translateY: knock.y * sE + fallY * fE - 6 * bounce },
+          { translateX: tx },
+          { translateY: ty },
           { rotate: `${rot}deg` },
-          { scale: 1 - 0.045 * fE },
+          { scale: 1 - 0.06 * collapseFallE },
         ],
-        opacity: 1 - 0.05 * fE,
+        opacity: 1 - 0.05 * collapseFallE,
       };
     }
     return {};
