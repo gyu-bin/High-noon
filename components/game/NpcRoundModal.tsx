@@ -241,9 +241,10 @@ const styles = StyleSheet.create({
     minWidth: 108,
     paddingVertical: 10,
   },
+  /* 승리 시 — 쓰러진 NPC(화면 38~57% 부근)를 가리지 않게 시체 위 하늘에 표시 */
   npcDefeatBadge: {
     right: '8%',
-    top: '47%',
+    top: '26%',
     minWidth: 108,
     paddingVertical: 10,
   },

@@ -49,9 +49,8 @@ export default function RootLayout() {
     async function prepare() {
       await preloadTitleHero();
       if (cancelled) return;
-      if (DEV_UNLOCK_ALL_CHARACTERS) {
-        checkUnlockConditions();
-      }
+      // 진행도 기준 캐릭터 해금 동기화 + 잠긴 캐릭터가 선택돼 있으면 기본 캐릭터로 복구
+      checkUnlockConditions();
       setAppReady(true);
       await SplashScreen.hideAsync();
       void preloadAll();

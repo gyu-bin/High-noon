@@ -18,6 +18,7 @@ import {
 import { HeartStrip } from '@/components/game/HeartStrip';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import {
+  DUEL_PLAYER_DEFEAT_LIFT_PX,
   duelFigureSize,
   duelFlipHorizontal,
 } from '@/constants/duelArena';
@@ -86,6 +87,8 @@ export function LocalDuelArenaLayout({
 }: Props) {
   const { width: figW, height: figH } = duelFigureSize(width);
   const boardPhase = signalPhase ?? enginePhaseToSignalBoardPhase(phase);
+  // P1 쓰러짐 — 하단 점수 바·화면 밖으로 몸이 잘리지 않게 존을 올림 (NPC전과 동일)
+  const p1DefeatLift = p1Pose === 'defeat' ? DUEL_PLAYER_DEFEAT_LIFT_PX : 0;
 
   return (
     <View style={[styles.root, { width, height }]}>
@@ -98,55 +101,46 @@ export function LocalDuelArenaLayout({
         />
       ) : null}
 
-      {/*
-        P2 — 상단 50% 전체 180° 회전.
-        맞은편(위쪽) 플레이어에게 캐릭터·HUD·탭 피드백이 정상 방향으로 보임.
-        내부 좌하 배치 → 회전 후 화면상 우상(대각선)에 위치.
-      */}
-      <View pointerEvents="none" style={styles.topHalfRotated}>
-        <View style={styles.topHalfInner}>
-          {INK_THEME ? <View style={[styles.groundLine, { bottom: 66 }]} /> : null}
-          <View style={styles.p2Zone}>
-            <DuelFigureSlot corner="bottomLeft" pose={p2Pose} figW={figW} figH={figH}>
-              <PlayerCharacterSprite
-                characterId={p2CharacterId}
-                width={figW}
-                height={figH}
-                flipHorizontal={duelFlipHorizontal('bottomLeft')}
-                pose={p2Pose}
-              />
-            </DuelFigureSlot>
-          </View>
-
-          <View style={styles.p2SignalWrap}>
-            <DuelSignalBoard variant="minimal" phase={boardPhase} />
-          </View>
-
-          <View style={[styles.hudP2Inner, { paddingTop: paddingTop + 4 }]}>
-            <Text style={[styles.playerLabel, INK_THEME && styles.playerLabelInk]}>P2</Text>
-            <HeartStrip filled={p2Hearts} max={winsNeeded} />
-            {p2LiveMs != null ? (
-              <Text style={[styles.liveMs, INK_THEME && styles.liveMsInk]}>
-                {Math.round(p2LiveMs)} ms
-              </Text>
-            ) : null}
-          </View>
-
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFillObject,
-              INK_THEME ? styles.tapFlashInk : styles.tapFlash,
-              p2TapAckStyle,
-            ]}
-          />
+      {/* P2 — 상단 50% 정방향, NPC전과 같은 우상단 대각 구도 (좌향) */}
+      <View pointerEvents="none" style={styles.topHalfShell}>
+        {INK_THEME ? <View style={[styles.groundLine, { bottom: 66 }]} /> : null}
+        <View style={styles.p2Zone}>
+          <DuelFigureSlot corner="topRight" pose={p2Pose} figW={figW} figH={figH}>
+            <PlayerCharacterSprite
+              characterId={p2CharacterId}
+              width={figW}
+              height={figH}
+              flipHorizontal={duelFlipHorizontal('topRight')}
+              pose={p2Pose}
+              duelCorner="topRight"
+            />
+          </DuelFigureSlot>
         </View>
+
+        <View style={[styles.hudP2, { paddingTop: paddingTop + 52 }]}>
+          <Text style={[styles.playerLabel, INK_THEME && styles.playerLabelInk]}>P2</Text>
+          <HeartStrip filled={p2Hearts} max={winsNeeded} />
+          {p2LiveMs != null ? (
+            <Text style={[styles.liveMs, INK_THEME && styles.liveMsInk]}>
+              {Math.round(p2LiveMs)} ms
+            </Text>
+          ) : null}
+        </View>
+
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFillObject,
+            INK_THEME ? styles.tapFlashInk : styles.tapFlash,
+            p2TapAckStyle,
+          ]}
+        />
       </View>
 
       {/* P1 — 하단 50% 정상 방향 */}
       <View pointerEvents="none" style={styles.bottomHalfShell}>
         {INK_THEME ? <View style={[styles.groundLine, { bottom: 22 }]} /> : null}
-        <View style={styles.p1Zone}>
+        <View style={[styles.p1Zone, { paddingBottom: 28 + p1DefeatLift }]}>
           <DuelFigureSlot corner="bottomLeft" pose={p1Pose} figW={figW} figH={figH}>
             <PlayerCharacterSprite
               characterId={p1CharacterId}
@@ -156,10 +150,6 @@ export function LocalDuelArenaLayout({
               pose={p1Pose}
             />
           </DuelFigureSlot>
-        </View>
-
-        <View style={styles.p1SignalWrap}>
-          <DuelSignalBoard variant="minimal" phase={boardPhase} />
         </View>
 
         <View
@@ -185,6 +175,11 @@ export function LocalDuelArenaLayout({
             p1TapAckStyle,
           ]}
         />
+      </View>
+
+      {/* 중앙 신호 — 두 플레이어 공용 */}
+      <View pointerEvents="none" style={styles.signalWrapCenter}>
+        <DuelSignalBoard variant="minimal" phase={boardPhase} />
       </View>
 
       {/* 점수·네비 */}
@@ -243,18 +238,14 @@ const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
   },
-  topHalfRotated: {
+  topHalfShell: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     height: '50%',
-    transform: [{ rotate: '180deg' }],
     zIndex: 4,
     overflow: 'visible',
-  },
-  topHalfInner: {
-    flex: 1,
   },
   bottomHalfShell: {
     position: 'absolute',
@@ -271,10 +262,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
     justifyContent: 'flex-end',
-    paddingLeft: 8,
-    paddingBottom: 72,
+    paddingRight: 10,
+    paddingBottom: 30,
     overflow: 'visible',
   },
   p1Zone: {
@@ -286,14 +277,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'flex-end',
     paddingLeft: 8,
-    paddingBottom: 28,
     overflow: 'visible',
   },
-  hudP2Inner: {
+  hudP2: {
     position: 'absolute',
     top: 0,
-    left: 14,
-    alignItems: 'flex-start',
+    right: 14,
+    alignItems: 'flex-end',
     gap: 6,
     zIndex: 8,
   },
@@ -335,20 +325,12 @@ const styles = StyleSheet.create({
   halfPressBottom: {
     bottom: 0,
   },
-  p2SignalWrap: {
+  signalWrapCenter: {
     position: 'absolute',
     left: '8%',
     right: '8%',
-    top: '34%',
-    height: 96,
-    zIndex: 6,
-  },
-  p1SignalWrap: {
-    position: 'absolute',
-    left: '8%',
-    right: '8%',
-    top: '18%',
-    height: 96,
+    top: '40%',
+    height: 120,
     zIndex: 6,
   },
   scoreBar: {

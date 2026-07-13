@@ -3,6 +3,7 @@ import { DEV_UNLOCK_ALL_CHARACTERS } from '@/constants/devFlags';
 import { NPCS } from '@/constants/npcs';
 import type { DuelOutcome } from '@/hooks/useDuelEngine';
 import { selectAverageReactionMs, useProgressStore } from '@/store/progressStore';
+import { useSettingsStore } from '@/store/settingsStore';
 
 /**
  * 승패·하트 변화는 `DuelOutcome`만으로는 부족하므로, 엔진이 계산한 값을 함께 넘깁니다.
@@ -62,20 +63,30 @@ export function checkUnlockConditions(): void {
   const avg = selectAverageReactionMs();
   const allClear = allNpcCleared(npcById);
 
-  const next = new Set(unlockedCharacterIds);
-  next.add(1);
+  // 진행도 기준 엄격 재계산 — 개발용 전체 해금이 저장된 기기도 정상 잠금으로 복구
+  const next = new Set<number>([1]);
 
   if (clears >= CHARACTER_UNLOCK.npcClearsFor2) next.add(2);
   if (clears >= CHARACTER_UNLOCK.npcClearsFor3) next.add(3);
 
-  const ghostUnlocked =
+  // 4번(망령 사수): 조건 달성 순간 해금, 이후 평균이 나빠져도 전 NPC 클리어 상태면 유지
+  const ghostEarnedNow =
     allClear && avg != null && avg <= CHARACTER_UNLOCK.avgReactionMsFor4;
-  if (ghostUnlocked) {
+  const ghostKept = unlockedCharacterIds.includes(4) && allClear;
+  if (ghostEarnedNow || ghostKept) {
     next.add(4);
     setHiddenCharUnlocked(true);
+  } else {
+    setHiddenCharUnlocked(false);
   }
 
   setUnlockedCharacterIds([...next]);
+
+  // 잠긴 캐릭터가 선택된 채 남아 있으면(개발용 전체 해금 상태에서 저장된 경우 등) 기본 캐릭터로 복구
+  const settings = useSettingsStore.getState();
+  if (!next.has(settings.selectedCharacterId)) {
+    settings.setSelectedCharacterId(1);
+  }
 }
 
 /**

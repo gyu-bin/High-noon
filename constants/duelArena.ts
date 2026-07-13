@@ -31,16 +31,6 @@ export function duelDefeatKnockback(corner: DuelCorner): { x: number; y: number;
   return { x: -22, y: 6, rotate: 16 };
 }
 
-/**
- * 로컬 2P 상단 구역(180° 회전) — `bottomLeft`와 같은 조준.
- * 부모 회전과 합쳐지면 화면상 아래(P1) 쪽을 향한다.
- */
-export function localDuelTopHalfFigureTransform(
-  pose: SpritePose = 'idle',
-): NonNullable<ViewStyle['transform']> {
-  return duelFigureTransform('bottomLeft', pose);
-}
-
 /** 세로 패배 — 하단 결과 바에 쓰러진 플레이어가 가려지지 않도록 존을 올림 */
 export const DUEL_PLAYER_DEFEAT_LIFT_PX = 108;
 

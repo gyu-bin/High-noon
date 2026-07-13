@@ -150,7 +150,6 @@ const styles = StyleSheet.create({
     right: '8%',
     alignItems: 'flex-end',
     gap: 4,
-    transform: [{ rotate: '180deg' }],
   },
   p1Block: {
     position: 'absolute',
