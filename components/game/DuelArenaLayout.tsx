@@ -17,18 +17,21 @@ import {
 import { DuelFigureSlot } from '@/components/game/DuelFigureSlot';
 import { FONT_RYE } from '@/constants/fonts';
 import {
+  DUEL_PLAYER_DEFEAT_LIFT_PX,
   duelFigureSize,
   duelFigureSizeLandscape,
   duelFlipHorizontal,
   type DuelCorner,
 } from '@/constants/duelArena';
 import { DUEL_ARENA_SHADE } from '@/constants/duelPresentation';
+import { DUEL_VISUAL_THEME, MINIMAL_DUEL } from '@/constants/duelTheme';
 import { colors } from '@/constants/theme';
 import { npcDisplayName } from '@/utils/npcDisplayName';
 
 const HEART_FULL = '#E11D48';
 const HEART_EMPTY = 'rgba(245, 230, 200, 0.55)';
 const WINS_TO_END = 3;
+const INK_THEME = DUEL_VISUAL_THEME === 'minimal';
 
 function HeartRow({ filled, max }: { filled: number; max: number }) {
   return (
@@ -36,7 +39,11 @@ function HeartRow({ filled, max }: { filled: number; max: number }) {
       {Array.from({ length: max }).map((_, i) => (
         <Text
           key={i}
-          style={[styles.heartGlyph, i < filled ? styles.heartFull : styles.heartEmpty]}
+          style={[
+            styles.heartGlyph,
+            INK_THEME && styles.heartGlyphInk,
+            i < filled ? styles.heartFull : INK_THEME ? styles.heartEmptyInk : styles.heartEmpty,
+          ]}
         >
           {i < filled ? '♥' : '♡'}
         </Text>
@@ -124,6 +131,10 @@ export function DuelArenaLayout({
   // 가로 — 서부극 정면 대치: 같은 지면선, 좌(플레이어)·우(NPC)
   const groundBottom = Math.max(paddingBottom + 30, Math.round(height * 0.09));
   const sideInset = Math.round(width * 0.07);
+  const playerDefeatLift =
+    !landscape && playerPose === 'defeat' ? DUEL_PLAYER_DEFEAT_LIFT_PX : 0;
+  // landscape — 이미 같은 지면선이므로 낮게 제자리 착지 (portrait은 기본: 앞쪽 지면으로 추락)
+  const defeatDropPx = landscape ? Math.round(figH * 0.05) : undefined;
 
   return (
     <View style={[styles.root, { width, height }]}>
@@ -141,12 +152,44 @@ export function DuelArenaLayout({
         style={StyleSheet.absoluteFill}
       />
 
-      <LinearGradient
-        pointerEvents="none"
-        colors={[...DUEL_ARENA_SHADE.colors]}
-        locations={[...DUEL_ARENA_SHADE.locations]}
-        style={StyleSheet.absoluteFill}
-      />
+      {!INK_THEME ? (
+        <LinearGradient
+          pointerEvents="none"
+          colors={[...DUEL_ARENA_SHADE.colors]}
+          locations={[...DUEL_ARENA_SHADE.locations]}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
+
+      {/* 미니멀 — 캐릭터 발밑 지면선 */}
+      {INK_THEME ? (
+        landscape ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.groundLine,
+              { bottom: groundBottom - 4, left: sideInset * 0.5, right: sideInset * 0.5 },
+            ]}
+          />
+        ) : (
+          <>
+            <View
+              pointerEvents="none"
+              style={[
+                styles.groundLine,
+                { top: height * 0.52 - 6, right: 0, width: '58%' },
+              ]}
+            />
+            <View
+              pointerEvents="none"
+              style={[
+                styles.groundLine,
+                { bottom: 90, left: 0, width: '58%' },
+              ]}
+            />
+          </>
+        )
+      ) : null}
 
       {/* NPC — portrait 우상단 대각선 · landscape 우측 정면 */}
       <View
@@ -166,6 +209,7 @@ export function DuelArenaLayout({
             pose={npcPose}
             victoryActive={npcVictoryActive}
             duelCorner={npcCorner}
+            defeatDropPx={defeatDropPx}
           />
         </DuelFigureSlot>
       </View>
@@ -179,7 +223,15 @@ export function DuelArenaLayout({
                 styles.playerZoneLandscape,
                 { paddingLeft: sideInset, paddingBottom: groundBottom },
               ]
-            : [styles.playerZone, { width, height: height * 0.52, bottom: 0 }]
+            : [
+                styles.playerZone,
+                {
+                  width,
+                  height: height * 0.52,
+                  bottom: 0,
+                  paddingBottom: 96 + playerDefeatLift,
+                },
+              ]
         }
       >
         <DuelFigureSlot corner={playerCorner} pose={playerPose} figW={figW} figH={figH}>
@@ -191,6 +243,7 @@ export function DuelArenaLayout({
             pose={playerPose}
             victoryActive={playerVictoryActive}
             duelCorner={playerCorner}
+            defeatDropPx={defeatDropPx}
           />
         </DuelFigureSlot>
       </View>
@@ -215,15 +268,23 @@ export function DuelArenaLayout({
         style={[styles.hudTop, { paddingTop: paddingTop + 8, paddingRight: paddingRight + 52 }]}
       >
         <View style={styles.nameRow}>
-          <Text style={[styles.npcName, { fontFamily: FONT_RYE }]} numberOfLines={1}>
+          <Text
+            style={[styles.npcName, INK_THEME && styles.npcNameInk, { fontFamily: FONT_RYE }]}
+            numberOfLines={1}
+          >
             {npcLabel}
           </Text>
           {bossFlag ? (
-            <Ionicons name="skull" size={20} color={colors.cream} style={styles.bossSkull} />
+            <Ionicons
+              name="skull"
+              size={20}
+              color={INK_THEME ? MINIMAL_DUEL.ink : colors.cream}
+              style={styles.bossSkull}
+            />
           ) : null}
         </View>
         <View style={styles.metaRow}>
-          <Text style={styles.tierPill}>{tierLabel}</Text>
+          <Text style={[styles.tierPill, INK_THEME && styles.tierPillInk]}>{tierLabel}</Text>
           <HeartRow filled={opponentHearts} max={3} />
         </View>
       </View>
@@ -235,20 +296,26 @@ export function DuelArenaLayout({
           style={[styles.hudBottom, { paddingBottom: paddingBottom + 12 }]}
         >
           <HeartRow filled={playerHearts} max={3} />
-          <Text style={styles.scoreLine}>
+          <Text style={[styles.scoreLine, INK_THEME && styles.scoreLineInk]}>
             {playerScore} — {opponentScore} · 선 {WINS_TO_END}승
           </Text>
           {shootActive ? (
-            <Text style={styles.tapHint}>TAP ANYWHERE</Text>
+            <Text style={[styles.tapHint, INK_THEME && styles.tapHintInk]}>TAP ANYWHERE</Text>
           ) : shootCapturesEarly ? (
-            <Text style={styles.waitHint}>WAIT FOR BANG…</Text>
+            <Text style={[styles.waitHint, INK_THEME && styles.waitHintInk]}>
+              WAIT FOR BANG…
+            </Text>
           ) : null}
         </View>
       ) : null}
 
       <Animated.View
         pointerEvents="none"
-        style={[StyleSheet.absoluteFillObject, styles.tapFlash, playerTapAckStyle]}
+        style={[
+          StyleSheet.absoluteFillObject,
+          INK_THEME ? styles.tapFlashInk : styles.tapFlash,
+          playerTapAckStyle,
+        ]}
       />
 
       <Pressable
@@ -258,7 +325,11 @@ export function DuelArenaLayout({
         style={[styles.pauseBtn, { top: paddingTop + 4, right: paddingRight + 8 }]}
         hitSlop={12}
       >
-        <Ionicons name="pause-circle" size={38} color="rgba(245, 230, 200, 0.92)" />
+        <Ionicons
+          name="pause-circle"
+          size={38}
+          color={INK_THEME ? 'rgba(28, 26, 21, 0.72)' : 'rgba(245, 230, 200, 0.92)'}
+        />
       </Pressable>
     </View>
   );
@@ -418,5 +489,45 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 30,
     padding: 4,
+  },
+  /* 미니멀(잉크) 테마 */
+  groundLine: {
+    position: 'absolute',
+    height: 2,
+    backgroundColor: MINIMAL_DUEL.line,
+    zIndex: 2,
+  },
+  npcNameInk: {
+    color: MINIMAL_DUEL.ink,
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+  },
+  tierPillInk: {
+    color: MINIMAL_DUEL.inkSoft,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: MINIMAL_DUEL.line,
+  },
+  heartGlyphInk: {
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+  },
+  heartEmptyInk: { color: MINIMAL_DUEL.heartEmpty },
+  scoreLineInk: {
+    color: MINIMAL_DUEL.inkSoft,
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+  },
+  tapHintInk: {
+    color: MINIMAL_DUEL.ink,
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+  },
+  waitHintInk: {
+    color: MINIMAL_DUEL.inkFaint,
+  },
+  tapFlashInk: {
+    backgroundColor: MINIMAL_DUEL.flash,
+    zIndex: 20,
   },
 });

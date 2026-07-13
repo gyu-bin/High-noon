@@ -207,9 +207,23 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
   pose = 'idle',
   victoryActive = false,
   duelCorner = 'topRight',
-}: BaseProps & { npcId: number; victoryActive?: boolean; duelCorner?: DuelCorner }) {
+  defeatDropPx,
+}: BaseProps & {
+  npcId: number;
+  victoryActive?: boolean;
+  duelCorner?: DuelCorner;
+  /** 낙하 거리 px — landscape 등 같은 지면선 구도에서 제자리 착지용 */
+  defeatDropPx?: number;
+}) {
   const hasPng = !!getNpcSpriteSource(npcId, 'idle');
-  const motionStyle = useDuelSpriteMotion(pose, victoryActive, duelCorner, 'topple', height);
+  const motionStyle = useDuelSpriteMotion(
+    pose,
+    victoryActive,
+    duelCorner,
+    'topple',
+    height,
+    defeatDropPx,
+  );
 
   return (
     <View
@@ -249,7 +263,7 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
         height={height}
         active={pose === 'defeat'}
         impactDelayMs={defeatImpactDelayMs('topple')}
-        groundOffsetY={height * 0.3}
+        groundOffsetY={defeatDropPx != null ? defeatDropPx * 0.9 : height * 0.3}
       />
     </View>
   );
@@ -264,7 +278,14 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
   pose = 'idle',
   victoryActive = false,
   duelCorner = 'bottomLeft',
-}: BaseProps & { characterId?: number; victoryActive?: boolean; duelCorner?: DuelCorner }) {
+  defeatDropPx,
+}: BaseProps & {
+  characterId?: number;
+  victoryActive?: boolean;
+  duelCorner?: DuelCorner;
+  /** 낙하 거리 px — landscape 등 같은 지면선 구도에서 제자리 착지용 */
+  defeatDropPx?: number;
+}) {
   const hasPng = !!getPlayerSpriteSource(characterId, 'idle');
   const hasDown = !!getPlayerDownSource(characterId);
   const motionStyle = useDuelSpriteMotion(
@@ -273,6 +294,7 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
     duelCorner,
     hasDown ? 'topple' : 'collapse',
     height,
+    defeatDropPx,
   );
 
   return (
@@ -321,7 +343,9 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
         height={height}
         active={pose === 'defeat'}
         impactDelayMs={defeatImpactDelayMs(hasDown ? 'topple' : 'collapse')}
-        groundOffsetY={height * (hasDown ? 0.3 : 0.38)}
+        groundOffsetY={
+          defeatDropPx != null ? defeatDropPx * 0.9 : height * (hasDown ? 0.3 : 0.38)
+        }
       />
     </View>
   );

@@ -22,6 +22,11 @@ export function useDuelSpriteMotion(
   corner: DuelCorner = 'bottomLeft',
   defeatMotion: DuelDefeatMotion = 'collapse',
   figureHeight = 220,
+  /**
+   * 낙하 거리(px). 기본은 portrait 대각선 구도용(앞쪽 낮은 지면으로 추락).
+   * landscape처럼 이미 같은 지면선에 서 있으면 작은 값을 넘겨 제자리 착지.
+   */
+  defeatDropPx?: number,
 ) {
   const phase = useSharedValue(0);
   const T = DUEL_SPRITE_TIMING;
@@ -202,7 +207,7 @@ export function useDuelSpriteMotion(
 
       if (defeatMotion === 'topple') {
         const tipDeg = dir * 44;
-        const peakFallY = figureHeight * 0.34;
+        const peakFallY = defeatDropPx ?? figureHeight * 0.34;
         const fallX = dir * 32;
 
         // defeat 아트: 피격 → 기울며 떨어짐 / down 아트: 회전 0으로 복귀하며 바닥에 누움
@@ -228,7 +233,7 @@ export function useDuelSpriteMotion(
       }
 
       // collapse — down 에셋 없을 때 defeat 아트로 통째로 낙하
-      const peakFallY = figureHeight * 0.4;
+      const peakFallY = defeatDropPx ?? figureHeight * 0.4;
       const fallX = dir * 26;
       const tipDeg = dir * 22;
       const landAt = T.defeatCollapseLandFrac;

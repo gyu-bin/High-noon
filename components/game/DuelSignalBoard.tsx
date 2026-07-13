@@ -11,6 +11,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { DUEL_VISUAL_THEME, MINIMAL_DUEL } from '@/constants/duelTheme';
 import { DUEL_SIGNAL_SPEC } from '@/constants/npcVisual';
 import { RM_GAME } from '@/constants/reanimatedGame';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
@@ -156,29 +157,54 @@ export function DuelSignalBoard({
 
   const label = signalLabel(phase);
   const showLabel = label.length > 0;
+  const inkTheme = DUEL_VISUAL_THEME === 'minimal';
 
-  const textStyle = (() => {
-    const bangStyle =
-      blindBangText && (phase === '뱅' || phase === '페이크')
-        ? styles.textBangBlind
-        : styles.textBang;
+  // 색 결정을 kind로 먼저 정리 — 테마별 팔레트로 매핑
+  const textKind = (() => {
+    if (blindBangText && (phase === '뱅' || phase === '페이크')) return 'bangBlind';
     if (invertSignalColors) {
-      if (phase === '준비') return styles.textSteady;
-      if (phase === '집중' || phase === '페이크') return styles.textReady;
-      if (phase === '뱅') return styles.textReady;
+      if (phase === '준비') return 'steady';
+      return 'ready'; // 집중/페이크/뱅
     }
-    if (phase === '뱅') return bangStyle;
-    if (phase === '집중' || phase === '페이크') return styles.textSteady;
-    return styles.textReady;
+    if (phase === '뱅') return 'bang';
+    if (phase === '집중' || phase === '페이크') return 'steady';
+    return 'ready';
   })();
 
-  const minimalTextShadow = minimal
-    ? {
-        textShadowColor: 'rgba(0,0,0,0.9)',
-        textShadowOffset: { width: 0, height: 3 } as const,
-        textShadowRadius: 10,
+  const textStyle = (() => {
+    if (inkTheme) {
+      switch (textKind) {
+        case 'bang':
+          return styles.inkBang;
+        case 'bangBlind':
+          return styles.inkBangBlind;
+        case 'steady':
+          return styles.inkSteady;
+        default:
+          return styles.inkReady;
       }
-    : null;
+    }
+    switch (textKind) {
+      case 'bang':
+        return styles.textBang;
+      case 'bangBlind':
+        return styles.textBangBlind;
+      case 'steady':
+        return styles.textSteady;
+      default:
+        return styles.textReady;
+    }
+  })();
+
+  // 잉크 테마 — 밝은 배경이라 텍스트 섀도 불필요
+  const minimalTextShadow =
+    minimal && !inkTheme
+      ? {
+          textShadowColor: 'rgba(0,0,0,0.9)',
+          textShadowOffset: { width: 0, height: 3 } as const,
+          textShadowRadius: 10,
+        }
+      : null;
   const readySize = minimal ? { fontSize: 34, letterSpacing: 3 } : styles.textReadySize;
   const steadySize = minimal ? { fontSize: 38, letterSpacing: 3 } : styles.textSteadySize;
   const bangSize = minimal
@@ -304,6 +330,23 @@ const styles = StyleSheet.create({
   },
   textBangBlind: {
     color: BG,
+    fontWeight: '900',
+  },
+  /* 미니멀(잉크) 테마 — 웜 화이트 배경 위 */
+  inkReady: {
+    color: MINIMAL_DUEL.inkSoft,
+    fontWeight: '800',
+  },
+  inkSteady: {
+    color: MINIMAL_DUEL.ink,
+    fontWeight: '900',
+  },
+  inkBang: {
+    color: MINIMAL_DUEL.bang,
+    fontWeight: '900',
+  },
+  inkBangBlind: {
+    color: MINIMAL_DUEL.bg,
     fontWeight: '900',
   },
   textBangSize: {

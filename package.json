@@ -7,6 +7,7 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "bash scripts/ensure-iphone-17-pro.sh && expo start --ios",
+    "screenshots": "bash scripts/capture_app_store_screenshots.sh",
     "web": "expo start --web",
     "lint": "expo lint"
   },

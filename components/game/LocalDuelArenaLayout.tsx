@@ -22,9 +22,12 @@ import {
   duelFlipHorizontal,
 } from '@/constants/duelArena';
 import { DUEL_ARENA_SHADE } from '@/constants/duelPresentation';
+import { DUEL_VISUAL_THEME, MINIMAL_DUEL } from '@/constants/duelTheme';
 import { colors } from '@/constants/theme';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
 import type { LocalPlayerId } from '@/hooks/useLocalDuelEngine';
+
+const INK_THEME = DUEL_VISUAL_THEME === 'minimal';
 
 type Props = {
   width: number;
@@ -86,12 +89,14 @@ export function LocalDuelArenaLayout({
 
   return (
     <View style={[styles.root, { width, height }]}>
-      <LinearGradient
-        pointerEvents="none"
-        colors={[...DUEL_ARENA_SHADE.colors]}
-        locations={[...DUEL_ARENA_SHADE.locations]}
-        style={StyleSheet.absoluteFill}
-      />
+      {!INK_THEME ? (
+        <LinearGradient
+          pointerEvents="none"
+          colors={[...DUEL_ARENA_SHADE.colors]}
+          locations={[...DUEL_ARENA_SHADE.locations]}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
 
       {/*
         P2 — 상단 50% 전체 180° 회전.
@@ -100,6 +105,7 @@ export function LocalDuelArenaLayout({
       */}
       <View pointerEvents="none" style={styles.topHalfRotated}>
         <View style={styles.topHalfInner}>
+          {INK_THEME ? <View style={[styles.groundLine, { bottom: 66 }]} /> : null}
           <View style={styles.p2Zone}>
             <DuelFigureSlot corner="bottomLeft" pose={p2Pose} figW={figW} figH={figH}>
               <PlayerCharacterSprite
@@ -117,22 +123,29 @@ export function LocalDuelArenaLayout({
           </View>
 
           <View style={[styles.hudP2Inner, { paddingTop: paddingTop + 4 }]}>
-            <Text style={styles.playerLabel}>P2</Text>
+            <Text style={[styles.playerLabel, INK_THEME && styles.playerLabelInk]}>P2</Text>
             <HeartStrip filled={p2Hearts} max={winsNeeded} />
             {p2LiveMs != null ? (
-              <Text style={styles.liveMs}>{Math.round(p2LiveMs)} ms</Text>
+              <Text style={[styles.liveMs, INK_THEME && styles.liveMsInk]}>
+                {Math.round(p2LiveMs)} ms
+              </Text>
             ) : null}
           </View>
 
           <Animated.View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFillObject, styles.tapFlash, p2TapAckStyle]}
+            style={[
+              StyleSheet.absoluteFillObject,
+              INK_THEME ? styles.tapFlashInk : styles.tapFlash,
+              p2TapAckStyle,
+            ]}
           />
         </View>
       </View>
 
       {/* P1 — 하단 50% 정상 방향 */}
       <View pointerEvents="none" style={styles.bottomHalfShell}>
+        {INK_THEME ? <View style={[styles.groundLine, { bottom: 22 }]} /> : null}
         <View style={styles.p1Zone}>
           <DuelFigureSlot corner="bottomLeft" pose={p1Pose} figW={figW} figH={figH}>
             <PlayerCharacterSprite
@@ -155,16 +168,22 @@ export function LocalDuelArenaLayout({
             { paddingBottom: paddingBottom + 72, paddingLeft: paddingLeft + 14 },
           ]}
         >
-          <Text style={styles.playerLabel}>P1</Text>
+          <Text style={[styles.playerLabel, INK_THEME && styles.playerLabelInk]}>P1</Text>
           <HeartStrip filled={p1Hearts} max={winsNeeded} />
           {p1LiveMs != null ? (
-            <Text style={styles.liveMs}>{Math.round(p1LiveMs)} ms</Text>
+            <Text style={[styles.liveMs, INK_THEME && styles.liveMsInk]}>
+              {Math.round(p1LiveMs)} ms
+            </Text>
           ) : null}
         </View>
 
         <Animated.View
           pointerEvents="none"
-          style={[StyleSheet.absoluteFillObject, styles.tapFlash, p1TapAckStyle]}
+          style={[
+            StyleSheet.absoluteFillObject,
+            INK_THEME ? styles.tapFlashInk : styles.tapFlash,
+            p1TapAckStyle,
+          ]}
         />
       </View>
 
@@ -174,13 +193,15 @@ export function LocalDuelArenaLayout({
           pointerEvents="none"
           style={[styles.scoreBar, { paddingBottom: paddingBottom + 8 }]}
         >
-          <Text style={styles.scoreLine}>
+          <Text style={[styles.scoreLine, INK_THEME && styles.scoreLineInk]}>
             P1 {p1Wins} — {p2Wins} P2 · 선 {winsNeeded}승
           </Text>
           {phase === '뱅' ? (
-            <Text style={styles.tapHint}>TAP YOUR HALF</Text>
+            <Text style={[styles.tapHint, INK_THEME && styles.tapHintInk]}>TAP YOUR HALF</Text>
           ) : phase !== '대기' && phase !== '결과' ? (
-            <Text style={styles.waitHint}>WAIT FOR BANG…</Text>
+            <Text style={[styles.waitHint, INK_THEME && styles.waitHintInk]}>
+              WAIT FOR BANG…
+            </Text>
           ) : null}
         </View>
       ) : null}
@@ -208,7 +229,11 @@ export function LocalDuelArenaLayout({
         style={[styles.pauseBtn, { top: paddingTop + 4, right: paddingRight + 8 }]}
         hitSlop={12}
       >
-        <Ionicons name="pause-circle" size={38} color="rgba(245, 230, 200, 0.92)" />
+        <Ionicons
+          name="pause-circle"
+          size={38}
+          color={INK_THEME ? 'rgba(28, 26, 21, 0.72)' : 'rgba(245, 230, 200, 0.92)'}
+        />
       </Pressable>
     </View>
   );
@@ -362,6 +387,42 @@ const styles = StyleSheet.create({
   },
   tapFlash: {
     backgroundColor: 'rgba(255, 236, 200, 0.55)',
+    zIndex: 20,
+  },
+  /* 미니멀(잉크) 테마 */
+  groundLine: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: MINIMAL_DUEL.line,
+    zIndex: 2,
+  },
+  playerLabelInk: {
+    color: MINIMAL_DUEL.ink,
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+  },
+  liveMsInk: {
+    color: MINIMAL_DUEL.inkSoft,
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+  },
+  scoreLineInk: {
+    color: MINIMAL_DUEL.inkSoft,
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+  },
+  tapHintInk: {
+    color: MINIMAL_DUEL.ink,
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+  },
+  waitHintInk: {
+    color: MINIMAL_DUEL.inkFaint,
+  },
+  tapFlashInk: {
+    backgroundColor: MINIMAL_DUEL.flash,
     zIndex: 20,
   },
   navBtn: {

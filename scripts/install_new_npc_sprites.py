@@ -49,9 +49,12 @@ def src_path(npc_id: int, suffix: str) -> Path:
     return base / f"enemy_{npc_id:02d}_{NAMES[npc_id]}{tail}.png"
 
 
+from scripts.regenerate_npc_sprites_magenta import ensure_png_faces_right  # noqa: E402
+
+
 def flip_face_right(img: Image.Image) -> Image.Image:
-    """게임 규격: PNG는 오른쪽(→) 조준. AI 생성분은 좌향이라 수평 반전."""
-    return img.transpose(Image.FLIP_LEFT_RIGHT)
+    """게임 규격: PNG는 오른쪽(→) 조준."""
+    return ensure_png_faces_right(img)
 
 
 def recoil_frame(shoot: Image.Image) -> Image.Image:

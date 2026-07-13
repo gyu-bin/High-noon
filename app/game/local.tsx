@@ -29,6 +29,7 @@ import {
   DUEL_DEFEAT_MODAL_DELAY_MS,
   DUEL_DEFEAT_REVEAL_DELAY_MS,
 } from '@/constants/duelPresentation';
+import { DUEL_VISUAL_THEME, MINIMAL_DUEL } from '@/constants/duelTheme';
 import { pickBattleDayNight } from '@/constants/gameImages';
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
@@ -493,14 +494,10 @@ export default function LocalGameScreen() {
     [matchType],
   );
 
-  return (
-    <PhoneStageShell>
-    <DuelSplitBackground
-      variant={battleDayNight}
-      style={{ width: winW, height: winH }}
-      contentWidth={winW}
-      contentHeight={winH}
-    >
+  const minimalTheme = DUEL_VISUAL_THEME === 'minimal';
+
+  const duelBody = (
+    <>
       <Animated.View pointerEvents="none" style={[styles.redFlash, redStyle]} />
 
       <LocalDuelArenaLayout
@@ -557,7 +554,34 @@ export default function LocalGameScreen() {
         secondaryLabel="대결 나가기"
         onMainMenu={leaveToMainMenu}
       />
-    </DuelSplitBackground>
+    </>
+  );
+
+  return (
+    <PhoneStageShell
+      backgroundColor={minimalTheme ? MINIMAL_DUEL.stageEdge : undefined}
+    >
+      {minimalTheme ? (
+        <View
+          style={{
+            width: winW,
+            height: winH,
+            backgroundColor: MINIMAL_DUEL.bg,
+            overflow: 'hidden',
+          }}
+        >
+          {duelBody}
+        </View>
+      ) : (
+        <DuelSplitBackground
+          variant={battleDayNight}
+          style={{ width: winW, height: winH }}
+          contentWidth={winW}
+          contentHeight={winH}
+        >
+          {duelBody}
+        </DuelSplitBackground>
+      )}
     </PhoneStageShell>
   );
 }

@@ -32,6 +32,7 @@ import {
   getBackgroundImage,
   pickBattleDayNight,
 } from '@/constants/gameImages';
+import { DUEL_VISUAL_THEME, MINIMAL_DUEL } from '@/constants/duelTheme';
 import { RM_GAME } from '@/constants/reanimatedGame';
 import { DEV_UNLOCK_ALL_NPCS } from '@/constants/devFlags';
 import { getNpcById } from '@/constants/npcs';
@@ -155,6 +156,9 @@ export default function NpcGameScreen() {
     [npc?.id],
   );
   const duelBg = useMemo(() => {
+    if (DUEL_VISUAL_THEME === 'minimal') {
+      return { kind: 'solid' as const, color: MINIMAL_DUEL.bg };
+    }
     if (!npc) {
       return { kind: 'full' as const, variant: 'day' as const };
     }
@@ -892,7 +896,14 @@ export default function NpcGameScreen() {
 
       {earlyOverlay ? (
         <View pointerEvents="none" style={styles.earlyLabelWrap}>
-          <Text style={styles.earlyLabel}>EARLY!</Text>
+          <Text
+            style={[
+              styles.earlyLabel,
+              DUEL_VISUAL_THEME === 'minimal' && styles.earlyLabelInk,
+            ]}
+          >
+            EARLY!
+          </Text>
         </View>
       ) : null}
 
@@ -960,15 +971,20 @@ export default function NpcGameScreen() {
   );
 
   return (
-    <PhoneStageShell edgeToEdge>
+    <PhoneStageShell
+      edgeToEdge
+      backgroundColor={DUEL_VISUAL_THEME === 'minimal' ? MINIMAL_DUEL.stageEdge : undefined}
+    >
       {duelBg.kind === 'solid' ? (
         <SceneBackground
           {...arenaShellProps}
           solidColor={duelBg.color}
           dimColor={
-            battleDayNight === 'night'
-              ? 'rgba(12, 8, 5, 0.1)'
-              : 'rgba(12, 8, 5, 0.16)'
+            DUEL_VISUAL_THEME === 'minimal'
+              ? 'transparent'
+              : battleDayNight === 'night'
+                ? 'rgba(12, 8, 5, 0.1)'
+                : 'rgba(12, 8, 5, 0.16)'
           }
         >
           {arenaBody}
@@ -1020,5 +1036,10 @@ const styles = StyleSheet.create({
     textShadowColor: '#1A3A6E',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
+  },
+  earlyLabelInk: {
+    color: MINIMAL_DUEL.ink,
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
   },
 });

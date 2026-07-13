@@ -181,7 +181,11 @@ export function NpcRoundModal({
 
           <View
             pointerEvents="none"
-            style={[styles.bottomPanel, { paddingBottom: Math.max(paddingBottom, 4) + 2 }]}
+            style={
+              landscape
+                ? [styles.bottomPanelLandscape, { bottom: Math.max(paddingBottom, 8) + 6 }]
+                : [styles.bottomPanel, { paddingBottom: Math.max(paddingBottom, 4) + 2 }]
+            }
           >
             <View style={styles.statsCard}>
               <Text style={styles.statsLine}>
@@ -294,6 +298,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(8, 5, 3, 0.92)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(212, 165, 116, 0.28)',
+  },
+  /* 가로모드 — 좌우 쓰러진 캐릭터를 가리지 않는 중앙 콤팩트 카드 */
+  bottomPanelLandscape: {
+    position: 'absolute',
+    alignSelf: 'center',
+    zIndex: 3,
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: 18,
+    paddingTop: 6,
+    paddingBottom: 6,
+    backgroundColor: 'rgba(8, 5, 3, 0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 165, 116, 0.28)',
+    borderRadius: 14,
+    maxWidth: '46%',
   },
   statsCard: {
     width: '100%',

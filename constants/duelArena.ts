@@ -1,19 +1,18 @@
 import type { SpritePose } from '@/constants/sprites';
 import type { ViewStyle } from 'react-native';
 
-/** 결투 코너 — 좌하(플레이어) ↔ 우상(NPC·P2) 대각선 대치 */
+/** 결투 코너 — portrait: 좌하(플레이어) ↔ 우상(NPC) · landscape: 좌(플레이어) ↔ 우(NPC) */
 export type DuelCorner = 'bottomLeft' | 'topRight';
 
 /**
- * duel 스프라이트는 PNG에서 **오른쪽(→) 조준**으로 그린다.
- * - bottomLeft(플레이어): 그대로 → 화면 우상(NPC 방향)
- * - topRight(NPC): scaleX 반전 → 화면 좌하(플레이어 방향)
+ * duel 스프라이트 PNG는 **오른쪽(→) 조준**으로 통일.
+ * - bottomLeft(플레이어·좌측): 그대로 → 상대 방향
+ * - topRight(NPC·우측): scaleX 반전 → 상대(플레이어) 방향
  */
 export function duelFigureTransform(
   corner: DuelCorner,
   _pose: SpritePose = 'idle',
 ): NonNullable<ViewStyle['transform']> {
-  // defeat도 idle과 같은 기준 트랜스폼 — 쓰러짐은 useDuelSpriteMotion이 연속 애니메이션으로 처리
   if (corner === 'bottomLeft') {
     return [{ translateY: 14 }, { scale: 0.98 }];
   }
@@ -41,6 +40,9 @@ export function localDuelTopHalfFigureTransform(
 ): NonNullable<ViewStyle['transform']> {
   return duelFigureTransform('bottomLeft', pose);
 }
+
+/** 세로 패배 — 하단 결과 바에 쓰러진 플레이어가 가려지지 않도록 존을 올림 */
+export const DUEL_PLAYER_DEFEAT_LIFT_PX = 108;
 
 export const DUEL_FIGURE_SIZE = {
   widthRatio: 0.54,

@@ -32,8 +32,17 @@ yarn-error.*
 
 # Python sprite pipeline
 .venv/
+.venv-tools/
 output/
 reference_sprite.png
+__pycache__/
+*.pyc
+
+# Xcode 로컬 빌드 (스크린샷 스크립트가 재생성)
+.derivedData/
+
+# App Store 스크린샷 산출물 (로컬 전용)
+marketing/
 
 # TypeScript
 *.tsbuildinfo

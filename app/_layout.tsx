@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 
 import { colors } from '@/constants/theme';
 import { DEV_UNLOCK_ALL_CHARACTERS } from '@/constants/devFlags';
+import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
 import { checkUnlockConditions } from '@/utils/characterAbility';
 import { WESTERN_HERO_FALLBACK } from '@/constants/westernBackground';
 import { initAds, preloadInterstitial } from '@/utils/adService';
@@ -26,6 +27,8 @@ export default function RootLayout() {
 
   const ready = fontsLoaded || fontError != null;
   const [appReady, setAppReady] = useState(false);
+
+  useAutoScreenshotTour(appReady);
 
   // 전 화면 회전 허용 — 이전 실행에서 잠긴 방향이 남아있을 수 있어 해제
   useEffect(() => {
@@ -89,6 +92,7 @@ export default function RootLayout() {
         <Stack.Screen name="character-select" options={{ title: '캐릭터' }} />
         <Stack.Screen name="duel" options={{ title: '결투', headerShown: true }} />
         <Stack.Screen name="game" options={{ headerShown: false }} />
+        <Stack.Screen name="capture" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ headerShown: false }} />
       </Stack>
     </>

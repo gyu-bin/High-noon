@@ -14,6 +14,9 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.regenerate_npc_sprites_magenta import ensure_png_faces_right  # noqa: E402
+
 PLAYER_DIR = Path("assets/sprites/player")
 SIZE = 256
 
@@ -95,7 +98,7 @@ def main() -> None:
         for pose in POSES:
             src = raw_dir / f"player_{pid:02d}_{name}_{pose}.png"
             img = Image.open(src).convert("RGBA")
-            img = to_square(trim_alpha(key_magenta(img)), SIZE)
+            img = ensure_png_faces_right(to_square(trim_alpha(key_magenta(img)), SIZE))
             img.save(PLAYER_DIR / f"player_{pid:02d}_{pose}.png")
             if pose == "shoot":
                 img.save(PLAYER_DIR / f"player_{pid:02d}_shoot_00.png")

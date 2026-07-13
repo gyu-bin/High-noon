@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { WesternHomeBackground } from '@/components/layout/WesternHomeBackground';
 import { ShimmerTitle } from '@/components/title/ShimmerTitle';
+import { DEV_AUTO_SCREENSHOTS } from '@/constants/devFlags';
 import { colors } from '@/constants/theme';
 import { FONT_RYE } from '@/constants/fonts';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
@@ -21,6 +22,11 @@ export default function TitleScreen() {
   useEffect(() => {
     void bootMenuBgm();
   }, []);
+
+  useEffect(() => {
+    if (!DEV_AUTO_SCREENSHOTS) return;
+    router.replace('/menu');
+  }, [router]);
 
   const goMenu = async () => {
     await Promise.all([trigger('medium'), play('bang_shot')]);
