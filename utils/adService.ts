@@ -23,7 +23,7 @@ async function getAdsLib(): Promise<AdsLib | null> {
 /** 프로덕션 전면 광고 유닛 — 실제 AdMob 콘솔 값으로 교체 */
 function getProductionInterstitialUnitId(): string {
   return Platform.select({
-    ios: 'ca-app-pub-3940256099942544/4411468910',
+    ios: 'ca-app-pub-2202662035854210/5547432578',
     android: 'ca-app-pub-3940256099942544/1033173712',
     default: 'ca-app-pub-3940256099942544/1033173712',
   })!;
@@ -53,7 +53,7 @@ let rewarded: ReturnType<AdsLib['RewardedAd']['createForAdRequest']> | null = nu
 
 function getProductionRewardedUnitId(): string {
   return Platform.select({
-    ios: 'ca-app-pub-3940256099942544/1712485313',
+    ios: 'ca-app-pub-2202662035854210/2394655629',
     android: 'ca-app-pub-3940256099942544/5224354917',
     default: 'ca-app-pub-3940256099942544/5224354917',
   })!;
