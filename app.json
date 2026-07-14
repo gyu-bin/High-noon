@@ -8,6 +8,13 @@
     "scheme": "high-noon",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/63cfa342-3b52-4fe6-86d6-44de84dc90fe",
+      "checkAutomatically": "ON_LOAD"
+    },
     "splash": {
       "image": "./assets/images/image/title_hero_menu.png",
       "resizeMode": "cover",

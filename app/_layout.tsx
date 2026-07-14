@@ -4,21 +4,35 @@ import { Rye_400Regular, useFonts } from '@expo-google-fonts/rye';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
 import { colors } from '@/constants/theme';
-import { DEV_UNLOCK_ALL_CHARACTERS } from '@/constants/devFlags';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
 import { checkUnlockConditions } from '@/utils/characterAbility';
 import { WESTERN_HERO_FALLBACK } from '@/constants/westernBackground';
 import { initAds, preloadInterstitial, preloadRewardedAd } from '@/utils/adService';
 import { preloadAll } from '@/utils/audioService';
-import { preloadBgm, bootMenuBgm } from '@/utils/bgmService';
+import { bootMenuBgm } from '@/utils/bgmService';
 // import { initPurchases } from '@/utils/purchaseService';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
 
 SplashScreen.preventAutoHideAsync();
+
+/** 프로덕션 빌드에서 EAS Update를 받아 즉시 재시작. 실패해도 앱은 계속 진행. */
+async function applyOtaUpdateIfAvailable(): Promise<boolean> {
+  if (__DEV__ || !Updates.isEnabled) return false;
+  try {
+    const check = await Updates.checkForUpdateAsync();
+    if (!check.isAvailable) return false;
+    await Updates.fetchUpdateAsync();
+    await Updates.reloadAsync();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -47,6 +61,9 @@ export default function RootLayout() {
     let cancelled = false;
 
     async function prepare() {
+      const reloading = await applyOtaUpdateIfAvailable();
+      if (reloading || cancelled) return;
+
       await preloadTitleHero();
       if (cancelled) return;
       // 진행도 기준 캐릭터 해금 동기화 + 잠긴 캐릭터가 선택돼 있으면 기본 캐릭터로 복구
