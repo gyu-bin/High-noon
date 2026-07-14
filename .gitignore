@@ -58,3 +58,5 @@ coverage/
 
 expo-env.d.ts
 # @end expo-cli
+# Broken/local tool checkouts that must not be gitlinks
+tools/sprite-gen/
