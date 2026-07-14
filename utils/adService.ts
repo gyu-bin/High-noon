@@ -40,12 +40,29 @@ let initialized = false;
 /** 동적 로드된 전면 인스턴스 (타입은 런타임만 사용) */
 let interstitial: ReturnType<AdsLib['InterstitialAd']['createForAdRequest']> | null = null;
 
-/** 승리 1회당 전면을 시도할 확률 (0~1). 낮을수록 덜 나옵니다. */
-const STAGE_AD_SHOW_PROBABILITY = 0.2;
-/** 직전 전면을 닫은 뒤 다시 노출하기까지 최소 대기 (ms) */
-const STAGE_AD_COOLDOWN_MS = 10 * 60 * 1000;
+/** N매치마다 전면 노출 (승패 무관) */
+const MATCHES_PER_INTERSTITIAL = 5;
+/** 직전 전면을 닫은 뒤 다시 노출하기까지 최소 대기 (ms) — 세이프가드 */
+const STAGE_AD_COOLDOWN_MS = 3 * 60 * 1000;
 
 let lastStageInterstitialClosedAt = 0;
+let matchesSinceLastAd = 0;
+
+/** 보상형 광고 인스턴스 */
+let rewarded: ReturnType<AdsLib['RewardedAd']['createForAdRequest']> | null = null;
+
+function getProductionRewardedUnitId(): string {
+  return Platform.select({
+    ios: 'ca-app-pub-3940256099942544/1712485313',
+    android: 'ca-app-pub-3940256099942544/5224354917',
+    default: 'ca-app-pub-3940256099942544/5224354917',
+  })!;
+}
+
+function getRewardedUnitId(lib: AdsLib): string {
+  if (__DEV__) return lib.TestIds.REWARDED;
+  return getProductionRewardedUnitId();
+}
 
 export async function initAds(): Promise<void> {
   if (initialized) return;
@@ -78,24 +95,24 @@ export function preloadInterstitial(): void {
 }
 
 /**
- * 스테이지 클리어(승리) 후 전면 광고.
+ * 매치 완료(승·패 무관) 후 호출. 5매치마다 전면 광고 노출.
  * - `progressStore.isAdFree === true`이면 즉시 resolve (스킵).
- * - 쿨다운·확률로 노출 빈도 제한 (대부분의 승리에서는 광고 없음).
- * - 실제로 표시된 뒤 `CLOSED`에서만 쿨다운 갱신. 로드/표시 실패는 쿨다운 없음.
- * - CLOSED / ERROR에서 resolve 후 `preloadInterstitial`.
- *
- * 호출 측에서 **승리 시에만** 호출할 것 (패배 시 호출하지 않음).
+ * - 카운터가 임계값에 도달했을 때만 표시. 도달 안 하면 즉시 resolve.
+ * - 안전장치로 짧은 쿨다운(3분)도 검사.
+ * - 실제로 표시된 뒤 `CLOSED`에서 카운터·쿨다운 갱신. 로드/표시 실패는 카운터 유지.
  */
 export function showStageCompleteAd(): Promise<void> {
   if (useProgressStore.getState().isAdFree) {
     return Promise.resolve();
   }
 
-  const now = Date.now();
-  if (now - lastStageInterstitialClosedAt < STAGE_AD_COOLDOWN_MS) {
+  matchesSinceLastAd += 1;
+  if (matchesSinceLastAd < MATCHES_PER_INTERSTITIAL) {
     return Promise.resolve();
   }
-  if (Math.random() > STAGE_AD_SHOW_PROBABILITY) {
+
+  const now = Date.now();
+  if (now - lastStageInterstitialClosedAt < STAGE_AD_COOLDOWN_MS) {
     return Promise.resolve();
   }
 
@@ -107,6 +124,7 @@ export function showStageCompleteAd(): Promise<void> {
 
     const finishAfterClosed = () => {
       lastStageInterstitialClosedAt = Date.now();
+      matchesSinceLastAd = 0;
       finish();
     };
 
@@ -142,6 +160,79 @@ export function showStageCompleteAd(): Promise<void> {
         ad.addAdEventListener(AdEventType.ERROR, finish);
       } catch {
         finish();
+      }
+    });
+  });
+}
+
+/** 보상형 광고 미리 로드. 앱 부팅 시 또는 close 직후 호출. */
+export function preloadRewardedAd(): void {
+  void initAds().then(async () => {
+    const lib = await getAdsLib();
+    if (!lib) return;
+    try {
+      rewarded?.removeAllListeners();
+      rewarded = lib.RewardedAd.createForAdRequest(getRewardedUnitId(lib));
+      rewarded.load();
+    } catch {
+      rewarded = null;
+    }
+  });
+}
+
+/**
+ * 보상형 광고 표시. 유저가 광고를 끝까지 시청해 리워드를 받으면 `true`.
+ * - 광고 스킵·에러·미로드 등은 `false`.
+ * - `isAdFree`이면 무조건 `true` (광고 제거 유저에게도 리워드 부여).
+ */
+export function showRewardedAd(): Promise<boolean> {
+  if (useProgressStore.getState().isAdFree) {
+    return Promise.resolve(true);
+  }
+
+  return new Promise((resolve) => {
+    let earned = false;
+
+    const finish = (result: boolean) => {
+      preloadRewardedAd();
+      resolve(result);
+    };
+
+    void initAds().then(async () => {
+      const lib = await getAdsLib();
+      if (!lib) {
+        finish(false);
+        return;
+      }
+
+      try {
+        if (!rewarded) {
+          rewarded = lib.RewardedAd.createForAdRequest(getRewardedUnitId(lib));
+          rewarded.load();
+        }
+
+        const ad = rewarded;
+        const { RewardedAdEventType, AdEventType } = lib;
+
+        const present = () => {
+          ad.removeAllListeners();
+          ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
+            earned = true;
+          });
+          ad.addAdEventListener(AdEventType.CLOSED, () => finish(earned));
+          ad.addAdEventListener(AdEventType.ERROR, () => finish(false));
+          void ad.show().catch(() => finish(false));
+        };
+
+        if (ad.loaded) {
+          present();
+          return;
+        }
+
+        ad.addAdEventListener(AdEventType.LOADED, present);
+        ad.addAdEventListener(AdEventType.ERROR, () => finish(false));
+      } catch {
+        finish(false);
       }
     });
   });

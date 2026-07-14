@@ -54,6 +54,8 @@ import {
 } from '@/utils/spritePose';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
 import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
+import { AdReviveModal } from '@/components/game/AdReviveModal';
+import { showRewardedAd } from '@/utils/adService';
 import { play, playBangShotDuel } from '@/utils/audioService';
 import { speakDuelCue, stopDuelSignalSpeech } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
@@ -214,6 +216,10 @@ export default function NpcGameScreen() {
   const [modal, setModal] = useState<NpcRoundModalData | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const modalDataRef = useRef<NpcRoundModalData | null>(null);
+  // 광고 부활 — 접전 패배(2:3) 시 한 번만 제안. `useRef`는 매치 리셋 때 초기화.
+  const [adRevivePending, setAdRevivePending] = useState<null | { ps: number; ns: number }>(null);
+  const [adReviveLoading, setAdReviveLoading] = useState(false);
+  const adReviveUsedRef = useRef(false);
   const [abilityOverlay, setAbilityOverlay] = useState<AbilityOverlayType>(null);
   const [headshotOffered, setHeadshotOffered] = useState(false);
   const [earlyOverlay, setEarlyOverlay] = useState(false);
@@ -412,6 +418,7 @@ export default function NpcGameScreen() {
         prevBangDelayRef.current = null;
         prevPlayerBangMsRef.current = null;
         processedOutcomeKey.current = '';
+        adReviveUsedRef.current = false;
         resetDuel();
         startRoundDuel();
       })();
@@ -768,6 +775,17 @@ export default function NpcGameScreen() {
     const ns = useGameStore.getState().opponentScore;
 
     if (ps >= WINS_TO_END || ns >= WINS_TO_END) {
+      // 접전 패배(2:3) — 광고 부활 제안 (매치당 1회, 보스전 22번 제외)
+      const closeLoss =
+        ns >= WINS_TO_END &&
+        ps === WINS_TO_END - 1 &&
+        !adReviveUsedRef.current &&
+        npc?.id !== 22;
+      if (closeLoss) {
+        adReviveUsedRef.current = true;
+        setAdRevivePending({ ps, ns });
+        return;
+      }
       if (ps >= WINS_TO_END) {
         useProgressStore.getState().markNpcCleared(npc!.id);
       }
@@ -841,6 +859,55 @@ export default function NpcGameScreen() {
     resetDuel();
     router.replace('/menu');
   }, [resetDuel, router]);
+
+  /** 광고 부활 결과 처리 — 성공 시 상대 마지막 승 롤백 후 다음 라운드, 실패·거절 시 정상 결과 화면으로 */
+  const finishMatchToResult = useCallback(() => {
+    const ps = useGameStore.getState().playerScore;
+    const ns = useGameStore.getState().opponentScore;
+    if (ps >= WINS_TO_END) {
+      useProgressStore.getState().markNpcCleared(npc!.id);
+    }
+    const lr = useGameStore.getState().lastReaction;
+    router.replace({
+      pathname: '/result/npc',
+      params: {
+        npcId: String(npc!.id),
+        won: ps >= WINS_TO_END ? '1' : '0',
+        playerWins: String(ps),
+        npcWins: String(ns),
+        completionStamp: String(Date.now()),
+        playerMs: lr.playerMs != null ? String(lr.playerMs) : '',
+        npcMs: lr.npcMs != null ? String(lr.npcMs) : '',
+        lossReason: '',
+        dayNight: battleDayNight,
+      },
+    });
+  }, [npc, router, battleDayNight]);
+
+  const onAdReviveDecline = useCallback(() => {
+    setAdRevivePending(null);
+    finishMatchToResult();
+  }, [finishMatchToResult]);
+
+  const onAdReviveWatchAd = useCallback(async () => {
+    setAdReviveLoading(true);
+    const rewarded = await showRewardedAd();
+    setAdReviveLoading(false);
+    if (!rewarded) {
+      // 광고 실패·스킵 → 정상 매치 종료로
+      setAdRevivePending(null);
+      finishMatchToResult();
+      return;
+    }
+    // 상대의 마지막 승 롤백 → 스코어 2:2, 다음 라운드 이어감
+    const ps = useGameStore.getState().playerScore;
+    const ns = useGameStore.getState().opponentScore;
+    useGameStore.getState().setScores(ps, Math.max(0, ns - 1));
+    setAdRevivePending(null);
+    processedOutcomeKey.current = '';
+    resetDuel();
+    startRoundDuel();
+  }, [finishMatchToResult, resetDuel, startRoundDuel]);
 
   const tierLabel = npc ? (TIER_KO[npc.tier] ?? npc.tier) : '';
 
@@ -964,6 +1031,15 @@ export default function NpcGameScreen() {
             onSecondaryExit={leaveToNpcSelect}
             secondaryLabel="대결상대 선택으로"
             onMainMenu={leaveToMainMenu}
+          />
+
+          <AdReviveModal
+            visible={adRevivePending != null}
+            playerWins={adRevivePending?.ps ?? 0}
+            opponentWins={adRevivePending?.ns ?? 0}
+            loading={adReviveLoading}
+            onWatchAd={onAdReviveWatchAd}
+            onDecline={onAdReviveDecline}
           />
         </>
       ) : null}

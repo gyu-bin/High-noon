@@ -12,7 +12,7 @@ import { DEV_UNLOCK_ALL_CHARACTERS } from '@/constants/devFlags';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
 import { checkUnlockConditions } from '@/utils/characterAbility';
 import { WESTERN_HERO_FALLBACK } from '@/constants/westernBackground';
-import { initAds, preloadInterstitial } from '@/utils/adService';
+import { initAds, preloadInterstitial, preloadRewardedAd } from '@/utils/adService';
 import { preloadAll } from '@/utils/audioService';
 import { preloadBgm, bootMenuBgm } from '@/utils/bgmService';
 // import { initPurchases } from '@/utils/purchaseService';
@@ -56,7 +56,10 @@ export default function RootLayout() {
       void preloadAll();
       void bootMenuBgm();
       void preloadSceneImages();
-      void initAds().then(() => preloadInterstitial());
+      void initAds().then(() => {
+        preloadInterstitial();
+        preloadRewardedAd();
+      });
       // void initPurchases();
     }
 
