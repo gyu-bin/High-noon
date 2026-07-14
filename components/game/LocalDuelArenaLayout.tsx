@@ -56,6 +56,8 @@ type Props = {
   onHalfPressIn: (player: LocalPlayerId) => void;
   onBack: () => void;
   onPause: () => void;
+  /** landscape — 좌(P1)·우(P2) 정면 대치 (기본 portrait 상하 분할) */
+  orientation?: 'portrait' | 'landscape';
 };
 
 export function LocalDuelArenaLayout({
@@ -84,11 +86,13 @@ export function LocalDuelArenaLayout({
   onHalfPressIn,
   onBack,
   onPause,
+  orientation = 'portrait',
 }: Props) {
-  const { width: figW, height: figH } = duelFigureSize(width);
+  const landscape = orientation === 'landscape';
+  const { width: figW, height: figH } = duelFigureSize(landscape ? height : width);
   const boardPhase = signalPhase ?? enginePhaseToSignalBoardPhase(phase);
   // P1 쓰러짐 — 하단 점수 바·화면 밖으로 몸이 잘리지 않게 존을 올림 (NPC전과 동일)
-  const p1DefeatLift = p1Pose === 'defeat' ? DUEL_PLAYER_DEFEAT_LIFT_PX : 0;
+  const p1DefeatLift = !landscape && p1Pose === 'defeat' ? DUEL_PLAYER_DEFEAT_LIFT_PX : 0;
 
   return (
     <View style={[styles.root, { width, height }]}>
@@ -101,8 +105,8 @@ export function LocalDuelArenaLayout({
         />
       ) : null}
 
-      {/* P2 — 상단 50% 정방향, NPC전과 같은 우상단 대각 구도 (좌향) */}
-      <View pointerEvents="none" style={styles.topHalfShell}>
+      {/* P2 — 상단 50% (portrait) / 우측 50% (landscape), NPC전과 같은 좌향 */}
+      <View pointerEvents="none" style={landscape ? styles.rightHalfShell : styles.topHalfShell}>
         {INK_THEME ? <View style={[styles.groundLine, { bottom: 66 }]} /> : null}
         <View style={styles.p2Zone}>
           <DuelFigureSlot corner="topRight" pose={p2Pose} figW={figW} figH={figH}>
@@ -137,8 +141,8 @@ export function LocalDuelArenaLayout({
         />
       </View>
 
-      {/* P1 — 하단 50% 정상 방향 */}
-      <View pointerEvents="none" style={styles.bottomHalfShell}>
+      {/* P1 — 하단 50% (portrait) / 좌측 50% (landscape) */}
+      <View pointerEvents="none" style={landscape ? styles.leftHalfShell : styles.bottomHalfShell}>
         {INK_THEME ? <View style={[styles.groundLine, { bottom: 22 }]} /> : null}
         <View style={[styles.p1Zone, { paddingBottom: 28 + p1DefeatLift }]}>
           <DuelFigureSlot corner="bottomLeft" pose={p1Pose} figW={figW} figH={figH}>
@@ -204,12 +208,20 @@ export function LocalDuelArenaLayout({
       <Pressable
         accessibilityLabel="P2 탭 영역"
         onPressIn={() => onHalfPressIn('p2')}
-        style={[styles.halfPress, styles.halfPressTop, { height: height / 2 }]}
+        style={
+          landscape
+            ? [styles.halfPressV, styles.halfPressRight, { width: width / 2 }]
+            : [styles.halfPress, styles.halfPressTop, { height: height / 2 }]
+        }
       />
       <Pressable
         accessibilityLabel="P1 탭 영역"
         onPressIn={() => onHalfPressIn('p1')}
-        style={[styles.halfPress, styles.halfPressBottom, { height: height / 2 }]}
+        style={
+          landscape
+            ? [styles.halfPressV, styles.halfPressLeft, { width: width / 2 }]
+            : [styles.halfPress, styles.halfPressBottom, { height: height / 2 }]
+        }
       />
 
       <MenuBackButton
@@ -253,6 +265,25 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: '50%',
+    zIndex: 4,
+    overflow: 'visible',
+  },
+  /* landscape — 좌우 분할 */
+  leftHalfShell: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: '50%',
+    zIndex: 4,
+    overflow: 'visible',
+  },
+  rightHalfShell: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: '50%',
     zIndex: 4,
     overflow: 'visible',
   },
@@ -324,6 +355,19 @@ const styles = StyleSheet.create({
   },
   halfPressBottom: {
     bottom: 0,
+  },
+  /* landscape — 좌·우 탭 영역 */
+  halfPressV: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    zIndex: 25,
+  },
+  halfPressLeft: {
+    left: 0,
+  },
+  halfPressRight: {
+    right: 0,
   },
   signalWrapCenter: {
     position: 'absolute',

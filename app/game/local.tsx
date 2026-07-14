@@ -24,6 +24,7 @@ import {
 import { LocalMatchModal } from '@/components/game/LocalMatchModal';
 import { LocalRoundModal } from '@/components/game/LocalRoundModal';
 import { PauseMenuModal } from '@/components/game/PauseMenuModal';
+import { DuelFullBackground } from '@/components/game/DuelFullBackground';
 import { DuelSplitBackground } from '@/components/game/DuelSplitBackground';
 import {
   DUEL_DEFEAT_MODAL_DELAY_MS,
@@ -54,6 +55,15 @@ import { trigger } from '@/utils/hapticService';
 import { localPlayerSpritePoseFromPhase } from '@/utils/spritePose';
 import { useSettingsStore } from '@/store/settingsStore';
 
+// 네이티브 모듈 미포함 구버전 빌드에서도 동작하도록 lazy 로드
+let ScreenOrientation: typeof import('expo-screen-orientation') | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  ScreenOrientation = require('expo-screen-orientation');
+} catch {
+  ScreenOrientation = null;
+}
+
 export type LocalMatchTypeProp = '3' | '5' | '7';
 
 function parseMatchType(raw: string | string[] | undefined): LocalMatchTypeProp {
@@ -76,6 +86,17 @@ export default function LocalGameScreen() {
   const winsNeeded = heartsForMatchType(matchType);
   const stage = usePhoneStageMetrics();
   const { stageWidth: winW, stageHeight: winH } = stage;
+  const isLandscape = stage.windowWidth > stage.windowHeight;
+
+  // 전 화면 회전 허용 — NPC 결투와 동일
+  useFocusEffect(
+    useCallback(() => {
+      const so = ScreenOrientation;
+      if (!so) return;
+      void so.unlockAsync().catch(() => {});
+    }, []),
+  );
+
   const overlayPad = useMemo(
     () =>
       phoneStageSafeOffsets(stage, {
@@ -526,6 +547,7 @@ export default function LocalGameScreen() {
         onHalfPressIn={onHalfPressIn}
         onBack={leaveLocalDuel}
         onPause={() => setPaused(true)}
+        orientation={isLandscape ? 'landscape' : 'portrait'}
       />
 
       <LocalRoundModal
@@ -572,6 +594,15 @@ export default function LocalGameScreen() {
         >
           {duelBody}
         </View>
+      ) : isLandscape ? (
+        <DuelFullBackground
+          variant={battleDayNight}
+          style={{ width: winW, height: winH }}
+          contentWidth={winW}
+          contentHeight={winH}
+        >
+          {duelBody}
+        </DuelFullBackground>
       ) : (
         <DuelSplitBackground
           variant={battleDayNight}
