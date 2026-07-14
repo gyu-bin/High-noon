@@ -40,6 +40,7 @@ export function LocalRoundModal({
 }: Props) {
   const m = usePhoneStageMetrics();
   const halfH = m.stageHeight / 2;
+  const landscape = m.windowWidth > m.windowHeight;
 
   if (!outcome) return null;
 
@@ -49,32 +50,37 @@ export function LocalRoundModal({
   const p1Loss = lossReason(outcome.p1);
   const p2Loss = lossReason(outcome.p2);
 
+  // 가로 — 스테이지 프레임 대신 전체 화면 기준 (좌우 캐릭터 정면 대치와 정렬)
+  const frame = landscape
+    ? { left: 0, top: 0, width: m.windowWidth, height: m.windowHeight }
+    : {
+        left: m.offsetX,
+        top: m.offsetY,
+        width: m.stageWidth,
+        height: m.stageHeight,
+      };
+
   return (
-    <Modal transparent animationType="fade" visible={visible} onRequestClose={onContinue}>
+    <Modal
+      transparent
+      animationType="fade"
+      visible={visible}
+      onRequestClose={onContinue}
+      supportedOrientations={['portrait', 'landscape']}
+    >
       <Pressable
         accessibilityLabel="탭하여 다음 라운드"
         accessibilityRole="button"
         onPress={onContinue}
         style={styles.root}
       >
-        <View
-          pointerEvents="box-none"
-          style={[
-            styles.stageFrame,
-            {
-              left: m.offsetX,
-              top: m.offsetY,
-              width: m.stageWidth,
-              height: m.stageHeight,
-            },
-          ]}
-        >
+        <View pointerEvents="box-none" style={[styles.stageFrame, frame]}>
           {p1Won && fxBurstId > 0 ? (
             <View style={styles.fxLayer} pointerEvents="none">
               <LocalDuelFireworks
-                origin="bottom"
-                width={m.stageWidth}
-                height={m.stageHeight}
+                origin={landscape ? 'left' : 'bottom'}
+                width={frame.width}
+                height={frame.height}
                 halfH={halfH}
                 burstId={fxBurstId}
               />
@@ -83,9 +89,9 @@ export function LocalRoundModal({
           {p2Won && fxBurstId > 0 ? (
             <View style={styles.fxLayer} pointerEvents="none">
               <LocalDuelFireworks
-                origin="top"
-                width={m.stageWidth}
-                height={m.stageHeight}
+                origin={landscape ? 'right' : 'top'}
+                width={frame.width}
+                height={frame.height}
                 halfH={halfH}
                 burstId={fxBurstId}
               />
@@ -93,8 +99,17 @@ export function LocalRoundModal({
           ) : null}
 
           <View pointerEvents="none" style={styles.labelsLayer}>
-            {/* P2 — 상단 플레이어용 (180°) */}
-            <View style={styles.p2Block}>
+            {/*
+              세로 2P — 위쪽 P2 시점을 위해 상단 절반은 180° 회전.
+              그래야 두 플레이어 모두 자기 결과를 정방향으로 읽음.
+            */}
+            <View
+              style={
+                landscape
+                  ? styles.p2BlockLandscape
+                  : [styles.p2BlockPortrait, { transform: [{ rotate: '180deg' }] }]
+              }
+            >
               <Text style={[styles.outcomeLabel, p2Won ? styles.winText : styles.loseText]}>
                 {draw ? '무승부' : p2Won ? '승리!' : '패배'}
               </Text>
@@ -104,8 +119,8 @@ export function LocalRoundModal({
               ) : null}
             </View>
 
-            {/* P1 — 하단 플레이어용 */}
-            <View style={styles.p1Block}>
+            {/* P1 — portrait: 하단 정방향 · landscape: 좌측 정면 */}
+            <View style={landscape ? styles.p1BlockLandscape : styles.p1BlockPortrait}>
               <Text style={[styles.outcomeLabel, p1Won ? styles.winText : styles.loseText]}>
                 {draw ? '무승부' : p1Won ? '승리!' : '패배'}
               </Text>
@@ -116,12 +131,33 @@ export function LocalRoundModal({
             </View>
           </View>
 
-          <View
-            pointerEvents="none"
-            style={[styles.bottomBar, { paddingBottom: Math.max(paddingBottom, 8) + 10 }]}
-          >
-            <Text style={styles.continueHint}>탭하여 다음 라운드</Text>
-          </View>
+          {/* 계속 안내 — landscape는 중앙, portrait은 양쪽 (P2는 180° 회전) */}
+          {landscape ? (
+            <View
+              pointerEvents="none"
+              style={[styles.bottomBarLandscape, { bottom: Math.max(paddingBottom, 8) + 6 }]}
+            >
+              <Text style={styles.continueHint}>탭하여 다음 라운드</Text>
+            </View>
+          ) : (
+            <>
+              <View
+                pointerEvents="none"
+                style={[styles.hintP1, { bottom: Math.max(paddingBottom, 8) + 10 }]}
+              >
+                <Text style={styles.continueHint}>탭하여 다음 라운드</Text>
+              </View>
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.hintP2,
+                  { top: Math.max(paddingBottom, 8) + 10, transform: [{ rotate: '180deg' }] },
+                ]}
+              >
+                <Text style={styles.continueHint}>탭하여 다음 라운드</Text>
+              </View>
+            </>
+          )}
         </View>
       </Pressable>
     </Modal>
@@ -156,6 +192,38 @@ const styles = StyleSheet.create({
     left: '8%',
     bottom: '36%',
     alignItems: 'flex-start',
+    gap: 4,
+  },
+  /* 세로 2P — 각 플레이어 절반 중앙, P2는 180° 회전으로 정방향 */
+  p1BlockPortrait: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '58%',
+    alignItems: 'center',
+    gap: 6,
+  },
+  p2BlockPortrait: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '18%',
+    alignItems: 'center',
+    gap: 6,
+  },
+  /* landscape — 좌우 정면 대치와 정렬, 캐릭터 머리 위 */
+  p1BlockLandscape: {
+    position: 'absolute',
+    left: '8%',
+    top: '18%',
+    alignItems: 'flex-start',
+    gap: 4,
+  },
+  p2BlockLandscape: {
+    position: 'absolute',
+    right: '8%',
+    top: '18%',
+    alignItems: 'flex-end',
     gap: 4,
   },
   outcomeLabel: {
@@ -201,6 +269,35 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(12, 8, 5, 0.96)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(212, 165, 116, 0.35)',
+  },
+  /* landscape — 하단 중앙 콤팩트 카드 (캐릭터·불꽃 안 가림) */
+  bottomBarLandscape: {
+    position: 'absolute',
+    alignSelf: 'center',
+    zIndex: 3,
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(8, 5, 3, 0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 165, 116, 0.28)',
+    borderRadius: 14,
+    maxWidth: '46%',
+  },
+  /* 세로 2P — 각자 자기 쪽 화면 끝의 "탭하여 계속" 힌트 */
+  hintP1: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 3,
+    alignItems: 'center',
+  },
+  hintP2: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 3,
+    alignItems: 'center',
   },
   continueHint: {
     fontSize: 11,

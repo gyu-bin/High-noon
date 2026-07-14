@@ -76,7 +76,13 @@ export function AbilityOverlay({ abilityType, onComplete }: Props) {
   const visible = abilityType != null;
 
   return (
-    <Modal transparent visible={visible} animationType="none" statusBarTranslucent>
+    <Modal
+      transparent
+      visible={visible}
+      animationType="none"
+      statusBarTranslucent
+      supportedOrientations={['portrait', 'landscape']}
+    >
       {visible && abilityType ? (
     <View pointerEvents="none" style={styles.root}>
       <View style={[styles.backdrop, abilityType === 'revive' && styles.backdropRevive]} />

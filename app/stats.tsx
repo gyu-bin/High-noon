@@ -1,6 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
@@ -14,6 +15,7 @@ import { useProgressStore } from '@/store/progressStore';
 export default function StatsScreen() {
   useScreenBgm('menu');
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const onBack = useCallback(() => {
     if (router.canGoBack()) {
       router.back();
@@ -37,7 +39,14 @@ export default function StatsScreen() {
         }}
       />
       <MetaScreenShell>
-        <View style={styles.root}>
+        <ScrollView
+          style={styles.root}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: insets.bottom + 24 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
           <Text style={[styles.head, { fontFamily: FONT_RYE }]}>기록</Text>
 
           <View style={styles.card}>
@@ -55,7 +64,7 @@ export default function StatsScreen() {
           <Text style={styles.footnote}>
             vs NPC·2인 대결에서 반응이 기록될 때마다 평균이 갱신됩니다.
           </Text>
-        </View>
+        </ScrollView>
       </MetaScreenShell>
     </>
   );
@@ -64,6 +73,8 @@ export default function StatsScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  content: {
     padding: 24,
     gap: 16,
   },

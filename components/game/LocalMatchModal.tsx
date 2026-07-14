@@ -30,33 +30,46 @@ export function LocalMatchModal({
   const m = usePhoneStageMetrics();
   const halfH = m.stageHeight / 2;
   const p1Won = matchWinner === 'p1';
+  const landscape = m.windowWidth > m.windowHeight;
+
+  const frame = landscape
+    ? { left: 0, top: 0, width: m.windowWidth, height: m.windowHeight }
+    : {
+        left: m.offsetX,
+        top: m.offsetY,
+        width: m.stageWidth,
+        height: m.stageHeight,
+      };
+
+  const winOrigin: 'top' | 'bottom' | 'left' | 'right' = landscape
+    ? p1Won
+      ? 'left'
+      : 'right'
+    : p1Won
+      ? 'bottom'
+      : 'top';
 
   return (
-    <Modal transparent animationType="fade" visible={visible} onRequestClose={onExit}>
+    <Modal
+      transparent
+      animationType="fade"
+      visible={visible}
+      onRequestClose={onExit}
+      supportedOrientations={['portrait', 'landscape']}
+    >
       <Pressable
         accessibilityLabel="탭하여 나가기"
         accessibilityRole="button"
         onPress={onExit}
         style={styles.root}
       >
-        <View
-          pointerEvents="box-none"
-          style={[
-            styles.stageFrame,
-            {
-              left: m.offsetX,
-              top: m.offsetY,
-              width: m.stageWidth,
-              height: m.stageHeight,
-            },
-          ]}
-        >
+        <View pointerEvents="box-none" style={[styles.stageFrame, frame]}>
           {fxBurstId > 0 ? (
             <View style={styles.fxLayer} pointerEvents="none">
               <LocalDuelFireworks
-                origin={p1Won ? 'bottom' : 'top'}
-                width={m.stageWidth}
-                height={m.stageHeight}
+                origin={winOrigin}
+                width={frame.width}
+                height={frame.height}
                 halfH={halfH}
                 burstId={fxBurstId}
               />
@@ -64,13 +77,19 @@ export function LocalMatchModal({
           ) : null}
 
           <View pointerEvents="none" style={styles.labelsLayer}>
-            <View style={styles.p2Block}>
+            <View
+              style={
+                landscape
+                  ? styles.p2BlockLandscape
+                  : [styles.p2BlockPortrait, { transform: [{ rotate: '180deg' }] }]
+              }
+            >
               <Text style={[styles.outcomeLabel, !p1Won ? styles.winText : styles.loseText]}>
                 {!p1Won ? '최종 승리!' : '패배'}
               </Text>
               <Text style={styles.statsText}>P2 · {p2Wins}승</Text>
             </View>
-            <View style={styles.p1Block}>
+            <View style={landscape ? styles.p1BlockLandscape : styles.p1BlockPortrait}>
               <Text style={[styles.outcomeLabel, p1Won ? styles.winText : styles.loseText]}>
                 {p1Won ? '최종 승리!' : '패배'}
               </Text>
@@ -80,7 +99,11 @@ export function LocalMatchModal({
 
           <View
             pointerEvents="none"
-            style={[styles.bottomBar, { paddingBottom: Math.max(paddingBottom, 8) + 10 }]}
+            style={
+              landscape
+                ? [styles.bottomBarLandscape, { bottom: Math.max(paddingBottom, 8) + 6 }]
+                : [styles.bottomBar, { paddingBottom: Math.max(paddingBottom, 8) + 10 }]
+            }
           >
             {lastOutcome ? (
               <Text style={styles.lastRound}>
@@ -114,6 +137,38 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 4,
   },
+  /* 세로 2P — 각자 절반 중앙, P2는 180° 회전 */
+  p1BlockPortrait: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '58%',
+    alignItems: 'center',
+    gap: 6,
+  },
+  p2BlockPortrait: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '18%',
+    alignItems: 'center',
+    gap: 6,
+  },
+  /* landscape — 좌우 정면 대치와 정렬 */
+  p1BlockLandscape: {
+    position: 'absolute',
+    left: '8%',
+    top: '18%',
+    alignItems: 'flex-start',
+    gap: 4,
+  },
+  p2BlockLandscape: {
+    position: 'absolute',
+    right: '8%',
+    top: '18%',
+    alignItems: 'flex-end',
+    gap: 4,
+  },
   outcomeLabel: {
     fontFamily: FONT_RYE,
     fontSize: 30,
@@ -144,6 +199,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(12, 8, 5, 0.96)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(212, 165, 116, 0.35)',
+  },
+  bottomBarLandscape: {
+    position: 'absolute',
+    alignSelf: 'center',
+    zIndex: 3,
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(8, 5, 3, 0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 165, 116, 0.28)',
+    borderRadius: 14,
+    maxWidth: '46%',
   },
   lastRound: {
     fontSize: 12,

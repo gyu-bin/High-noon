@@ -85,8 +85,10 @@ export default function LocalGameScreen() {
   const matchType = parseMatchType(params.matchType);
   const winsNeeded = heartsForMatchType(matchType);
   const stage = usePhoneStageMetrics();
-  const { stageWidth: winW, stageHeight: winH } = stage;
   const isLandscape = stage.windowWidth > stage.windowHeight;
+  // NPC 결투와 동일하게 실제 창 크기 사용 (가로 회전 시 화면 전체 채움)
+  const winW = stage.windowWidth;
+  const winH = stage.windowHeight;
 
   // 전 화면 회전 허용 — NPC 결투와 동일
   useFocusEffect(
@@ -581,6 +583,7 @@ export default function LocalGameScreen() {
 
   return (
     <PhoneStageShell
+      edgeToEdge
       backgroundColor={minimalTheme ? MINIMAL_DUEL.stageEdge : undefined}
     >
       {minimalTheme ? (

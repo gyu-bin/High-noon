@@ -1,6 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
@@ -16,6 +17,7 @@ import {
 
 export default function LocalSetupScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   useScreenBgm('menu');
   const onBack = useCallback(() => {
     if (router.canGoBack()) router.back();
@@ -49,31 +51,38 @@ export default function LocalSetupScreen() {
         }}
       />
       <MetaScreenShell>
-    <View style={styles.root}>
-      <Text style={[styles.title, { fontFamily: FONT_RYE }]}>판수 선택</Text>
-      <Text style={styles.sub}>
-        선승제에 맞춰 하트 수가 정해집니다. 버튼을 누르면 곧바로 같은 기기에서 2인
-        대결이 시작됩니다.
-      </Text>
-      <Text style={styles.presetHint}>
-        기본 선택: {activeCfg.maxRounds}판 {activeCfg.winsRequired}선
-      </Text>
+        <ScrollView
+          style={styles.root}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: insets.bottom + 24 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={[styles.title, { fontFamily: FONT_RYE }]}>판수 선택</Text>
+          <Text style={styles.sub}>
+            선승제에 맞춰 하트 수가 정해집니다. 버튼을 누르면 곧바로 같은 기기에서 2인
+            대결이 시작됩니다.
+          </Text>
+          <Text style={styles.presetHint}>
+            기본 선택: {activeCfg.maxRounds}판 {activeCfg.winsRequired}선
+          </Text>
 
-      <View style={styles.row}>
-        {(['bo3', 'bo5', 'bo7'] as const).map((key) => {
-          const cfg = LOCAL_MATCH_PRESETS[key];
-          const active = preset === key;
-          return (
-            <WoodButton
-              key={key}
-              title={`${cfg.maxRounds}판 ${cfg.winsRequired}선`}
-              onPress={() => goDuel(key)}
-              style={[styles.btn, active && styles.btnActive]}
-            />
-          );
-        })}
-      </View>
-    </View>
+          <View style={styles.row}>
+            {(['bo3', 'bo5', 'bo7'] as const).map((key) => {
+              const cfg = LOCAL_MATCH_PRESETS[key];
+              const active = preset === key;
+              return (
+                <WoodButton
+                  key={key}
+                  title={`${cfg.maxRounds}판 ${cfg.winsRequired}선`}
+                  onPress={() => goDuel(key)}
+                  style={[styles.btn, active && styles.btnActive]}
+                />
+              );
+            })}
+          </View>
+        </ScrollView>
       </MetaScreenShell>
     </>
   );
@@ -82,6 +91,8 @@ export default function LocalSetupScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  content: {
     padding: 24,
     gap: 16,
   },

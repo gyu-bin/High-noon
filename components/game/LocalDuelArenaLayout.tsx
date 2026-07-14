@@ -20,6 +20,7 @@ import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import {
   DUEL_PLAYER_DEFEAT_LIFT_PX,
   duelFigureSize,
+  duelFigureSizeLandscape,
   duelFlipHorizontal,
 } from '@/constants/duelArena';
 import { DUEL_ARENA_SHADE } from '@/constants/duelPresentation';
@@ -89,10 +90,18 @@ export function LocalDuelArenaLayout({
   orientation = 'portrait',
 }: Props) {
   const landscape = orientation === 'landscape';
-  const { width: figW, height: figH } = duelFigureSize(landscape ? height : width);
+  const { width: figW, height: figH } = landscape
+    ? duelFigureSizeLandscape(height)
+    : duelFigureSize(width);
   const boardPhase = signalPhase ?? enginePhaseToSignalBoardPhase(phase);
   // P1 쓰러짐 — 하단 점수 바·화면 밖으로 몸이 잘리지 않게 존을 올림 (NPC전과 동일)
   const p1DefeatLift = !landscape && p1Pose === 'defeat' ? DUEL_PLAYER_DEFEAT_LIFT_PX : 0;
+  const p2DefeatLift = !landscape && p2Pose === 'defeat' ? DUEL_PLAYER_DEFEAT_LIFT_PX : 0;
+  // 가로 — NPC 결투와 동일한 사이드·지면 간격
+  const sideInset = Math.round(width * 0.07);
+  const groundBottom = Math.max(paddingBottom + 30, Math.round(height * 0.09));
+  // 세로 — 캐릭터를 각 절반 안쪽으로 올려 각 플레이어 시야 중앙 부근에 위치
+  const halfInnerPad = 84;
 
   return (
     <View style={[styles.root, { width, height }]}>
@@ -105,23 +114,51 @@ export function LocalDuelArenaLayout({
         />
       ) : null}
 
-      {/* P2 — 상단 50% (portrait) / 우측 50% (landscape), NPC전과 같은 좌향 */}
-      <View pointerEvents="none" style={landscape ? styles.rightHalfShell : styles.topHalfShell}>
+      {/*
+        P2 — landscape: 우측 정면 (좌향)
+        portrait: 상단 반쪽 전체 180° 회전 → 폰 위쪽에서 보는 P2에게 캐릭터·
+        HUD·탭 피드백이 P1과 대칭되는 정방향으로 보임.
+      */}
+      <View
+        pointerEvents="none"
+        style={
+          landscape
+            ? styles.rightHalfShell
+            : [styles.topHalfShell, styles.topHalfRotated]
+        }
+      >
         {INK_THEME ? <View style={[styles.groundLine, { bottom: 66 }]} /> : null}
-        <View style={styles.p2Zone}>
-          <DuelFigureSlot corner="topRight" pose={p2Pose} figW={figW} figH={figH}>
+        <View
+          style={
+            landscape
+              ? [styles.p2Zone, { paddingRight: sideInset, paddingBottom: groundBottom }]
+              : [styles.p1Zone, { paddingBottom: halfInnerPad + p2DefeatLift }]
+          }
+        >
+          <DuelFigureSlot
+            corner={landscape ? 'topRight' : 'bottomLeft'}
+            pose={p2Pose}
+            figW={figW}
+            figH={figH}
+          >
             <PlayerCharacterSprite
               characterId={p2CharacterId}
               width={figW}
               height={figH}
-              flipHorizontal={duelFlipHorizontal('topRight')}
+              flipHorizontal={duelFlipHorizontal(landscape ? 'topRight' : 'bottomLeft')}
               pose={p2Pose}
-              duelCorner="topRight"
+              duelCorner={landscape ? 'topRight' : 'bottomLeft'}
             />
           </DuelFigureSlot>
         </View>
 
-        <View style={[styles.hudP2, { paddingTop: paddingTop + 52 }]}>
+        <View
+          style={
+            landscape
+              ? [styles.hudP2, { paddingTop: paddingTop + 52 }]
+              : [styles.hudP1, { paddingBottom: paddingBottom + 72, paddingLeft: paddingLeft + 14 }]
+          }
+        >
           <Text style={[styles.playerLabel, INK_THEME && styles.playerLabelInk]}>P2</Text>
           <HeartStrip filled={p2Hearts} max={winsNeeded} />
           {p2LiveMs != null ? (
@@ -130,6 +167,29 @@ export function LocalDuelArenaLayout({
             </Text>
           ) : null}
         </View>
+
+        {/* 세로일 때는 P2 쪽에도 신호/점수 텍스트 표시 (180° 회전 컨테이너 안에서 자연스레 P2 시점 정방향) */}
+        {!landscape ? (
+          <>
+            <View pointerEvents="none" style={styles.p2SignalInner}>
+              <DuelSignalBoard variant="minimal" phase={boardPhase} />
+            </View>
+            {!hideBottomHud ? (
+              <View pointerEvents="none" style={[styles.scoreBarP2, { paddingBottom: paddingBottom + 8 }]}>
+                <Text style={[styles.scoreLine, INK_THEME && styles.scoreLineInk]}>
+                  P1 {p1Wins} — {p2Wins} P2 · 선 {winsNeeded}승
+                </Text>
+                {phase === '뱅' ? (
+                  <Text style={[styles.tapHint, INK_THEME && styles.tapHintInk]}>TAP YOUR HALF</Text>
+                ) : phase !== '대기' && phase !== '결과' ? (
+                  <Text style={[styles.waitHint, INK_THEME && styles.waitHintInk]}>
+                    WAIT FOR BANG…
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
+          </>
+        ) : null}
 
         <Animated.View
           pointerEvents="none"
@@ -144,7 +204,13 @@ export function LocalDuelArenaLayout({
       {/* P1 — 하단 50% (portrait) / 좌측 50% (landscape) */}
       <View pointerEvents="none" style={landscape ? styles.leftHalfShell : styles.bottomHalfShell}>
         {INK_THEME ? <View style={[styles.groundLine, { bottom: 22 }]} /> : null}
-        <View style={[styles.p1Zone, { paddingBottom: 28 + p1DefeatLift }]}>
+        <View
+          style={
+            landscape
+              ? [styles.p1Zone, { paddingLeft: sideInset, paddingBottom: groundBottom }]
+              : [styles.p1Zone, { paddingBottom: halfInnerPad + p1DefeatLift }]
+          }
+        >
           <DuelFigureSlot corner="bottomLeft" pose={p1Pose} figW={figW} figH={figH}>
             <PlayerCharacterSprite
               characterId={p1CharacterId}
@@ -171,6 +237,13 @@ export function LocalDuelArenaLayout({
           ) : null}
         </View>
 
+        {/* P1 신호 — 자기 절반 위쪽 스플릿 라인 근처 */}
+        {!landscape ? (
+          <View pointerEvents="none" style={styles.p1SignalInner}>
+            <DuelSignalBoard variant="minimal" phase={boardPhase} />
+          </View>
+        ) : null}
+
         <Animated.View
           pointerEvents="none"
           style={[
@@ -181,13 +254,34 @@ export function LocalDuelArenaLayout({
         />
       </View>
 
-      {/* 중앙 신호 — 두 플레이어 공용 */}
-      <View pointerEvents="none" style={styles.signalWrapCenter}>
-        <DuelSignalBoard variant="minimal" phase={boardPhase} />
-      </View>
+      {/* 신호 — landscape만 화면 중앙 공용 (portrait은 각 절반 내부에 이미 렌더) */}
+      {landscape ? (
+        <View pointerEvents="none" style={styles.signalWrapCenter}>
+          <DuelSignalBoard variant="minimal" phase={boardPhase} />
+        </View>
+      ) : null}
 
-      {/* 점수·네비 */}
-      {!hideBottomHud ? (
+      {/* 점수·네비 — landscape는 하단 중앙 한 번, portrait은 각 절반 내부에서 렌더 */}
+      {!hideBottomHud && landscape ? (
+        <View
+          pointerEvents="none"
+          style={[styles.scoreBar, { paddingBottom: paddingBottom + 8 }]}
+        >
+          <Text style={[styles.scoreLine, INK_THEME && styles.scoreLineInk]}>
+            P1 {p1Wins} — {p2Wins} P2 · 선 {winsNeeded}승
+          </Text>
+          {phase === '뱅' ? (
+            <Text style={[styles.tapHint, INK_THEME && styles.tapHintInk]}>TAP YOUR HALF</Text>
+          ) : phase !== '대기' && phase !== '결과' ? (
+            <Text style={[styles.waitHint, INK_THEME && styles.waitHintInk]}>
+              WAIT FOR BANG…
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+
+      {/* 세로일 때 P1(하단) 쪽 점수·힌트 */}
+      {!hideBottomHud && !landscape ? (
         <View
           pointerEvents="none"
           style={[styles.scoreBar, { paddingBottom: paddingBottom + 8 }]}
@@ -258,6 +352,10 @@ const styles = StyleSheet.create({
     height: '50%',
     zIndex: 4,
     overflow: 'visible',
+  },
+  /* 세로 2P — 상단 절반을 180° 회전 → 위쪽에서 보는 P2 시점에서 정방향 */
+  topHalfRotated: {
+    transform: [{ rotate: '180deg' }],
   },
   bottomHalfShell: {
     position: 'absolute',
@@ -376,6 +474,32 @@ const styles = StyleSheet.create({
     top: '40%',
     height: 120,
     zIndex: 6,
+  },
+  /* 세로 2P — 각 절반의 스플릿 라인 쪽에 배치 (P2는 회전 컨테이너 안이라 동일 top 값이 자연히 대칭 위치가 됨) */
+  p1SignalInner: {
+    position: 'absolute',
+    left: '8%',
+    right: '8%',
+    top: 40,
+    height: 100,
+    zIndex: 6,
+  },
+  p2SignalInner: {
+    position: 'absolute',
+    left: '8%',
+    right: '8%',
+    top: 40,
+    height: 100,
+    zIndex: 6,
+  },
+  scoreBarP2: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    zIndex: 8,
+    gap: 4,
   },
   scoreBar: {
     position: 'absolute',

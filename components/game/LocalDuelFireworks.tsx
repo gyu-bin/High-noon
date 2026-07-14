@@ -11,7 +11,6 @@ import Animated, {
 import { RM_GAME } from '@/constants/reanimatedGame';
 import { colors } from '@/constants/theme';
 
-type Origin = 'top' | 'bottom';
 
 type SparkSpec = {
   angle: number;
@@ -100,7 +99,7 @@ function Spark({
 }
 
 type Props = {
-  origin: 'top' | 'bottom';
+  origin: 'top' | 'bottom' | 'left' | 'right';
   width: number;
   height: number;
   halfH: number;
@@ -113,8 +112,22 @@ type Props = {
 export function LocalDuelFireworks({ origin, width, height, halfH, burstId }: Props) {
   const specs = useMemo(() => buildSparks(40, burstId * 7919 + 104729), [burstId]);
 
-  const cx = width / 2;
-  const cy = origin === 'top' ? halfH * 0.45 : height - halfH * 0.48;
+  const halfW = width / 2;
+  let cx: number;
+  let cy: number;
+  if (origin === 'top') {
+    cx = width / 2;
+    cy = halfH * 0.45;
+  } else if (origin === 'bottom') {
+    cx = width / 2;
+    cy = height - halfH * 0.48;
+  } else if (origin === 'left') {
+    cx = halfW * 0.45;
+    cy = height / 2;
+  } else {
+    cx = width - halfW * 0.48;
+    cy = height / 2;
+  }
 
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, styles.layer]}>
