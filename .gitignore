@@ -1,3 +1,6 @@
+# Claude / agent local worktrees (must not be committed as submodules — breaks GitHub Pages)
+.claude/
+
 # Dependencies
 node_modules/
 
