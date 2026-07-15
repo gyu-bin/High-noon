@@ -13,10 +13,10 @@ import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
 import { checkUnlockConditions } from '@/utils/characterAbility';
 import { WESTERN_HERO_FALLBACK } from '@/constants/westernBackground';
 import { initAds, preloadInterstitial, preloadRewardedAd } from '@/utils/adService';
-import { initPurchases } from '@/utils/purchaseService';
+// IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
+// import { initPurchases } from '@/utils/purchaseService';
 import { preloadAll } from '@/utils/audioService';
 import { bootMenuBgm } from '@/utils/bgmService';
-// import { initPurchases } from '@/utils/purchaseService';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
 
 SplashScreen.preventAutoHideAsync();
@@ -78,7 +78,7 @@ export default function RootLayout() {
         preloadInterstitial();
         preloadRewardedAd();
       });
-      void initPurchases();
+      // void initPurchases(); // IAP 임시 비활성
     }
 
     void prepare();

@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,12 +24,13 @@ import { useProgressStore } from '@/store/progressStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { playBgm, syncBgmWithSettings } from '@/utils/bgmService';
-import {
-  fetchAdRemovalProduct,
-  purchaseAdRemoval,
-  purchasesRuntimeEnabled,
-  restorePurchases,
-} from '@/utils/purchaseService';
+// IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
+// import {
+//   fetchAdRemovalProduct,
+//   purchaseAdRemoval,
+//   purchasesRuntimeEnabled,
+//   restorePurchases,
+// } from '@/utils/purchaseService';
 
 export default function MenuScreen() {
   const router = useRouter();
@@ -46,79 +46,14 @@ export default function MenuScreen() {
   const setMusicEnabled = useSettingsStore((s) => s.setMusicEnabled);
   const setHapticEnabled = useSettingsStore((s) => s.setHapticEnabled);
 
-  const isAdFree = useProgressStore((s) => s.isAdFree);
-  const [purchaseBusy, setPurchaseBusy] = useState(false);
-  const [adRemovalPrice, setAdRemovalPrice] = useState<string | null>(null);
-  const [productReady, setProductReady] = useState(false);
-  const [productLoadTried, setProductLoadTried] = useState(false);
-  const iapAvailable = purchasesRuntimeEnabled();
-
-  useEffect(() => {
-    if (!iapAvailable || isAdFree) return;
-    let cancelled = false;
-    let attempt = 0;
-
-    const load = async () => {
-      const p = await fetchAdRemovalProduct();
-      if (cancelled) return;
-      if (p) {
-        setAdRemovalPrice(p.localizedPrice || null);
-        setProductReady(true);
-        setProductLoadTried(true);
-        return;
-      }
-      attempt += 1;
-      setProductLoadTried(true);
-      if (attempt < 6) {
-        setTimeout(() => {
-          if (!cancelled) void load();
-        }, 1500);
-      }
-    };
-
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [iapAvailable, isAdFree]);
-
-  const onPurchaseAdRemoval = useCallback(async () => {
-    if (isAdFree || purchaseBusy) return;
-    setPurchaseBusy(true);
-    try {
-      const result = await purchaseAdRemoval();
-      if (result.ok) {
-        // purchaseUpdatedListener가 isAdFree를 세팅. 미반영 시 안내
-        if (!useProgressStore.getState().isAdFree) {
-          Alert.alert(
-            '결제 완료',
-            '구매가 완료되었습니다. 광고 제거가 곧 적용됩니다.',
-          );
-        }
-        return;
-      }
-      if (result.reason === 'cancelled') return;
-      Alert.alert('Purchase unavailable / 결제 불가', result.message);
-    } finally {
-      setPurchaseBusy(false);
-    }
-  }, [isAdFree, purchaseBusy]);
-
-  const onRestorePurchases = useCallback(async () => {
-    if (purchaseBusy) return;
-    setPurchaseBusy(true);
-    try {
-      const restored = await restorePurchases();
-      Alert.alert(
-        restored ? '복원 완료' : '복원 결과 없음',
-        restored
-          ? '이전에 구매한 광고 제거가 복원되었습니다.'
-          : '이 계정에서 구매한 항목을 찾지 못했습니다.',
-      );
-    } finally {
-      setPurchaseBusy(false);
-    }
-  }, [purchaseBusy]);
+  // --- IAP 임시 비활성 ---
+  // const isAdFree = useProgressStore((s) => s.isAdFree);
+  // const [purchaseBusy, setPurchaseBusy] = useState(false);
+  // const [adRemovalPrice, setAdRemovalPrice] = useState<string | null>(null);
+  // const [productReady, setProductReady] = useState(false);
+  // const [productLoadTried, setProductLoadTried] = useState(false);
+  // const iapAvailable = purchasesRuntimeEnabled();
+  // ... fetch / purchase / restore handlers omitted while IAP_ENABLED=false
 
   useScreenBgm('menu');
 
@@ -233,55 +168,9 @@ export default function MenuScreen() {
             </Text>
           </View>
 
-          {iapAvailable ? (
-            <View style={styles.iapCard}>
-              {isAdFree ? (
-                <>
-                  <Text style={styles.iapTitle}>광고 제거 활성화됨</Text>
-                  <Text style={styles.iapDesc}>구매해주셔서 감사합니다.</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.iapTitle}>광고 제거</Text>
-                  <Text style={styles.iapDesc}>
-                    매치 사이 전면 광고를 제거합니다. 1회 결제 · 영구 소유.
-                  </Text>
-                  {productLoadTried && !productReady ? (
-                    <Text style={styles.iapWarn}>
-                      스토어 상품을 불러오는 중이거나 아직 판매 준비가 안 됐습니다.
-                      네트워크·App Store 로그인 후 다시 시도해 주세요.
-                    </Text>
-                  ) : null}
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="광고 제거 구매"
-                    disabled={purchaseBusy}
-                    onPress={onPurchaseAdRemoval}
-                    style={({ pressed }) => [
-                      styles.iapBuyBtn,
-                      pressed && styles.iapBuyBtnPressed,
-                      purchaseBusy && styles.iapBuyBtnDisabled,
-                    ]}
-                  >
-                    <Text style={styles.iapBuyText}>
-                      {purchaseBusy
-                        ? '처리 중…'
-                        : `구매하기${adRemovalPrice ? ` · ${adRemovalPrice}` : ''}`}
-                    </Text>
-                  </Pressable>
-                </>
-              )}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="이전 구매 복원"
-                disabled={purchaseBusy}
-                onPress={onRestorePurchases}
-                style={styles.iapRestoreBtn}
-              >
-                <Text style={styles.iapRestoreText}>구매 복원</Text>
-              </Pressable>
-            </View>
-          ) : null}
+          {/* IAP 임시 비활성 — purchaseService.IAP_ENABLED=true 로 켠 뒤 아래 블록 복구
+          {iapAvailable ? ( ... 광고 제거 / 구매 복원 UI ... ) : null}
+          */}
         </ScrollView>
       </View>
     </MetaScreenShell>

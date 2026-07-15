@@ -3,11 +3,16 @@
  *
  * App Store Connect 상품 ID는 아래 상수와 반드시 일치해야 한다.
  * ASC에 미등록·판매불가면 fetchProducts가 비고, 구매 시트가 뜨지 않는다.
+ *
+ * IAP_ENABLED=false 이면 UI·init·구매 전부 비활성 (유료 앱 계약 전까지).
  */
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
 
 import { useProgressStore } from '@/store/progressStore';
+
+/** 광고 제거 결제 ON/OFF — 다시 켤 때 true */
+export const IAP_ENABLED = false;
 
 /** iOS · Android 공통 상품 ID — App Store Connect / Play Console과 동일해야 함 */
 export const AD_REMOVAL_PRODUCT_ID = 'com.highnoon.app.remove_ads';
@@ -59,7 +64,7 @@ async function getIapLib(): Promise<IapLib | null> {
 }
 
 export function purchasesRuntimeEnabled(): boolean {
-  return USE_NATIVE_IAP;
+  return IAP_ENABLED && USE_NATIVE_IAP;
 }
 
 export function isPurchasesInitialized(): boolean {
@@ -154,6 +159,7 @@ async function initPurchasesInternal(): Promise<boolean> {
 
 /** 앱 부팅 시 1회 — 스토어 연결 + 리스너 + 잔존 구매 확인 */
 export async function initPurchases(): Promise<void> {
+  if (!IAP_ENABLED) return;
   if (!initPromise) {
     initPromise = initPurchasesInternal().finally(() => {
       if (!initialized) initPromise = null;
@@ -164,6 +170,7 @@ export async function initPurchases(): Promise<void> {
 
 /** init이 끝날 때까지 대기. 실패하면 false */
 export async function ensurePurchasesReady(): Promise<boolean> {
+  if (!IAP_ENABLED) return false;
   if (initialized) return true;
   await initPurchases();
   return initialized;
