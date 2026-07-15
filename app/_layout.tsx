@@ -13,6 +13,7 @@ import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
 import { checkUnlockConditions } from '@/utils/characterAbility';
 import { WESTERN_HERO_FALLBACK } from '@/constants/westernBackground';
 import { initAds, preloadInterstitial, preloadRewardedAd } from '@/utils/adService';
+import { initPurchases } from '@/utils/purchaseService';
 import { preloadAll } from '@/utils/audioService';
 import { bootMenuBgm } from '@/utils/bgmService';
 // import { initPurchases } from '@/utils/purchaseService';
@@ -77,7 +78,7 @@ export default function RootLayout() {
         preloadInterstitial();
         preloadRewardedAd();
       });
-      // void initPurchases();
+      void initPurchases();
     }
 
     void prepare();

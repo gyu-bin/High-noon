@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,11 +25,12 @@ import { useProgressStore } from '@/store/progressStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { playBgm, syncBgmWithSettings } from '@/utils/bgmService';
-// import {
-//   presentCustomerCenter,
-//   presentSubscriptionPaywall,
-//   restorePurchases,
-// } from '@/utils/purchaseService';
+import {
+  fetchAdRemovalProduct,
+  purchaseAdRemoval,
+  purchasesRuntimeEnabled,
+  restorePurchases,
+} from '@/utils/purchaseService';
 
 export default function MenuScreen() {
   const router = useRouter();
@@ -43,38 +45,52 @@ export default function MenuScreen() {
   const setSoundEnabled = useSettingsStore((s) => s.setSoundEnabled);
   const setMusicEnabled = useSettingsStore((s) => s.setMusicEnabled);
   const setHapticEnabled = useSettingsStore((s) => s.setHapticEnabled);
-  // const isAdFree = useProgressStore((s) => s.isAdFree);
-  // const [purchaseBusy, setPurchaseBusy] = useState(false);
 
-  // const onOpenProPaywall = useCallback(async () => {
-  //   if (isAdFree || purchaseBusy) return;
-  //   setPurchaseBusy(true);
-  //   try {
-  //     await presentSubscriptionPaywall();
-  //   } finally {
-  //     setPurchaseBusy(false);
-  //   }
-  // }, [isAdFree, purchaseBusy]);
+  const isAdFree = useProgressStore((s) => s.isAdFree);
+  const [purchaseBusy, setPurchaseBusy] = useState(false);
+  const [adRemovalPrice, setAdRemovalPrice] = useState<string | null>(null);
+  const iapAvailable = purchasesRuntimeEnabled();
 
-  // const onRestorePurchases = useCallback(async () => {
-  //   if (purchaseBusy) return;
-  //   setPurchaseBusy(true);
-  //   try {
-  //     await restorePurchases();
-  //   } finally {
-  //     setPurchaseBusy(false);
-  //   }
-  // }, [purchaseBusy]);
+  useEffect(() => {
+    if (!iapAvailable || isAdFree) return;
+    let cancelled = false;
+    void fetchAdRemovalProduct().then((p) => {
+      if (!cancelled && p) setAdRemovalPrice(p.localizedPrice);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [iapAvailable, isAdFree]);
 
-  // const onManageSubscription = useCallback(async () => {
-  //   if (purchaseBusy) return;
-  //   setPurchaseBusy(true);
-  //   try {
-  //     await presentCustomerCenter();
-  //   } finally {
-  //     setPurchaseBusy(false);
-  //   }
-  // }, [purchaseBusy]);
+  const onPurchaseAdRemoval = useCallback(async () => {
+    if (isAdFree || purchaseBusy) return;
+    setPurchaseBusy(true);
+    try {
+      const ok = await purchaseAdRemoval();
+      if (!ok) {
+        Alert.alert('결제 실패', '결제를 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      }
+      // 성공은 purchaseService의 리스너가 처리 (isAdFree = true 자동 반영)
+    } finally {
+      setPurchaseBusy(false);
+    }
+  }, [isAdFree, purchaseBusy]);
+
+  const onRestorePurchases = useCallback(async () => {
+    if (purchaseBusy) return;
+    setPurchaseBusy(true);
+    try {
+      const restored = await restorePurchases();
+      Alert.alert(
+        restored ? '복원 완료' : '복원 결과 없음',
+        restored
+          ? '이전에 구매한 광고 제거가 복원되었습니다.'
+          : '이 계정에서 구매한 항목을 찾지 못했습니다.',
+      );
+    } finally {
+      setPurchaseBusy(false);
+    }
+  }, [purchaseBusy]);
 
   useScreenBgm('menu');
 
@@ -189,11 +205,49 @@ export default function MenuScreen() {
             </Text>
           </View>
 
-          {/* 인앱 결제 UI 비활성화
-          <View style={styles.adRemovalRow}>
-            ...
-          </View>
-          */}
+          {iapAvailable ? (
+            <View style={styles.iapCard}>
+              {isAdFree ? (
+                <>
+                  <Text style={styles.iapTitle}>광고 제거 활성화됨</Text>
+                  <Text style={styles.iapDesc}>구매해주셔서 감사합니다.</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.iapTitle}>광고 제거</Text>
+                  <Text style={styles.iapDesc}>
+                    매치 사이 전면 광고를 제거합니다. 1회 결제 · 영구 소유.
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="광고 제거 구매"
+                    disabled={purchaseBusy}
+                    onPress={onPurchaseAdRemoval}
+                    style={({ pressed }) => [
+                      styles.iapBuyBtn,
+                      pressed && styles.iapBuyBtnPressed,
+                      purchaseBusy && styles.iapBuyBtnDisabled,
+                    ]}
+                  >
+                    <Text style={styles.iapBuyText}>
+                      {purchaseBusy
+                        ? '처리 중…'
+                        : `구매하기${adRemovalPrice ? ` · ${adRemovalPrice}` : ''}`}
+                    </Text>
+                  </Pressable>
+                </>
+              )}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="이전 구매 복원"
+                disabled={purchaseBusy}
+                onPress={onRestorePurchases}
+                style={styles.iapRestoreBtn}
+              >
+                <Text style={styles.iapRestoreText}>구매 복원</Text>
+              </Pressable>
+            </View>
+          ) : null}
         </ScrollView>
       </View>
     </MetaScreenShell>
@@ -391,4 +445,61 @@ const styles = StyleSheet.create({
     ...metaTextShadow,
   },
   */
+  iapCard: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: META_PANEL_BG,
+    borderWidth: 1,
+    borderColor: META_PANEL_BORDER,
+    gap: 10,
+  },
+  iapTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: colors.gold,
+    letterSpacing: 1,
+    ...metaTextShadow,
+  },
+  iapDesc: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors.cream,
+    opacity: 0.9,
+    ...metaTextShadow,
+  },
+  iapBuyBtn: {
+    marginTop: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: colors.rustRed,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 230, 200, 0.4)',
+    alignItems: 'center',
+  },
+  iapBuyBtnPressed: {
+    opacity: 0.85,
+  },
+  iapBuyBtnDisabled: {
+    opacity: 0.6,
+  },
+  iapBuyText: {
+    color: colors.cream,
+    fontWeight: '900',
+    fontSize: 14,
+    letterSpacing: 1,
+  },
+  iapRestoreBtn: {
+    alignSelf: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  iapRestoreText: {
+    color: colors.sand,
+    fontSize: 12,
+    fontWeight: '700',
+    opacity: 0.75,
+    textDecorationLine: 'underline',
+  },
 });
