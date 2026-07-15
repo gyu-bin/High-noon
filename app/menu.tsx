@@ -49,14 +49,34 @@ export default function MenuScreen() {
   const isAdFree = useProgressStore((s) => s.isAdFree);
   const [purchaseBusy, setPurchaseBusy] = useState(false);
   const [adRemovalPrice, setAdRemovalPrice] = useState<string | null>(null);
+  const [productReady, setProductReady] = useState(false);
+  const [productLoadTried, setProductLoadTried] = useState(false);
   const iapAvailable = purchasesRuntimeEnabled();
 
   useEffect(() => {
     if (!iapAvailable || isAdFree) return;
     let cancelled = false;
-    void fetchAdRemovalProduct().then((p) => {
-      if (!cancelled && p) setAdRemovalPrice(p.localizedPrice);
-    });
+    let attempt = 0;
+
+    const load = async () => {
+      const p = await fetchAdRemovalProduct();
+      if (cancelled) return;
+      if (p) {
+        setAdRemovalPrice(p.localizedPrice || null);
+        setProductReady(true);
+        setProductLoadTried(true);
+        return;
+      }
+      attempt += 1;
+      setProductLoadTried(true);
+      if (attempt < 6) {
+        setTimeout(() => {
+          if (!cancelled) void load();
+        }, 1500);
+      }
+    };
+
+    void load();
     return () => {
       cancelled = true;
     };
@@ -66,11 +86,19 @@ export default function MenuScreen() {
     if (isAdFree || purchaseBusy) return;
     setPurchaseBusy(true);
     try {
-      const ok = await purchaseAdRemoval();
-      if (!ok) {
-        Alert.alert('결제 실패', '결제를 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      const result = await purchaseAdRemoval();
+      if (result.ok) {
+        // purchaseUpdatedListener가 isAdFree를 세팅. 미반영 시 안내
+        if (!useProgressStore.getState().isAdFree) {
+          Alert.alert(
+            '결제 완료',
+            '구매가 완료되었습니다. 광고 제거가 곧 적용됩니다.',
+          );
+        }
+        return;
       }
-      // 성공은 purchaseService의 리스너가 처리 (isAdFree = true 자동 반영)
+      if (result.reason === 'cancelled') return;
+      Alert.alert('Purchase unavailable / 결제 불가', result.message);
     } finally {
       setPurchaseBusy(false);
     }
@@ -218,6 +246,12 @@ export default function MenuScreen() {
                   <Text style={styles.iapDesc}>
                     매치 사이 전면 광고를 제거합니다. 1회 결제 · 영구 소유.
                   </Text>
+                  {productLoadTried && !productReady ? (
+                    <Text style={styles.iapWarn}>
+                      스토어 상품을 불러오는 중이거나 아직 판매 준비가 안 됐습니다.
+                      네트워크·App Store 로그인 후 다시 시도해 주세요.
+                    </Text>
+                  ) : null}
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="광고 제거 구매"
@@ -466,6 +500,14 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     color: colors.cream,
     opacity: 0.9,
+    ...metaTextShadow,
+  },
+  iapWarn: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: colors.gold,
+    opacity: 0.95,
+    marginBottom: 4,
     ...metaTextShadow,
   },
   iapBuyBtn: {

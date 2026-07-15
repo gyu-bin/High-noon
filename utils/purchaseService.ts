@@ -1,26 +1,28 @@
 /**
- * 인앱 결제 (react-native-iap 기반) — 광고 제거 IAP 하나만 지원.
+ * 인앱 결제 (react-native-iap) — 광고 제거 Non-consumable 1종.
  *
- * 사용 흐름:
- *   1) 앱 부팅: `initPurchases()` 호출로 스토어 연결 + 이전 구매 복원 확인
- *   2) 유저가 "광고 제거" 버튼 탭: `purchaseAdRemoval()` → 스토어 결제 UI 표시
- *   3) 결제 성공 → 리스너가 `progressStore.setAdFree(true)` + `finishTransaction()`
- *   4) 기기 변경 등에서 "구매 복원" 탭: `restorePurchases()` → 이전 결제 다시 활성화
- *
- * Expo Go / 웹 등 네이티브 미탑재 환경에서는 모든 함수가 즉시 false/no-op.
+ * App Store Connect 상품 ID는 아래 상수와 반드시 일치해야 한다.
+ * ASC에 미등록·판매불가면 fetchProducts가 비고, 구매 시트가 뜨지 않는다.
  */
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
 
 import { useProgressStore } from '@/store/progressStore';
 
-/** iOS · Android 공통 상품 ID (스토어 콘솔에도 이 ID로 등록해야 함) */
+/** iOS · Android 공통 상품 ID — App Store Connect / Play Console과 동일해야 함 */
 export const AD_REMOVAL_PRODUCT_ID = 'com.highnoon.app.remove_ads';
 
-/** 하위 호환용 export (기존 stub이 쓰던 것) */
 export const HIGH_NOON_PRO_ENTITLEMENT_ID = 'High noon Pro';
 export const STORE_PRODUCT_IDS = { lifetime: AD_REMOVAL_PRODUCT_ID } as const;
 export type HighNoonStoreProductId = keyof typeof STORE_PRODUCT_IDS;
+
+export type PurchaseOutcome =
+  | { ok: true }
+  | {
+      ok: false;
+      reason: 'cancelled' | 'unavailable' | 'not_ready' | 'failed';
+      message: string;
+    };
 
 const USE_NATIVE_IAP =
   Platform.OS !== 'web' &&
@@ -30,8 +32,23 @@ type IapLib = typeof import('react-native-iap');
 
 let iapLibPromise: Promise<IapLib | null> | null = null;
 let initialized = false;
+let initPromise: Promise<boolean> | null = null;
 let purchaseListener: { remove: () => void } | null = null;
 let errorListener: { remove: () => void } | null = null;
+
+type PendingPurchase = {
+  resolve: (result: PurchaseOutcome) => void;
+  timer: ReturnType<typeof setTimeout>;
+};
+let pendingPurchase: PendingPurchase | null = null;
+
+function settlePendingPurchase(result: PurchaseOutcome) {
+  if (!pendingPurchase) return;
+  clearTimeout(pendingPurchase.timer);
+  const { resolve } = pendingPurchase;
+  pendingPurchase = null;
+  resolve(result);
+}
 
 async function getIapLib(): Promise<IapLib | null> {
   if (!USE_NATIVE_IAP) return null;
@@ -45,61 +62,138 @@ export function purchasesRuntimeEnabled(): boolean {
   return USE_NATIVE_IAP;
 }
 
-/** 앱 부팅 시 1회 호출 — 스토어 연결 + 결제 리스너 등록 + 잔존 구매 활성화 */
-export async function initPurchases(): Promise<void> {
-  if (initialized) return;
+export function isPurchasesInitialized(): boolean {
+  return initialized;
+}
+
+function mapPurchaseError(error: unknown): PurchaseOutcome {
+  const err = error as {
+    code?: string | number;
+    message?: string;
+    userInfo?: { message?: string };
+  };
+  const code = String(err?.code ?? '').toLowerCase();
+  const message = String(err?.message ?? err?.userInfo?.message ?? '');
+  const blob = `${code} ${message}`.toLowerCase();
+
+  if (
+    blob.includes('cancel') ||
+    blob.includes('user-cancelled') ||
+    blob.includes('user_cancelled') ||
+    blob.includes('usercancelled') ||
+    code === '2' ||
+    code === 'e_user_cancelled'
+  ) {
+    return {
+      ok: false,
+      reason: 'cancelled',
+      message: '결제가 취소되었습니다.',
+    };
+  }
+
+  if (
+    blob.includes('sku-not-found') ||
+    blob.includes('skunotfound') ||
+    blob.includes('item-unavailable') ||
+    blob.includes('itemunavailable') ||
+    blob.includes('item_unavailable') ||
+    blob.includes('product not available') ||
+    (blob.includes('skerror') && blob.includes('unavailable'))
+  ) {
+    return {
+      ok: false,
+      reason: 'unavailable',
+      message:
+        '앱스토어에서 상품을 찾을 수 없습니다. 상품 ID·판매 상태·유료 앱 계약을 확인해 주세요.',
+    };
+  }
+
+  return {
+    ok: false,
+    reason: 'failed',
+    message: message.trim() || '결제를 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  };
+}
+
+async function initPurchasesInternal(): Promise<boolean> {
+  if (initialized) return true;
   const lib = await getIapLib();
-  if (!lib) return;
+  if (!lib) return false;
 
   try {
     await lib.initConnection();
-    initialized = true;
 
-    // 결제 완료 리스너 — 스토어에서 어떤 시점이든 트랜잭션이 도착하면 처리
+    purchaseListener?.remove();
+    errorListener?.remove();
+
     purchaseListener = lib.purchaseUpdatedListener(async (purchase) => {
       try {
         const productId = purchase.productId;
         if (productId === AD_REMOVAL_PRODUCT_ID) {
           useProgressStore.getState().setAdFree(true);
+          settlePendingPurchase({ ok: true });
         }
-        // Non-consumable — isConsumable false로 트랜잭션 종결
         await lib.finishTransaction({ purchase, isConsumable: false });
       } catch {
-        // 무시 — 다음 부팅 시 미완료 트랜잭션이 다시 도착함
+        // 다음 부팅 시 미완료 트랜잭션이 다시 도착함
       }
     });
 
-    errorListener = lib.purchaseErrorListener(() => {
-      // 유저 취소·네트워크 오류 등. UI 층에서 처리하므로 여기서는 조용히.
+    errorListener = lib.purchaseErrorListener((error) => {
+      settlePendingPurchase(mapPurchaseError(error));
     });
 
-    // 앱 시작 시 잔존 구매 확인 (기기 변경 후 첫 실행 등)
+    initialized = true;
     void refreshAdFreeFromReceipts();
+    return true;
   } catch {
     initialized = false;
+    return false;
   }
 }
 
-/** 스토어에 등록된 상품 정보 조회 (가격 표시용) */
+/** 앱 부팅 시 1회 — 스토어 연결 + 리스너 + 잔존 구매 확인 */
+export async function initPurchases(): Promise<void> {
+  if (!initPromise) {
+    initPromise = initPurchasesInternal().finally(() => {
+      if (!initialized) initPromise = null;
+    });
+  }
+  await initPromise;
+}
+
+/** init이 끝날 때까지 대기. 실패하면 false */
+export async function ensurePurchasesReady(): Promise<boolean> {
+  if (initialized) return true;
+  await initPurchases();
+  return initialized;
+}
+
+/** 스토어에 등록된 상품 정보 조회 (가격 표시용). init을 기다린다. */
 export async function fetchAdRemovalProduct(): Promise<{
   productId: string;
   localizedPrice: string;
 } | null> {
+  const ready = await ensurePurchasesReady();
   const lib = await getIapLib();
-  if (!lib || !initialized) return null;
+  if (!lib || !ready) return null;
   try {
     const products = await lib.fetchProducts({
       skus: [AD_REMOVAL_PRODUCT_ID],
       type: 'in-app',
     });
     const list = Array.isArray(products) ? products : [];
-    const p = list.find((x): x is Extract<typeof x, { id: string }> =>
-      x != null && 'id' in x && x.id === AD_REMOVAL_PRODUCT_ID,
+    const p = list.find(
+      (x): x is Extract<typeof x, { id: string }> =>
+        x != null && 'id' in x && x.id === AD_REMOVAL_PRODUCT_ID,
     );
     if (!p) return null;
     return {
       productId: p.id,
-      localizedPrice: 'displayPrice' in p ? p.displayPrice : String(AD_REMOVAL_PRODUCT_ID),
+      localizedPrice:
+        'displayPrice' in p && typeof p.displayPrice === 'string'
+          ? p.displayPrice
+          : '',
     };
   } catch {
     return null;
@@ -107,39 +201,89 @@ export async function fetchAdRemovalProduct(): Promise<{
 }
 
 /**
- * 광고 제거 상품 결제 요청.
- * 반환값이 true = 결제 요청이 스토어에 전달됨 (실제 완료는 리스너에서 처리)
- * false = 결제 요청 전달 실패 (스토어 연결 실패·상품 없음 등)
+ * 광고 제거 결제 요청.
+ * 실제 완료/실패는 StoreKit 이벤트까지 기다린 뒤 반환한다.
+ * (requestPurchase만 resolve되면 성공으로 처리하던 버그를 고침)
  */
-export async function purchaseAdRemoval(): Promise<boolean> {
+export async function purchaseAdRemoval(): Promise<PurchaseOutcome> {
+  const ready = await ensurePurchasesReady();
   const lib = await getIapLib();
-  if (!lib || !initialized) return false;
-
-  // 이미 광고 제거 상태면 스킵
-  if (useProgressStore.getState().isAdFree) return true;
-
-  try {
-    await lib.requestPurchase({
-      type: 'in-app',
-      request: {
-        ios: { sku: AD_REMOVAL_PRODUCT_ID },
-        android: { skus: [AD_REMOVAL_PRODUCT_ID] },
-      },
-    });
-    return true;
-  } catch {
-    return false;
+  if (!lib || !ready) {
+    return {
+      ok: false,
+      reason: 'not_ready',
+      message: '스토어 연결을 준비하는 중입니다. 잠시 후 다시 시도해 주세요.',
+    };
   }
+
+  if (useProgressStore.getState().isAdFree) {
+    return { ok: true };
+  }
+
+  const product = await fetchAdRemovalProduct();
+  if (!product) {
+    return {
+      ok: false,
+      reason: 'unavailable',
+      message:
+        '구매 상품을 불러오지 못했습니다. 네트워크와 App Store 로그인을 확인한 뒤 다시 시도해 주세요.',
+    };
+  }
+
+  if (pendingPurchase) {
+    return {
+      ok: false,
+      reason: 'failed',
+      message: '이미 결제창이 열려 있습니다.',
+    };
+  }
+
+  return new Promise<PurchaseOutcome>((resolve) => {
+    pendingPurchase = {
+      resolve,
+      timer: setTimeout(() => {
+        settlePendingPurchase({
+          ok: false,
+          reason: 'failed',
+          message: '결제 응답이 없습니다. 잠시 후 다시 시도해 주세요.',
+        });
+      }, 120_000),
+    };
+
+    void (async () => {
+      try {
+        await lib.requestPurchase({
+          type: 'in-app',
+          request: {
+            ios: { sku: AD_REMOVAL_PRODUCT_ID },
+            android: { skus: [AD_REMOVAL_PRODUCT_ID] },
+          },
+        });
+        // 성공/실패는 purchaseUpdated / purchaseError 리스너가 settle
+      } catch (error) {
+        settlePendingPurchase(mapPurchaseError(error));
+      }
+    })();
+  });
 }
 
 /**
- * 구매 복원 — 다른 기기에서 이미 구매한 유저용 (Apple 심사 필수 버튼).
- * 성공적으로 광고 제거 권한을 복원했으면 true.
+ * 구매 복원 — Apple 심사 필수.
  */
 export async function restorePurchases(): Promise<boolean> {
+  const ready = await ensurePurchasesReady();
   const lib = await getIapLib();
-  if (!lib || !initialized) return false;
+  if (!lib || !ready) return false;
   try {
+    // iOS: App Store와 영수증 동기화 후 가용 구매 조회
+    const sync = (lib as { syncIOS?: () => Promise<boolean> }).syncIOS;
+    if (Platform.OS === 'ios' && typeof sync === 'function') {
+      try {
+        await sync();
+      } catch {
+        // sync 실패해도 getAvailablePurchases는 시도
+      }
+    }
     const purchases = await lib.getAvailablePurchases();
     const owns = purchases.some((p) => p.productId === AD_REMOVAL_PRODUCT_ID);
     if (owns) {
@@ -151,7 +295,6 @@ export async function restorePurchases(): Promise<boolean> {
   }
 }
 
-/** 부팅 시 조용히 영수증 검사해 이미 산 유저 자동 활성화 */
 async function refreshAdFreeFromReceipts(): Promise<void> {
   const lib = await getIapLib();
   if (!lib || !initialized) return;
@@ -165,31 +308,41 @@ async function refreshAdFreeFromReceipts(): Promise<void> {
   }
 }
 
-/** 앱 종료 시(선택) — 대부분 unmount 필요 없음 */
 export async function shutdownPurchases(): Promise<void> {
   purchaseListener?.remove();
   errorListener?.remove();
+  purchaseListener = null;
+  errorListener = null;
+  settlePendingPurchase({
+    ok: false,
+    reason: 'failed',
+    message: '결제가 중단되었습니다.',
+  });
   const lib = await getIapLib();
-  if (!lib) return;
-  try {
-    await lib.endConnection();
-  } catch {
-    // 무시
+  if (lib) {
+    try {
+      await lib.endConnection();
+    } catch {
+      // 무시
+    }
   }
   initialized = false;
+  initPromise = null;
 }
 
-// ─── 아래는 이전 코드가 참조하던 stub — 삭제 예정 ─────────────────────
+// ─── 하위 호환 stub ───────────────────────────────────────────────
 export async function fetchCustomerInfo(): Promise<null> {
   return null;
 }
 export async function presentSubscriptionPaywall(): Promise<boolean> {
-  return purchaseAdRemoval();
+  const r = await purchaseAdRemoval();
+  return r.ok;
 }
 export async function presentSubscriptionPaywallIfNeeded(): Promise<boolean> {
   return false;
 }
 export async function purchaseStoreProductById(): Promise<boolean> {
-  return purchaseAdRemoval();
+  const r = await purchaseAdRemoval();
+  return r.ok;
 }
 export async function presentCustomerCenter(): Promise<void> {}
