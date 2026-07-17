@@ -3,8 +3,15 @@ import { Platform } from 'react-native';
 
 import { useProgressStore } from '@/store/progressStore';
 
+/**
+ * 광고 ON/OFF — AdMob 설정 전까지 false.
+ * 다시 켤 때 true 로 바꾸고 _layout 주석도 해제.
+ */
+export const ADS_ENABLED = false;
+
 /** Expo Go / 웹에는 네이티브 AdMob이 없어 정적 import 시 크래시 */
 const USE_NATIVE_ADS =
+  ADS_ENABLED &&
   Platform.OS !== 'web' &&
   Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
 
@@ -65,6 +72,10 @@ function getRewardedUnitId(lib: AdsLib): string {
 }
 
 export async function initAds(): Promise<void> {
+  if (!ADS_ENABLED) {
+    initialized = true;
+    return;
+  }
   if (initialized) return;
   const lib = await getAdsLib();
   if (lib) {
@@ -81,6 +92,7 @@ export async function initAds(): Promise<void> {
  * 전면 광고 미리 로드. 매치 진입 시 또는 전면 종료 직후 호출.
  */
 export function preloadInterstitial(): void {
+  if (!ADS_ENABLED) return;
   void initAds().then(async () => {
     const lib = await getAdsLib();
     if (!lib) return;
@@ -102,7 +114,7 @@ export function preloadInterstitial(): void {
  * - 실제로 표시된 뒤 `CLOSED`에서 카운터·쿨다운 갱신. 로드/표시 실패는 카운터 유지.
  */
 export function showStageCompleteAd(): Promise<void> {
-  if (useProgressStore.getState().isAdFree) {
+  if (!ADS_ENABLED || useProgressStore.getState().isAdFree) {
     return Promise.resolve();
   }
 
@@ -167,6 +179,7 @@ export function showStageCompleteAd(): Promise<void> {
 
 /** 보상형 광고 미리 로드. 앱 부팅 시 또는 close 직후 호출. */
 export function preloadRewardedAd(): void {
+  if (!ADS_ENABLED) return;
   void initAds().then(async () => {
     const lib = await getAdsLib();
     if (!lib) return;
@@ -186,7 +199,8 @@ export function preloadRewardedAd(): void {
  * - `isAdFree`이면 무조건 `true` (광고 제거 유저에게도 리워드 부여).
  */
 export function showRewardedAd(): Promise<boolean> {
-  if (useProgressStore.getState().isAdFree) {
+  // 광고 비활성 시에도 리워드 플로우는 막지 않음 (시청 성공과 동일 처리)
+  if (!ADS_ENABLED || useProgressStore.getState().isAdFree) {
     return Promise.resolve(true);
   }
 

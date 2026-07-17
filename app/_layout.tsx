@@ -12,7 +12,8 @@ import { colors } from '@/constants/theme';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
 import { checkUnlockConditions } from '@/utils/characterAbility';
 import { WESTERN_HERO_FALLBACK } from '@/constants/westernBackground';
-import { initAds, preloadInterstitial, preloadRewardedAd } from '@/utils/adService';
+// 광고 임시 비활성 — 다시 켤 때 adService.ADS_ENABLED=true 와 함께 주석 해제
+// import { initAds, preloadInterstitial, preloadRewardedAd } from '@/utils/adService';
 // IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
 // import { initPurchases } from '@/utils/purchaseService';
 import { preloadAll } from '@/utils/audioService';
@@ -74,10 +75,10 @@ export default function RootLayout() {
       void preloadAll();
       void bootMenuBgm();
       void preloadSceneImages();
-      void initAds().then(() => {
-        preloadInterstitial();
-        preloadRewardedAd();
-      });
+      // void initAds().then(() => {
+      //   preloadInterstitial();
+      //   preloadRewardedAd();
+      // });
       // void initPurchases(); // IAP 임시 비활성
     }
 
