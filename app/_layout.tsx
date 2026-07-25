@@ -5,11 +5,11 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
-import { OtaBootSplash } from '@/components/ui/OtaBootSplash';
+import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
 import { colors } from '@/constants/theme';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
 import { checkUnlockConditions } from '@/utils/characterAbility';
@@ -25,7 +25,6 @@ import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages
 SplashScreen.preventAutoHideAsync();
 
 const OTA_SPLASH_TIMEOUT_MS = 12_000;
-const OTA_DONE_SHOW_MS = 2400;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -43,23 +42,12 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * 스플래시(부트 화면)에서 EAS Update 확인 → 다운로드 → 재시작.
- * 재시작 직후엔 같은 화면에서 "업데이트 완료"를 잠깐 보여 준다.
- */
-async function applyOtaUpdateIfAvailable(
-  onStatus: (message: string) => void,
-): Promise<boolean> {
+/** 스플래시 유지한 채 OTA 확인·적용. UI 문구 없이 조용히 처리. */
+async function applyOtaUpdateIfAvailable(): Promise<boolean> {
   if (__DEV__ || !Updates.isEnabled) return false;
   try {
-    onStatus('업데이트 확인 중…');
     const check = await withTimeout(Updates.checkForUpdateAsync(), OTA_SPLASH_TIMEOUT_MS);
     if (!check.isAvailable) return false;
-    onStatus('업데이트 적용 중…');
     await withTimeout(Updates.fetchUpdateAsync(), OTA_SPLASH_TIMEOUT_MS);
     await markOtaJustApplied();
     await Updates.reloadAsync();
@@ -76,9 +64,11 @@ export default function RootLayout() {
 
   const ready = fontsLoaded || fontError != null;
   const [appReady, setAppReady] = useState(false);
-  const [bootMessage, setBootMessage] = useState<string | null>(null);
+  const [otaToastVisible, setOtaToastVisible] = useState(false);
 
   useAutoScreenshotTour(appReady);
+
+  const hideOtaToast = useCallback(() => setOtaToastVisible(false), []);
 
   useEffect(() => {
     try {
@@ -96,30 +86,19 @@ export default function RootLayout() {
     let cancelled = false;
 
     async function prepare() {
-      // 네이티브 스플래시 → 동일 색 부트 화면 (메시지 표시 가능)
-      await SplashScreen.hideAsync();
-      if (cancelled) return;
-
-      // 직전 OTA reload 로 들어온 경우 — 스플래시에서 완료 안내
+      // 재시작 직후 플래그 — 앱 진입 후 하단 작은 토스트만
       const justUpdated = await consumeOtaJustApplied();
       if (cancelled) return;
-      if (justUpdated) {
-        setBootMessage('업데이트 완료');
-        await delay(OTA_DONE_SHOW_MS);
-        if (cancelled) return;
-        setBootMessage(null);
-      }
 
-      const reloading = await applyOtaUpdateIfAvailable((msg) => {
-        if (!cancelled) setBootMessage(msg);
-      });
+      const reloading = await applyOtaUpdateIfAvailable();
       if (reloading || cancelled) return;
-      setBootMessage(null);
 
       await preloadTitleHero();
       if (cancelled) return;
       checkUnlockConditions();
       setAppReady(true);
+      if (justUpdated) setOtaToastVisible(true);
+      await SplashScreen.hideAsync();
       void preloadAll();
       void bootMenuBgm();
       void preloadSceneImages();
@@ -136,17 +115,8 @@ export default function RootLayout() {
     };
   }, [ready]);
 
-  if (!ready) {
+  if (!ready || !appReady) {
     return null;
-  }
-
-  if (!appReady) {
-    return (
-      <SafeAreaProvider>
-        <StatusBar style="light" />
-        <OtaBootSplash message={bootMessage} />
-      </SafeAreaProvider>
-    );
   }
 
   return (
@@ -172,6 +142,7 @@ export default function RootLayout() {
         <Stack.Screen name="capture" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ headerShown: false }} />
       </Stack>
+      <OtaUpdatedToast visible={otaToastVisible} onHidden={hideOtaToast} />
     </SafeAreaProvider>
   );
 }
