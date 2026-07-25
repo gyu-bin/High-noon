@@ -22,13 +22,36 @@ import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages
 
 SplashScreen.preventAutoHideAsync();
 
-/** 프로덕션 빌드에서 EAS Update를 받아 즉시 재시작. 실패해도 앱은 계속 진행. */
+/** 스플래시에서 OTA 확인·적용 최대 대기. 초과 시 기존 번들로 진입. */
+const OTA_SPLASH_TIMEOUT_MS = 12_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('ota-timeout')), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err: unknown) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
+/**
+ * 스플래시 표시 중 EAS Update 확인 → 다운로드 → 즉시 재시작.
+ * JS/에셋(require)만 바뀌는 변경은 앱스토어 재심사 없이 `eas update`로 반영.
+ * 네이티브 모듈·권한·런타임버전 변경은 스토어 빌드 필요.
+ */
 async function applyOtaUpdateIfAvailable(): Promise<boolean> {
   if (__DEV__ || !Updates.isEnabled) return false;
   try {
-    const check = await Updates.checkForUpdateAsync();
+    const check = await withTimeout(Updates.checkForUpdateAsync(), OTA_SPLASH_TIMEOUT_MS);
     if (!check.isAvailable) return false;
-    await Updates.fetchUpdateAsync();
+    await withTimeout(Updates.fetchUpdateAsync(), OTA_SPLASH_TIMEOUT_MS);
     await Updates.reloadAsync();
     return true;
   } catch {

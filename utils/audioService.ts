@@ -1,4 +1,8 @@
-import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import {
+  createAudioPlayer,
+  setAudioModeAsync,
+  setIsAudioActiveAsync,
+} from 'expo-audio';
 import type { AudioPlayer } from 'expo-audio';
 
 import { useSettingsStore } from '@/store/settingsStore';
@@ -16,15 +20,16 @@ export const SOUND_NAMES = [
 
 export type SoundName = (typeof SOUND_NAMES)[number];
 
+/** 짧은 SFX는 PCM(WAV) — 기기에서 디코더 priming/로딩 지연 없이 즉시 재생 */
 const SOURCES: Record<SoundName, number> = {
-  ready_click: require('@/assets/sounds/ready_click.mp3'),
-  steady_click: require('@/assets/sounds/steady_click.mp3'),
-  bang_shot: require('@/assets/sounds/bang_shot.mp3'),
-  early_tap: require('@/assets/sounds/early_tap.mp3'),
-  win_fanfare: require('@/assets/sounds/win_fanfare.mp3'),
-  lose_sad: require('@/assets/sounds/lose_sad.mp3'),
-  heart_break: require('@/assets/sounds/heart_break.mp3'),
-  level_clear: require('@/assets/sounds/level_clear.mp3'),
+  ready_click: require('@/assets/sounds/ready_click.wav'),
+  steady_click: require('@/assets/sounds/steady_click.wav'),
+  bang_shot: require('@/assets/sounds/bang_shot.wav'),
+  early_tap: require('@/assets/sounds/early_tap.wav'),
+  win_fanfare: require('@/assets/sounds/win_fanfare.wav'),
+  lose_sad: require('@/assets/sounds/lose_sad.wav'),
+  heart_break: require('@/assets/sounds/heart_break.wav'),
+  level_clear: require('@/assets/sounds/level_clear.wav'),
 };
 
 const cache = new Map<SoundName, AudioPlayer>();
@@ -34,8 +39,8 @@ let modeReady = false;
 let preloadPromise: Promise<void> | null = null;
 
 const PLAYER_OPTIONS = {
-  /** 짧은 SFX 여러 개: 로드 안정화 */
-  downloadFirst: true as const,
+  /** 로컬 번들 에셋이므로 downloadFirst 불필요(원격 전용 옵션) — 즉시 로드 */
+  downloadFirst: false as const,
   /** 재생 종료 시 세션을 바로 끊지 않아 연속 효과음에 유리 */
   keepAudioSessionActive: true as const,
 };
@@ -49,6 +54,8 @@ async function ensureAudioMode(): Promise<void> {
     shouldRouteThroughEarpiece: false,
     interruptionMode: 'duckOthers',
   });
+  // 세션 활성화가 빠지면 기기(특히 iOS)에서 짧은 SFX가 무음이 되는 경우가 있다.
+  await setIsAudioActiveAsync(true);
   modeReady = true;
 }
 

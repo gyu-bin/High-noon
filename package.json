@@ -14,10 +14,11 @@
     "version:sync": "node scripts/sync-store-version.js",
     "eas-build-pre-install": "node scripts/sync-store-version.js",
     "build:ios:production": "node scripts/bump-store-version.js && eas build --platform ios --profile production --auto-submit",
-    "update:production": "eas update --channel production --platform ios --message",
-    "update:preview": "eas update --channel preview --platform ios --message",
-    "update:production:android": "eas update --channel production --platform android --message",
-    "update:preview:android": "eas update --channel preview --platform android --message"
+    "ota:upload": "node scripts/ota-upload.js",
+    "update:production": "node scripts/ota-upload.js --channel production --platform ios",
+    "update:preview": "node scripts/ota-upload.js --channel preview --platform ios",
+    "update:production:android": "node scripts/ota-upload.js --channel production --platform android",
+    "update:preview:android": "node scripts/ota-upload.js --channel preview --platform android"
   },
   "dependencies": {
     "@expo-google-fonts/rye": "^0.4.1",
