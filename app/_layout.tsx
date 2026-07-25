@@ -6,19 +6,21 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { colors } from '@/constants/theme';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
 import { checkUnlockConditions } from '@/utils/characterAbility';
 import { WESTERN_HERO_FALLBACK } from '@/constants/westernBackground';
-// 광고 임시 비활성 — 다시 켤 때 adService.ADS_ENABLED=true 와 함께 주석 해제
-// import { initAds, preloadInterstitial, preloadRewardedAd } from '@/utils/adService';
-// IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
-// import { initPurchases } from '@/utils/purchaseService';
+import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
+import { initAds, preloadInterstitial, preloadRewardedAd } from '@/utils/adService';
 import { preloadAll } from '@/utils/audioService';
 import { bootMenuBgm } from '@/utils/bgmService';
+import { markOtaJustApplied } from '@/utils/otaUpdateFlag';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
+// IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
+// import { initPurchases } from '@/utils/purchaseService';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -52,6 +54,7 @@ async function applyOtaUpdateIfAvailable(): Promise<boolean> {
     const check = await withTimeout(Updates.checkForUpdateAsync(), OTA_SPLASH_TIMEOUT_MS);
     if (!check.isAvailable) return false;
     await withTimeout(Updates.fetchUpdateAsync(), OTA_SPLASH_TIMEOUT_MS);
+    await markOtaJustApplied();
     await Updates.reloadAsync();
     return true;
   } catch {
@@ -98,10 +101,10 @@ export default function RootLayout() {
       void preloadAll();
       void bootMenuBgm();
       void preloadSceneImages();
-      // void initAds().then(() => {
-      //   preloadInterstitial();
-      //   preloadRewardedAd();
-      // });
+      void initAds().then(() => {
+        preloadInterstitial();
+        preloadRewardedAd();
+      });
       // void initPurchases(); // IAP 임시 비활성
     }
 
@@ -117,7 +120,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <SafeAreaProvider>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -139,6 +142,7 @@ export default function RootLayout() {
         <Stack.Screen name="capture" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ headerShown: false }} />
       </Stack>
-    </>
+      <OtaUpdatedToast />
+    </SafeAreaProvider>
   );
 }

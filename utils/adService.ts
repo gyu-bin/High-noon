@@ -4,10 +4,10 @@ import { Platform } from 'react-native';
 import { useProgressStore } from '@/store/progressStore';
 
 /**
- * 광고 ON/OFF — AdMob 설정 전까지 false.
- * 다시 켤 때 true 로 바꾸고 _layout 주석도 해제.
+ * 광고 ON/OFF.
+ * 끌 때 false + `_layout` 의 initAds/preload 호출 주석.
  */
-export const ADS_ENABLED = false;
+export const ADS_ENABLED = true;
 
 /** Expo Go / 웹에는 네이티브 AdMob이 없어 정적 import 시 크래시 */
 const USE_NATIVE_ADS =
@@ -48,7 +48,7 @@ let initialized = false;
 let interstitial: ReturnType<AdsLib['InterstitialAd']['createForAdRequest']> | null = null;
 
 /** N매치마다 전면 노출 (승패 무관) */
-const MATCHES_PER_INTERSTITIAL = 5;
+const MATCHES_PER_INTERSTITIAL = 3;
 /** 직전 전면을 닫은 뒤 다시 노출하기까지 최소 대기 (ms) — 세이프가드 */
 const STAGE_AD_COOLDOWN_MS = 3 * 60 * 1000;
 

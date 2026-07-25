@@ -77,13 +77,36 @@ function printHelp() {
   npm run ota:upload -- --platform ios --channel preview -m "핫픽스"
 
 Flags:
-  --platform ios|android|all     (default: all)
+  --platform ios|android|all     (default: all = ios+android, web 제외)
   --channel prod|production|preview  (default: production)
   --runtime-version <ver>        warn if mismatch with app.json
   --apply-mode immediate|next-launch  (info only; app applies on splash)
   --message / -m <text>          (default: auto timestamp)
   --api-base-url <url>           ignored (EAS Update uses Expo CDN)
 `);
+}
+
+function runEasUpdate({ channel, platform, message }) {
+  const args = [
+    'eas-cli',
+    'update',
+    '--channel',
+    channel,
+    '--platform',
+    platform,
+    '--message',
+    message,
+    '--non-interactive',
+  ];
+
+  console.log(`[ota:upload] eas update --platform ${platform} ...`);
+  const result = spawnSync('npx', args, {
+    cwd: path.join(__dirname, '..'),
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+    env: { ...process.env, CI: '1' },
+  });
+  return result.status ?? 1;
 }
 
 function main() {
@@ -132,25 +155,19 @@ function main() {
     );
   }
 
-  const args = [
-    'eas-cli',
-    'update',
-    '--channel',
-    channel,
-    '--platform',
-    opts.platform,
-    '--message',
-    message,
-    '--non-interactive',
-  ];
+  // `eas update --platform all` 은 web static export까지 돌려 AdMob 등에서 실패함.
+  // all = 모바일만 (ios → android 순).
+  const platforms =
+    opts.platform === 'all' ? ['ios', 'android'] : [opts.platform];
 
-  const result = spawnSync('npx', args, {
-    cwd: path.join(__dirname, '..'),
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-  });
+  for (const platform of platforms) {
+    const code = runEasUpdate({ channel, platform, message });
+    if (code !== 0) {
+      process.exit(code);
+    }
+  }
 
-  process.exit(result.status ?? 1);
+  process.exit(0);
 }
 
 main();

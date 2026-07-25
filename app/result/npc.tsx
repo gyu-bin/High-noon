@@ -170,7 +170,8 @@ export default function NpcResultScreen() {
   const lossReason = (lossReasonParam ?? '') as LossReason;
   const faster = whoFaster(playerMs, npcMs);
 
-  const [adFlowComplete, setAdFlowComplete] = useState(() => !victory);
+  // 승패 무관 광고 플로우를 거친 뒤 연출 시작
+  const [adFlowComplete, setAdFlowComplete] = useState(false);
   const adHandledKeyRef = useRef<string | null>(null);
   const resultSessionKey = `${npcId ?? ''}-${won ?? ''}-${playerWins ?? ''}-${npcWins ?? ''}-${completionStamp ?? ''}`;
 
@@ -179,10 +180,7 @@ export default function NpcResultScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (won !== '1') {
-        setAdFlowComplete(true);
-        return;
-      }
+      // 승패 무관 3매치마다 전면 — 패배(못 깬) 매치도 카운트
       if (adHandledKeyRef.current === resultSessionKey) {
         setAdFlowComplete(true);
         return;
@@ -197,7 +195,7 @@ export default function NpcResultScreen() {
       return () => {
         cancelled = true;
       };
-    }, [won, resultSessionKey]),
+    }, [resultSessionKey]),
   );
 
   useEffect(() => {
