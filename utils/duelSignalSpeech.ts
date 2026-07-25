@@ -1,24 +1,40 @@
-import { duckBgm } from '@/utils/bgmService';
-import { play, preloadAll, type SoundName } from '@/utils/audioService';
-import { useSettingsStore } from '@/store/settingsStore';
+import * as Speech from 'expo-speech';
 
-const CUE_SFX: Record<'ready' | 'steady', SoundName> = {
-  ready: 'ready_click',
-  steady: 'steady_click',
-};
+import { duckBgm } from '@/utils/bgmService';
 
 export type DuelSpeakCue = 'ready' | 'steady' | 'bang';
 
+const CUE_SPEECH: Record<DuelSpeakCue, string> = {
+  ready: 'Ready',
+  steady: 'Steady',
+  bang: 'Bang!',
+};
+
+/** 결투 큐 음성 중단 (라운드 리셋·조기탭 등) */
 export function stopDuelSignalSpeech(): void {
-  /* SFX 큐 — 엔진 정리용 no-op */
+  try {
+    void Speech.stop();
+  } catch {
+    /* ignore */
+  }
 }
 
-/** READY / STEADY — 전용 효과음(ready_click·steady_click) · BANG은 `playBangShotDuel` */
+/**
+ * READY / STEADY / BANG — 화면 텍스트를 TTS로 읽음.
+ * BANG 총성은 호출측 `playBangShotDuel`이 담당.
+ * 게임 진행 핵심 큐라서 효과음 설정을 꺼도 항상 읽는다.
+ */
 export function speakDuelCue(cue: DuelSpeakCue): void {
-  if (!useSettingsStore.getState().soundEnabled) return;
-  if (cue === 'bang') return;
-
-  void preloadAll();
+  stopDuelSignalSpeech();
   duckBgm(true);
-  play(CUE_SFX[cue]);
+
+  try {
+    Speech.speak(CUE_SPEECH[cue], {
+      language: 'en-US',
+      pitch: cue === 'bang' ? 1.05 : 0.95,
+      rate: cue === 'bang' ? 1.1 : 0.92,
+    });
+  } catch {
+    /* 시뮬레이터·미지원 기기 */
+  }
 }

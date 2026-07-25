@@ -9,23 +9,23 @@ import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
+import { OtaBootSplash } from '@/components/ui/OtaBootSplash';
 import { colors } from '@/constants/theme';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
 import { checkUnlockConditions } from '@/utils/characterAbility';
 import { WESTERN_HERO_FALLBACK } from '@/constants/westernBackground';
-import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
 import { initAds, preloadInterstitial, preloadRewardedAd } from '@/utils/adService';
 import { preloadAll } from '@/utils/audioService';
 import { bootMenuBgm } from '@/utils/bgmService';
-import { markOtaJustApplied } from '@/utils/otaUpdateFlag';
+import { consumeOtaJustApplied, markOtaJustApplied } from '@/utils/otaUpdateFlag';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
 // IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
 // import { initPurchases } from '@/utils/purchaseService';
 
 SplashScreen.preventAutoHideAsync();
 
-/** 스플래시에서 OTA 확인·적용 최대 대기. 초과 시 기존 번들로 진입. */
 const OTA_SPLASH_TIMEOUT_MS = 12_000;
+const OTA_DONE_SHOW_MS = 2400;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -43,16 +43,23 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
- * 스플래시 표시 중 EAS Update 확인 → 다운로드 → 즉시 재시작.
- * JS/에셋(require)만 바뀌는 변경은 앱스토어 재심사 없이 `eas update`로 반영.
- * 네이티브 모듈·권한·런타임버전 변경은 스토어 빌드 필요.
+ * 스플래시(부트 화면)에서 EAS Update 확인 → 다운로드 → 재시작.
+ * 재시작 직후엔 같은 화면에서 "업데이트 완료"를 잠깐 보여 준다.
  */
-async function applyOtaUpdateIfAvailable(): Promise<boolean> {
+async function applyOtaUpdateIfAvailable(
+  onStatus: (message: string) => void,
+): Promise<boolean> {
   if (__DEV__ || !Updates.isEnabled) return false;
   try {
+    onStatus('업데이트 확인 중…');
     const check = await withTimeout(Updates.checkForUpdateAsync(), OTA_SPLASH_TIMEOUT_MS);
     if (!check.isAvailable) return false;
+    onStatus('업데이트 적용 중…');
     await withTimeout(Updates.fetchUpdateAsync(), OTA_SPLASH_TIMEOUT_MS);
     await markOtaJustApplied();
     await Updates.reloadAsync();
@@ -69,17 +76,17 @@ export default function RootLayout() {
 
   const ready = fontsLoaded || fontError != null;
   const [appReady, setAppReady] = useState(false);
+  const [bootMessage, setBootMessage] = useState<string | null>(null);
 
   useAutoScreenshotTour(appReady);
 
-  // 전 화면 회전 허용 — 이전 실행에서 잠긴 방향이 남아있을 수 있어 해제
   useEffect(() => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const so: typeof import('expo-screen-orientation') = require('expo-screen-orientation');
       void so.unlockAsync().catch(() => {});
     } catch {
-      // 네이티브 모듈 미포함 빌드 — app.json orientation 설정에 의존
+      // 네이티브 모듈 미포함 빌드
     }
   }, []);
 
@@ -89,15 +96,30 @@ export default function RootLayout() {
     let cancelled = false;
 
     async function prepare() {
-      const reloading = await applyOtaUpdateIfAvailable();
+      // 네이티브 스플래시 → 동일 색 부트 화면 (메시지 표시 가능)
+      await SplashScreen.hideAsync();
+      if (cancelled) return;
+
+      // 직전 OTA reload 로 들어온 경우 — 스플래시에서 완료 안내
+      const justUpdated = await consumeOtaJustApplied();
+      if (cancelled) return;
+      if (justUpdated) {
+        setBootMessage('업데이트 완료');
+        await delay(OTA_DONE_SHOW_MS);
+        if (cancelled) return;
+        setBootMessage(null);
+      }
+
+      const reloading = await applyOtaUpdateIfAvailable((msg) => {
+        if (!cancelled) setBootMessage(msg);
+      });
       if (reloading || cancelled) return;
+      setBootMessage(null);
 
       await preloadTitleHero();
       if (cancelled) return;
-      // 진행도 기준 캐릭터 해금 동기화 + 잠긴 캐릭터가 선택돼 있으면 기본 캐릭터로 복구
       checkUnlockConditions();
       setAppReady(true);
-      await SplashScreen.hideAsync();
       void preloadAll();
       void bootMenuBgm();
       void preloadSceneImages();
@@ -105,7 +127,6 @@ export default function RootLayout() {
         preloadInterstitial();
         preloadRewardedAd();
       });
-      // void initPurchases(); // IAP 임시 비활성
     }
 
     void prepare();
@@ -115,8 +136,17 @@ export default function RootLayout() {
     };
   }, [ready]);
 
-  if (!ready || !appReady) {
+  if (!ready) {
     return null;
+  }
+
+  if (!appReady) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar style="light" />
+        <OtaBootSplash message={bootMessage} />
+      </SafeAreaProvider>
+    );
   }
 
   return (
@@ -142,7 +172,6 @@ export default function RootLayout() {
         <Stack.Screen name="capture" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ headerShown: false }} />
       </Stack>
-      <OtaUpdatedToast />
     </SafeAreaProvider>
   );
 }
