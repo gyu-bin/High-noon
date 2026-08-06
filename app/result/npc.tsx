@@ -180,7 +180,7 @@ export default function NpcResultScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      // 승패 무관 3매치마다 전면 — 패배(못 깬) 매치도 카운트
+      // 승패 무관 — NPC 한 판 끝날 때마다 전면
       if (adHandledKeyRef.current === resultSessionKey) {
         setAdFlowComplete(true);
         return;

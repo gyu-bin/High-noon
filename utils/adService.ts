@@ -47,10 +47,10 @@ let initialized = false;
 /** 동적 로드된 전면 인스턴스 (타입은 런타임만 사용) */
 let interstitial: ReturnType<AdsLib['InterstitialAd']['createForAdRequest']> | null = null;
 
-/** N매치마다 전면 노출 (승패 무관) */
-const MATCHES_PER_INTERSTITIAL = 3;
-/** 직전 전면을 닫은 뒤 다시 노출하기까지 최소 대기 (ms) — 세이프가드 */
-const STAGE_AD_COOLDOWN_MS = 3 * 60 * 1000;
+/** 매치마다 전면 노출 (승패 무관) */
+const MATCHES_PER_INTERSTITIAL = 1;
+/** 연속 전면 최소 간격 — 매판 노출이므로 쿨다운 없음 */
+const STAGE_AD_COOLDOWN_MS = 0;
 
 let lastStageInterstitialClosedAt = 0;
 let matchesSinceLastAd = 0;
@@ -107,11 +107,10 @@ export function preloadInterstitial(): void {
 }
 
 /**
- * 매치 완료(승·패 무관) 후 호출. 5매치마다 전면 광고 노출.
+ * 매치 완료(승·패 무관) 후 호출. 매 판마다 전면 광고 노출.
  * - `progressStore.isAdFree === true`이면 즉시 resolve (스킵).
- * - 카운터가 임계값에 도달했을 때만 표시. 도달 안 하면 즉시 resolve.
- * - 안전장치로 짧은 쿨다운(3분)도 검사.
- * - 실제로 표시된 뒤 `CLOSED`에서 카운터·쿨다운 갱신. 로드/표시 실패는 카운터 유지.
+ * - 로드/표시 실패 시에도 resolve 해서 결과 화면은 진행.
+ * - 닫힌 뒤 다음 전면을 미리 로드.
  */
 export function showStageCompleteAd(): Promise<void> {
   if (!ADS_ENABLED || useProgressStore.getState().isAdFree) {
@@ -123,9 +122,11 @@ export function showStageCompleteAd(): Promise<void> {
     return Promise.resolve();
   }
 
-  const now = Date.now();
-  if (now - lastStageInterstitialClosedAt < STAGE_AD_COOLDOWN_MS) {
-    return Promise.resolve();
+  if (STAGE_AD_COOLDOWN_MS > 0) {
+    const now = Date.now();
+    if (now - lastStageInterstitialClosedAt < STAGE_AD_COOLDOWN_MS) {
+      return Promise.resolve();
+    }
   }
 
   return new Promise((resolve) => {
