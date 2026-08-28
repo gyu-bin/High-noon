@@ -55,9 +55,17 @@ const STAGE_AD_COOLDOWN_MS = 60_000;
 
 let lastStageInterstitialClosedAt = 0;
 let matchesSinceLastAd = 0;
+/**
+ * 전면 노출 플로우가 인스턴스를 점유 중인지 여부.
+ * 점유 중에 preload가 인스턴스를 교체하면 표시 중인 광고의 CLOSED 리스너가
+ * 사라져 결과 화면이 로딩 상태로 멈춘다.
+ */
+let interstitialBusy = false;
 
 /** 보상형 광고 인스턴스 */
 let rewarded: ReturnType<AdsLib['RewardedAd']['createForAdRequest']> | null = null;
+/** 보상형도 동일 — 표시/대기 중 교체 금지 */
+let rewardedBusy = false;
 
 function getProductionRewardedUnitId(): string {
   return Platform.select({
@@ -90,13 +98,17 @@ export async function initAds(): Promise<void> {
 }
 
 /**
- * 전면 광고 미리 로드. 매치 진입 시 또는 전면 종료 직후 호출.
+ * 전면 광고 미리 로드. 앱 부팅 시 또는 전면 종료 직후 호출.
+ * - 노출 플로우가 인스턴스를 쓰는 중이면 아무것도 하지 않는다.
+ * - 이미 로드된 광고가 있으면 재생성하지 않는다(재생성 = 처음부터 다시 로드 = 대기 시간).
  */
 export function preloadInterstitial(): void {
   if (!ADS_ENABLED) return;
   void initAds().then(async () => {
     const lib = await getAdsLib();
     if (!lib) return;
+    if (interstitialBusy) return;
+    if (interstitial?.loaded) return;
     try {
       interstitial?.removeAllListeners();
       interstitial = lib.InterstitialAd.createForAdRequest(getInterstitialUnitId(lib));
@@ -109,8 +121,16 @@ export function preloadInterstitial(): void {
 
 /** 광고 표시 후 CLOSED 이벤트가 오지 않을 경우 대비 타임아웃 (ms) */
 const AD_SHOW_TIMEOUT_MS = 30000;
-/** AppState가 active로 돌아온 뒤 grace period (ms) */
-const AD_FOREGROUND_GRACE_MS = 1500;
+/** AppState가 active로 돌아온 뒤 grace period (ms) — CLOSED가 먼저 도착할 여유만 준다 */
+const AD_FOREGROUND_GRACE_MS = 250;
+/**
+ * 노출 전 로드 대기 최대 시간 (ms).
+ * 이 안에 준비되지 않으면 광고를 포기하고 화면을 진행시킨다.
+ * (로드는 계속 진행되어 다음 기회에 즉시 노출된다)
+ */
+const AD_LOAD_TIMEOUT_MS = 3000;
+/** 보상형 로드 대기 최대 시간 (ms) — 유저가 직접 요청한 광고라 조금 더 기다린다 */
+const REWARDED_LOAD_TIMEOUT_MS = 8000;
 
 /**
  * 매치 완료(승·패 무관) 후 호출. `MATCHES_PER_INTERSTITIAL`판마다,
@@ -137,11 +157,16 @@ export function showStageCompleteAd(): Promise<void> {
     }
   }
 
+  // preload가 인스턴스를 갈아치우지 못하도록 동기적으로 점유를 선언한다.
+  interstitialBusy = true;
+
   return new Promise((resolve) => {
     let resolved = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let appStateSubscription: ReturnType<typeof AppState.addEventListener> | null = null;
     let adShown = false;
+    /** 광고 표시로 앱이 foreground를 벗어난 적이 있는지 */
+    let leftForeground = false;
 
     const cleanup = () => {
       if (timeoutId) {
@@ -158,6 +183,7 @@ export function showStageCompleteAd(): Promise<void> {
       if (resolved) return;
       resolved = true;
       cleanup();
+      interstitialBusy = false;
       preloadInterstitial();
       resolve();
     };
@@ -166,6 +192,15 @@ export function showStageCompleteAd(): Promise<void> {
       lastStageInterstitialClosedAt = Date.now();
       matchesSinceLastAd = 0;
       finish();
+    };
+
+    /** 로드 대기 포기 — 진행 중인 로드는 살려두고 화면만 진행시킨다 */
+    const finishKeepingLoad = () => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      interstitialBusy = false;
+      resolve();
     };
 
     void initAds().then(async () => {
@@ -193,6 +228,8 @@ export function showStageCompleteAd(): Promise<void> {
 
           adShown = true;
 
+          // 로드 대기 타임아웃을 표시용 타임아웃으로 교체
+          if (timeoutId) clearTimeout(timeoutId);
           // 광고 표시 후 타임아웃 설정 — CLOSED 이벤트 미발생 대비
           timeoutId = setTimeout(() => {
             if (!resolved) {
@@ -200,15 +237,19 @@ export function showStageCompleteAd(): Promise<void> {
             }
           }, AD_SHOW_TIMEOUT_MS);
 
-          // AppState 감지 — 앱이 foreground로 돌아오면 grace period 후 완료
+          // AppState 감지 — 광고로 앱이 내려갔다가 돌아온 경우에만 완료 처리.
+          // (표시 직후의 inactive→active 전환을 광고 종료로 오인하면 광고 뒤에서 결과가 재생된다)
           appStateSubscription = AppState.addEventListener('change', (nextState) => {
-            if (nextState === 'active' && adShown && !resolved) {
-              setTimeout(() => {
-                if (!resolved) {
-                  finishAfterClosed();
-                }
-              }, AD_FOREGROUND_GRACE_MS);
+            if (nextState !== 'active') {
+              leftForeground = true;
+              return;
             }
+            if (!leftForeground || !adShown || resolved) return;
+            setTimeout(() => {
+              if (!resolved) {
+                finishAfterClosed();
+              }
+            }, AD_FOREGROUND_GRACE_MS);
           });
 
           void ad.show().catch(finish);
@@ -219,6 +260,8 @@ export function showStageCompleteAd(): Promise<void> {
           return;
         }
 
+        // 아직 로드 전 — 무한정 기다리지 않는다. 로딩 오버레이가 길어지느니 광고를 건너뛴다.
+        timeoutId = setTimeout(finishKeepingLoad, AD_LOAD_TIMEOUT_MS);
         ad.addAdEventListener(AdEventType.LOADED, present);
         ad.addAdEventListener(AdEventType.ERROR, finish);
       } catch {
@@ -234,6 +277,8 @@ export function preloadRewardedAd(): void {
   void initAds().then(async () => {
     const lib = await getAdsLib();
     if (!lib) return;
+    if (rewardedBusy) return;
+    if (rewarded?.loaded) return;
     try {
       rewarded?.removeAllListeners();
       rewarded = lib.RewardedAd.createForAdRequest(getRewardedUnitId(lib));
@@ -256,6 +301,8 @@ export function showRewardedAd(): Promise<boolean> {
     return Promise.resolve(true);
   }
 
+  rewardedBusy = true;
+
   return new Promise((resolve) => {
     let earned = false;
     let resolved = false;
@@ -272,8 +319,18 @@ export function showRewardedAd(): Promise<boolean> {
       if (resolved) return;
       resolved = true;
       cleanup();
+      rewardedBusy = false;
       preloadRewardedAd();
       resolve(result);
+    };
+
+    /** 로드 대기 포기 — 진행 중인 로드는 살려둔다 */
+    const finishKeepingLoad = () => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      rewardedBusy = false;
+      resolve(false);
     };
 
     void initAds().then(async () => {
@@ -302,6 +359,7 @@ export function showRewardedAd(): Promise<boolean> {
           ad.addAdEventListener(AdEventType.CLOSED, () => finish(earned));
           ad.addAdEventListener(AdEventType.ERROR, () => finish(false));
 
+          if (timeoutId) clearTimeout(timeoutId);
           timeoutId = setTimeout(() => {
             if (!resolved) {
               finish(earned);
@@ -316,7 +374,10 @@ export function showRewardedAd(): Promise<boolean> {
           return;
         }
 
-        ad.addAdEventListener(AdEventType.LOADED, present);
+        // 보상형은 유저가 "광고 보기"를 누른 상태라 조금 더 기다려 주되, 무한 대기는 막는다.
+        timeoutId = setTimeout(finishKeepingLoad, REWARDED_LOAD_TIMEOUT_MS);
+        // 보상형은 AdEventType.LOADED를 쓰면 라이브러리가 throw 한다. (RewardedAdEventType.LOADED 사용)
+        ad.addAdEventListener(RewardedAdEventType.LOADED, present);
         ad.addAdEventListener(AdEventType.ERROR, () => finish(false));
       } catch {
         finish(false);

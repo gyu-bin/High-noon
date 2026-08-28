@@ -34,7 +34,7 @@ import { getNpcDisplayName } from '@/utils/npcLabels';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { bgmPlay } from '@/utils/audioService';
-import { initAds, preloadInterstitial, showStageCompleteAd } from '@/utils/adService';
+import { showStageCompleteAd } from '@/utils/adService';
 import { trigger } from '@/utils/hapticService';
 
 type LossReason = 'early' | 'timeout' | 'slower' | '';
@@ -191,7 +191,8 @@ export default function NpcResultScreen() {
       adHandledKeyRef.current = resultSessionKey;
       setAdFlowComplete(false);
       let cancelled = false;
-      void initAds().then(() => preloadInterstitial());
+      // 여기서 preloadInterstitial()을 부르면 showStageCompleteAd가 쓰는 인스턴스를
+      // 교체해 버려 로딩이 길어진다. 로드·다음 광고 준비는 showStageCompleteAd가 맡는다.
       void showStageCompleteAd().then(() => {
         if (!cancelled) setAdFlowComplete(true);
       });
