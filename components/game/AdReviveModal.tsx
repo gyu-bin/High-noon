@@ -1,4 +1,5 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { FONT_RYE } from '@/constants/fonts';
 import { colors } from '@/constants/theme';
@@ -21,6 +22,8 @@ export function AdReviveModal({
   onWatchAd,
   onDecline,
 }: Props) {
+  const { t } = useTranslation();
+
   return (
     <Modal
       transparent
@@ -31,32 +34,30 @@ export function AdReviveModal({
     >
       <View style={styles.backdrop}>
         <View style={styles.card}>
-          <Text style={[styles.title, { fontFamily: FONT_RYE }]}>아직 끝난 게 아니야</Text>
+          <Text style={[styles.title, { fontFamily: FONT_RYE }]}>{t('revive.title')}</Text>
           <Text style={styles.score}>
             {playerWins} <Text style={styles.dash}>—</Text> {opponentWins}
           </Text>
-          <Text style={styles.desc}>
-            광고를 보면 한 판 더 도전할 수 있습니다.{'\n'}이번 기회는 한 번뿐입니다.
-          </Text>
+          <Text style={styles.desc}>{t('revive.desc')}</Text>
           <Pressable
-            accessibilityLabel="광고 보고 한 판 더 도전"
+            accessibilityLabel={t('revive.watchAdA11y')}
             accessibilityRole="button"
             onPress={onWatchAd}
             disabled={loading}
             style={[styles.watchBtn, loading && styles.watchBtnDisabled]}
           >
             <Text style={styles.watchText}>
-              {loading ? '광고 준비 중…' : '광고 보고 한 판 더'}
+              {loading ? t('revive.watchAdLoading') : t('revive.watchAd')}
             </Text>
           </Pressable>
           <Pressable
-            accessibilityLabel="포기하고 결과 보기"
+            accessibilityLabel={t('revive.declineA11y')}
             accessibilityRole="button"
             onPress={onDecline}
             disabled={loading}
             style={styles.declineBtn}
           >
-            <Text style={styles.declineText}>포기</Text>
+            <Text style={styles.declineText}>{t('revive.giveUp')}</Text>
           </Pressable>
         </View>
       </View>
@@ -78,70 +79,56 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(18, 10, 6, 0.98)',
     borderWidth: 1,
     borderColor: 'rgba(212, 165, 116, 0.5)',
-    borderRadius: 18,
-    padding: 24,
+    borderRadius: 16,
+    padding: 22,
     alignItems: 'center',
-    gap: 12,
   },
   title: {
-    fontSize: 26,
-    color: colors.ochre,
-    letterSpacing: 2,
-    textShadowColor: 'rgba(0,0,0,0.9)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
-    marginBottom: 4,
+    fontSize: 22,
+    color: colors.cream,
+    letterSpacing: 1,
+    textAlign: 'center',
   },
   score: {
-    fontSize: 40,
+    marginTop: 14,
+    fontSize: 28,
     fontWeight: '900',
-    color: colors.cream,
-    letterSpacing: 4,
-    marginVertical: 4,
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+    color: colors.ochre,
   },
   dash: {
     color: colors.sand,
-    opacity: 0.65,
+    fontWeight: '600',
   },
   desc: {
+    marginTop: 14,
     fontSize: 14,
-    color: colors.cream,
-    opacity: 0.9,
+    lineHeight: 21,
+    color: colors.sand,
     textAlign: 'center',
-    marginBottom: 8,
-    lineHeight: 20,
   },
   watchBtn: {
-    alignSelf: 'stretch',
+    marginTop: 20,
+    width: '100%',
     paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: colors.rustRed,
-    borderWidth: 1,
-    borderColor: 'rgba(245, 230, 200, 0.45)',
+    borderRadius: 10,
+    backgroundColor: colors.ochre,
     alignItems: 'center',
   },
   watchBtnDisabled: {
-    opacity: 0.6,
+    opacity: 0.65,
   },
   watchText: {
-    color: colors.cream,
-    fontWeight: '900',
-    fontSize: 15,
-    letterSpacing: 1.5,
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.darkBrown,
   },
   declineBtn: {
-    alignSelf: 'stretch',
+    marginTop: 12,
     paddingVertical: 10,
-    alignItems: 'center',
   },
   declineText: {
-    color: colors.sand,
+    fontSize: 14,
     fontWeight: '700',
-    fontSize: 13,
-    letterSpacing: 1,
-    opacity: 0.8,
+    color: colors.sand,
   },
 });

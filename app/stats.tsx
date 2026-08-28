@@ -2,6 +2,7 @@ import { Stack, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
@@ -13,6 +14,7 @@ import { NPCS } from '@/constants/npcs';
 import { useProgressStore } from '@/store/progressStore';
 
 export default function StatsScreen() {
+  const { t } = useTranslation();
   useScreenBgm('menu');
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -47,23 +49,21 @@ export default function StatsScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.head, { fontFamily: FONT_RYE }]}>기록</Text>
+          <Text style={[styles.head, { fontFamily: FONT_RYE }]}>{t('stats.title')}</Text>
 
           <View style={styles.card}>
-            <Text style={styles.label}>전체 평균 반응</Text>
+            <Text style={styles.label}>{t('stats.avgReaction')}</Text>
             <Text style={styles.value}>{avg != null ? `${avg.toFixed(1)} ms` : '—'}</Text>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.label}>NPC 클리어</Text>
+            <Text style={styles.label}>{t('stats.npcCleared')}</Text>
             <Text style={styles.value}>
               {clearedCount} / {NPCS.length}
             </Text>
           </View>
 
-          <Text style={styles.footnote}>
-            vs NPC·2인 대결에서 반응이 기록될 때마다 평균이 갱신됩니다.
-          </Text>
+          <Text style={styles.footnote}>{t('stats.footnote')}</Text>
         </ScrollView>
       </MetaScreenShell>
     </>

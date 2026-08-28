@@ -12,7 +12,10 @@
   },
   "menu": {
     "play": "プレイ",
+    "vsNpc": "vs NPC",
+    "vsNpcHint": "対戦相手リストへ",
     "localDuel": "2人対戦",
+    "localDuelHint": "ラウンド数を選び、同じ端末で2人プレイ",
     "more": "その他",
     "stats": "記録",
     "character": "キャラクター",
@@ -21,7 +24,21 @@
     "sfx": "効果音",
     "vibration": "振動",
     "language": "言語",
-    "progress": "進行状況 — 解放済みNPC"
+    "progress": "進行状況 — 解放済みNPC",
+    "landscapeHintTitle": "横向きでもOK",
+    "landscapeHintBody": "縦向き・横向きどちらも対応しています。\n好きな向きでプレイしてください。",
+    "landscapeHintOk": "OK"
+  },
+  "settings": {
+    "languageAuto": "自動",
+    "languageAutoSub": "端末設定",
+    "languageAutoHint": "端末の言語 · {{lang}}",
+    "languageKo": "한국어",
+    "languageEn": "English",
+    "languageJa": "日本語",
+    "languageCodeKo": "KO",
+    "languageCodeEn": "EN",
+    "languageCodeJa": "JA"
   },
   "game": {
     "pause": "一時停止",
@@ -31,12 +48,25 @@
     "tapToContinue": "タップして続行",
     "tapToNextRound": "タップして次のラウンドへ",
     "tapToExit": "タップして終了",
-    "earlyTapWarning": "バン前にタップすると即敗北"
+    "earlyTapWarning": "バン前にタップすると即敗北",
+    "tapAnywhere": "TAP ANYWHERE",
+    "waitForBang": "WAIT FOR BANG…",
+    "tapShort": "TAP!",
+    "duelTapArea": "決闘タップエリア",
+    "tapHintShoot": "画面をタップして撃つ",
+    "tapHintEarly": "バン前にタップすると即敗北",
+    "pauseA11y": "一時停止",
+    "toOpponentSelect": "対戦相手選択へ",
+    "exitLocalDuel": "対戦をやめる",
+    "p1TapArea": "P1タップエリア",
+    "p2TapArea": "P2タップエリア",
+    "scoreLine": "{{p1}} — {{p2}} · {{wins}}先取"
   },
   "result": {
     "victory": "勝利",
     "defeat": "敗北",
     "draw": "引き分け",
+    "roundVictory": "勝利!",
     "lastStand": "ラストスタンド",
     "headshot": "ヘッドショット",
     "wonDuel": "決闘に勝ちました",
@@ -62,28 +92,80 @@
   },
   "localDuel": {
     "selectRounds": "ラウンド数選択",
+    "sub": "先取制に合わせてハート数が決まります。ボタンを押すと同じ端末で2人対戦が始まります。",
+    "defaultPreset": "デフォルト: {{rounds}}本中{{wins}}先取",
     "roundFormat": "{{rounds}}本中{{wins}}先取",
+    "roundButton": "{{rounds}}本 · {{wins}}先取",
     "p1Wins": "P1 · {{wins}}勝",
-    "p2Wins": "P2 · {{wins}}勝"
+    "p2Wins": "P2 · {{wins}}勝",
+    "lastRound": "最終ラウンド · P1 {{p1}} — {{p2}} P2",
+    "matchScoreLine": "P1 {{p1}} — {{p2}} P2 · {{wins}}先取",
+    "matchWinTitle": "マッチ勝利!",
+    "matchWinPlayer": "{{player}} の勝ち",
+    "finalScoreLine": "最終スコア {{p1}} — {{p2}}"
   },
   "character": {
     "title": "ガンマン",
     "subtitle": "決闘で使用するキャラクターを選びます",
     "noAbility": "能力なし",
     "selected": "選択中",
-    "unlocked": "??? 解放済み"
+    "unlocked": "??? 解放済み",
+    "hiddenRevealBody": "隠されたガンマンが姿を現します。",
+    "unlock": {
+      "default": "最初から解放",
+      "npcClears": "NPC {{count}}人クリア",
+      "hidden": "解放条件未公開"
+    },
+    "abilityOverlay": {
+      "lastStand": "ラストスタンド!",
+      "headshot": "ヘッドショット!",
+      "revive": "もう一度!"
+    },
+    "list": {
+      "1": {
+        "name": "名もなきガンマン",
+        "ability": "",
+        "abilityDesc": ""
+      },
+      "2": {
+        "name": "鉄の保安官",
+        "ability": "ラストスタンド",
+        "abilityDesc": "マッチ1回、負けたラウンドを勝利に反転します。"
+      },
+      "3": {
+        "name": "赤いロサ",
+        "ability": "ヘッドショット",
+        "abilityDesc": "勝利ラウンド直後に選択すると、NPCのハートを2つ同時に除去します。（マッチ1回）"
+      },
+      "4": {
+        "name": "亡霊の狙撃手",
+        "ability": "もう一度",
+        "abilityDesc": "マッチ1回、プレイヤーのハートが0になる代わりに1で復活します。"
+      }
+    }
   },
   "stats": {
     "title": "記録",
     "avgReaction": "平均反応速度",
-    "npcCleared": "NPCクリア"
+    "npcCleared": "NPCクリア",
+    "footnote": "vs NPC・2人対戦で反応が記録されるたびに平均が更新されます。"
   },
   "npcSelect": {
     "title": "対戦相手選択",
-    "locked": "ロック中の対戦相手 {{name}}"
+    "locked": "ロック中の対戦相手 {{name}}",
+    "challenge": "{{name}}に挑戦",
+    "maskedBadge": "???",
+    "maskedHint": "クリア後に公開",
+    "avgReaction": "平均反応",
+    "clearLabel": "クリア"
   },
   "revive": {
     "title": "まだ終わりじゃない",
+    "desc": "広告を見るともう1ラウンド挑戦できます。\nこのチャンスは一度だけです。",
+    "watchAd": "広告を見て再挑戦",
+    "watchAdLoading": "広告準備中…",
+    "watchAdA11y": "広告を見てもう1ラウンド",
+    "declineA11y": "諦めて結果を見る",
     "giveUp": "諦める"
   },
   "nav": {
@@ -92,5 +174,16 @@
     "stats": "記録",
     "character": "キャラクター",
     "duel": "決闘"
+  },
+  "ota": {
+    "updated": "アップデート完了"
+  },
+  "a11y": {
+    "titleTap": "タップしてメニューへ"
+  },
+  "speech": {
+    "ready": "レディ!",
+    "steady": "ステディ!",
+    "bang": "バン!"
   }
 }

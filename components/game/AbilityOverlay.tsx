@@ -8,8 +8,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { useTranslation } from 'react-i18next';
+
 import { RM_GAME } from '@/constants/reanimatedGame';
 import { colors } from '@/constants/theme';
+import { abilityOverlayLabel } from '@/utils/characterLabels';
 
 export type AbilityOverlayType = 'last_stand' | 'headshot' | 'revive' | null;
 
@@ -24,6 +27,7 @@ const DURATION_MS = 1100;
  * 캐릭터 능력 발동 전면 연출 (NPC 결투 위에 표시)
  */
 export function AbilityOverlay({ abilityType, onComplete }: Props) {
+  const { t } = useTranslation();
   const scale = useSharedValue(0.75);
   const opacity = useSharedValue(0);
 
@@ -92,7 +96,7 @@ export function AbilityOverlay({ abilityType, onComplete }: Props) {
             <Text style={styles.shieldGlyph}>🛡</Text>
           </View>
           <Animated.Text style={[styles.label, styles.labelGold, textStyle]}>
-            LAST STAND!
+            {abilityOverlayLabel(t, 'lastStand')}
           </Animated.Text>
         </View>
       ) : null}
@@ -104,7 +108,7 @@ export function AbilityOverlay({ abilityType, onComplete }: Props) {
             <View style={styles.chDot} />
           </View>
           <Animated.Text style={[styles.label, styles.labelRed, textStyle]}>
-            HEADSHOT!
+            {abilityOverlayLabel(t, 'headshot')}
           </Animated.Text>
         </View>
       ) : null}
@@ -112,7 +116,7 @@ export function AbilityOverlay({ abilityType, onComplete }: Props) {
         <View style={styles.fxCol}>
           <View style={styles.aura} />
           <Animated.Text style={[styles.label, styles.labelRevive, textStyle]}>
-            REVIVE!
+            {abilityOverlayLabel(t, 'revive')}
           </Animated.Text>
         </View>
       ) : null}

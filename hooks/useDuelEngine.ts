@@ -107,10 +107,21 @@ function buildSteadyPlan(
   return plan;
 }
 
+export type DuelEngineOptions = {
+  /** 플레이어가 뱅 후 유효 탭(발사) */
+  onPlayerShoot?: () => void;
+  /** NPC 반응 시간에 opponent 발사 */
+  onOpponentShoot?: () => void;
+};
+
 /**
  * NPC 1인 결투. `start(timing?, { fakeBangCount })` — NPC별 `duelTiming`이 없을 때만 `DEFAULT_DUEL_TIMING`(단계별 1~5초).
  */
-export function useDuelEngine() {
+export function useDuelEngine(options?: DuelEngineOptions) {
+  const onPlayerShootRef = useRef(options?.onPlayerShoot);
+  const onOpponentShootRef = useRef(options?.onOpponentShoot);
+  onPlayerShootRef.current = options?.onPlayerShoot;
+  onOpponentShootRef.current = options?.onOpponentShoot;
   const [phase, setPhase] = useState<DuelPhase>('대기');
   const [signalText, setSignalText] = useState('');
   const [outcome, setOutcome] = useState<DuelOutcome | null>(null);
@@ -149,7 +160,6 @@ export function useDuelEngine() {
 
   const resolveBangLoss = useCallback(
     (next: DuelOutcome) => {
-      stopDuelSignalSpeech();
       clearAllTimers();
       bangArmedRef.current = false;
       bangStartMsRef.current = null;
@@ -191,6 +201,7 @@ export function useDuelEngine() {
       opponentShotTimerRef.current = setTimeout(() => {
         if (duelSeqRef.current !== seq || !bangArmedRef.current) return;
         opponentShotDeadlineRef.current = null;
+        onOpponentShootRef.current?.();
         forceTimeout();
       }, ms);
     },
@@ -350,6 +361,7 @@ export function useDuelEngine() {
       const reactionMs = performance.now() - bangStartMsRef.current;
       bangStartMsRef.current = null;
       duelSeqRef.current += 1;
+      onPlayerShootRef.current?.();
       finish({ reactionMs, earlyTap: false, timeout: false });
       return;
     }

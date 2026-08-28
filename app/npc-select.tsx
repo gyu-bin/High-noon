@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
@@ -81,6 +82,7 @@ function buildGridCells(
 }
 
 function NpcSelectStatsHeader({ paleUnlocked }: { paleUnlocked: boolean }) {
+  const { t } = useTranslation();
   const avg = useProgressStore((s) => {
     if (s.reactionAggregate.count <= 0) return null;
     return s.reactionAggregate.sumMs / s.reactionAggregate.count;
@@ -97,13 +99,13 @@ function NpcSelectStatsHeader({ paleUnlocked }: { paleUnlocked: boolean }) {
   return (
     <View style={styles.statsBar}>
       <Text style={styles.statsText}>
-        평균 반응{' '}
+        {t('npcSelect.avgReaction')}{' '}
         <Text style={styles.statsValue}>
           {avg != null ? `${formatReactionMs(avg)} ms` : '—'}
         </Text>
       </Text>
       <Text style={styles.statsText}>
-        클리어{' '}
+        {t('npcSelect.clearLabel')}{' '}
         <Text style={styles.statsValue}>
           {clearCount} / {total}
         </Text>

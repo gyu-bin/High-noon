@@ -1,23 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { TIER_BADGE } from '@/constants/npcVisual';
 import { colors } from '@/constants/theme';
+import { getNpcTierLabel } from '@/utils/npcLabels';
 
 /** §2-2 레전드 마스크 카드 (#19~21, #18 클리어 전) */
 export function MaskedLegendCard() {
+  const { t } = useTranslation();
   const badge = TIER_BADGE.legend;
+  const tierLabel = getNpcTierLabel(t, 'legend');
+
   return (
     <View style={styles.outer}>
       <View style={styles.card}>
         <View style={styles.silhouette}>
           <Text style={styles.q}>?</Text>
         </View>
-        <Text style={styles.line}>LEGEND</Text>
+        <Text style={styles.line}>{tierLabel}</Text>
         <View style={[styles.badge, { backgroundColor: badge.bg }]}>
-          <Text style={[styles.badgeText, { color: badge.text }]}>???</Text>
+          <Text style={[styles.badgeText, { color: badge.text }]}>
+            {t('npcSelect.maskedBadge')}
+          </Text>
         </View>
-        <Text style={styles.sub}>??????????</Text>
+        <Text style={styles.sub}>{t('npcSelect.maskedHint')}</Text>
         <Ionicons name="lock-closed" size={18} color={colors.sand} />
       </View>
     </View>
@@ -77,5 +84,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: colors.sand,
     letterSpacing: 1,
+    textAlign: 'center',
   },
 });

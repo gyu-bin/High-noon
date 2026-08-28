@@ -39,7 +39,7 @@ export default function TitleScreen() {
     <WesternHomeBackground>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="화면을 눌러 메뉴로"
+        accessibilityLabel={t('a11y.titleTap')}
         onPress={goMenu}
         style={StyleSheet.absoluteFill}
       >

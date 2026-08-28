@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
 import type { StyleProp, ViewStyle } from 'react-native';
 import type { AnimatedStyle } from 'react-native-reanimated';
@@ -89,6 +90,7 @@ export function LocalDuelArenaLayout({
   onPause,
   orientation = 'portrait',
 }: Props) {
+  const { t } = useTranslation();
   const landscape = orientation === 'landscape';
   const { width: figW, height: figH } = landscape
     ? duelFigureSizeLandscape(height)
@@ -96,12 +98,20 @@ export function LocalDuelArenaLayout({
   const boardPhase = signalPhase ?? enginePhaseToSignalBoardPhase(phase);
   // P1 쓰러짐 — 하단 점수 바·화면 밖으로 몸이 잘리지 않게 존을 올림 (NPC전과 동일)
   const p1DefeatLift = !landscape && p1Pose === 'defeat' ? DUEL_PLAYER_DEFEAT_LIFT_PX : 0;
+  // P2 portrait — 상단 절반이 180° 회전 → defeat 시 +paddingTop/+낙하는 물리 상단(노치) 쪽으로 밀려 숨음
   const p2DefeatLift = !landscape && p2Pose === 'defeat' ? DUEL_PLAYER_DEFEAT_LIFT_PX : 0;
+  const p2PortraitDefeatDrop =
+    !landscape && p2Pose === 'defeat' ? -Math.round(figH * 0.34) : undefined;
+  const p2LandscapeDefeatDrop =
+    landscape && p2Pose === 'defeat' ? Math.round(figH * 0.05) : undefined;
   // 가로 — NPC 결투와 동일한 사이드·지면 간격
   const sideInset = Math.round(width * 0.07);
   const groundBottom = Math.max(paddingBottom + 30, Math.round(height * 0.09));
-  // 세로 — 캐릭터를 각 절반 안쪽으로 올려 각 플레이어 시야 중앙 부근에 위치
+  // 세로 — 캐릭터를 각 절반 안쪽(스플릿 라인) 쪽에 배치
   const halfInnerPad = 84;
+  /** portrait P2 — 180° 회전 후 물리 상단(다이나믹 아일랜드)과 겹치지 않게 · defeat는 스플릿 쪽으로 */
+  const p2PortraitPadTop = Math.max(8, 52 - p2DefeatLift);
+  const navTopPortrait = height / 2 + 10;
 
   return (
     <View style={[styles.root, { width, height }]}>
@@ -132,7 +142,7 @@ export function LocalDuelArenaLayout({
           style={
             landscape
               ? [styles.p2Zone, { paddingRight: sideInset, paddingBottom: groundBottom }]
-              : [styles.p1Zone, { paddingBottom: halfInnerPad + p2DefeatLift }]
+              : [styles.p2ZonePortrait, { paddingTop: p2PortraitPadTop }]
           }
         >
           <DuelFigureSlot
@@ -148,6 +158,7 @@ export function LocalDuelArenaLayout({
               flipHorizontal={duelFlipHorizontal(landscape ? 'topRight' : 'bottomLeft')}
               pose={p2Pose}
               duelCorner={landscape ? 'topRight' : 'bottomLeft'}
+              defeatDropPx={p2PortraitDefeatDrop ?? p2LandscapeDefeatDrop}
             />
           </DuelFigureSlot>
         </View>
@@ -156,7 +167,7 @@ export function LocalDuelArenaLayout({
           style={
             landscape
               ? [styles.hudP2, { paddingTop: paddingTop + 52 }]
-              : [styles.hudP1, { paddingBottom: paddingBottom + 72, paddingLeft: paddingLeft + 14 }]
+              : [styles.hudP1, { paddingBottom: paddingTop + 56, paddingLeft: paddingLeft + 14 }]
           }
         >
           <Text style={[styles.playerLabel, INK_THEME && styles.playerLabelInk]}>P2</Text>
@@ -175,15 +186,15 @@ export function LocalDuelArenaLayout({
               <DuelSignalBoard variant="minimal" phase={boardPhase} />
             </View>
             {!hideBottomHud ? (
-              <View pointerEvents="none" style={[styles.scoreBarP2, { paddingBottom: paddingBottom + 8 }]}>
+              <View pointerEvents="none" style={[styles.scoreBarP2, { paddingBottom: paddingTop + 8 }]}>
                 <Text style={[styles.scoreLine, INK_THEME && styles.scoreLineInk]}>
-                  P1 {p1Wins} — {p2Wins} P2 · 선 {winsNeeded}승
+                  {t('localDuel.matchScoreLine', { p1: p1Wins, p2: p2Wins, wins: winsNeeded })}
                 </Text>
                 {phase === '뱅' ? (
                   <Text style={[styles.tapHint, INK_THEME && styles.tapHintInk]}>TAP YOUR HALF</Text>
                 ) : phase !== '대기' && phase !== '결과' ? (
                   <Text style={[styles.waitHint, INK_THEME && styles.waitHintInk]}>
-                    WAIT FOR BANG…
+                    {t('game.waitForBang')}
                   </Text>
                 ) : null}
               </View>
@@ -218,6 +229,7 @@ export function LocalDuelArenaLayout({
               height={figH}
               flipHorizontal={duelFlipHorizontal('bottomLeft')}
               pose={p1Pose}
+              defeatDropPx={landscape && p1Pose === 'defeat' ? Math.round(figH * 0.05) : undefined}
             />
           </DuelFigureSlot>
         </View>
@@ -268,13 +280,13 @@ export function LocalDuelArenaLayout({
           style={[styles.scoreBar, { paddingBottom: paddingBottom + 8 }]}
         >
           <Text style={[styles.scoreLine, INK_THEME && styles.scoreLineInk]}>
-            P1 {p1Wins} — {p2Wins} P2 · 선 {winsNeeded}승
+            {t('localDuel.matchScoreLine', { p1: p1Wins, p2: p2Wins, wins: winsNeeded })}
           </Text>
           {phase === '뱅' ? (
             <Text style={[styles.tapHint, INK_THEME && styles.tapHintInk]}>TAP YOUR HALF</Text>
           ) : phase !== '대기' && phase !== '결과' ? (
             <Text style={[styles.waitHint, INK_THEME && styles.waitHintInk]}>
-              WAIT FOR BANG…
+              {t('game.waitForBang')}
             </Text>
           ) : null}
         </View>
@@ -287,20 +299,20 @@ export function LocalDuelArenaLayout({
           style={[styles.scoreBar, { paddingBottom: paddingBottom + 8 }]}
         >
           <Text style={[styles.scoreLine, INK_THEME && styles.scoreLineInk]}>
-            P1 {p1Wins} — {p2Wins} P2 · 선 {winsNeeded}승
+            {t('localDuel.matchScoreLine', { p1: p1Wins, p2: p2Wins, wins: winsNeeded })}
           </Text>
           {phase === '뱅' ? (
             <Text style={[styles.tapHint, INK_THEME && styles.tapHintInk]}>TAP YOUR HALF</Text>
           ) : phase !== '대기' && phase !== '결과' ? (
             <Text style={[styles.waitHint, INK_THEME && styles.waitHintInk]}>
-              WAIT FOR BANG…
+              {t('game.waitForBang')}
             </Text>
           ) : null}
         </View>
       ) : null}
 
       <Pressable
-        accessibilityLabel="P2 탭 영역"
+        accessibilityLabel={t('game.p2TapArea')}
         onPressIn={() => onHalfPressIn('p2')}
         style={
           landscape
@@ -309,7 +321,7 @@ export function LocalDuelArenaLayout({
         }
       />
       <Pressable
-        accessibilityLabel="P1 탭 영역"
+        accessibilityLabel={t('game.p1TapArea')}
         onPressIn={() => onHalfPressIn('p1')}
         style={
           landscape
@@ -321,13 +333,23 @@ export function LocalDuelArenaLayout({
       <MenuBackButton
         variant="overlay"
         onPress={onBack}
-        style={[styles.navBtn, { top: paddingTop + 4, left: paddingLeft + 8 }]}
+        style={[
+          styles.navBtn,
+          landscape
+            ? { top: paddingTop + 4, left: paddingLeft + 8 }
+            : { top: navTopPortrait, left: paddingLeft + 8 },
+        ]}
       />
 
       <Pressable
-        accessibilityLabel="일시정지"
+        accessibilityLabel={t('game.pauseA11y')}
         onPress={onPause}
-        style={[styles.pauseBtn, { top: paddingTop + 4, right: paddingRight + 8 }]}
+        style={[
+          styles.pauseBtn,
+          landscape
+            ? { top: paddingTop + 4, right: paddingRight + 8 }
+            : { top: navTopPortrait, right: paddingRight + 8 },
+        ]}
         hitSlop={12}
       >
         <Ionicons
@@ -395,6 +417,17 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingRight: 10,
     paddingBottom: 30,
+    overflow: 'visible',
+  },
+  p2ZonePortrait: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    paddingLeft: 8,
     overflow: 'visible',
   },
   p1Zone: {
@@ -536,7 +569,7 @@ const styles = StyleSheet.create({
     color: 'rgba(245, 230, 200, 0.65)',
   },
   tapFlash: {
-    backgroundColor: 'rgba(255, 236, 200, 0.55)',
+    backgroundColor: 'rgba(120, 48, 28, 0.14)',
     zIndex: 20,
   },
   /* 미니멀(잉크) 테마 */

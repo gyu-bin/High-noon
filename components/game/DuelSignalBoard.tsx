@@ -3,7 +3,6 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -40,7 +39,6 @@ export function enginePhaseToSignalBoardPhase(phase: DuelPhase): DuelSignalBoard
 const BG = '#2C1A0E';
 const BORDER = '#C8860A';
 const CREAM = '#F5E6C8';
-const BANG_RED = DUEL_SIGNAL_SPEC.bang.color;
 
 function signalLabel(phase: DuelSignalBoardPhase): string {
   switch (phase) {
@@ -70,6 +68,7 @@ export function DuelSignalBoard({
   const minimal = variant === 'minimal';
   const flashOpacity = useSharedValue(0);
   const pulse = useSharedValue(1);
+  const bangScale = useSharedValue(1);
   const echoOpacity = useSharedValue(0);
   const prevPhaseRef = useRef(phase);
 
@@ -108,6 +107,26 @@ export function DuelSignalBoard({
   }, [phase, pulse]);
 
   useEffect(() => {
+    if (phase === '뱅') {
+      bangScale.value = withSequence(
+        withTiming(1.1, {
+          duration: 90,
+          easing: Easing.out(Easing.back(1.4)),
+          reduceMotion: RM_GAME,
+        }),
+        withTiming(1, {
+          duration: 260,
+          easing: Easing.out(Easing.quad),
+          reduceMotion: RM_GAME,
+        }),
+      );
+    } else {
+      cancelAnimation(bangScale);
+      bangScale.value = 1;
+    }
+  }, [phase, bangScale]);
+
+  useEffect(() => {
     if (!echoReady || phase !== '준비') {
       cancelAnimation(echoOpacity);
       echoOpacity.value = 0;
@@ -122,25 +141,29 @@ export function DuelSignalBoard({
   }, [echoReady, phase, echoOpacity]);
 
   useEffect(() => {
-    if (phase === '뱅' || phase === '페이크') {
+    if (phase === '페이크') {
       cancelAnimation(flashOpacity);
-      const peak = phase === '페이크' ? (minimal ? 0.22 : 0.3) : minimal ? 0.36 : 0.48;
-      const dur = phase === '페이크' ? (minimal ? 110 : 140) : minimal ? 160 : 220;
-      flashOpacity.value = peak;
-      flashOpacity.value = withTiming(
-        0,
-        { duration: dur, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME },
-        (finished) => {
-          if (finished && phase === '뱅') {
-            runOnJS(fireComplete)();
-          }
-        },
+      flashOpacity.value = withSequence(
+        withTiming(0.14, {
+          duration: 70,
+          easing: Easing.out(Easing.quad),
+          reduceMotion: RM_GAME,
+        }),
+        withTiming(0, {
+          duration: 200,
+          easing: Easing.inOut(Easing.quad),
+          reduceMotion: RM_GAME,
+        }),
       );
+    } else if (phase === '뱅') {
+      cancelAnimation(flashOpacity);
+      flashOpacity.value = 0;
+      fireComplete();
     } else {
       cancelAnimation(flashOpacity);
       flashOpacity.value = 0;
     }
-  }, [phase, flashOpacity, fireComplete, minimal]);
+  }, [phase, flashOpacity, fireComplete]);
 
   const flashStyle = useAnimatedStyle(() => ({
     opacity: flashOpacity.value,
@@ -148,6 +171,10 @@ export function DuelSignalBoard({
 
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulse.value }],
+  }));
+
+  const bangPopStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: bangScale.value }],
   }));
 
   const echoStyle = useAnimatedStyle(() => ({
@@ -225,11 +252,23 @@ export function DuelSignalBoard({
               <Animated.View style={[pulseStyle, styles.pulseWrap]}>
                 <Text style={[textStyle, steadySize, minimalTextShadow]}>{label}</Text>
               </Animated.View>
+            ) : phase === '뱅' ? (
+              <Animated.View style={bangPopStyle}>
+                <Text
+                  style={[
+                    textStyle,
+                    bangSize,
+                    minimalTextShadow,
+                  ]}
+                >
+                  {label}
+                </Text>
+              </Animated.View>
             ) : (
               <Text
                 style={[
                   textStyle,
-                  phase === '뱅' ? bangSize : readySize,
+                  readySize,
                   minimalTextShadow,
                 ]}
               >
@@ -268,7 +307,7 @@ const styles = StyleSheet.create({
   },
   flashOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: BANG_RED,
+    backgroundColor: 'rgba(200, 72, 48, 0.55)',
     zIndex: 10,
   },
   woodPanel: {

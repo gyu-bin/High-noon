@@ -3,16 +3,16 @@ import type { NpcArchetype, NpcTier, NpcZone } from '@/types/npc';
 /** §2-3 NPC 선택 카드 — 티어 뱃지 */
 export const TIER_BADGE: Record<
   NpcTier,
-  { label: string; bg: string; text: string }
+  { bg: string; text: string }
 > = {
-  bronze: { label: 'BRONZE', bg: '#CD7F32', text: '#FFFFFF' },
-  silver: { label: 'SILVER', bg: '#C0C0C0', text: '#333333' },
-  gold: { label: 'GOLD', bg: '#FFD700', text: '#333333' },
-  platinum: { label: 'PLATINUM', bg: '#E5E4E2', text: '#333333' },
-  diamond: { label: 'DIAMOND', bg: '#B9F2FF', text: '#006080' },
-  master: { label: 'MASTER', bg: '#9B30FF', text: '#FFFFFF' },
-  legend: { label: 'LEGEND', bg: '#FF4500', text: '#FFFFFF' },
-  hidden: { label: 'HIDDEN', bg: '#1A1A2E', text: '#00FFFF' },
+  bronze: { bg: '#CD7F32', text: '#FFFFFF' },
+  silver: { bg: '#C0C0C0', text: '#333333' },
+  gold: { bg: '#FFD700', text: '#333333' },
+  platinum: { bg: '#E5E4E2', text: '#333333' },
+  diamond: { bg: '#B9F2FF', text: '#006080' },
+  master: { bg: '#9B30FF', text: '#FFFFFF' },
+  legend: { bg: '#FF4500', text: '#FFFFFF' },
+  hidden: { bg: '#1A1A2E', text: '#00FFFF' },
 };
 
 /** §4-1 결투 신호판 타이포 */

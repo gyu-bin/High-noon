@@ -33,12 +33,15 @@ type SettingsStoreState = {
   selectedCharacterId: number;
   /** 앱 언어 설정 (auto = 기기 설정 따름) */
   language: AppLanguage;
+  /** 메뉴 — 가로 회전 안내 팝업 1회 */
+  landscapeHintSeen: boolean;
   setSoundEnabled: (value: boolean) => void;
   setMusicEnabled: (value: boolean) => void;
   setHapticEnabled: (value: boolean) => void;
   setLocalMatchPreset: (preset: LocalMatchPreset) => void;
   setSelectedCharacterId: (id: number) => void;
   setLanguage: (lang: AppLanguage) => void;
+  setLandscapeHintSeen: (value: boolean) => void;
 };
 
 export const useSettingsStore = create<SettingsStoreState>()(
@@ -50,6 +53,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
       localMatchPreset: 'bo5',
       selectedCharacterId: 1,
       language: 'auto',
+      landscapeHintSeen: false,
 
       setSoundEnabled: (soundEnabled) => set({ soundEnabled }),
 
@@ -62,6 +66,8 @@ export const useSettingsStore = create<SettingsStoreState>()(
       setSelectedCharacterId: (selectedCharacterId) => set({ selectedCharacterId }),
 
       setLanguage: (language) => set({ language }),
+
+      setLandscapeHintSeen: (landscapeHintSeen) => set({ landscapeHintSeen }),
     }),
     {
       name: 'high-noon-settings',
@@ -73,17 +79,22 @@ export const useSettingsStore = create<SettingsStoreState>()(
         localMatchPreset: s.localMatchPreset,
         selectedCharacterId: s.selectedCharacterId,
         language: s.language,
+        landscapeHintSeen: s.landscapeHintSeen,
       }),
-      merge: (persisted, current) => ({
-        ...current,
-        ...(persisted as object),
-        musicEnabled:
-          (persisted as Partial<SettingsStoreState>)?.musicEnabled ?? true,
-        selectedCharacterId:
-          (persisted as Partial<SettingsStoreState>)?.selectedCharacterId ?? 1,
-        language:
-          (persisted as Partial<SettingsStoreState>)?.language ?? 'auto',
-      }),
+      merge: (persisted, current) => {
+        const p = persisted as Partial<SettingsStoreState> & {
+          localLandscapeHintSeen?: boolean;
+        };
+        return {
+          ...current,
+          ...p,
+          musicEnabled: p?.musicEnabled ?? true,
+          selectedCharacterId: p?.selectedCharacterId ?? 1,
+          language: p?.language ?? 'auto',
+          landscapeHintSeen:
+            p?.landscapeHintSeen ?? p?.localLandscapeHintSeen ?? false,
+        };
+      },
     },
   ),
 );

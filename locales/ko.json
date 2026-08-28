@@ -12,7 +12,10 @@
   },
   "menu": {
     "play": "플레이",
+    "vsNpc": "vs NPC",
+    "vsNpcHint": "NPC 목록으로 이동합니다",
     "localDuel": "2인 대결",
+    "localDuelHint": "판수를 고른 뒤 같은 기기에서 둘이 플레이합니다",
     "more": "더보기",
     "stats": "기록",
     "character": "캐릭터",
@@ -21,7 +24,21 @@
     "sfx": "효과음",
     "vibration": "진동",
     "language": "언어",
-    "progress": "진행 — 해금 NPC"
+    "progress": "진행 — 해금 NPC",
+    "landscapeHintTitle": "가로로 돌려도 OK",
+    "landscapeHintBody": "세로·가로 모두 지원해요.\n편한 방향으로 돌려서 플레이하세요.",
+    "landscapeHintOk": "알겠어요"
+  },
+  "settings": {
+    "languageAuto": "자동",
+    "languageAutoSub": "기기 설정",
+    "languageAutoHint": "기기 언어 · {{lang}}",
+    "languageKo": "한국어",
+    "languageEn": "English",
+    "languageJa": "日本語",
+    "languageCodeKo": "KO",
+    "languageCodeEn": "EN",
+    "languageCodeJa": "JA"
   },
   "game": {
     "pause": "일시정지",
@@ -31,12 +48,25 @@
     "tapToContinue": "탭하여 계속",
     "tapToNextRound": "탭하여 다음 라운드",
     "tapToExit": "탭하여 나가기",
-    "earlyTapWarning": "뱅 신호 전 탭 시 즉시 패배합니다"
+    "earlyTapWarning": "뱅 신호 전 탭 시 즉시 패배합니다",
+    "tapAnywhere": "TAP ANYWHERE",
+    "waitForBang": "WAIT FOR BANG…",
+    "tapShort": "TAP!",
+    "duelTapArea": "결투 화면 탭",
+    "tapHintShoot": "화면 아무 곳이나 탭해 발사합니다",
+    "tapHintEarly": "뱅 신호 전 탭 시 즉시 패배합니다",
+    "pauseA11y": "일시정지",
+    "toOpponentSelect": "대결상대 선택으로",
+    "exitLocalDuel": "대결 나가기",
+    "p1TapArea": "P1 탭 영역",
+    "p2TapArea": "P2 탭 영역",
+    "scoreLine": "{{p1}} — {{p2}} · 선 {{wins}}승"
   },
   "result": {
     "victory": "승리",
     "defeat": "패배",
     "draw": "무승부",
+    "roundVictory": "승리!",
     "lastStand": "라스트 스탠드",
     "headshot": "헤드샷",
     "wonDuel": "결투에서 이겼습니다",
@@ -62,28 +92,80 @@
   },
   "localDuel": {
     "selectRounds": "판수 선택",
+    "sub": "선승제에 맞춰 하트 수가 정해집니다. 버튼을 누르면 곧바로 같은 기기에서 2인 대결이 시작됩니다.",
+    "defaultPreset": "기본 선택: {{rounds}}판 {{wins}}선",
     "roundFormat": "{{rounds}}판 {{wins}}선",
+    "roundButton": "{{rounds}}판 {{wins}}선",
     "p1Wins": "P1 · {{wins}}승",
-    "p2Wins": "P2 · {{wins}}승"
+    "p2Wins": "P2 · {{wins}}승",
+    "lastRound": "마지막 라운드 · P1 {{p1}} — {{p2}} P2",
+    "matchScoreLine": "P1 {{p1}} — {{p2}} P2 · 선 {{wins}}승",
+    "matchWinTitle": "매치 승리!",
+    "matchWinPlayer": "{{player}} 최종 승리",
+    "finalScoreLine": "최종 스코어 {{p1}} — {{p2}}"
   },
   "character": {
     "title": "총잡이",
     "subtitle": "대결에 사용할 캐릭터를 고릅니다",
     "noAbility": "능력 없음",
     "selected": "선택됨",
-    "unlocked": "??? 해금됨"
+    "unlocked": "??? 해금됨",
+    "hiddenRevealBody": "숨겨진 총잡이가 모습을 드러냅니다.",
+    "unlock": {
+      "default": "기본 해금",
+      "npcClears": "NPC {{count}}명 클리어",
+      "hidden": "해금 조건 미공개"
+    },
+    "abilityOverlay": {
+      "lastStand": "라스트 스탠드!",
+      "headshot": "헤드샷!",
+      "revive": "한 번 더!"
+    },
+    "list": {
+      "1": {
+        "name": "무명의 총잡이",
+        "ability": "",
+        "abilityDesc": ""
+      },
+      "2": {
+        "name": "철의 보안관",
+        "ability": "라스트 스탠드",
+        "abilityDesc": "매치당 1회, 패배한 라운드를 승리로 바꿉니다."
+      },
+      "3": {
+        "name": "붉은 로사",
+        "ability": "헤드샷",
+        "abilityDesc": "승리한 라운드 직후 선택 시 NPC 하트를 2칸 동시에 제거합니다. (매치당 1회)"
+      },
+      "4": {
+        "name": "망령 사수",
+        "ability": "한 번 더",
+        "abilityDesc": "매치당 1회, 플레이어 하트가 0이 되는 대신 1로 부활합니다."
+      }
+    }
   },
   "stats": {
     "title": "기록",
     "avgReaction": "전체 평균 반응",
-    "npcCleared": "NPC 클리어"
+    "npcCleared": "NPC 클리어",
+    "footnote": "vs NPC·2인 대결에서 반응이 기록될 때마다 평균이 갱신됩니다."
   },
   "npcSelect": {
     "title": "대결상대 선택",
-    "locked": "잠긴 대결상대 {{name}}"
+    "locked": "잠긴 대결상대 {{name}}",
+    "challenge": "{{name}} 도전",
+    "maskedBadge": "???",
+    "maskedHint": "클리어 후 공개",
+    "avgReaction": "평균 반응",
+    "clearLabel": "클리어"
   },
   "revive": {
     "title": "아직 끝난 게 아니야",
+    "desc": "광고를 보면 한 판 더 도전할 수 있습니다.\n이번 기회는 한 번뿐입니다.",
+    "watchAd": "광고 보고 한 판 더",
+    "watchAdLoading": "광고 준비 중…",
+    "watchAdA11y": "광고 보고 한 판 더 도전",
+    "declineA11y": "포기하고 결과 보기",
     "giveUp": "포기"
   },
   "nav": {
@@ -92,5 +174,16 @@
     "stats": "기록",
     "character": "캐릭터",
     "duel": "결투"
+  },
+  "ota": {
+    "updated": "업데이트 완료"
+  },
+  "a11y": {
+    "titleTap": "화면을 눌러 메뉴로"
+  },
+  "speech": {
+    "ready": "레디!",
+    "steady": "스테디!",
+    "bang": "뱅!"
   }
 }

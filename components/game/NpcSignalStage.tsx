@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -28,6 +29,7 @@ export function NpcSignalStage({
   onBangPhaseEnter,
   wrapStyle,
 }: Props) {
+  const { t } = useTranslation();
   const readyOp = useSharedValue(0);
   const steadyPulse = useSharedValue(1);
 
@@ -103,7 +105,7 @@ export function NpcSignalStage({
       ) : null}
       {showBang || showFakeBang ? <Text style={styles.bangText}>BANG!</Text> : null}
       {phase === '대기' ? (
-        <Text style={styles.waitText}>라운드 시작…</Text>
+        <Text style={styles.waitText}>{t('game.roundStart')}</Text>
       ) : null}
       {phase === '결과' && !showBang ? (
         <Text style={styles.waitText}> </Text>

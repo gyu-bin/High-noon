@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -11,7 +11,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
+import { LandscapeHintModal } from '@/components/game/LandscapeHintModal';
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
+import { LanguageSelector } from '@/components/settings/LanguageSelector';
 import { WoodButton } from '@/components/ui/WoodButton';
 import {
   META_PANEL_BG,
@@ -23,7 +25,7 @@ import { FONT_RYE } from '@/constants/fonts';
 import { NPCS } from '@/constants/npcs';
 import { changeLanguage } from '@/locales';
 import { useProgressStore } from '@/store/progressStore';
-import { useSettingsStore, LANGUAGE_OPTIONS, type AppLanguage } from '@/store/settingsStore';
+import { useSettingsStore, type AppLanguage } from '@/store/settingsStore';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { playBgm, syncBgmWithSettings } from '@/utils/bgmService';
 // IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
@@ -50,6 +52,26 @@ export default function MenuScreen() {
   const setMusicEnabled = useSettingsStore((s) => s.setMusicEnabled);
   const setHapticEnabled = useSettingsStore((s) => s.setHapticEnabled);
   const setLanguage = useSettingsStore((s) => s.setLanguage);
+  const setLandscapeHintSeen = useSettingsStore((s) => s.setLandscapeHintSeen);
+  const [showLandscapeHint, setShowLandscapeHint] = useState(false);
+
+  useEffect(() => {
+    const maybeShow = () => {
+      if (!useSettingsStore.getState().landscapeHintSeen) {
+        setShowLandscapeHint(true);
+      }
+    };
+    if (useSettingsStore.persist.hasHydrated()) {
+      maybeShow();
+      return;
+    }
+    return useSettingsStore.persist.onFinishHydration(maybeShow);
+  }, []);
+
+  const dismissLandscapeHint = useCallback(() => {
+    setShowLandscapeHint(false);
+    setLandscapeHintSeen(true);
+  }, [setLandscapeHintSeen]);
 
   const onLanguageChange = useCallback(
     (lang: AppLanguage) => {
@@ -104,14 +126,14 @@ export default function MenuScreen() {
             <Text style={styles.sectionLabel}>{t('menu.play')}</Text>
             <View style={styles.primaryButtons}>
               <WoodButton
-                title="vs NPC"
-                accessibilityHint="NPC 목록으로 이동합니다"
+                title={t('menu.vsNpc')}
+                accessibilityHint={t('menu.vsNpcHint')}
                 onPress={() => router.push('/npc-select')}
                 style={styles.primaryBtn}
               />
               <WoodButton
                 title={t('menu.localDuel')}
-                accessibilityHint="판수를 고른 뒤 같은 기기에서 둘이 플레이합니다"
+                accessibilityHint={t('menu.localDuelHint')}
                 onPress={() => router.push('/local-setup')}
                 style={styles.primaryBtn}
               />
@@ -172,32 +194,7 @@ export default function MenuScreen() {
                 thumbColor={hapticEnabled ? colors.ochre : colors.sand}
               />
             </View>
-            <View style={styles.languageRow}>
-              <Text style={styles.settingLabel}>{t('menu.language')}</Text>
-              <View style={styles.languageOptions}>
-                {LANGUAGE_OPTIONS.map((opt) => (
-                  <Pressable
-                    key={opt.value}
-                    accessibilityRole="button"
-                    accessibilityLabel={opt.label}
-                    onPress={() => onLanguageChange(opt.value)}
-                    style={[
-                      styles.languageBtn,
-                      language === opt.value && styles.languageBtnActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.languageBtnText,
-                        language === opt.value && styles.languageBtnTextActive,
-                      ]}
-                    >
-                      {opt.value === 'auto' ? 'Auto' : opt.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
+            <LanguageSelector value={language} onChange={onLanguageChange} />
           </View>
 
           <View style={styles.footer}>
@@ -212,6 +209,7 @@ export default function MenuScreen() {
           */}
         </ScrollView>
       </View>
+      <LandscapeHintModal visible={showLandscapeHint} onDismiss={dismissLandscapeHint} />
     </MetaScreenShell>
   );
 }
@@ -316,34 +314,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.cream,
     ...metaTextShadow,
-  },
-  languageRow: {
-    gap: 8,
-  },
-  languageOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  languageBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    borderWidth: 1,
-    borderColor: 'rgba(212, 165, 116, 0.3)',
-  },
-  languageBtnActive: {
-    backgroundColor: colors.ochre,
-    borderColor: colors.gold,
-  },
-  languageBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.sand,
-  },
-  languageBtnTextActive: {
-    color: colors.darkBrown,
   },
   footer: {
     alignItems: 'center',

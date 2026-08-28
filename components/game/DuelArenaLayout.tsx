@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
 import type { StyleProp, ViewStyle } from 'react-native';
 import type { AnimatedStyle } from 'react-native-reanimated';
@@ -26,7 +27,8 @@ import {
 import { DUEL_ARENA_SHADE } from '@/constants/duelPresentation';
 import { DUEL_VISUAL_THEME, MINIMAL_DUEL } from '@/constants/duelTheme';
 import { colors } from '@/constants/theme';
-import { npcDisplayName } from '@/utils/npcDisplayName';
+import type { NpcTier } from '@/types/npc';
+import { getNpcDisplayName, getNpcTierLabel } from '@/utils/npcLabels';
 
 const HEART_FULL = '#E11D48';
 const HEART_EMPTY = 'rgba(245, 230, 200, 0.55)';
@@ -59,9 +61,7 @@ type Props = {
   paddingBottom: number;
   paddingRight: number;
   npcId: number;
-  npcTitle: string;
-  npcName: string;
-  tierLabel: string;
+  tier: NpcTier;
   bossFlag: boolean;
   npcPose: SpritePose;
   npcVictoryActive?: boolean;
@@ -94,9 +94,7 @@ export function DuelArenaLayout({
   paddingBottom,
   paddingRight,
   npcId,
-  npcTitle,
-  npcName,
-  tierLabel,
+  tier,
   bossFlag,
   npcPose,
   npcVictoryActive = false,
@@ -120,6 +118,7 @@ export function DuelArenaLayout({
   hideBottomHud = false,
   orientation = 'portrait',
 }: Props) {
+  const { t } = useTranslation();
   const landscape = orientation === 'landscape';
   const { width: figW, height: figH } = landscape
     ? duelFigureSizeLandscape(height)
@@ -127,7 +126,8 @@ export function DuelArenaLayout({
 
   const npcCorner: DuelCorner = 'topRight';
   const playerCorner: DuelCorner = 'bottomLeft';
-  const npcLabel = npcDisplayName({ title: npcTitle, name: npcName });
+  const npcLabel = getNpcDisplayName(t, npcId);
+  const tierLabel = getNpcTierLabel(t, tier);
   // 가로 — 서부극 정면 대치: 같은 지면선, 좌(플레이어)·우(NPC)
   const groundBottom = Math.max(paddingBottom + 30, Math.round(height * 0.09));
   const sideInset = Math.round(width * 0.07);
@@ -139,13 +139,11 @@ export function DuelArenaLayout({
   return (
     <View style={[styles.root, { width, height }]}>
       <Pressable
-        accessibilityLabel="결투 화면 탭"
+        accessibilityLabel={t('game.duelTapArea')}
         accessibilityRole="button"
         accessibilityState={{ disabled: !shootCapturesEarly }}
         accessibilityHint={
-          shootActive
-            ? '화면 아무 곳이나 탭해 발사합니다'
-            : '뱅 신호 전 탭 시 즉시 패배합니다'
+          shootActive ? t('game.tapHintShoot') : t('game.tapHintEarly')
         }
         disabled={!shootCapturesEarly}
         onPress={onShootPress}
@@ -297,13 +295,19 @@ export function DuelArenaLayout({
         >
           <HeartRow filled={playerHearts} max={3} />
           <Text style={[styles.scoreLine, INK_THEME && styles.scoreLineInk]}>
-            {playerScore} — {opponentScore} · 선 {WINS_TO_END}승
+            {t('game.scoreLine', {
+              p1: playerScore,
+              p2: opponentScore,
+              wins: WINS_TO_END,
+            })}
           </Text>
           {shootActive ? (
-            <Text style={[styles.tapHint, INK_THEME && styles.tapHintInk]}>TAP ANYWHERE</Text>
+            <Text style={[styles.tapHint, INK_THEME && styles.tapHintInk]}>
+              {t('game.tapAnywhere')}
+            </Text>
           ) : shootCapturesEarly ? (
             <Text style={[styles.waitHint, INK_THEME && styles.waitHintInk]}>
-              WAIT FOR BANG…
+              {t('game.waitForBang')}
             </Text>
           ) : null}
         </View>
@@ -319,7 +323,7 @@ export function DuelArenaLayout({
       />
 
       <Pressable
-        accessibilityLabel="일시정지"
+        accessibilityLabel={t('game.pauseA11y')}
         disabled={pauseDisabled}
         onPress={onPause}
         style={[styles.pauseBtn, { top: paddingTop + 4, right: paddingRight + 8 }]}
@@ -482,7 +486,7 @@ const styles = StyleSheet.create({
     color: 'rgba(245, 230, 200, 0.65)',
   },
   tapFlash: {
-    backgroundColor: 'rgba(255, 236, 200, 0.55)',
+    backgroundColor: 'rgba(120, 48, 28, 0.14)',
     zIndex: 20,
   },
   pauseBtn: {

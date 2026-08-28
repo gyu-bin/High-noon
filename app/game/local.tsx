@@ -5,6 +5,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
@@ -49,8 +50,8 @@ import { useProgressStore } from '@/store/progressStore';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
 import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
 import { RM_GAME } from '@/constants/reanimatedGame';
-import { play, playBangShotDuel } from '@/utils/audioService';
-import { speakDuelCue, stopDuelSignalSpeech } from '@/utils/duelSignalSpeech';
+import { play, playGunshot } from '@/utils/audioService';
+import { speakDuelCue, stopDuelSignalSpeech, warmupDuelSpeech } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
 import { localPlayerSpritePoseFromPhase } from '@/utils/spritePose';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -79,6 +80,7 @@ function heartsForMatchType(m: LocalMatchTypeProp): number {
 }
 
 export default function LocalGameScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ matchType?: string }>();
@@ -147,44 +149,36 @@ export default function LocalGameScreen() {
     if (bangHapticDone.current) return;
     bangHapticDone.current = true;
     redFlash.value = withSequence(
-      RM_GAME,
-      withTiming(0.52, {
-        duration: 40,
+      withTiming(0.16, {
+        duration: 100,
         easing: Easing.out(Easing.quad),
         reduceMotion: RM_GAME,
       }),
       withTiming(0, {
-        duration: 240,
-        easing: Easing.in(Easing.quad),
+        duration: 360,
+        easing: Easing.inOut(Easing.quad),
         reduceMotion: RM_GAME,
       }),
     );
     speakDuelCue('bang');
-    void playBangShotDuel();
     void trigger('heavy');
   }, [redFlash]);
 
   const pulseHalfTapAck = useCallback((sv: SharedValue<number>, kind: 'bang' | 'other') => {
     cancelAnimation(sv);
-    if (kind === 'bang') {
-      sv.value = 0.92;
-      sv.value = withTiming(0, {
-        duration: 160,
-        easing: Easing.in(Easing.quad),
-        reduceMotion: RM_GAME,
-      });
-      return;
-    }
     sv.value = 0;
+    const peak = kind === 'bang' ? 0.2 : 0.14;
+    const upMs = kind === 'bang' ? 90 : 70;
+    const downMs = kind === 'bang' ? 340 : 240;
     sv.value = withSequence(
-      withTiming(0.52, {
-        duration: 42,
+      withTiming(peak, {
+        duration: upMs,
         easing: Easing.out(Easing.quad),
         reduceMotion: RM_GAME,
       }),
       withTiming(0, {
-        duration: 190,
-        easing: Easing.in(Easing.quad),
+        duration: downMs,
+        easing: Easing.inOut(Easing.quad),
         reduceMotion: RM_GAME,
       }),
     );
@@ -192,6 +186,7 @@ export default function LocalGameScreen() {
 
   const handleBangTap = useCallback(
     ({ player, ms }: LocalBangTapEvent) => {
+      playGunshot();
       if (player === 'p2') {
         pulseHalfTapAck(p2TapAck, 'bang');
         setP2ShootFlash(true);
@@ -319,6 +314,7 @@ export default function LocalGameScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      warmupDuelSpeech();
       let cancelled = false;
       void (async () => {
         await Promise.all([
@@ -385,14 +381,6 @@ export default function LocalGameScreen() {
       setP1Hearts((x) => Math.max(0, x - 1));
     }
 
-    if (outcome.winner === 'p1' && p2Hearts > 0) {
-      void play('heart_break');
-      void trigger('medium');
-    } else if (outcome.winner === 'p2' && p1Hearts > 0) {
-      void play('heart_break');
-      void trigger('medium');
-    }
-
     setP1Wins(winsRef.current.p1);
     setP2Wins(winsRef.current.p2);
 
@@ -403,12 +391,13 @@ export default function LocalGameScreen() {
       (outcome.winner === 'p1' || outcome.winner === 'p2') &&
       !matchOver
     ) {
-      void play('win_fanfare');
       void trigger('success');
     }
 
     const nextRoundDefeated =
       outcome.winner === 'p1' ? ('p2' as const) : outcome.winner === 'p2' ? ('p1' as const) : null;
+    const heartLost =
+      (outcome.winner === 'p1' && p2Hearts > 0) || (outcome.winner === 'p2' && p1Hearts > 0);
     if (defeatRevealTimerRef.current != null) {
       clearTimeout(defeatRevealTimerRef.current);
       defeatRevealTimerRef.current = null;
@@ -419,37 +408,28 @@ export default function LocalGameScreen() {
     }
 
     if (matchOver) {
-      void play('level_clear');
       void trigger('success');
       setMatchWinner(winsRef.current.p1 >= winsNeeded ? 'p1' : 'p2');
-      if (nextRoundDefeated == null) {
-        setModalStep('match');
-      } else {
-        // 마지막 라운드도 쓰러지는 연출을 보여준 뒤 매치 모달
-        defeatRevealTimerRef.current = setTimeout(() => {
-          setRoundDefeated(nextRoundDefeated);
-          defeatRevealTimerRef.current = null;
-        }, DUEL_DEFEAT_REVEAL_DELAY_MS);
-        roundModalTimerRef.current = setTimeout(() => {
-          setModalStep('match');
-          roundModalTimerRef.current = null;
-        }, DUEL_DEFEAT_MODAL_DELAY_MS);
-      }
+    }
+
+    // 매치 종료 포함 — 라운드 결과 먼저 → 탭 후 매치 결과(LocalMatchModal)
+    if (nextRoundDefeated == null) {
+      setRoundDefeated(null);
+      setModalStep('round');
     } else {
-      if (nextRoundDefeated == null) {
-        setRoundDefeated(null);
+      defeatRevealTimerRef.current = setTimeout(() => {
+        setRoundDefeated(nextRoundDefeated);
+        void play('defeat_thud');
+        void trigger('medium');
+        if (heartLost) {
+          setTimeout(() => void play('heart_break'), 130);
+        }
+        defeatRevealTimerRef.current = null;
+      }, DUEL_DEFEAT_REVEAL_DELAY_MS);
+      roundModalTimerRef.current = setTimeout(() => {
         setModalStep('round');
-      } else {
-        defeatRevealTimerRef.current = setTimeout(() => {
-          setRoundDefeated(nextRoundDefeated);
-          defeatRevealTimerRef.current = null;
-        }, DUEL_DEFEAT_REVEAL_DELAY_MS);
-        // 쓰러지는 연출이 끝난 뒤 라운드 모달
-        roundModalTimerRef.current = setTimeout(() => {
-          setModalStep('round');
-          roundModalTimerRef.current = null;
-        }, DUEL_DEFEAT_MODAL_DELAY_MS);
-      }
+        roundModalTimerRef.current = null;
+      }, DUEL_DEFEAT_MODAL_DELAY_MS);
     }
   }, [phase, outcome, winsNeeded, p1Hearts, p2Hearts]);
 
@@ -464,11 +444,17 @@ export default function LocalGameScreen() {
     }
     setModalStep(null);
     setRoundDefeated(null);
+
+    if (matchWinner != null) {
+      setModalStep('match');
+      return;
+    }
+
     roundIdx.current += 1;
     processedKey.current = '';
     reset();
     start();
-  }, [reset, start]);
+  }, [matchWinner, reset, start]);
 
   const exitMatch = useCallback(() => {
     setModalStep(null);
@@ -510,8 +496,6 @@ export default function LocalGameScreen() {
     return localPlayerSpritePoseFromPhase(phase, p2ShootFlash, holdResultShoot);
   }, [roundDefeated, phase, p2ShootFlash, holdResultShoot]);
 
-  const hideBottomHud = modalStep != null;
-
   const battleDayNight = useMemo(
     () => pickBattleDayNight(0),
     [matchType],
@@ -521,43 +505,50 @@ export default function LocalGameScreen() {
 
   const duelBody = (
     <>
-      <Animated.View pointerEvents="none" style={[styles.redFlash, redStyle]} />
+      {modalStep !== 'match' ? (
+        <>
+          <Animated.View pointerEvents="none" style={[styles.redFlash, redStyle]} />
 
-      <LocalDuelArenaLayout
-        width={winW}
-        height={winH}
-        paddingTop={overlayPad.top}
-        paddingBottom={insets.bottom}
-        paddingLeft={overlayPad.left}
-        paddingRight={overlayPad.right}
-        phase={phase}
-        signalPhase={signalBoardPhase}
-        p1CharacterId={selectedCharacterId}
-        p2CharacterId={selectedCharacterId}
-        p1Pose={p1Pose}
-        p2Pose={p2Pose}
-        p1Hearts={p1Hearts}
-        p2Hearts={p2Hearts}
-        p1Wins={p1Wins}
-        p2Wins={p2Wins}
-        winsNeeded={winsNeeded}
-        p1TapAckStyle={p1TapAckStyle}
-        p2TapAckStyle={p2TapAckStyle}
-        p1LiveMs={p1LiveMs}
-        p2LiveMs={p2LiveMs}
-        hideBottomHud={hideBottomHud}
-        onHalfPressIn={onHalfPressIn}
-        onBack={leaveLocalDuel}
-        onPause={() => setPaused(true)}
-        orientation={isLandscape ? 'landscape' : 'portrait'}
-      />
+          <LocalDuelArenaLayout
+            width={winW}
+            height={winH}
+            paddingTop={overlayPad.top}
+            paddingBottom={insets.bottom}
+            paddingLeft={overlayPad.left}
+            paddingRight={overlayPad.right}
+            phase={phase}
+            signalPhase={signalBoardPhase}
+            p1CharacterId={selectedCharacterId}
+            p2CharacterId={selectedCharacterId}
+            p1Pose={p1Pose}
+            p2Pose={p2Pose}
+            p1Hearts={p1Hearts}
+            p2Hearts={p2Hearts}
+            p1Wins={p1Wins}
+            p2Wins={p2Wins}
+            winsNeeded={winsNeeded}
+            p1TapAckStyle={p1TapAckStyle}
+            p2TapAckStyle={p2TapAckStyle}
+            p1LiveMs={p1LiveMs}
+            p2LiveMs={p2LiveMs}
+            hideBottomHud={false}
+            onHalfPressIn={onHalfPressIn}
+            onBack={leaveLocalDuel}
+            onPause={() => setPaused(true)}
+            orientation={isLandscape ? 'landscape' : 'portrait'}
+          />
+        </>
+      ) : null}
 
       <LocalRoundModal
         visible={modalStep === 'round'}
         outcome={outcome}
         onContinue={continueAfterRound}
         fxBurstId={fxBurstId}
+        width={winW}
+        height={winH}
         paddingBottom={insets.bottom}
+        paddingTop={overlayPad.top}
       />
 
       <LocalMatchModal
@@ -565,17 +556,21 @@ export default function LocalGameScreen() {
         matchWinner={matchWinner ?? 'p1'}
         p1Wins={p1Wins}
         p2Wins={p2Wins}
-        lastOutcome={outcome}
+        winsNeeded={winsNeeded}
         onExit={exitMatch}
         fxBurstId={fxBurstId}
+        backgroundVariant={battleDayNight}
+        width={winW}
+        height={winH}
         paddingBottom={insets.bottom}
+        paddingTop={overlayPad.top}
       />
 
       <PauseMenuModal
         visible={paused}
         onResume={() => setPaused(false)}
         onSecondaryExit={leaveLocalDuel}
-        secondaryLabel="대결 나가기"
+        secondaryLabel={t('game.exitLocalDuel')}
         onMainMenu={leaveToMainMenu}
       />
     </>
@@ -623,7 +618,7 @@ export default function LocalGameScreen() {
 const styles = StyleSheet.create({
   redFlash: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#8B1A1A',
+    backgroundColor: 'rgba(80, 24, 16, 0.55)',
     zIndex: 40,
   },
 });

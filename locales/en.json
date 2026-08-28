@@ -12,7 +12,10 @@
   },
   "menu": {
     "play": "Play",
+    "vsNpc": "vs NPC",
+    "vsNpcHint": "Go to opponent list",
     "localDuel": "2P Duel",
+    "localDuelHint": "Pick rounds, then play on one device",
     "more": "More",
     "stats": "Stats",
     "character": "Character",
@@ -21,7 +24,21 @@
     "sfx": "Sound Effects",
     "vibration": "Vibration",
     "language": "Language",
-    "progress": "Progress — Unlocked NPCs"
+    "progress": "Progress — Unlocked NPCs",
+    "landscapeHintTitle": "Landscape works too",
+    "landscapeHintBody": "Portrait and landscape are both supported.\nRotate to whatever feels best.",
+    "landscapeHintOk": "Got it"
+  },
+  "settings": {
+    "languageAuto": "Auto",
+    "languageAutoSub": "Device",
+    "languageAutoHint": "Device language · {{lang}}",
+    "languageKo": "한국어",
+    "languageEn": "English",
+    "languageJa": "日本語",
+    "languageCodeKo": "KO",
+    "languageCodeEn": "EN",
+    "languageCodeJa": "JA"
   },
   "game": {
     "pause": "Paused",
@@ -31,12 +48,25 @@
     "tapToContinue": "Tap to continue",
     "tapToNextRound": "Tap for next round",
     "tapToExit": "Tap to exit",
-    "earlyTapWarning": "Tapping before BANG means instant defeat"
+    "earlyTapWarning": "Tapping before BANG means instant defeat",
+    "tapAnywhere": "TAP ANYWHERE",
+    "waitForBang": "WAIT FOR BANG…",
+    "tapShort": "TAP!",
+    "duelTapArea": "Duel tap area",
+    "tapHintShoot": "Tap anywhere to shoot",
+    "tapHintEarly": "Tap before BANG and you lose instantly",
+    "pauseA11y": "Pause",
+    "toOpponentSelect": "Opponent Select",
+    "exitLocalDuel": "Leave Duel",
+    "p1TapArea": "P1 tap area",
+    "p2TapArea": "P2 tap area",
+    "scoreLine": "{{p1}} — {{p2}} · first to {{wins}}"
   },
   "result": {
     "victory": "Victory",
     "defeat": "Defeat",
     "draw": "Draw",
+    "roundVictory": "Victory!",
     "lastStand": "Last Stand",
     "headshot": "Headshot",
     "wonDuel": "You won the duel",
@@ -62,28 +92,80 @@
   },
   "localDuel": {
     "selectRounds": "Select Rounds",
-    "roundFormat": "Best of {{rounds}}",
+    "sub": "Hearts match the win condition. Tap to start a 2-player duel on this device.",
+    "defaultPreset": "Default: best of {{rounds}} ({{wins}} wins)",
+    "roundFormat": "Best of {{rounds}} ({{wins}} wins)",
+    "roundButton": "{{rounds}} rounds · {{wins}} wins",
     "p1Wins": "P1 · {{wins}} wins",
-    "p2Wins": "P2 · {{wins}} wins"
+    "p2Wins": "P2 · {{wins}} wins",
+    "lastRound": "Last round · P1 {{p1}} — {{p2}} P2",
+    "matchScoreLine": "P1 {{p1}} — {{p2}} P2 · first to {{wins}}",
+    "matchWinTitle": "Match won!",
+    "matchWinPlayer": "{{player}} wins the match",
+    "finalScoreLine": "Final score {{p1}} — {{p2}}"
   },
   "character": {
     "title": "Gunslingers",
     "subtitle": "Choose your character for the duel",
     "noAbility": "No ability",
     "selected": "Selected",
-    "unlocked": "??? Unlocked"
+    "unlocked": "??? Unlocked",
+    "hiddenRevealBody": "A hidden gunslinger steps into the light.",
+    "unlock": {
+      "default": "Unlocked by default",
+      "npcClears": "Clear {{count}} NPCs",
+      "hidden": "Unlock condition unknown"
+    },
+    "abilityOverlay": {
+      "lastStand": "LAST STAND!",
+      "headshot": "HEADSHOT!",
+      "revive": "REVIVE!"
+    },
+    "list": {
+      "1": {
+        "name": "Nameless Gunslinger",
+        "ability": "",
+        "abilityDesc": ""
+      },
+      "2": {
+        "name": "Iron Sheriff",
+        "ability": "Last Stand",
+        "abilityDesc": "Once per match, flip a lost round into a win."
+      },
+      "3": {
+        "name": "Crimson Rosa",
+        "ability": "Headshot",
+        "abilityDesc": "After a won round, optionally remove 2 NPC hearts at once. (Once per match)"
+      },
+      "4": {
+        "name": "Phantom Sharpshooter",
+        "ability": "One More",
+        "abilityDesc": "Once per match, when your hearts hit 0, revive with 1 instead."
+      }
+    }
   },
   "stats": {
     "title": "Stats",
     "avgReaction": "Average Reaction",
-    "npcCleared": "NPCs Cleared"
+    "npcCleared": "NPCs Cleared",
+    "footnote": "Average updates whenever a reaction is recorded in vs NPC or 2P duel."
   },
   "npcSelect": {
     "title": "Select Opponent",
-    "locked": "Locked opponent {{name}}"
+    "locked": "Locked opponent {{name}}",
+    "challenge": "Challenge {{name}}",
+    "maskedBadge": "???",
+    "maskedHint": "Clear to reveal",
+    "avgReaction": "Avg reaction",
+    "clearLabel": "Cleared"
   },
   "revive": {
     "title": "It's not over yet",
+    "desc": "Watch an ad for one more round.\nThis chance only comes once.",
+    "watchAd": "Watch ad & retry",
+    "watchAdLoading": "Loading ad…",
+    "watchAdA11y": "Watch ad for one more round",
+    "declineA11y": "Give up and see results",
     "giveUp": "Give Up"
   },
   "nav": {
@@ -92,5 +174,16 @@
     "stats": "Stats",
     "character": "Character",
     "duel": "Duel"
+  },
+  "ota": {
+    "updated": "Update complete"
+  },
+  "a11y": {
+    "titleTap": "Tap to open menu"
+  },
+  "speech": {
+    "ready": "READY!",
+    "steady": "STEADY!",
+    "bang": "BANG!"
   }
 }

@@ -77,24 +77,44 @@ def click(freq: float, dur: float, decay: float, noise: float = 0.0) -> list[flo
     return out
 
 
-def gunshot(dur: float = 0.34) -> list[float]:
-    """총성 — 저역 thump + 광대역 노이즈 버스트, 빠른 감쇠."""
+def gunshot(dur: float = 0.48) -> list[float]:
+    """리볼버 총성 — 초고속 크랙 + 저역 블로우 + 메탈릭 링 + 잔향."""
     n = int(dur * SR)
-    out = []
-    prev = 0.0
+    out: list[float] = []
+    lp = 0.0
+    hp = 0.0
     for i in range(n):
         t = i / SR
-        # 빠른 어택, 지수 감쇠
-        amp = math.exp(-16.0 * t)
-        white = random.uniform(-1, 1)
-        # 살짝 로우패스 (묵직함)
-        prev = prev * 0.55 + white * 0.45
-        thump = math.sin(2 * math.pi * 85 * t) * math.exp(-26.0 * t)
-        crack = white * math.exp(-55.0 * t)
-        out.append((prev * 0.7 + thump * 0.9 + crack * 0.6) * amp)
-    # 앞쪽 살짝 페이드로 클릭 방지
-    for i in range(min(40, n)):
-        out[i] *= i / 40
+        white = random.uniform(-1.0, 1.0)
+
+        # 초반 크랙 (고역 노이즈)
+        crack = white * math.exp(-90.0 * t) * 1.35
+
+        # 몸통 블로우 (저역)
+        body = (
+            math.sin(2 * math.pi * 72 * t) * math.exp(-18.0 * t)
+            + math.sin(2 * math.pi * 118 * t) * math.exp(-28.0 * t) * 0.55
+        )
+
+        # 배럴 메탈릭 링
+        ring = (
+            math.sin(2 * math.pi * 1850 * t) * math.exp(-42.0 * t) * 0.22
+            + math.sin(2 * math.pi * 3200 * t) * math.exp(-70.0 * t) * 0.12
+        )
+
+        # 광대역 노이즈 테일 (머즐 블라스트)
+        lp = lp * 0.72 + white * 0.28
+        hp = white - lp
+        blast = (lp * 0.85 + hp * 0.35) * math.exp(-11.0 * t)
+
+        # 짧은 잔향 느낌
+        room = white * math.exp(-4.2 * t) * 0.08
+
+        v = crack + body * 1.15 + ring + blast * 0.9 + room
+        # 초초반 soft attack으로 DAC 클릭 방지
+        if t < 0.0015:
+            v *= t / 0.0015
+        out.append(v)
     return out
 
 
@@ -107,6 +127,70 @@ def seq(notes: list[tuple[float, float]], gap: float = 0.0, decay: float = 6.0) 
     return out
 
 
+def shout_burst(base: float, dur: float, noise_amt: float = 0.55) -> list[float]:
+    """짧은 외침/강조 — 노이즈 + 하강 포먼트."""
+    n = int(dur * SR)
+    out = []
+    for i in range(n):
+        t = i / SR
+        env = math.exp(-9.0 * t)
+        freq = base * (1.0 + 1.8 * math.exp(-14.0 * t))
+        v = math.sin(2 * math.pi * freq * t)
+        if noise_amt and t < dur * 0.45:
+            v += random.uniform(-1, 1) * noise_amt * math.exp(-20.0 * t)
+        out.append(v * env * min(1.0, t / 0.004))
+    return out
+
+
+def duel_cue_ready() -> list[float]:
+    """긴장감 — 저음 타격 → 상승."""
+    gap = int(0.018 * SR)
+    a = click(280, 0.07, 42, 0.45)
+    b = tone(520, 0.11, decay=10, harmonics=(1.0, 0.55, 0.2))
+    c = shout_burst(680, 0.14, 0.35)
+    return a + [0.0] * gap + b + [0.0] * gap + c
+
+
+def duel_cue_steady() -> list[float]:
+    """집중 — 떨리는 중음 + 마무리 강조."""
+    n = int(0.26 * SR)
+    out = []
+    for i in range(n):
+        t = i / SR
+        trem = 1.0 + 0.11 * math.sin(2 * math.pi * 14 * t)
+        v = math.sin(2 * math.pi * 480 * t) * trem * math.exp(-2.8 * t)
+        out.append(v)
+    tail = shout_burst(560, 0.1, 0.28)
+    return out + tail
+
+
+def duel_cue_bang() -> list[float]:
+    """뱅 — 폭발적 외침(총성은 별도)."""
+    return shout_burst(320, 0.2, 0.72) + click(140, 0.06, 28, 0.35)
+
+
+def defeat_thud() -> list[float]:
+    """쓰러짐 — 저역 충격 + 흙먼지."""
+    n = int(0.38 * SR)
+    out = []
+    prev = 0.0
+    for i in range(n):
+        t = i / SR
+        env = math.exp(-8.5 * t)
+        thump = math.sin(2 * math.pi * 62 * t) * math.exp(-20.0 * t)
+        nse = random.uniform(-1, 1) * math.exp(-28.0 * t) * 0.45
+        prev = prev * 0.58 + nse * 0.42
+        out.append((thump * 1.1 + prev) * env * min(1.0, t / 0.003))
+    return out
+
+
+def heart_crack() -> list[float]:
+    """하트 깨짐 — 짧은 금속/유리 크랙 (멜로디 X)."""
+    crack = click(920, 0.045, 72, 0.55)
+    tail = tone(180, 0.07, decay=24, harmonics=(1.0, 0.2))
+    return crack + tail
+
+
 def build() -> None:
     random.seed(7)
     os.makedirs(os.path.abspath(OUT_DIR), exist_ok=True)
@@ -115,13 +199,19 @@ def build() -> None:
     # 카운트다운 큐 — 짧고 명확, 음정으로 진행감
     _write("ready_click.wav", click(660, 0.14, decay=34, noise=0.25))
     _write("steady_click.wav", click(990, 0.13, decay=36, noise=0.22))
-    _write("bang_shot.wav", gunshot(0.34))
+    _write("bang_shot.wav", gunshot(0.48))
+
+    # 결투 음성 큐 — TTS 대신 임팩트 있는 WAV (화면 텍스트가 i18n)
+    _write("cue_ready.wav", duel_cue_ready())
+    _write("cue_steady.wav", duel_cue_steady())
+    _write("cue_bang.wav", duel_cue_bang())
 
     # 조작/결과
     _write("early_tap.wav", seq([(440, 0.09), (300, 0.13)], decay=9))          # 삑- 실패
     _write("win_fanfare.wav", seq([(523, 0.12), (659, 0.12), (784, 0.14), (1047, 0.28)], decay=4))
-    _write("lose_sad.wav", seq([(392, 0.18), (311, 0.30)], decay=3.5))
-    _write("heart_break.wav", seq([(600, 0.10), (450, 0.10), (250, 0.22)], decay=6))
+    _write("lose_sad.wav", seq([(330, 0.22), (262, 0.28)], decay=4.2))        # 매치 패배용 — 짧게
+    _write("defeat_thud.wav", defeat_thud())
+    _write("heart_break.wav", heart_crack())
     _write("level_clear.wav", seq([(523, 0.11), (659, 0.11), (784, 0.11), (1047, 0.24)], decay=3.5))
 
     print("done ->", os.path.abspath(OUT_DIR))

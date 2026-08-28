@@ -1,11 +1,10 @@
 import {
   createAudioPlayer,
-  setAudioModeAsync,
-  setIsAudioActiveAsync,
 } from 'expo-audio';
 import type { AudioPlayer } from 'expo-audio';
 
 import { useSettingsStore } from '@/store/settingsStore';
+import { ensureGameAudioSession } from '@/utils/audioService';
 
 export type BgmTrack = 'menu' | 'duel' | 'boss';
 
@@ -30,23 +29,13 @@ const LOAD_TIMEOUT_MS = 12_000;
 
 const players = new Map<BgmTrack, AudioPlayer>();
 let activeTrack: BgmTrack | null = null;
-let modeReady = false;
 let bootedMenuBgm = false;
 let duckTimer: ReturnType<typeof setTimeout> | null = null;
 let fadeTimer: ReturnType<typeof setInterval> | null = null;
 let playChain: Promise<void> = Promise.resolve();
 
 async function ensureAudioMode(): Promise<void> {
-  if (modeReady) return;
-  await setAudioModeAsync({
-    playsInSilentMode: true,
-    shouldPlayInBackground: false,
-    allowsRecording: false,
-    shouldRouteThroughEarpiece: false,
-    interruptionMode: 'duckOthers',
-  });
-  await setIsAudioActiveAsync(true);
-  modeReady = true;
+  await ensureGameAudioSession();
 }
 
 function musicOn(): boolean {

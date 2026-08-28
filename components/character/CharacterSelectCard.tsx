@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { PlayerCharacterSprite } from '@/components/game/CharacterSprites';
 import type { PlayerCharacter } from '@/constants/characters';
 import { colors } from '@/constants/theme';
+import { useCharacterLabels } from '@/utils/characterLabels';
 
 const PORTRAIT_W = 96;
 const PORTRAIT_H = 108;
@@ -16,6 +18,8 @@ type Props = {
 };
 
 export function CharacterSelectCard({ character, unlocked, selected, onPress }: Props) {
+  const { t } = useTranslation();
+  const labels = useCharacterLabels(character.id);
   return (
     <Pressable
       accessibilityRole="button"
@@ -45,18 +49,18 @@ export function CharacterSelectCard({ character, unlocked, selected, onPress }: 
       </View>
 
       <Text style={styles.cardName} numberOfLines={2}>
-        {character.name}
+        {labels.name}
       </Text>
-      {character.abilityName ? (
-        <Text style={styles.abilityTag}>「{character.abilityName}」</Text>
+      {labels.abilityName ? (
+        <Text style={styles.abilityTag}>「{labels.abilityName}」</Text>
       ) : (
-        <Text style={styles.abilityNone}>능력 없음</Text>
+        <Text style={styles.abilityNone}>{t('character.noAbility')}</Text>
       )}
       {!unlocked ? (
-        <Text style={styles.lockHint}>{character.unlockCondition}</Text>
+        <Text style={styles.lockHint}>{labels.unlockCondition}</Text>
       ) : null}
       {selected && unlocked ? (
-        <Text style={styles.selectedBadge}>선택됨</Text>
+        <Text style={styles.selectedBadge}>{t('character.selected')}</Text>
       ) : null}
     </Pressable>
   );

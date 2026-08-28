@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 140" fill="none">
+  <rect x="8" y="8" width="304" height="124" rx="14" fill="#2A1810" stroke="#C9A66B" stroke-width="2"/>
+  <!-- portrait phone -->
+  <rect x="36" y="24" width="52" height="92" rx="8" fill="#1A0C06" stroke="#E8A82A" stroke-width="2"/>
+  <rect x="44" y="36" width="36" height="56" rx="4" fill="#3D2414"/>
+  <circle cx="62" cy="104" r="3" fill="#8B6914"/>
+  <!-- rotate arrow -->
+  <path d="M112 70a34 34 0 0 1 58-24" stroke="#E8A82A" stroke-width="3" stroke-linecap="round"/>
+  <path d="M164 38l10 8-10 8" stroke="#E8A82A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- landscape phone -->
+  <rect x="196" y="44" width="104" height="52" rx="8" fill="#1A0C06" stroke="#E8A82A" stroke-width="2"/>
+  <rect x="208" y="52" width="72" height="36" rx="4" fill="#3D2414"/>
+  <circle cx="288" cy="70" r="3" fill="#8B6914"/>
+</svg>

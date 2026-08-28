@@ -1,4 +1,5 @@
 import 'react-native-gesture-handler';
+import '@/locales';
 
 import { Rye_400Regular, useFonts } from '@expo-google-fonts/rye';
 import { Stack } from 'expo-router';
@@ -10,8 +11,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
-import '@/locales';
-import { changeLanguage } from '@/locales';
+import i18n, { changeLanguage, i18nInitPromise } from '@/locales';
 import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
 import { useSettingsStore } from '@/store/settingsStore';
 import { colors } from '@/constants/theme';
@@ -19,8 +19,9 @@ import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
 import { checkUnlockConditions } from '@/utils/characterAbility';
 import { WESTERN_HERO_FALLBACK } from '@/constants/westernBackground';
 import { initAds, preloadInterstitial, preloadRewardedAd } from '@/utils/adService';
-import { preloadAll } from '@/utils/audioService';
+import { preloadAll, ensureGameAudioSession } from '@/utils/audioService';
 import { bootMenuBgm } from '@/utils/bgmService';
+import { warmupDuelSpeech } from '@/utils/duelSignalSpeech';
 import { consumeOtaJustApplied, markOtaJustApplied } from '@/utils/otaUpdateFlag';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
 // IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
@@ -62,6 +63,22 @@ async function applyOtaUpdateIfAvailable(): Promise<boolean> {
 }
 
 export default function RootLayout() {
+  const [i18nReady, setI18nReady] = useState(i18n.isInitialized);
+
+  useEffect(() => {
+    if (i18n.isInitialized) {
+      setI18nReady(true);
+      return;
+    }
+    void i18nInitPromise.then(() => setI18nReady(true));
+  }, []);
+
+  if (!i18nReady) return null;
+
+  return <RootLayoutContent />;
+}
+
+function RootLayoutContent() {
   const { t } = useTranslation();
   const language = useSettingsStore((s) => s.language);
   const [fontsLoaded, fontError] = useFonts({
@@ -110,6 +127,8 @@ export default function RootLayout() {
       if (justUpdated) setOtaToastVisible(true);
       await SplashScreen.hideAsync();
       void preloadAll();
+      void ensureGameAudioSession();
+      warmupDuelSpeech();
       void bootMenuBgm();
       void preloadSceneImages();
       void initAds().then(() => {

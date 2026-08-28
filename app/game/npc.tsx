@@ -1,6 +1,7 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
@@ -36,6 +37,11 @@ import { DUEL_VISUAL_THEME, MINIMAL_DUEL } from '@/constants/duelTheme';
 import { RM_GAME } from '@/constants/reanimatedGame';
 import { DEV_UNLOCK_ALL_NPCS } from '@/constants/devFlags';
 import { getNpcById } from '@/constants/npcs';
+import {
+  DUEL_DEFEAT_MODAL_DELAY_MS,
+  DUEL_DEFEAT_REVEAL_DELAY_MS,
+  DUEL_EARLY_MODAL_DELAY_MS,
+} from '@/constants/duelPresentation';
 import { buildDuelStartParams } from '@/utils/npcDuelParams';
 import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
 import { useDuelEngine, type DuelOutcome, type DuelPhase } from '@/hooks/useDuelEngine';
@@ -56,17 +62,12 @@ import { preloadSceneImages } from '@/utils/preloadSceneImages';
 import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
 import { AdReviveModal } from '@/components/game/AdReviveModal';
 import { showRewardedAd } from '@/utils/adService';
-import { play, playBangShotDuel } from '@/utils/audioService';
-import { speakDuelCue, stopDuelSignalSpeech } from '@/utils/duelSignalSpeech';
+import { play, playGunshot } from '@/utils/audioService';
+import { speakDuelCue, stopDuelSignalSpeech, warmupDuelSpeech } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
 
 const WINS_TO_END = 3;
 const HEARTS = 3;
-import {
-  DUEL_DEFEAT_MODAL_DELAY_MS,
-  DUEL_DEFEAT_REVEAL_DELAY_MS,
-  DUEL_EARLY_MODAL_DELAY_MS,
-} from '@/constants/duelPresentation';
 
 // 네이티브 모듈 미포함 구버전 빌드에서도 동작하도록 lazy 로드
 let ScreenOrientation: typeof import('expo-screen-orientation') | null = null;
@@ -76,17 +77,6 @@ try {
 } catch {
   ScreenOrientation = null;
 }
-
-const TIER_KO: Record<string, string> = {
-  bronze: '브론즈',
-  silver: '실버',
-  gold: '골드',
-  platinum: '플래티넘',
-  diamond: '다이아',
-  master: '마스터',
-  legend: '레전드',
-  hidden: '???',
-};
 
 function buildLastStandWinData(
   loss: Extract<NpcRoundModalData, { kind: 'loss' }>,
@@ -113,6 +103,7 @@ function buildLastStandWinData(
 }
 
 export default function NpcGameScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const stage = usePhoneStageMetrics();
@@ -181,6 +172,10 @@ export default function NpcGameScreen() {
   const setAbilityUsed = useGameStore((s) => s.setAbilityUsed);
   const nextRound = useGameStore((s) => s.nextRound);
 
+  const fireGunshot = useCallback(() => {
+    playGunshot();
+  }, []);
+
   const {
     phase,
     outcome,
@@ -193,7 +188,10 @@ export default function NpcGameScreen() {
     reset: resetDuel,
     pauseTimers,
     resumeTimers,
-  } = useDuelEngine();
+  } = useDuelEngine({
+    onPlayerShoot: fireGunshot,
+    onOpponentShoot: fireGunshot,
+  });
 
   useDuelBgmDuck(phase);
 
@@ -269,9 +267,9 @@ export default function NpcGameScreen() {
     (kind: 'bang' | 'other') => {
       cancelAnimation(playerTapAck);
       playerTapAck.value = 0;
-      const peak = kind === 'bang' ? 1 : 0.62;
-      const upMs = kind === 'bang' ? 55 : 42;
-      const downMs = kind === 'bang' ? 300 : 200;
+      const peak = kind === 'bang' ? 0.22 : 0.14;
+      const upMs = kind === 'bang' ? 100 : 70;
+      const downMs = kind === 'bang' ? 380 : 260;
       playerTapAck.value = withSequence(
         withTiming(peak, {
           duration: upMs,
@@ -280,7 +278,7 @@ export default function NpcGameScreen() {
         }),
         withTiming(0, {
           duration: downMs,
-          easing: Easing.in(Easing.quad),
+          easing: Easing.inOut(Easing.quad),
           reduceMotion: RM_GAME,
         }),
       );
@@ -327,7 +325,7 @@ export default function NpcGameScreen() {
     if (phase !== '뱅') return;
     if (bangHapticDoneRef.current) return;
     bangHapticDoneRef.current = true;
-    void playBangShotDuel();
+    speakDuelCue('bang');
     void trigger('heavy');
   }, [phase]);
 
@@ -387,6 +385,7 @@ export default function NpcGameScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      warmupDuelSpeech();
       if (npcIdStr == null) {
         return () => {
           resetDuel();
@@ -609,11 +608,20 @@ export default function NpcGameScreen() {
       outcomeRevealTimersRef.current.modal = null;
     }
 
+    const playerLostHeart =
+      !effectiveWin && !reviveFlip && data.kind === 'loss' && ph > 0;
+    const npcLostHeart = effectiveWin && oh > 0;
+
     if (nextDefeatedSide == null) {
       setDefeatedSide(null);
     } else {
       outcomeRevealTimersRef.current.defeat = setTimeout(() => {
         setDefeatedSide(nextDefeatedSide);
+        void play('defeat_thud');
+        void trigger('medium');
+        if (playerLostHeart || npcLostHeart) {
+          setTimeout(() => void play('heart_break'), 130);
+        }
         outcomeRevealTimersRef.current.defeat = null;
       }, DUEL_DEFEAT_REVEAL_DELAY_MS);
     }
@@ -653,18 +661,7 @@ export default function NpcGameScreen() {
       void play('early_tap');
       void trigger('error');
     } else if (effectiveWin) {
-      void play('win_fanfare');
       void trigger('success');
-    } else {
-      void play('lose_sad');
-    }
-
-    const playerLostHeart =
-      !effectiveWin && !reviveFlip && data.kind === 'loss' && ph > 0;
-    const npcLostHeart = effectiveWin && oh > 0;
-    if (playerLostHeart || npcLostHeart) {
-      void play('heart_break');
-      void trigger('medium');
     }
 
     if (effectiveWin) {
@@ -909,8 +906,6 @@ export default function NpcGameScreen() {
     startRoundDuel();
   }, [finishMatchToResult, resetDuel, startRoundDuel]);
 
-  const tierLabel = npc ? (TIER_KO[npc.tier] ?? npc.tier) : '';
-
   const holdResultShoot = phase === '결과' && defeatedSide == null;
 
   const npcPose = useMemo(() => {
@@ -983,9 +978,7 @@ export default function NpcGameScreen() {
             paddingBottom={insets.bottom}
             paddingRight={overlayPad.right}
             npcId={npc.id}
-            npcTitle={npc.title}
-            npcName={npc.name}
-            tierLabel={tierLabel}
+            tier={npc.tier}
             bossFlag={npc.bossFlag}
             npcPose={npcPose}
             npcVictoryActive={defeatedSide === 'player'}
@@ -1029,7 +1022,7 @@ export default function NpcGameScreen() {
             visible={paused}
             onResume={() => setPaused(false)}
             onSecondaryExit={leaveToNpcSelect}
-            secondaryLabel="대결상대 선택으로"
+            secondaryLabel={t('game.toOpponentSelect')}
             onMainMenu={leaveToMainMenu}
           />
 

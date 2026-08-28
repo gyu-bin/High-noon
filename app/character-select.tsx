@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { CharacterSelectCard } from '@/components/character/CharacterSelectCard';
@@ -23,10 +24,12 @@ import { FONT_RYE } from '@/constants/fonts';
 import { useProgressStore } from '@/store/progressStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { checkUnlockConditions } from '@/utils/characterAbility';
+import { useCharacterLabels } from '@/utils/characterLabels';
 
 type RevealPhase = 'idle' | 'black' | 'eyes' | 'popup' | 'reveal' | 'done';
 
 export default function CharacterSelectScreen() {
+  const { t } = useTranslation();
   useScreenBgm('menu');
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -89,6 +92,7 @@ export default function CharacterSelectScreen() {
   );
 
   const ghost = getCharacterById(4);
+  const ghostLabels = useCharacterLabels(4);
 
   return (
     <>
@@ -105,8 +109,8 @@ export default function CharacterSelectScreen() {
           { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 },
         ]}
       >
-        <Text style={[styles.title, { fontFamily: FONT_RYE }]}>총잡이</Text>
-        <Text style={styles.sub}>대결에 사용할 캐릭터를 고릅니다</Text>
+        <Text style={[styles.title, { fontFamily: FONT_RYE }]}>{t('character.title')}</Text>
+        <Text style={styles.sub}>{t('character.subtitle')}</Text>
 
         <ScrollView
           contentContainerStyle={styles.grid}
@@ -154,12 +158,10 @@ export default function CharacterSelectScreen() {
       >
         <Pressable style={styles.popupDim} onPress={onRevealPopupConfirm}>
           <View style={styles.popupCard}>
-            <Text style={styles.popupTitle}>??? 해금됨</Text>
-            <Text style={styles.popupBody}>
-              숨겨진 총잡이가 모습을 드러냅니다.
-            </Text>
+            <Text style={styles.popupTitle}>{t('character.unlocked')}</Text>
+            <Text style={styles.popupBody}>{t('character.hiddenRevealBody')}</Text>
             <Pressable style={styles.popupBtn} onPress={onRevealPopupConfirm}>
-              <Text style={styles.popupBtnText}>확인</Text>
+              <Text style={styles.popupBtnText}>{t('common.confirm')}</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -173,8 +175,10 @@ export default function CharacterSelectScreen() {
                 <PlayerCharacterSprite characterId={4} width={110} height={124} pose="idle" />
               </View>
               <Text style={styles.ghostCardId}>04</Text>
-              <Text style={styles.ghostCardName}>{ghost.name}</Text>
-              <Text style={styles.ghostAbility}>「{ghost.abilityName}」</Text>
+              <Text style={styles.ghostCardName}>{ghostLabels.name}</Text>
+              {ghostLabels.abilityName ? (
+                <Text style={styles.ghostAbility}>「{ghostLabels.abilityName}」</Text>
+              ) : null}
             </Animated.View>
           ) : null}
         </View>

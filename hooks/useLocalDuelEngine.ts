@@ -112,7 +112,6 @@ export function useLocalDuelEngine(options?: {
   }, []);
 
   const finishRound = useCallback((next: LocalRoundOutcome) => {
-    stopDuelSignalSpeech();
     clearAllTimers();
     bangArmedRef.current = false;
     bangT0Ref.current = null;

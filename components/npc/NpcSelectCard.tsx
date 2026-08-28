@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 import { NpcCharacterSprite } from '@/components/game/CharacterSprites';
 import { BOSS_CARD_BORDER, TIER_BADGE } from '@/constants/npcVisual';
 import { colors } from '@/constants/theme';
 import type { NpcDefinition } from '@/types/npc';
 import { formatReactionMs } from '@/utils/formatReactionMs';
-import { npcDisplayName } from '@/utils/npcDisplayName';
+import { getNpcDisplayName, getNpcTierLabel } from '@/utils/npcLabels';
 
 type Props = {
   npc: NpcDefinition;
@@ -26,8 +27,11 @@ export function NpcSelectCard({
   onPress,
   revealDelayMs,
 }: Props) {
+  const { t } = useTranslation();
+  const displayName = getNpcDisplayName(t, npc.id);
   const boss = npc.bossFlag;
   const badge = TIER_BADGE[npc.tier];
+  const tierLabel = getNpcTierLabel(t, npc.tier);
   const spriteOpacity = locked ? 0.35 : cleared ? 1 : 0.8;
 
   const inner = (
@@ -56,11 +60,11 @@ export function NpcSelectCard({
       </View>
 
       <Text style={[styles.name, locked && styles.nameLocked]} numberOfLines={2}>
-        {npcDisplayName(npc)}
+        {displayName}
       </Text>
 
       <View style={[styles.badge, { backgroundColor: badge.bg }]}>
-        <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
+        <Text style={[styles.badgeText, { color: badge.text }]}>{tierLabel}</Text>
       </View>
 
       {cleared && bestMs != null ? (
@@ -85,8 +89,8 @@ export function NpcSelectCard({
     );
 
   const a11yName = locked
-    ? `잠긴 대결상대 ${npcDisplayName(npc)}`
-    : npcDisplayName(npc);
+    ? t('npcSelect.locked', { name: displayName })
+    : displayName;
 
   if (locked || !onPress) {
     return (
@@ -104,7 +108,7 @@ export function NpcSelectCard({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${a11yName} 도전`}
+      accessibilityLabel={t('npcSelect.challenge', { name: displayName })}
       onPress={onPress}
       style={({ pressed }) => [styles.outer, pressed && styles.pressed]}
     >

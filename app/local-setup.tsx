@@ -2,6 +2,7 @@ import { Stack, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
@@ -16,6 +17,7 @@ import {
 } from '@/store/settingsStore';
 
 export default function LocalSetupScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   useScreenBgm('menu');
@@ -59,13 +61,15 @@ export default function LocalSetupScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.title, { fontFamily: FONT_RYE }]}>판수 선택</Text>
-          <Text style={styles.sub}>
-            선승제에 맞춰 하트 수가 정해집니다. 버튼을 누르면 곧바로 같은 기기에서 2인
-            대결이 시작됩니다.
+          <Text style={[styles.title, { fontFamily: FONT_RYE }]}>
+            {t('localDuel.selectRounds')}
           </Text>
+          <Text style={styles.sub}>{t('localDuel.sub')}</Text>
           <Text style={styles.presetHint}>
-            기본 선택: {activeCfg.maxRounds}판 {activeCfg.winsRequired}선
+            {t('localDuel.defaultPreset', {
+              rounds: activeCfg.maxRounds,
+              wins: activeCfg.winsRequired,
+            })}
           </Text>
 
           <View style={styles.row}>
@@ -75,7 +79,10 @@ export default function LocalSetupScreen() {
               return (
                 <WoodButton
                   key={key}
-                  title={`${cfg.maxRounds}판 ${cfg.winsRequired}선`}
+                  title={t('localDuel.roundButton', {
+                    rounds: cfg.maxRounds,
+                    wins: cfg.winsRequired,
+                  })}
                   onPress={() => goDuel(key)}
                   style={[styles.btn, active && styles.btnActive]}
                 />

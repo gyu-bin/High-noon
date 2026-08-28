@@ -27,17 +27,6 @@ try {
   ScreenOrientation = null;
 }
 
-const TIER_KO: Record<string, string> = {
-  bronze: '브론즈',
-  silver: '실버',
-  gold: '골드',
-  platinum: '플래티넘',
-  diamond: '다이아',
-  master: '마스터',
-  legend: '레전드',
-  hidden: '???',
-};
-
 type CaptureSceneId =
   | 'duel-steady'
   | 'duel-bang'
@@ -179,7 +168,6 @@ function FrozenNpcDuel({ frame }: { frame: DuelFrame }) {
 
   if (!npc) return null;
 
-  const tierLabel = TIER_KO[npc.tier] ?? npc.tier;
   const modalVisible = frame.modal != null;
 
   return (
@@ -197,9 +185,7 @@ function FrozenNpcDuel({ frame }: { frame: DuelFrame }) {
           paddingBottom={insets.bottom}
           paddingRight={overlayPad.right}
           npcId={npc.id}
-          npcTitle={npc.title}
-          npcName={npc.name}
-          tierLabel={tierLabel}
+          tier={npc.tier}
           bossFlag={npc.bossFlag}
           npcPose={frame.npcPose}
           npcVictoryActive={frame.defeatedSide === 'player'}

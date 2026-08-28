@@ -3,15 +3,19 @@
 set -euo pipefail
 
 SIMULATOR_NAME="iPhone 17 Pro"
-SIMULATOR_UDID="18AB4DDD-83C9-4622-897D-42BE6FE002FC"
 
-defaults write com.apple.iphonesimulator CurrentDeviceUDID "$SIMULATOR_UDID"
+SIMULATOR_UDID="$(xcrun simctl list devices available \
+  | grep -F "${SIMULATOR_NAME} (" \
+  | head -1 \
+  | sed -E 's/.*\(([0-9A-F-]+)\).*/\1/')"
 
-if ! xcrun simctl list devices available | grep -q "$SIMULATOR_UDID"; then
-  echo "시뮬레이터 '${SIMULATOR_NAME}' (${SIMULATOR_UDID})를 찾을 수 없습니다."
-  echo "Xcode > Settings > Platforms 에서 iOS 26.4 런타임을 확인해주세요."
+if [[ -z "${SIMULATOR_UDID}" ]]; then
+  echo "시뮬레이터 '${SIMULATOR_NAME}'를 찾을 수 없습니다."
+  echo "Xcode > Settings > Platforms 에서 iOS 런타임을 확인해주세요."
   exit 1
 fi
+
+defaults write com.apple.iphonesimulator CurrentDeviceUDID "$SIMULATOR_UDID"
 
 xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
 open -a Simulator --args -CurrentDeviceUDID "$SIMULATOR_UDID"

@@ -53,8 +53,6 @@ export type NpcSpecialAbility =
 
 export type NpcDefinition = {
   id: number;
-  name: string;
-  title: string;
   /** 카드 표기 목표 반응(ms). 시뮬은 이 값 부근(티어 ±수 ms)에서 출렁임 — 낮을수록 강함 */
   reactionMs: number;
   tier: NpcTier;

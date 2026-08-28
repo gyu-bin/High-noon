@@ -5,11 +5,12 @@ import * as Localization from 'expo-localization';
 import ko from './ko.json';
 import en from './en.json';
 import ja from './ja.json';
+import { npcTranslationBlock } from './npcI18n';
 
 const resources = {
-  ko: { translation: ko },
-  en: { translation: en },
-  ja: { translation: ja },
+  ko: { translation: { ...ko, npcs: npcTranslationBlock('ko') } },
+  en: { translation: { ...en, npcs: npcTranslationBlock('en') } },
+  ja: { translation: { ...ja, npcs: npcTranslationBlock('ja') } },
 };
 
 export function getDeviceLanguage(): string {
@@ -20,12 +21,22 @@ export function getDeviceLanguage(): string {
   return 'en';
 }
 
+/** 설정값(auto 포함)을 실제 적용 언어 코드로 변환 */
+export function resolveLanguage(lang: 'auto' | 'ko' | 'en' | 'ja'): 'ko' | 'en' | 'ja' {
+  return lang === 'auto' ? (getDeviceLanguage() as 'ko' | 'en' | 'ja') : lang;
+}
+
+/** 기기 로케일 태그 (예: ko-KR) — 자동 모드 안내용 */
+export function getDeviceLocaleTag(): string {
+  return Localization.getLocales()[0]?.languageTag ?? 'ko-KR';
+}
+
 /**
  * 앱 언어 변경
  * @param lang 'auto' | 'ko' | 'en' | 'ja'
  */
 export function changeLanguage(lang: 'auto' | 'ko' | 'en' | 'ja'): void {
-  const targetLang = lang === 'auto' ? getDeviceLanguage() : lang;
+  const targetLang = resolveLanguage(lang);
   void i18n.changeLanguage(targetLang);
 }
 
@@ -36,7 +47,7 @@ export function getCurrentLanguage(): string {
   return i18n.language;
 }
 
-i18n.use(initReactI18next).init({
+export const i18nInitPromise = i18n.use(initReactI18next).init({
   resources,
   lng: getDeviceLanguage(),
   fallbackLng: 'en',

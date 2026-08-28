@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { colors } from '@/constants/theme';
 
@@ -20,10 +21,12 @@ type Props = {
 /** 화면 하단 작은 OTA 안내 토스트 */
 export function OtaUpdatedToast({
   visible,
-  message = '업데이트 완료',
+  message,
   onHidden,
   durationMs = 2200,
 }: Props) {
+  const { t } = useTranslation();
+  const label = message ?? t('ota.updated');
   const insets = useSafeAreaInsets();
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(8);
@@ -56,7 +59,7 @@ export function OtaUpdatedToast({
   return (
     <View pointerEvents="none" style={[styles.wrap, { bottom: Math.max(insets.bottom, 12) + 16 }]}>
       <Animated.View style={[styles.pill, animStyle]}>
-        <Text style={styles.text}>{message}</Text>
+        <Text style={styles.text}>{label}</Text>
       </Animated.View>
     </View>
   );

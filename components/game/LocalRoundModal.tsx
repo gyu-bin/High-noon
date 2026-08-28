@@ -1,13 +1,19 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { LocalDuelFireworks } from '@/components/game/LocalDuelFireworks';
 import { FONT_RYE } from '@/constants/fonts';
+import {
+  OUTCOME_DEFEAT,
+  OUTCOME_VICTORY,
+  outcomeTextShadow,
+} from '@/constants/outcomeTheme';
 import { colors } from '@/constants/theme';
 import type {
   LocalPlayerRoundState,
   LocalRoundOutcome,
 } from '@/hooks/useLocalDuelEngine';
-import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { formatReactionMs } from '@/utils/formatReactionMs';
 
 type Props = {
@@ -15,20 +21,61 @@ type Props = {
   outcome: LocalRoundOutcome | null;
   onContinue: () => void;
   fxBurstId: number;
+  width: number;
+  height: number;
   paddingBottom?: number;
+  paddingTop?: number;
 };
 
-function resultLine(s: LocalPlayerRoundState): string {
-  if (s.earlyTap) return '얼리 탭';
-  if (s.timeout) return '타임아웃';
+function resultLine(
+  s: LocalPlayerRoundState,
+  t: (key: string) => string,
+): string {
+  if (s.earlyTap) return t('lossShort.early');
+  if (s.timeout) return t('lossShort.timeout');
   if (s.reactionMs != null) return `${formatReactionMs(s.reactionMs)} ms`;
   return '—';
 }
 
-function lossReason(s: LocalPlayerRoundState): string | null {
-  if (s.earlyTap) return '얼리 탭';
-  if (s.timeout) return '시간 초과';
+function lossReason(s: LocalPlayerRoundState, t: (key: string) => string): string | null {
+  if (s.earlyTap) return t('lossShort.early');
+  if (s.timeout) return t('lossShort.timeout');
   return null;
+}
+
+function RoundPanel({
+  player,
+  won,
+  draw,
+  line,
+  reason,
+  rotate,
+}: {
+  player: 'P1' | 'P2';
+  won: boolean;
+  draw: boolean;
+  line: string;
+  reason: string | null;
+  rotate?: boolean;
+}) {
+  const { t } = useTranslation();
+  const theme = won && !draw ? OUTCOME_VICTORY : OUTCOME_DEFEAT;
+
+  return (
+    <Animated.View
+      entering={FadeInDown.duration(380).springify().damping(18)}
+      style={[styles.panel, rotate ? styles.panelRotated : null]}
+    >
+      <Text style={styles.playerTag}>{player}</Text>
+      <Text style={[styles.outcomeLabel, { fontFamily: FONT_RYE, color: theme.title }]}>
+        {draw ? t('result.draw') : won ? t('result.roundVictory') : t('result.defeat')}
+      </Text>
+      <Text style={styles.statsText}>
+        {player} · {line}
+      </Text>
+      {!won && reason ? <Text style={styles.reasonText}>{reason}</Text> : null}
+    </Animated.View>
+  );
 }
 
 export function LocalRoundModal({
@@ -36,273 +83,216 @@ export function LocalRoundModal({
   outcome,
   onContinue,
   fxBurstId,
+  width,
+  height,
   paddingBottom = 0,
+  paddingTop = 0,
 }: Props) {
-  const m = usePhoneStageMetrics();
-  const halfH = m.stageHeight / 2;
-  const landscape = m.windowWidth > m.windowHeight;
+  const { t } = useTranslation();
+  const landscape = width > height;
+  const halfH = height / 2;
 
-  if (!outcome) return null;
+  if (!visible || !outcome) return null;
 
   const p1Won = outcome.winner === 'p1';
   const p2Won = outcome.winner === 'p2';
   const draw = outcome.winner === 'draw';
-  const p1Loss = lossReason(outcome.p1);
-  const p2Loss = lossReason(outcome.p2);
-
-  // 가로 — 스테이지 프레임 대신 전체 화면 기준 (좌우 캐릭터 정면 대치와 정렬)
-  const frame = landscape
-    ? { left: 0, top: 0, width: m.windowWidth, height: m.windowHeight }
-    : {
-        left: m.offsetX,
-        top: m.offsetY,
-        width: m.stageWidth,
-        height: m.stageHeight,
-      };
+  const p1Loss = lossReason(outcome.p1, t);
+  const p2Loss = lossReason(outcome.p2, t);
 
   return (
-    <Modal
-      transparent
-      animationType="fade"
-      visible={visible}
-      onRequestClose={onContinue}
-      supportedOrientations={['portrait', 'landscape']}
+    <Pressable
+      accessibilityLabel={t('game.tapToNextRound')}
+      accessibilityRole="button"
+      onPress={onContinue}
+      style={styles.root}
     >
-      <Pressable
-        accessibilityLabel="탭하여 다음 라운드"
-        accessibilityRole="button"
-        onPress={onContinue}
-        style={styles.root}
-      >
-        <View pointerEvents="box-none" style={[styles.stageFrame, frame]}>
-          {p1Won && fxBurstId > 0 ? (
-            <View style={styles.fxLayer} pointerEvents="none">
-              <LocalDuelFireworks
-                origin={landscape ? 'left' : 'bottom'}
-                width={frame.width}
-                height={frame.height}
-                halfH={halfH}
-                burstId={fxBurstId}
-              />
-            </View>
-          ) : null}
-          {p2Won && fxBurstId > 0 ? (
-            <View style={styles.fxLayer} pointerEvents="none">
-              <LocalDuelFireworks
-                origin={landscape ? 'right' : 'top'}
-                width={frame.width}
-                height={frame.height}
-                halfH={halfH}
-                burstId={fxBurstId}
-              />
-            </View>
-          ) : null}
-
-          <View pointerEvents="none" style={styles.labelsLayer}>
-            {/*
-              세로 2P — 위쪽 P2 시점을 위해 상단 절반은 180° 회전.
-              그래야 두 플레이어 모두 자기 결과를 정방향으로 읽음.
-            */}
-            <View
-              style={
-                landscape
-                  ? styles.p2BlockLandscape
-                  : [styles.p2BlockPortrait, { transform: [{ rotate: '180deg' }] }]
-              }
-            >
-              <Text style={[styles.outcomeLabel, p2Won ? styles.winText : styles.loseText]}>
-                {draw ? '무승부' : p2Won ? '승리!' : '패배'}
-              </Text>
-              <Text style={styles.statsText}>P2 · {resultLine(outcome.p2)}</Text>
-              {!p2Won && p2Loss ? (
-                <Text style={styles.reasonText}>{p2Loss}</Text>
-              ) : null}
-            </View>
-
-            {/* P1 — portrait: 하단 정방향 · landscape: 좌측 정면 */}
-            <View style={landscape ? styles.p1BlockLandscape : styles.p1BlockPortrait}>
-              <Text style={[styles.outcomeLabel, p1Won ? styles.winText : styles.loseText]}>
-                {draw ? '무승부' : p1Won ? '승리!' : '패배'}
-              </Text>
-              <Text style={styles.statsText}>P1 · {resultLine(outcome.p1)}</Text>
-              {!p1Won && p1Loss ? (
-                <Text style={styles.reasonText}>{p1Loss}</Text>
-              ) : null}
-            </View>
-          </View>
-
-          {/* 계속 안내 — landscape는 중앙, portrait은 양쪽 (P2는 180° 회전) */}
-          {landscape ? (
-            <View
-              pointerEvents="none"
-              style={[styles.bottomBarLandscape, { bottom: Math.max(paddingBottom, 8) + 6 }]}
-            >
-              <Text style={styles.continueHint}>탭하여 다음 라운드</Text>
-            </View>
-          ) : (
-            <>
-              <View
-                pointerEvents="none"
-                style={[styles.hintP1, { bottom: Math.max(paddingBottom, 8) + 10 }]}
-              >
-                <Text style={styles.continueHint}>탭하여 다음 라운드</Text>
-              </View>
-              <View
-                pointerEvents="none"
-                style={[
-                  styles.hintP2,
-                  { top: Math.max(paddingBottom, 8) + 10, transform: [{ rotate: '180deg' }] },
-                ]}
-              >
-                <Text style={styles.continueHint}>탭하여 다음 라운드</Text>
-              </View>
-            </>
-          )}
+      {p1Won && fxBurstId > 0 ? (
+        <View style={styles.fxLayer} pointerEvents="none">
+          <LocalDuelFireworks
+            origin={landscape ? 'left' : 'bottom'}
+            width={width}
+            height={height}
+            halfH={halfH}
+            burstId={fxBurstId}
+          />
         </View>
-      </Pressable>
-    </Modal>
+      ) : null}
+      {p2Won && fxBurstId > 0 ? (
+        <View style={styles.fxLayer} pointerEvents="none">
+          <LocalDuelFireworks
+            origin={landscape ? 'right' : 'top'}
+            width={width}
+            height={height}
+            halfH={halfH}
+            burstId={fxBurstId}
+          />
+        </View>
+      ) : null}
+
+      {landscape ? (
+        <View style={[styles.landscapeRow, { paddingTop: paddingTop + 16, paddingBottom: paddingBottom + 16 }]}>
+          <RoundPanel
+            player="P1"
+            won={p1Won}
+            draw={draw}
+            line={resultLine(outcome.p1, t)}
+            reason={p1Loss}
+          />
+          <RoundPanel
+            player="P2"
+            won={p2Won}
+            draw={draw}
+            line={resultLine(outcome.p2, t)}
+            reason={p2Loss}
+          />
+        </View>
+      ) : (
+        <View style={styles.portraitStack}>
+          <View style={[styles.halfTop, { paddingTop: paddingTop + 12 }]}>
+            <RoundPanel
+              player="P2"
+              won={p2Won}
+              draw={draw}
+              line={resultLine(outcome.p2, t)}
+              reason={p2Loss}
+              rotate
+            />
+          </View>
+          <View style={[styles.halfBottom, { paddingBottom: paddingBottom + 12 }]}>
+            <RoundPanel
+              player="P1"
+              won={p1Won}
+              draw={draw}
+              line={resultLine(outcome.p1, t)}
+              reason={p1Loss}
+            />
+          </View>
+        </View>
+      )}
+
+      {landscape ? (
+        <View
+          pointerEvents="none"
+          style={[styles.hintCenter, { bottom: Math.max(paddingBottom, 8) + 10 }]}
+        >
+          <Text style={styles.continueHint}>{t('game.tapToNextRound')}</Text>
+        </View>
+      ) : (
+        <>
+          <View
+            pointerEvents="none"
+            style={[styles.hintP1, { bottom: Math.max(paddingBottom, 8) + 10 }]}
+          >
+            <Text style={styles.continueHint}>{t('game.tapToNextRound')}</Text>
+          </View>
+          <View
+            pointerEvents="none"
+            style={[
+              styles.hintP2,
+              { top: Math.max(paddingTop, 8) + 10, transform: [{ rotate: '180deg' }] },
+            ]}
+          >
+            <Text style={styles.continueHint}>{t('game.tapToNextRound')}</Text>
+          </View>
+        </>
+      )}
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
-  },
-  stageFrame: {
-    position: 'absolute',
-    overflow: 'hidden',
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 40,
   },
   fxLayer: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
   },
-  labelsLayer: {
-    ...StyleSheet.absoluteFillObject,
+  portraitStack: {
+    flex: 1,
     zIndex: 2,
   },
-  p2Block: {
-    position: 'absolute',
-    top: '20%',
-    right: '8%',
-    alignItems: 'flex-end',
-    gap: 4,
+  halfTop: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    transform: [{ rotate: '180deg' }],
   },
-  p1Block: {
-    position: 'absolute',
-    left: '8%',
-    bottom: '36%',
-    alignItems: 'flex-start',
-    gap: 4,
+  halfBottom: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
-  /* 세로 2P — 각 플레이어 절반 중앙, P2는 180° 회전으로 정방향 */
-  p1BlockPortrait: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: '58%',
+  landscapeRow: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 14,
+    paddingHorizontal: 18,
+    zIndex: 2,
   },
-  p2BlockPortrait: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: '18%',
+  panel: {
+    flex: 1,
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
   },
-  /* landscape — 좌우 정면 대치와 정렬, 캐릭터 머리 위 */
-  p1BlockLandscape: {
-    position: 'absolute',
-    left: '8%',
-    top: '18%',
-    alignItems: 'flex-start',
-    gap: 4,
-  },
-  p2BlockLandscape: {
-    position: 'absolute',
-    right: '8%',
-    top: '18%',
-    alignItems: 'flex-end',
-    gap: 4,
+  panelRotated: {},
+  playerTag: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: colors.sand,
+    letterSpacing: 2,
+    textAlign: 'center',
+    ...outcomeTextShadow,
   },
   outcomeLabel: {
-    fontFamily: FONT_RYE,
-    fontSize: 32,
+    fontSize: 38,
+    textAlign: 'center',
     letterSpacing: 1,
-    textShadowColor: 'rgba(0,0,0,0.9)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
-  },
-  winText: {
-    color: colors.ochre,
-  },
-  loseText: {
-    color: colors.sand,
-    opacity: 0.92,
+    ...outcomeTextShadow,
   },
   statsText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
     color: colors.cream,
-    letterSpacing: 0.3,
-    textShadowColor: 'rgba(0,0,0,0.85)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
+    textAlign: 'center',
+    ...outcomeTextShadow,
   },
   reasonText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: colors.sand,
-    opacity: 0.88,
-    letterSpacing: 0.4,
+    textAlign: 'center',
+    ...outcomeTextShadow,
   },
-  bottomBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 3,
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    backgroundColor: 'rgba(12, 8, 5, 0.96)',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(212, 165, 116, 0.35)',
-  },
-  /* landscape — 하단 중앙 콤팩트 카드 (캐릭터·불꽃 안 가림) */
-  bottomBarLandscape: {
+  hintCenter: {
     position: 'absolute',
     alignSelf: 'center',
-    zIndex: 3,
-    alignItems: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(8, 5, 3, 0.9)',
-    borderWidth: 1,
-    borderColor: 'rgba(212, 165, 116, 0.28)',
-    borderRadius: 14,
-    maxWidth: '46%',
+    zIndex: 6,
   },
-  /* 세로 2P — 각자 자기 쪽 화면 끝의 "탭하여 계속" 힌트 */
   hintP1: {
     position: 'absolute',
     left: 0,
     right: 0,
-    zIndex: 3,
+    zIndex: 6,
     alignItems: 'center',
   },
   hintP2: {
     position: 'absolute',
     left: 0,
     right: 0,
-    zIndex: 3,
+    zIndex: 6,
     alignItems: 'center',
   },
   continueHint: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
-    color: 'rgba(245, 230, 200, 0.55)',
+    color: 'rgba(245, 230, 200, 0.6)',
     letterSpacing: 0.8,
+    ...outcomeTextShadow,
   },
 });

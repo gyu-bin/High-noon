@@ -30,6 +30,7 @@ import { RM_GAME } from '@/constants/reanimatedGame';
 import { colors } from '@/constants/theme';
 import { FONT_RYE } from '@/constants/fonts';
 import { getNpcById } from '@/constants/npcs';
+import { getNpcDisplayName } from '@/utils/npcLabels';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { bgmPlay } from '@/utils/audioService';
@@ -294,7 +295,7 @@ export default function NpcResultScreen() {
               <View style={styles.opponentRow}>
                 <Text style={styles.opponentLabel}>{t('result.opponent')}</Text>
                 <Text style={styles.opponentName}>
-                  {npc.title} {npc.name}
+                  {getNpcDisplayName(t, npc.id)}
                 </Text>
               </View>
             ) : null}
