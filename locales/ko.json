@@ -168,6 +168,14 @@
     "declineA11y": "포기하고 결과 보기",
     "giveUp": "포기"
   },
+  "error": {
+    "title": "이런, 문제가 생겼습니다",
+    "desc": "예상치 못한 오류로 화면을 불러오지 못했습니다.",
+    "retry": "다시 시도",
+    "retryA11y": "다시 시도하기",
+    "toMenu": "메인 메뉴로",
+    "toMenuA11y": "메인 메뉴로 돌아가기"
+  },
   "nav": {
     "npcSelect": "대결상대 선택",
     "localSetup": "2인 대결",

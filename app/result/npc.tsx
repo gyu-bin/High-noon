@@ -183,7 +183,7 @@ export default function NpcResultScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      // 승패 무관 — NPC 한 판 끝날 때마다 전면
+      // 승패 무관 — 전면 노출 여부·주기 판단은 showStageCompleteAd가 담당(스킵 시 즉시 resolve)
       if (adHandledKeyRef.current === resultSessionKey) {
         setAdFlowComplete(true);
         return;

@@ -168,6 +168,14 @@
     "declineA11y": "Give up and see results",
     "giveUp": "Give Up"
   },
+  "error": {
+    "title": "Something went wrong",
+    "desc": "An unexpected error kept this screen from loading.",
+    "retry": "Try again",
+    "retryA11y": "Try loading this screen again",
+    "toMenu": "Main menu",
+    "toMenuA11y": "Return to the main menu"
+  },
   "nav": {
     "npcSelect": "Select Opponent",
     "localSetup": "2P Duel",

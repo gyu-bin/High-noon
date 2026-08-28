@@ -27,12 +27,13 @@ async function getAdsLib(): Promise<AdsLib | null> {
   return adsLibPromise;
 }
 
-/** 프로덕션 전면 광고 유닛 — 실제 AdMob 콘솔 값으로 교체 */
+/** 프로덕션 전면 광고 유닛 (AdMob 콘솔 발급값). `__DEV__`에서는 TestIds로 대체된다. */
 function getProductionInterstitialUnitId(): string {
   return Platform.select({
     ios: 'ca-app-pub-2202662035854210/5547432578',
-    android: 'ca-app-pub-3940256099942544/1033173712',
-    default: 'ca-app-pub-3940256099942544/1033173712',
+    android: 'ca-app-pub-2202662035854210/8204516938',
+    // 웹·기타 플랫폼은 USE_NATIVE_ADS가 false라 실제로 도달하지 않는 분기
+    default: 'ca-app-pub-2202662035854210/8204516938',
   })!;
 }
 
@@ -47,10 +48,10 @@ let initialized = false;
 /** 동적 로드된 전면 인스턴스 (타입은 런타임만 사용) */
 let interstitial: ReturnType<AdsLib['InterstitialAd']['createForAdRequest']> | null = null;
 
-/** 매치마다 전면 노출 (승패 무관) */
-const MATCHES_PER_INTERSTITIAL = 1;
-/** 연속 전면 최소 간격 — 매판 노출이므로 쿨다운 없음 */
-const STAGE_AD_COOLDOWN_MS = 0;
+/** 전면 노출 주기 — N번째 매치 완료마다 1회 (승패 무관) */
+const MATCHES_PER_INTERSTITIAL = 2;
+/** 연속 전면 최소 간격. 한 판이 수 초인 게임이라 주기만으로는 간격이 너무 좁다 */
+const STAGE_AD_COOLDOWN_MS = 60_000;
 
 let lastStageInterstitialClosedAt = 0;
 let matchesSinceLastAd = 0;
@@ -61,8 +62,8 @@ let rewarded: ReturnType<AdsLib['RewardedAd']['createForAdRequest']> | null = nu
 function getProductionRewardedUnitId(): string {
   return Platform.select({
     ios: 'ca-app-pub-2202662035854210/2394655629',
-    android: 'ca-app-pub-3940256099942544/5224354917',
-    default: 'ca-app-pub-3940256099942544/5224354917',
+    android: 'ca-app-pub-2202662035854210/8411516012',
+    default: 'ca-app-pub-2202662035854210/8411516012',
   })!;
 }
 
@@ -112,7 +113,8 @@ const AD_SHOW_TIMEOUT_MS = 30000;
 const AD_FOREGROUND_GRACE_MS = 1500;
 
 /**
- * 매치 완료(승·패 무관) 후 호출. 매 판마다 전면 광고 노출.
+ * 매치 완료(승·패 무관) 후 호출. `MATCHES_PER_INTERSTITIAL`판마다,
+ * 직전 전면이 닫힌 지 `STAGE_AD_COOLDOWN_MS` 이상 지났을 때만 노출.
  * - `progressStore.isAdFree === true`이면 즉시 resolve (스킵).
  * - 로드/표시 실패 시에도 resolve 해서 결과 화면은 진행.
  * - 닫힌 뒤 다음 전면을 미리 로드.

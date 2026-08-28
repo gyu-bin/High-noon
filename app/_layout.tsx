@@ -1,8 +1,9 @@
 import 'react-native-gesture-handler';
-import '@/locales';
+// i18n은 다른 모듈보다 먼저 평가되어야 한다 — import 위치를 위로 유지할 것
+import i18n, { changeLanguage, i18nInitPromise } from '@/locales';
 
 import { Rye_400Regular, useFonts } from '@expo-google-fonts/rye';
-import { Stack } from 'expo-router';
+import { Stack, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
@@ -11,7 +12,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
-import i18n, { changeLanguage, i18nInitPromise } from '@/locales';
+import { AppErrorBoundary } from '@/components/ui/AppErrorBoundary';
 import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
 import { useSettingsStore } from '@/store/settingsStore';
 import { colors } from '@/constants/theme';
@@ -27,7 +28,15 @@ import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages
 // IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
 // import { initPurchases } from '@/utils/purchaseService';
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync().catch(() => {});
+
+/**
+ * expo-router 라우트 규약 — 이 레이아웃과 모든 하위 화면의 렌더 에러를 잡는 최종 방어선.
+ * 여기까지 왔다는 건 화면을 그리지 못했다는 뜻이라, 흰 화면 대신 재시도 경로를 준다.
+ */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return <AppErrorBoundary error={error} retry={retry} />;
+}
 
 const OTA_SPLASH_TIMEOUT_MS = 12_000;
 
@@ -112,29 +121,49 @@ function RootLayoutContent() {
 
     let cancelled = false;
 
+    /**
+     * 부팅 준비. 어떤 단계가 던지더라도 스플래시에 갇히지 않는 것이 최우선이라
+     * 화면 진입(setAppReady + hideAsync)은 finally에서 처리한다.
+     * 유일한 예외는 OTA 적용 후 reloadAsync 대기 — 이때는 곧 재시작하므로
+     * 스플래시를 유지한 채 넘긴다.
+     */
     async function prepare() {
-      // 재시작 직후 플래그 — 앱 진입 후 하단 작은 토스트만
-      const justUpdated = await consumeOtaJustApplied();
-      if (cancelled) return;
+      let handOffToReload = false;
+      let justUpdated = false;
 
-      const reloading = await applyOtaUpdateIfAvailable();
-      if (reloading || cancelled) return;
+      try {
+        // 재시작 직후 플래그 — 앱 진입 후 하단 작은 토스트만
+        justUpdated = await consumeOtaJustApplied();
+        if (cancelled) return;
 
-      await preloadTitleHero();
-      if (cancelled) return;
-      checkUnlockConditions();
-      setAppReady(true);
-      if (justUpdated) setOtaToastVisible(true);
-      await SplashScreen.hideAsync();
-      void preloadAll();
-      void ensureGameAudioSession();
-      warmupDuelSpeech();
-      void bootMenuBgm();
-      void preloadSceneImages();
-      void initAds().then(() => {
-        preloadInterstitial();
-        preloadRewardedAd();
-      });
+        handOffToReload = await applyOtaUpdateIfAvailable();
+        if (handOffToReload || cancelled) return;
+
+        await preloadTitleHero();
+        if (cancelled) return;
+        checkUnlockConditions();
+      } catch (err) {
+        // 준비 단계 실패가 부팅 자체를 막아선 안 된다. 프리로드는 없어도 플레이는 가능.
+        if (__DEV__) console.warn('[boot] prepare 실패 — 스플래시는 내리고 진행:', err);
+      } finally {
+        if (!handOffToReload) {
+          if (!cancelled) {
+            setAppReady(true);
+            if (justUpdated) setOtaToastVisible(true);
+          }
+          // 언마운트됐더라도 스플래시는 전역 상태이므로 반드시 내린다
+          await SplashScreen.hideAsync().catch(() => {});
+          void preloadAll();
+          void ensureGameAudioSession();
+          warmupDuelSpeech();
+          void bootMenuBgm();
+          void preloadSceneImages();
+          void initAds().then(() => {
+            preloadInterstitial();
+            preloadRewardedAd();
+          });
+        }
+      }
     }
 
     void prepare();
