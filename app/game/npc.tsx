@@ -887,24 +887,28 @@ export default function NpcGameScreen() {
   }, [finishMatchToResult]);
 
   const onAdReviveWatchAd = useCallback(async () => {
+    const pending = adRevivePending;
+    if (!pending) return;
+
     setAdReviveLoading(true);
+    setAdRevivePending(null);
+
     const rewarded = await showRewardedAd();
     setAdReviveLoading(false);
+
     if (!rewarded) {
-      // 광고 실패·스킵 → 정상 매치 종료로
-      setAdRevivePending(null);
       finishMatchToResult();
       return;
     }
-    // 상대의 마지막 승 롤백 → 스코어 2:2, 다음 라운드 이어감
-    const ps = useGameStore.getState().playerScore;
-    const ns = useGameStore.getState().opponentScore;
-    useGameStore.getState().setScores(ps, Math.max(0, ns - 1));
-    setAdRevivePending(null);
+
+    useGameStore.getState().setScores(pending.ps, Math.max(0, pending.ns - 1));
+    setDefeatedSide(null);
+    setModalVisible(false);
+    setModal(null);
     processedOutcomeKey.current = '';
     resetDuel();
     startRoundDuel();
-  }, [finishMatchToResult, resetDuel, startRoundDuel]);
+  }, [adRevivePending, finishMatchToResult, resetDuel, startRoundDuel]);
 
   const holdResultShoot = phase === '결과' && defeatedSide == null;
 

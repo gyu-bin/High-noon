@@ -246,6 +246,7 @@ export function preloadRewardedAd(): void {
  * 보상형 광고 표시. 유저가 광고를 끝까지 시청해 리워드를 받으면 `true`.
  * - 광고 스킵·에러·미로드 등은 `false`.
  * - `isAdFree`이면 무조건 `true` (광고 제거 유저에게도 리워드 부여).
+ * - CLOSED 이벤트 미발생·앱 복귀 등에도 resolve (무한 "광고 준비 중" 방지).
  */
 export function showRewardedAd(): Promise<boolean> {
   // 광고 비활성 시에도 리워드 플로우는 막지 않음 (시청 성공과 동일 처리)
@@ -255,8 +256,20 @@ export function showRewardedAd(): Promise<boolean> {
 
   return new Promise((resolve) => {
     let earned = false;
+    let resolved = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const cleanup = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    };
 
     const finish = (result: boolean) => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
       preloadRewardedAd();
       resolve(result);
     };
@@ -278,12 +291,21 @@ export function showRewardedAd(): Promise<boolean> {
         const { RewardedAdEventType, AdEventType } = lib;
 
         const present = () => {
+          if (resolved) return;
+
           ad.removeAllListeners();
           ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
             earned = true;
           });
           ad.addAdEventListener(AdEventType.CLOSED, () => finish(earned));
           ad.addAdEventListener(AdEventType.ERROR, () => finish(false));
+
+          timeoutId = setTimeout(() => {
+            if (!resolved) {
+              finish(earned);
+            }
+          }, AD_SHOW_TIMEOUT_MS);
+
           void ad.show().catch(() => finish(false));
         };
 
