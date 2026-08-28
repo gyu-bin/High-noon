@@ -12,12 +12,28 @@ const resources = {
   ja: { translation: ja },
 };
 
-function getDeviceLanguage(): string {
+export function getDeviceLanguage(): string {
   const locale = Localization.getLocales()[0]?.languageCode ?? 'ko';
   if (locale.startsWith('ja')) return 'ja';
   if (locale.startsWith('en')) return 'en';
   if (locale.startsWith('ko')) return 'ko';
   return 'en';
+}
+
+/**
+ * 앱 언어 변경
+ * @param lang 'auto' | 'ko' | 'en' | 'ja'
+ */
+export function changeLanguage(lang: 'auto' | 'ko' | 'en' | 'ja'): void {
+  const targetLang = lang === 'auto' ? getDeviceLanguage() : lang;
+  void i18n.changeLanguage(targetLang);
+}
+
+/**
+ * 현재 적용된 언어 코드 반환
+ */
+export function getCurrentLanguage(): string {
+  return i18n.language;
 }
 
 i18n.use(initReactI18next).init({

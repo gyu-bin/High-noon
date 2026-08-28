@@ -11,7 +11,9 @@ import 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
 import '@/locales';
+import { changeLanguage } from '@/locales';
 import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
+import { useSettingsStore } from '@/store/settingsStore';
 import { colors } from '@/constants/theme';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
 import { checkUnlockConditions } from '@/utils/characterAbility';
@@ -61,6 +63,7 @@ async function applyOtaUpdateIfAvailable(): Promise<boolean> {
 
 export default function RootLayout() {
   const { t } = useTranslation();
+  const language = useSettingsStore((s) => s.language);
   const [fontsLoaded, fontError] = useFonts({
     Rye_400Regular,
   });
@@ -72,6 +75,10 @@ export default function RootLayout() {
   useAutoScreenshotTour(appReady);
 
   const hideOtaToast = useCallback(() => setOtaToastVisible(false), []);
+
+  useEffect(() => {
+    changeLanguage(language);
+  }, [language]);
 
   useEffect(() => {
     try {

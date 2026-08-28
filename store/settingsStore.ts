@@ -14,6 +14,16 @@ export const LOCAL_MATCH_PRESETS: Record<
   bo7: { winsRequired: 4, maxRounds: 7 },
 };
 
+/** 지원하는 언어 코드 */
+export type AppLanguage = 'auto' | 'ko' | 'en' | 'ja';
+
+export const LANGUAGE_OPTIONS: { value: AppLanguage; label: string }[] = [
+  { value: 'auto', label: '자동 (Auto)' },
+  { value: 'ko', label: '한국어' },
+  { value: 'en', label: 'English' },
+  { value: 'ja', label: '日本語' },
+];
+
 type SettingsStoreState = {
   soundEnabled: boolean;
   musicEnabled: boolean;
@@ -21,11 +31,14 @@ type SettingsStoreState = {
   localMatchPreset: LocalMatchPreset;
   /** 플레이어 선택 캐릭터 id (1~4) */
   selectedCharacterId: number;
+  /** 앱 언어 설정 (auto = 기기 설정 따름) */
+  language: AppLanguage;
   setSoundEnabled: (value: boolean) => void;
   setMusicEnabled: (value: boolean) => void;
   setHapticEnabled: (value: boolean) => void;
   setLocalMatchPreset: (preset: LocalMatchPreset) => void;
   setSelectedCharacterId: (id: number) => void;
+  setLanguage: (lang: AppLanguage) => void;
 };
 
 export const useSettingsStore = create<SettingsStoreState>()(
@@ -36,6 +49,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
       hapticEnabled: true,
       localMatchPreset: 'bo5',
       selectedCharacterId: 1,
+      language: 'auto',
 
       setSoundEnabled: (soundEnabled) => set({ soundEnabled }),
 
@@ -46,6 +60,8 @@ export const useSettingsStore = create<SettingsStoreState>()(
       setLocalMatchPreset: (localMatchPreset) => set({ localMatchPreset }),
 
       setSelectedCharacterId: (selectedCharacterId) => set({ selectedCharacterId }),
+
+      setLanguage: (language) => set({ language }),
     }),
     {
       name: 'high-noon-settings',
@@ -56,6 +72,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
         hapticEnabled: s.hapticEnabled,
         localMatchPreset: s.localMatchPreset,
         selectedCharacterId: s.selectedCharacterId,
+        language: s.language,
       }),
       merge: (persisted, current) => ({
         ...current,
@@ -64,6 +81,8 @@ export const useSettingsStore = create<SettingsStoreState>()(
           (persisted as Partial<SettingsStoreState>)?.musicEnabled ?? true,
         selectedCharacterId:
           (persisted as Partial<SettingsStoreState>)?.selectedCharacterId ?? 1,
+        language:
+          (persisted as Partial<SettingsStoreState>)?.language ?? 'auto',
       }),
     },
   ),

@@ -21,8 +21,9 @@ import {
 import { colors } from '@/constants/theme';
 import { FONT_RYE } from '@/constants/fonts';
 import { NPCS } from '@/constants/npcs';
+import { changeLanguage } from '@/locales';
 import { useProgressStore } from '@/store/progressStore';
-import { useSettingsStore } from '@/store/settingsStore';
+import { useSettingsStore, LANGUAGE_OPTIONS, type AppLanguage } from '@/store/settingsStore';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { playBgm, syncBgmWithSettings } from '@/utils/bgmService';
 // IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
@@ -44,9 +45,19 @@ export default function MenuScreen() {
   const soundEnabled = useSettingsStore((s) => s.soundEnabled);
   const musicEnabled = useSettingsStore((s) => s.musicEnabled);
   const hapticEnabled = useSettingsStore((s) => s.hapticEnabled);
+  const language = useSettingsStore((s) => s.language);
   const setSoundEnabled = useSettingsStore((s) => s.setSoundEnabled);
   const setMusicEnabled = useSettingsStore((s) => s.setMusicEnabled);
   const setHapticEnabled = useSettingsStore((s) => s.setHapticEnabled);
+  const setLanguage = useSettingsStore((s) => s.setLanguage);
+
+  const onLanguageChange = useCallback(
+    (lang: AppLanguage) => {
+      setLanguage(lang);
+      changeLanguage(lang);
+    },
+    [setLanguage],
+  );
 
   // --- IAP 임시 비활성 ---
   // const isAdFree = useProgressStore((s) => s.isAdFree);
@@ -160,6 +171,32 @@ export default function MenuScreen() {
                 trackColor={{ false: '#2A1810', true: 'rgba(212, 165, 116, 0.45)' }}
                 thumbColor={hapticEnabled ? colors.ochre : colors.sand}
               />
+            </View>
+            <View style={styles.languageRow}>
+              <Text style={styles.settingLabel}>{t('menu.language')}</Text>
+              <View style={styles.languageOptions}>
+                {LANGUAGE_OPTIONS.map((opt) => (
+                  <Pressable
+                    key={opt.value}
+                    accessibilityRole="button"
+                    accessibilityLabel={opt.label}
+                    onPress={() => onLanguageChange(opt.value)}
+                    style={[
+                      styles.languageBtn,
+                      language === opt.value && styles.languageBtnActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.languageBtnText,
+                        language === opt.value && styles.languageBtnTextActive,
+                      ]}
+                    >
+                      {opt.value === 'auto' ? 'Auto' : opt.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
           </View>
 
@@ -279,6 +316,34 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.cream,
     ...metaTextShadow,
+  },
+  languageRow: {
+    gap: 8,
+  },
+  languageOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  languageBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 165, 116, 0.3)',
+  },
+  languageBtnActive: {
+    backgroundColor: colors.ochre,
+    borderColor: colors.gold,
+  },
+  languageBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.sand,
+  },
+  languageBtnTextActive: {
+    color: colors.darkBrown,
   },
   footer: {
     alignItems: 'center',
