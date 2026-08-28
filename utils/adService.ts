@@ -1,5 +1,5 @@
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { useProgressStore } from '@/store/progressStore';
 
@@ -106,11 +106,17 @@ export function preloadInterstitial(): void {
   });
 }
 
+/** 광고 표시 후 CLOSED 이벤트가 오지 않을 경우 대비 타임아웃 (ms) */
+const AD_SHOW_TIMEOUT_MS = 30000;
+/** AppState가 active로 돌아온 뒤 grace period (ms) */
+const AD_FOREGROUND_GRACE_MS = 1500;
+
 /**
  * 매치 완료(승·패 무관) 후 호출. 매 판마다 전면 광고 노출.
  * - `progressStore.isAdFree === true`이면 즉시 resolve (스킵).
  * - 로드/표시 실패 시에도 resolve 해서 결과 화면은 진행.
  * - 닫힌 뒤 다음 전면을 미리 로드.
+ * - 타임아웃 및 AppState fallback으로 무한 대기 방지.
  */
 export function showStageCompleteAd(): Promise<void> {
   if (!ADS_ENABLED || useProgressStore.getState().isAdFree) {
@@ -130,7 +136,26 @@ export function showStageCompleteAd(): Promise<void> {
   }
 
   return new Promise((resolve) => {
+    let resolved = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let appStateSubscription: ReturnType<typeof AppState.addEventListener> | null = null;
+    let adShown = false;
+
+    const cleanup = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      if (appStateSubscription) {
+        appStateSubscription.remove();
+        appStateSubscription = null;
+      }
+    };
+
     const finish = () => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
       preloadInterstitial();
       resolve();
     };
@@ -158,9 +183,32 @@ export function showStageCompleteAd(): Promise<void> {
         const { AdEventType } = lib;
 
         const present = () => {
+          if (resolved) return;
+
           ad.removeAllListeners();
           ad.addAdEventListener(AdEventType.CLOSED, finishAfterClosed);
           ad.addAdEventListener(AdEventType.ERROR, finish);
+
+          adShown = true;
+
+          // 광고 표시 후 타임아웃 설정 — CLOSED 이벤트 미발생 대비
+          timeoutId = setTimeout(() => {
+            if (!resolved) {
+              finishAfterClosed();
+            }
+          }, AD_SHOW_TIMEOUT_MS);
+
+          // AppState 감지 — 앱이 foreground로 돌아오면 grace period 후 완료
+          appStateSubscription = AppState.addEventListener('change', (nextState) => {
+            if (nextState === 'active' && adShown && !resolved) {
+              setTimeout(() => {
+                if (!resolved) {
+                  finishAfterClosed();
+                }
+              }, AD_FOREGROUND_GRACE_MS);
+            }
+          });
+
           void ad.show().catch(finish);
         };
 
