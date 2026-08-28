@@ -186,6 +186,14 @@
   "ota": {
     "updated": "アップデート完了"
   },
+  "storeUpdate": {
+    "title": "アップデートが必要です",
+    "body": "新しいバージョン(v{{required}})が公開されました。\n現在 v{{current}} — App Store / Google Play から更新してください。",
+    "openStore": "ストアで更新",
+    "openStoreA11y": "アプリストアで更新する",
+    "later": "あとで",
+    "laterA11y": "あとで更新する"
+  },
   "a11y": {
     "titleTap": "タップしてメニューへ"
   },

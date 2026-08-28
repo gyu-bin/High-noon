@@ -67,5 +67,18 @@ replaceFile(path.join(root, 'ios/HighNoon.xcodeproj/project.pbxproj'), (text) =>
   text.replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${next};`),
 );
 
+replaceFile(path.join(root, 'android/app/build.gradle'), (text) =>
+  text.replace(/versionName\s+"[^"]+"/, `versionName "${next}"`),
+);
+
+replaceFile(path.join(root, 'constants/release.ts'), (text) =>
+  text.replace(
+    /export const MINIMUM_STORE_VERSION = '[^']+';/,
+    `export const MINIMUM_STORE_VERSION = '${next}';`,
+  ),
+);
+
 console.log(`Store version bumped: ${prev} → ${next}`);
-console.log('Synced: app.json, package.json, Info.plist, Expo.plist, project.pbxproj');
+console.log(
+  'Synced: app.json, package.json, Info.plist, Expo.plist, project.pbxproj, android/build.gradle, constants/release.ts',
+);

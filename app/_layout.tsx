@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 
 import { AppErrorBoundary } from '@/components/ui/AppErrorBoundary';
 import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
+import { StoreUpdateModal } from '@/components/ui/StoreUpdateModal';
 import { useSettingsStore } from '@/store/settingsStore';
 import { colors } from '@/constants/theme';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
@@ -25,6 +26,7 @@ import { bootMenuBgm } from '@/utils/bgmService';
 import { warmupDuelSpeech } from '@/utils/duelSignalSpeech';
 import { consumeOtaJustApplied, markOtaJustApplied } from '@/utils/otaUpdateFlag';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
+import { isStoreUpdateRequired } from '@/utils/storeUpdate';
 // IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
 // import { initPurchases } from '@/utils/purchaseService';
 
@@ -101,10 +103,19 @@ function RootLayoutContent() {
   const ready = fontsLoaded || fontError != null;
   const [appReady, setAppReady] = useState(false);
   const [otaToastVisible, setOtaToastVisible] = useState(false);
+  const [storeUpdateVisible, setStoreUpdateVisible] = useState(false);
 
   useAutoScreenshotTour(appReady);
 
   const hideOtaToast = useCallback(() => setOtaToastVisible(false), []);
+  const dismissStoreUpdate = useCallback(() => setStoreUpdateVisible(false), []);
+
+  useEffect(() => {
+    if (!appReady) return;
+    if (isStoreUpdateRequired()) {
+      setStoreUpdateVisible(true);
+    }
+  }, [appReady]);
 
   useEffect(() => {
     changeLanguage(language);
@@ -205,6 +216,7 @@ function RootLayoutContent() {
         <Stack.Screen name="result" options={{ headerShown: false }} />
       </Stack>
       <OtaUpdatedToast visible={otaToastVisible} onHidden={hideOtaToast} />
+      <StoreUpdateModal visible={storeUpdateVisible} onDismiss={dismissStoreUpdate} />
     </SafeAreaProvider>
   );
 }

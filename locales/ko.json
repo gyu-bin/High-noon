@@ -186,6 +186,14 @@
   "ota": {
     "updated": "업데이트 완료"
   },
+  "storeUpdate": {
+    "title": "업데이트 필요",
+    "body": "새 버전(v{{required}})이 출시되었습니다.\n현재 v{{current}} — App Store / Play에서 업데이트해 주세요.",
+    "openStore": "스토어에서 업데이트",
+    "openStoreA11y": "앱 스토어에서 업데이트하기",
+    "later": "나중에",
+    "laterA11y": "나중에 업데이트"
+  },
   "a11y": {
     "titleTap": "화면을 눌러 메뉴로"
   },

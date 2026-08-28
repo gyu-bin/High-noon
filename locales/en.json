@@ -186,6 +186,14 @@
   "ota": {
     "updated": "Update complete"
   },
+  "storeUpdate": {
+    "title": "Update required",
+    "body": "A new version (v{{required}}) is available.\nYou're on v{{current}} — please update from the App Store or Google Play.",
+    "openStore": "Update in store",
+    "openStoreA11y": "Open app store to update",
+    "later": "Not now",
+    "laterA11y": "Update later"
+  },
   "a11y": {
     "titleTap": "Tap to open menu"
   },
