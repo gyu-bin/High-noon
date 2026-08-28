@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 import { LocalDuelFireworks } from '@/components/game/LocalDuelFireworks';
 import {
@@ -40,31 +41,14 @@ type Props = {
   paddingBottom?: number;
 };
 
-function bottomStatsLine(data: NpcRoundModalData): string {
-  if (data.kind === 'win') {
-    const npcPart = data.npcMisfire
-      ? '상대 오발'
-      : data.npcMs != null
-        ? `상대 ${formatReactionMs(data.npcMs)} ms`
-        : '상대 —';
-    return `나 ${formatReactionMs(data.playerMs)} ms  ·  ${npcPart}`;
-  }
-
-  const playerPart =
-    data.playerMs != null ? `나 ${formatReactionMs(data.playerMs)} ms` : '나 —';
-  const npcPart =
-    data.npcMs != null ? `상대 ${formatReactionMs(data.npcMs)} ms` : '상대 —';
-  return `${playerPart}  ·  ${npcPart}`;
-}
-
-function lossReasonShort(reason: NpcRoundLossReason): string {
+function getLossReasonShortKey(reason: NpcRoundLossReason): string {
   switch (reason) {
     case 'early':
-      return '얼리 탭';
+      return 'lossShort.early';
     case 'timeout':
-      return '시간 초과';
+      return 'lossShort.timeout';
     case 'slower':
-      return '더 느림';
+      return 'lossShort.slower';
   }
 }
 
@@ -77,7 +61,24 @@ export function NpcRoundModal({
   onHeadshotPress,
   paddingBottom = 0,
 }: Props) {
+  const { t } = useTranslation();
   const m = usePhoneStageMetrics();
+
+  const getBottomStatsLine = (d: NpcRoundModalData): string => {
+    const me = t('result.me');
+    const opp = t('result.opponent');
+    if (d.kind === 'win') {
+      const npcPart = d.npcMisfire
+        ? t('loss.opponentEarly')
+        : d.npcMs != null
+          ? `${opp} ${formatReactionMs(d.npcMs)} ms`
+          : `${opp} —`;
+      return `${me} ${formatReactionMs(d.playerMs)} ms  ·  ${npcPart}`;
+    }
+    const playerPart = d.playerMs != null ? `${me} ${formatReactionMs(d.playerMs)} ms` : `${me} —`;
+    const npcPart = d.npcMs != null ? `${opp} ${formatReactionMs(d.npcMs)} ms` : `${opp} —`;
+    return `${playerPart}  ·  ${npcPart}`;
+  };
 
   if (!visible || !data) return null;
 
@@ -98,7 +99,7 @@ export function NpcRoundModal({
 
   return (
     <Pressable
-      accessibilityLabel="탭하여 계속"
+      accessibilityLabel={t('game.tapToContinue')}
       accessibilityRole="button"
       onPress={onContinue}
       style={styles.root}
@@ -125,9 +126,9 @@ export function NpcRoundModal({
                 entering={FadeIn.duration(220)}
                 style={[styles.badge, styles.playerBadge, landscape && styles.playerBadgeLandscape, { borderColor: theme.badgeBorder, backgroundColor: theme.badgeBg }]}
               >
-                <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: theme.title }]}>승리</Text>
+                <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: theme.title }]}>{t('result.victory')}</Text>
                 {data.kind === 'win' && data.lastStand ? (
-                  <Text style={styles.badgeHint}>라스트 스탠드</Text>
+                  <Text style={styles.badgeHint}>{t('result.lastStand')}</Text>
                 ) : null}
               </Animated.View>
             ) : (
@@ -135,9 +136,9 @@ export function NpcRoundModal({
                 entering={FadeInDown.duration(220)}
                 style={[styles.badge, styles.npcBadge, landscape && styles.playerBadgeLandscape, { borderColor: theme.badgeBorder, backgroundColor: theme.badgeBg }]}
               >
-                <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: theme.title }]}>패배</Text>
+                <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: theme.title }]}>{t('result.defeat')}</Text>
                 {data.kind === 'loss' ? (
-                  <Text style={styles.badgeHint}>{lossReasonShort(data.reason)}</Text>
+                  <Text style={styles.badgeHint}>{t(getLossReasonShortKey(data.reason))}</Text>
                 ) : null}
               </Animated.View>
             )}
@@ -148,7 +149,7 @@ export function NpcRoundModal({
                 style={[styles.badge, styles.npcWinBadge, landscape && styles.npcBadgeLandscape, { borderColor: OUTCOME_VICTORY.badgeBorder, backgroundColor: OUTCOME_VICTORY.badgeBg }]}
               >
                 <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: OUTCOME_VICTORY.title }]}>
-                  승리
+                  {t('result.victory')}
                 </Text>
               </Animated.View>
             ) : (
@@ -157,7 +158,7 @@ export function NpcRoundModal({
                 style={[styles.badge, styles.npcDefeatBadge, landscape && styles.npcBadgeLandscape, { borderColor: OUTCOME_DEFEAT.badgeBorder, backgroundColor: OUTCOME_DEFEAT.badgeBg }]}
               >
                 <Text style={[styles.badgeTitle, { fontFamily: FONT_RYE, color: OUTCOME_DEFEAT.title }]}>
-                  패배
+                  {t('result.defeat')}
                 </Text>
               </Animated.View>
             )}
@@ -166,7 +167,7 @@ export function NpcRoundModal({
           {headshotOffered && onHeadshotPress ? (
             <View pointerEvents="box-none" style={styles.headshotWrap}>
               <Pressable
-                accessibilityLabel="헤드샷 사용"
+                accessibilityLabel={t('result.headshot')}
                 accessibilityRole="button"
                 onPress={(e) => {
                   e.stopPropagation?.();
@@ -174,7 +175,7 @@ export function NpcRoundModal({
                 }}
                 style={styles.headshotBtn}
               >
-                <Text style={styles.headshotText}>헤드샷</Text>
+                <Text style={styles.headshotText}>{t('result.headshot')}</Text>
               </Pressable>
             </View>
           ) : null}
@@ -189,11 +190,11 @@ export function NpcRoundModal({
           >
             <View style={styles.statsCard}>
               <Text style={styles.statsLine}>
-                <Text style={styles.statsHeading}>이번 라운드  </Text>
-                {bottomStatsLine(data)}
+                <Text style={styles.statsHeading}>{t('result.thisRound')}</Text>
+                {getBottomStatsLine(data)}
               </Text>
             </View>
-            <Text style={styles.continueHint}>탭하여 계속</Text>
+            <Text style={styles.continueHint}>{t('game.tapToContinue')}</Text>
           </View>
         </View>
       </Pressable>

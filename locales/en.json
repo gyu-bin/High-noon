@@ -1,0 +1,95 @@
+{
+  "common": {
+    "back": "Back",
+    "confirm": "OK",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "loading": "Please wait…"
+  },
+  "title": {
+    "tapToStart": "Tap to Start",
+    "tagline": "Reaction Duel"
+  },
+  "menu": {
+    "play": "Play",
+    "localDuel": "2P Duel",
+    "more": "More",
+    "stats": "Stats",
+    "character": "Character",
+    "settings": "Settings",
+    "bgm": "Background Music",
+    "sfx": "Sound Effects",
+    "vibration": "Vibration",
+    "progress": "Progress — Unlocked NPCs"
+  },
+  "game": {
+    "pause": "Paused",
+    "continue": "Continue",
+    "mainMenu": "Main Menu",
+    "roundStart": "Round starting…",
+    "tapToContinue": "Tap to continue",
+    "tapToNextRound": "Tap for next round",
+    "tapToExit": "Tap to exit",
+    "earlyTapWarning": "Tapping before BANG means instant defeat"
+  },
+  "result": {
+    "victory": "Victory",
+    "defeat": "Defeat",
+    "draw": "Draw",
+    "lastStand": "Last Stand",
+    "headshot": "Headshot",
+    "wonDuel": "You won the duel",
+    "opponent": "Opponent",
+    "finalScore": "Final Score",
+    "retry": "Retry",
+    "toOpponentSelect": "Select Opponent",
+    "thisRound": "This Round  ",
+    "finalVictory": "Final Victory!",
+    "reactionSpeed": "Reaction Time",
+    "me": "Me"
+  },
+  "loss": {
+    "early": "You fired before BANG",
+    "timeout": "You didn't fire in time",
+    "slower": "You reacted slower than your opponent",
+    "opponentEarly": "Opponent misfired"
+  },
+  "lossShort": {
+    "early": "Early tap",
+    "timeout": "Timeout",
+    "slower": "Too slow"
+  },
+  "localDuel": {
+    "selectRounds": "Select Rounds",
+    "roundFormat": "Best of {{rounds}}",
+    "p1Wins": "P1 · {{wins}} wins",
+    "p2Wins": "P2 · {{wins}} wins"
+  },
+  "character": {
+    "title": "Gunslingers",
+    "subtitle": "Choose your character for the duel",
+    "noAbility": "No ability",
+    "selected": "Selected",
+    "unlocked": "??? Unlocked"
+  },
+  "stats": {
+    "title": "Stats",
+    "avgReaction": "Average Reaction",
+    "npcCleared": "NPCs Cleared"
+  },
+  "npcSelect": {
+    "title": "Select Opponent",
+    "locked": "Locked opponent {{name}}"
+  },
+  "revive": {
+    "title": "It's not over yet",
+    "giveUp": "Give Up"
+  },
+  "nav": {
+    "npcSelect": "Select Opponent",
+    "localSetup": "2P Duel",
+    "stats": "Stats",
+    "character": "Character",
+    "duel": "Duel"
+  }
+}

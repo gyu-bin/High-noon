@@ -14,6 +14,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 import { OutcomeBackdrop } from '@/components/result/OutcomeBackdrop';
 import { ReactionStatsCard } from '@/components/result/ReactionStatsCard';
@@ -107,16 +108,16 @@ function VictorySparkles({ width, seed }: { width: number; seed: string }) {
   );
 }
 
-function lossReasonLabel(reason: LossReason): string {
+function getLossReasonKey(reason: LossReason): string | null {
   switch (reason) {
     case 'early':
-      return '뱅 신호 전에 발사했습니다';
+      return 'loss.early';
     case 'timeout':
-      return '제한 시간 안에 쏘지 못했습니다';
+      return 'loss.timeout';
     case 'slower':
-      return '상대보다 늦게 반응했습니다';
+      return 'loss.slower';
     default:
-      return '';
+      return null;
   }
 }
 
@@ -131,6 +132,7 @@ function whoFaster(
 }
 
 export default function NpcResultScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   useScreenBgm(null, true);
   const { windowWidth: winW, windowHeight: winH } = usePhoneStageMetrics();
@@ -248,7 +250,7 @@ export default function NpcResultScreen() {
         {!adFlowComplete ? (
           <View style={styles.adLoading} pointerEvents="auto">
             <ActivityIndicator size="large" color={colors.cream} />
-            <Text style={styles.adLoadingText}>잠시만요…</Text>
+            <Text style={styles.adLoadingText}>{t('common.loading')}</Text>
           </View>
         ) : null}
 
@@ -271,26 +273,26 @@ export default function NpcResultScreen() {
                   titleAnimatedStyle,
                 ]}
               >
-                승리
+                {t('result.victory')}
               </Animated.Text>
             ) : (
               <Animated.Text
                 entering={FadeInDown.duration(380)}
                 style={[styles.title, { fontFamily: FONT_RYE, color: theme.title }]}
               >
-                패배
+                {t('result.defeat')}
               </Animated.Text>
             )}
 
             {!victory && lossReason ? (
-              <Text style={styles.lossReason}>{lossReasonLabel(lossReason)}</Text>
+              <Text style={styles.lossReason}>{t(getLossReasonKey(lossReason) ?? '')}</Text>
             ) : victory ? (
-              <Text style={styles.winSubtitle}>결투에서 이겼습니다</Text>
+              <Text style={styles.winSubtitle}>{t('result.wonDuel')}</Text>
             ) : null}
 
             {npc ? (
               <View style={styles.opponentRow}>
-                <Text style={styles.opponentLabel}>상대</Text>
+                <Text style={styles.opponentLabel}>{t('result.opponent')}</Text>
                 <Text style={styles.opponentName}>
                   {npc.title} {npc.name}
                 </Text>
@@ -298,7 +300,7 @@ export default function NpcResultScreen() {
             ) : null}
 
             <View style={styles.scorePill}>
-              <Text style={styles.scoreLabel}>최종 스코어</Text>
+              <Text style={styles.scoreLabel}>{t('result.finalScore')}</Text>
               <Text style={[styles.scoreValue, { fontFamily: FONT_RYE }]}>
                 {playerWins ?? '0'} — {npcWins ?? '0'}
               </Text>
@@ -307,9 +309,9 @@ export default function NpcResultScreen() {
             <ReactionStatsCard playerMs={playerMs} npcMs={npcMs} faster={faster} />
 
             <View style={styles.btnCol}>
-              <WoodButton title="다시 도전" onPress={onRetry} style={styles.btn} />
+              <WoodButton title={t('result.retry')} onPress={onRetry} style={styles.btn} />
               <WoodButton
-                title="대결상대 선택으로"
+                title={t('result.toOpponentSelect')}
                 onPress={onNpcSelect}
                 style={styles.btnSecondary}
                 textStyle={styles.btnSecondaryText}

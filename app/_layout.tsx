@@ -8,7 +8,9 @@ import * as Updates from 'expo-updates';
 import { useCallback, useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
+import '@/locales';
 import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
 import { colors } from '@/constants/theme';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
@@ -58,6 +60,7 @@ async function applyOtaUpdateIfAvailable(): Promise<boolean> {
 }
 
 export default function RootLayout() {
+  const { t } = useTranslation();
   const [fontsLoaded, fontError] = useFonts({
     Rye_400Regular,
   });
@@ -127,17 +130,17 @@ export default function RootLayout() {
           headerStyle: { backgroundColor: colors.darkBrown },
           headerTintColor: colors.cream,
           headerTitleStyle: { fontWeight: '700', color: colors.cream },
-          headerBackTitle: '뒤로',
+          headerBackTitle: t('common.back'),
           contentStyle: { backgroundColor: WESTERN_HERO_FALLBACK },
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="menu" options={{ headerShown: false }} />
-        <Stack.Screen name="npc-select" options={{ title: '대결상대 선택' }} />
-        <Stack.Screen name="local-setup" options={{ title: '2인 대결' }} />
-        <Stack.Screen name="stats" options={{ title: '기록' }} />
-        <Stack.Screen name="character-select" options={{ title: '캐릭터' }} />
-        <Stack.Screen name="duel" options={{ title: '결투', headerShown: true }} />
+        <Stack.Screen name="npc-select" options={{ title: t('nav.npcSelect') }} />
+        <Stack.Screen name="local-setup" options={{ title: t('nav.localSetup') }} />
+        <Stack.Screen name="stats" options={{ title: t('nav.stats') }} />
+        <Stack.Screen name="character-select" options={{ title: t('nav.character') }} />
+        <Stack.Screen name="duel" options={{ title: t('nav.duel'), headerShown: true }} />
         <Stack.Screen name="game" options={{ headerShown: false }} />
         <Stack.Screen name="capture" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ headerShown: false }} />

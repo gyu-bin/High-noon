@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { OUTCOME_PANEL, OUTCOME_VICTORY, outcomeTextShadow } from '@/constants/outcomeTheme';
 import { colors } from '@/constants/theme';
@@ -11,12 +12,13 @@ type Props = {
 };
 
 export function ReactionStatsCard({ playerMs, npcMs, faster }: Props) {
+  const { t } = useTranslation();
   return (
     <View style={styles.card}>
-      <Text style={styles.heading}>반응 속도</Text>
+      <Text style={styles.heading}>{t('result.reactionSpeed')}</Text>
       <View style={styles.row}>
         <View style={[styles.col, faster === 'player' && styles.colWin]}>
-          <Text style={styles.label}>나</Text>
+          <Text style={styles.label}>{t('result.me')}</Text>
           <Text style={[styles.value, faster === 'player' && styles.valueWin]}>
             {playerMs != null ? formatReactionMs(playerMs) : '—'}
           </Text>

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { colors } from '@/constants/theme';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
@@ -20,6 +21,7 @@ export function PauseMenuModal({
   secondaryLabel,
   onMainMenu,
 }: Props) {
+  const { t } = useTranslation();
   const m = usePhoneStageMetrics();
   const landscape = m.windowWidth > m.windowHeight;
 
@@ -48,14 +50,14 @@ export function PauseMenuModal({
             { width: cardWidth, alignSelf: 'center' },
           ]}
         >
-          <Text style={[styles.title, landscape && styles.titleLandscape]}>일시정지</Text>
+          <Text style={[styles.title, landscape && styles.titleLandscape]}>{t('game.pause')}</Text>
           <Pressable
-            accessibilityLabel="계속하기"
+            accessibilityLabel={t('game.continue')}
             accessibilityRole="button"
             onPress={onResume}
             style={styles.btnPrimary}
           >
-            <Text style={styles.btnPrimaryText}>계속하기</Text>
+            <Text style={styles.btnPrimaryText}>{t('game.continue')}</Text>
           </Pressable>
           {onSecondaryExit != null && secondaryLabel != null ? (
             <Pressable
@@ -68,13 +70,12 @@ export function PauseMenuModal({
             </Pressable>
           ) : null}
           <Pressable
-            accessibilityLabel="메인 메뉴"
-            accessibilityHint="타이틀 화면이 있는 메뉴로 이동합니다"
+            accessibilityLabel={t('game.mainMenu')}
             accessibilityRole="button"
             onPress={onMainMenu}
             style={styles.btn}
           >
-            <Text style={styles.btnText}>메인 메뉴</Text>
+            <Text style={styles.btnText}>{t('game.mainMenu')}</Text>
           </Pressable>
         </View>
       </View>

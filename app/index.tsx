@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { WesternHomeBackground } from '@/components/layout/WesternHomeBackground';
 import { ShimmerTitle } from '@/components/title/ShimmerTitle';
@@ -14,6 +15,7 @@ import { play } from '@/utils/audioService';
 import { trigger } from '@/utils/hapticService';
 
 export default function TitleScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -52,7 +54,7 @@ export default function TitleScreen() {
           pointerEvents="box-none"
         >
           <ShimmerTitle label="HIGH NOON" fontFamily={FONT_RYE} fontSize={48} />
-          <Text style={styles.tapHint}>탭하여 시작</Text>
+          <Text style={styles.tapHint}>{t('title.tapToStart')}</Text>
         </View>
       </Pressable>
     </WesternHomeBackground>

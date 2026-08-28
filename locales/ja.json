@@ -1,0 +1,95 @@
+{
+  "common": {
+    "back": "戻る",
+    "confirm": "確認",
+    "cancel": "キャンセル",
+    "continue": "続ける",
+    "loading": "少々お待ちください…"
+  },
+  "title": {
+    "tapToStart": "タップしてスタート",
+    "tagline": "反応速度デュエル"
+  },
+  "menu": {
+    "play": "プレイ",
+    "localDuel": "2人対戦",
+    "more": "その他",
+    "stats": "記録",
+    "character": "キャラクター",
+    "settings": "設定",
+    "bgm": "BGM",
+    "sfx": "効果音",
+    "vibration": "振動",
+    "progress": "進行状況 — 解放済みNPC"
+  },
+  "game": {
+    "pause": "一時停止",
+    "continue": "続ける",
+    "mainMenu": "メインメニュー",
+    "roundStart": "ラウンド開始…",
+    "tapToContinue": "タップして続行",
+    "tapToNextRound": "タップして次のラウンドへ",
+    "tapToExit": "タップして終了",
+    "earlyTapWarning": "バン前にタップすると即敗北"
+  },
+  "result": {
+    "victory": "勝利",
+    "defeat": "敗北",
+    "draw": "引き分け",
+    "lastStand": "ラストスタンド",
+    "headshot": "ヘッドショット",
+    "wonDuel": "決闘に勝ちました",
+    "opponent": "相手",
+    "finalScore": "最終スコア",
+    "retry": "再挑戦",
+    "toOpponentSelect": "対戦相手選択へ",
+    "thisRound": "このラウンド  ",
+    "finalVictory": "最終勝利！",
+    "reactionSpeed": "反応速度",
+    "me": "自分"
+  },
+  "loss": {
+    "early": "バン前に撃ちました",
+    "timeout": "制限時間内に撃てませんでした",
+    "slower": "相手より反応が遅かったです",
+    "opponentEarly": "相手の誤射"
+  },
+  "lossShort": {
+    "early": "早打ち",
+    "timeout": "タイムアウト",
+    "slower": "遅かった"
+  },
+  "localDuel": {
+    "selectRounds": "ラウンド数選択",
+    "roundFormat": "{{rounds}}本中{{wins}}先取",
+    "p1Wins": "P1 · {{wins}}勝",
+    "p2Wins": "P2 · {{wins}}勝"
+  },
+  "character": {
+    "title": "ガンマン",
+    "subtitle": "決闘で使用するキャラクターを選びます",
+    "noAbility": "能力なし",
+    "selected": "選択中",
+    "unlocked": "??? 解放済み"
+  },
+  "stats": {
+    "title": "記録",
+    "avgReaction": "平均反応速度",
+    "npcCleared": "NPCクリア"
+  },
+  "npcSelect": {
+    "title": "対戦相手選択",
+    "locked": "ロック中の対戦相手 {{name}}"
+  },
+  "revive": {
+    "title": "まだ終わりじゃない",
+    "giveUp": "諦める"
+  },
+  "nav": {
+    "npcSelect": "対戦相手選択",
+    "localSetup": "2人対戦",
+    "stats": "記録",
+    "character": "キャラクター",
+    "duel": "決闘"
+  }
+}

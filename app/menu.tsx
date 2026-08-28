@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { WoodButton } from '@/components/ui/WoodButton';
@@ -33,6 +34,7 @@ import { playBgm, syncBgmWithSettings } from '@/utils/bgmService';
 // } from '@/utils/purchaseService';
 
 export default function MenuScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
@@ -79,7 +81,7 @@ export default function MenuScreen() {
       >
         <View style={styles.header}>
           <Text style={[styles.brand, { fontFamily: FONT_RYE }]}>HIGH NOON</Text>
-          <Text style={styles.tagline}>반응속도 결투</Text>
+          <Text style={styles.tagline}>{t('title.tagline')}</Text>
         </View>
 
         <ScrollView
@@ -88,7 +90,7 @@ export default function MenuScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>플레이</Text>
+            <Text style={styles.sectionLabel}>{t('menu.play')}</Text>
             <View style={styles.primaryButtons}>
               <WoodButton
                 title="vs NPC"
@@ -97,7 +99,7 @@ export default function MenuScreen() {
                 style={styles.primaryBtn}
               />
               <WoodButton
-                title="2인 대결"
+                title={t('menu.localDuel')}
                 accessibilityHint="판수를 고른 뒤 같은 기기에서 둘이 플레이합니다"
                 onPress={() => router.push('/local-setup')}
                 style={styles.primaryBtn}
@@ -106,33 +108,33 @@ export default function MenuScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>더보기</Text>
+            <Text style={styles.sectionLabel}>{t('menu.more')}</Text>
             <View style={styles.secondaryRow}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="기록"
+                accessibilityLabel={t('menu.stats')}
                 onPress={() => router.push('/stats')}
                 style={({ pressed }) => [styles.secondaryTile, pressed && styles.secondaryTilePressed]}
               >
-                <Text style={styles.secondaryTileText}>기록</Text>
+                <Text style={styles.secondaryTileText}>{t('menu.stats')}</Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="캐릭터"
+                accessibilityLabel={t('menu.character')}
                 onPress={() => router.push('/character-select')}
                 style={({ pressed }) => [styles.secondaryTile, pressed && styles.secondaryTilePressed]}
               >
-                <Text style={styles.secondaryTileText}>캐릭터</Text>
+                <Text style={styles.secondaryTileText}>{t('menu.character')}</Text>
               </Pressable>
             </View>
           </View>
 
           <View style={styles.settingsCard}>
-            <Text style={styles.settingsTitle}>플레이 설정</Text>
+            <Text style={styles.settingsTitle}>{t('menu.settings')}</Text>
             <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>배경음악</Text>
+              <Text style={styles.settingLabel}>{t('menu.bgm')}</Text>
               <Switch
-                accessibilityLabel="배경음악"
+                accessibilityLabel={t('menu.bgm')}
                 value={musicEnabled}
                 onValueChange={onMusicToggle}
                 trackColor={{ false: '#2A1810', true: 'rgba(212, 165, 116, 0.45)' }}
@@ -140,9 +142,9 @@ export default function MenuScreen() {
               />
             </View>
             <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>효과음</Text>
+              <Text style={styles.settingLabel}>{t('menu.sfx')}</Text>
               <Switch
-                accessibilityLabel="효과음"
+                accessibilityLabel={t('menu.sfx')}
                 value={soundEnabled}
                 onValueChange={setSoundEnabled}
                 trackColor={{ false: '#2A1810', true: 'rgba(212, 165, 116, 0.45)' }}
@@ -150,9 +152,9 @@ export default function MenuScreen() {
               />
             </View>
             <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>진동</Text>
+              <Text style={styles.settingLabel}>{t('menu.vibration')}</Text>
               <Switch
-                accessibilityLabel="진동"
+                accessibilityLabel={t('menu.vibration')}
                 value={hapticEnabled}
                 onValueChange={setHapticEnabled}
                 trackColor={{ false: '#2A1810', true: 'rgba(212, 165, 116, 0.45)' }}
@@ -162,7 +164,7 @@ export default function MenuScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerLabel}>진행 — 해금 NPC</Text>
+            <Text style={styles.footerLabel}>{t('menu.progress')}</Text>
             <Text style={[styles.footerValue, { fontFamily: FONT_RYE }]}>
               {unlockedLabel}
             </Text>
