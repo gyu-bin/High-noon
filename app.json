@@ -33,7 +33,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.highnoon.app",
+      "package": "com.highnoon.game",
       "permissions": [
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],

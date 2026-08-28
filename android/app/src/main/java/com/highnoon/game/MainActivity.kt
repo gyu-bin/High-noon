@@ -1,4 +1,4 @@
-package com.highnoon.app
+package com.highnoon.game
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

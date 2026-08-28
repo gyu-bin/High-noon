@@ -2,12 +2,6 @@
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
-  <!--
-    미사용 권한 제거. 아래 셋은 의존 라이브러리 매니페스트에서 병합되므로
-    (RECORD_AUDIO=expo-audio, READ/WRITE_EXTERNAL_STORAGE=expo-image·expo-file-system)
-    줄 삭제만으로는 빠지지 않는다. tools:node="remove"가 있어야 최종 APK에서 제외된다.
-    앱은 녹음·외부 저장소 접근을 하지 않는다(audioService: allowsRecording=false).
-  -->
   <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove"/>
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>

@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.highnoon.app'
+    namespace 'com.highnoon.game'
     defaultConfig {
-        applicationId 'com.highnoon.app'
+        applicationId 'com.highnoon.game'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

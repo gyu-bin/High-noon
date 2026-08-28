@@ -1,4 +1,4 @@
-package com.highnoon.app
+package com.highnoon.game
 
 import android.app.Application
 import android.content.res.Configuration

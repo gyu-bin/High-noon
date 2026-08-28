@@ -2,4 +2,4 @@
 export const MINIMUM_STORE_VERSION = '1.3';
 
 export const IOS_APP_STORE_ID = '6762042961';
-export const ANDROID_PACKAGE = 'com.highnoon.app';
+export const ANDROID_PACKAGE = 'com.highnoon.game';
