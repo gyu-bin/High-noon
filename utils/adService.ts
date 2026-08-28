@@ -128,6 +128,11 @@ export function preloadInterstitial(): void {
 
 /** 광고 표시 후 CLOSED 이벤트가 오지 않을 경우 대비 타임아웃 (ms) */
 const AD_SHOW_TIMEOUT_MS = 30000;
+/**
+ * show() 후 OPENED가 오지 않으면 광고가 실제로 뜨지 않은 것 —
+ * 로딩 오버레이만 남는 상황이므로 이 시간이 지나면 그냥 진행한다. (ms)
+ */
+const AD_OPEN_TIMEOUT_MS = 2500;
 /** AppState가 active로 돌아온 뒤 grace period (ms) — CLOSED가 먼저 도착할 여유만 준다 */
 const AD_FOREGROUND_GRACE_MS = 250;
 /** 보상형 로드 대기 최대 시간 (ms) — 유저가 직접 "광고 보기"를 누른 경우에만 적용 */
@@ -176,7 +181,8 @@ export function showStageCompleteAd(): Promise<void> {
     let resolved = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let appStateSubscription: ReturnType<typeof AppState.addEventListener> | null = null;
-    let adShown = false;
+    /** OPENED 수신 — 광고가 실제로 화면에 떠 있는지 */
+    let adOpened = false;
     /** 광고 표시로 앱이 foreground를 벗어난 적이 있는지 */
     let leftForeground = false;
 
@@ -212,24 +218,41 @@ export function showStageCompleteAd(): Promise<void> {
       ad.removeAllListeners();
       ad.addAdEventListener(AdEventType.CLOSED, finishAfterClosed);
       ad.addAdEventListener(AdEventType.ERROR, finish);
+      ad.addAdEventListener(AdEventType.OPENED, () => {
+        adOpened = true;
+        // 광고가 실제로 떴다 — 열림 감시 타이머를 종료 감시 타이머로 교체
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          if (!resolved) {
+            finishAfterClosed();
+          }
+        }, AD_SHOW_TIMEOUT_MS);
+      });
 
-      adShown = true;
-
-      // 광고 표시 후 타임아웃 — CLOSED 이벤트 미발생 대비
+      // OPENED가 오지 않으면 광고가 안 뜬 것 — 오버레이만 띄워두지 않고 바로 진행한다.
+      // 단, 앱이 이미 백그라운드로 내려갔다면 이벤트만 놓친 것이므로 종료 감시로 전환한다.
       timeoutId = setTimeout(() => {
-        if (!resolved) {
-          finishAfterClosed();
+        if (resolved) return;
+        if (!leftForeground) {
+          finish();
+          return;
         }
-      }, AD_SHOW_TIMEOUT_MS);
+        adOpened = true;
+        timeoutId = setTimeout(() => {
+          if (!resolved) {
+            finishAfterClosed();
+          }
+        }, AD_SHOW_TIMEOUT_MS);
+      }, AD_OPEN_TIMEOUT_MS);
 
-      // AppState 감지 — 광고로 앱이 내려갔다가 돌아온 경우에만 완료 처리.
+      // AppState 감지 — 광고가 실제로 뜬 뒤 앱이 내려갔다가 돌아온 경우에만 완료 처리.
       // (표시 직후의 inactive→active 전환을 광고 종료로 오인하면 광고 뒤에서 결과가 재생된다)
       appStateSubscription = AppState.addEventListener('change', (nextState) => {
         if (nextState !== 'active') {
           leftForeground = true;
           return;
         }
-        if (!leftForeground || !adShown || resolved) return;
+        if (!leftForeground || !adOpened || resolved) return;
         setTimeout(() => {
           if (!resolved) {
             finishAfterClosed();
@@ -331,13 +354,31 @@ export function showRewardedAd(): Promise<boolean> {
           });
           ad.addAdEventListener(AdEventType.CLOSED, () => finish(earned));
           ad.addAdEventListener(AdEventType.ERROR, () => finish(false));
+          ad.addAdEventListener(AdEventType.OPENED, () => {
+            // 실제로 떴다 — 열림 감시를 종료 감시로 교체
+            if (timeoutId) clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+              if (!resolved) {
+                finish(earned);
+              }
+            }, AD_SHOW_TIMEOUT_MS);
+          });
 
+          // OPENED가 오지 않으면 광고가 안 뜬 것 — "광고 준비 중…"에 묶어두지 않는다.
+          // 앱이 이미 내려가 있으면 이벤트만 놓친 것이므로 종료 감시로 전환한다.
           if (timeoutId) clearTimeout(timeoutId);
           timeoutId = setTimeout(() => {
-            if (!resolved) {
-              finish(earned);
+            if (resolved) return;
+            if (AppState.currentState === 'active') {
+              finish(false);
+              return;
             }
-          }, AD_SHOW_TIMEOUT_MS);
+            timeoutId = setTimeout(() => {
+              if (!resolved) {
+                finish(earned);
+              }
+            }, AD_SHOW_TIMEOUT_MS);
+          }, AD_OPEN_TIMEOUT_MS);
 
           void ad.show().catch(() => finish(false));
         };
