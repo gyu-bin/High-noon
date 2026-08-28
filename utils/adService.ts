@@ -18,11 +18,18 @@ const USE_NATIVE_ADS =
 type AdsLib = typeof import('react-native-google-mobile-ads');
 
 let adsLibPromise: Promise<AdsLib | null> | null = null;
+/** 로드 완료된 라이브러리 동기 참조 — 노출 판단에 await를 끼우지 않기 위함 */
+let adsLib: AdsLib | null = null;
 
 async function getAdsLib(): Promise<AdsLib | null> {
   if (!USE_NATIVE_ADS) return null;
   if (!adsLibPromise) {
-    adsLibPromise = import('react-native-google-mobile-ads').catch(() => null);
+    adsLibPromise = import('react-native-google-mobile-ads')
+      .then((mod) => {
+        adsLib = mod;
+        return mod;
+      })
+      .catch(() => null);
   }
   return adsLibPromise;
 }
@@ -123,22 +130,17 @@ export function preloadInterstitial(): void {
 const AD_SHOW_TIMEOUT_MS = 30000;
 /** AppState가 active로 돌아온 뒤 grace period (ms) — CLOSED가 먼저 도착할 여유만 준다 */
 const AD_FOREGROUND_GRACE_MS = 250;
-/**
- * 노출 전 로드 대기 최대 시간 (ms).
- * 이 안에 준비되지 않으면 광고를 포기하고 화면을 진행시킨다.
- * (로드는 계속 진행되어 다음 기회에 즉시 노출된다)
- */
-const AD_LOAD_TIMEOUT_MS = 3000;
-/** 보상형 로드 대기 최대 시간 (ms) — 유저가 직접 요청한 광고라 조금 더 기다린다 */
-const REWARDED_LOAD_TIMEOUT_MS = 8000;
+/** 보상형 로드 대기 최대 시간 (ms) — 유저가 직접 "광고 보기"를 누른 경우에만 적용 */
+const REWARDED_LOAD_TIMEOUT_MS = 6000;
 
 /**
  * 매치 완료(승·패 무관) 후 호출. `MATCHES_PER_INTERSTITIAL`판마다,
  * 직전 전면이 닫힌 지 `STAGE_AD_COOLDOWN_MS` 이상 지났을 때만 노출.
- * - `progressStore.isAdFree === true`이면 즉시 resolve (스킵).
- * - 로드/표시 실패 시에도 resolve 해서 결과 화면은 진행.
- * - 닫힌 뒤 다음 전면을 미리 로드.
- * - 타임아웃 및 AppState fallback으로 무한 대기 방지.
+ *
+ * **유저를 광고 때문에 기다리게 하지 않는 것이 최우선.**
+ * - 노출 조건 판단은 전부 동기 — await로 결과 화면을 붙잡지 않는다.
+ * - 이미 로드된 광고가 없으면 그냥 건너뛰고 다음 기회를 위해 로드만 걸어둔다.
+ * - 표시 실패·CLOSED 미발생 시에도 타임아웃/AppState fallback으로 반드시 resolve.
  */
 export function showStageCompleteAd(): Promise<void> {
   if (!ADS_ENABLED || useProgressStore.getState().isAdFree) {
@@ -155,6 +157,16 @@ export function showStageCompleteAd(): Promise<void> {
     if (now - lastStageInterstitialClosedAt < STAGE_AD_COOLDOWN_MS) {
       return Promise.resolve();
     }
+  }
+
+  const lib = adsLib;
+  const ad = interstitial;
+
+  // 준비된 광고가 없으면 절대 기다리지 않는다 — 이번 판은 건너뛰고 다음 판을 위해 로드만 시작.
+  // (matchesSinceLastAd는 유지되므로 다음 매치에서 다시 시도한다)
+  if (!lib || !ad?.loaded) {
+    preloadInterstitial();
+    return Promise.resolve();
   }
 
   // preload가 인스턴스를 갈아치우지 못하도록 동기적으로 점유를 선언한다.
@@ -194,80 +206,41 @@ export function showStageCompleteAd(): Promise<void> {
       finish();
     };
 
-    /** 로드 대기 포기 — 진행 중인 로드는 살려두고 화면만 진행시킨다 */
-    const finishKeepingLoad = () => {
-      if (resolved) return;
-      resolved = true;
-      cleanup();
-      interstitialBusy = false;
-      resolve();
-    };
+    try {
+      const { AdEventType } = lib;
 
-    void initAds().then(async () => {
-      const lib = await getAdsLib();
-      if (!lib) {
-        finish();
-        return;
-      }
+      ad.removeAllListeners();
+      ad.addAdEventListener(AdEventType.CLOSED, finishAfterClosed);
+      ad.addAdEventListener(AdEventType.ERROR, finish);
 
-      try {
-        if (!interstitial) {
-          interstitial = lib.InterstitialAd.createForAdRequest(getInterstitialUnitId(lib));
-          interstitial.load();
+      adShown = true;
+
+      // 광고 표시 후 타임아웃 — CLOSED 이벤트 미발생 대비
+      timeoutId = setTimeout(() => {
+        if (!resolved) {
+          finishAfterClosed();
         }
+      }, AD_SHOW_TIMEOUT_MS);
 
-        const ad = interstitial;
-        const { AdEventType } = lib;
-
-        const present = () => {
-          if (resolved) return;
-
-          ad.removeAllListeners();
-          ad.addAdEventListener(AdEventType.CLOSED, finishAfterClosed);
-          ad.addAdEventListener(AdEventType.ERROR, finish);
-
-          adShown = true;
-
-          // 로드 대기 타임아웃을 표시용 타임아웃으로 교체
-          if (timeoutId) clearTimeout(timeoutId);
-          // 광고 표시 후 타임아웃 설정 — CLOSED 이벤트 미발생 대비
-          timeoutId = setTimeout(() => {
-            if (!resolved) {
-              finishAfterClosed();
-            }
-          }, AD_SHOW_TIMEOUT_MS);
-
-          // AppState 감지 — 광고로 앱이 내려갔다가 돌아온 경우에만 완료 처리.
-          // (표시 직후의 inactive→active 전환을 광고 종료로 오인하면 광고 뒤에서 결과가 재생된다)
-          appStateSubscription = AppState.addEventListener('change', (nextState) => {
-            if (nextState !== 'active') {
-              leftForeground = true;
-              return;
-            }
-            if (!leftForeground || !adShown || resolved) return;
-            setTimeout(() => {
-              if (!resolved) {
-                finishAfterClosed();
-              }
-            }, AD_FOREGROUND_GRACE_MS);
-          });
-
-          void ad.show().catch(finish);
-        };
-
-        if (ad.loaded) {
-          present();
+      // AppState 감지 — 광고로 앱이 내려갔다가 돌아온 경우에만 완료 처리.
+      // (표시 직후의 inactive→active 전환을 광고 종료로 오인하면 광고 뒤에서 결과가 재생된다)
+      appStateSubscription = AppState.addEventListener('change', (nextState) => {
+        if (nextState !== 'active') {
+          leftForeground = true;
           return;
         }
+        if (!leftForeground || !adShown || resolved) return;
+        setTimeout(() => {
+          if (!resolved) {
+            finishAfterClosed();
+          }
+        }, AD_FOREGROUND_GRACE_MS);
+      });
 
-        // 아직 로드 전 — 무한정 기다리지 않는다. 로딩 오버레이가 길어지느니 광고를 건너뛴다.
-        timeoutId = setTimeout(finishKeepingLoad, AD_LOAD_TIMEOUT_MS);
-        ad.addAdEventListener(AdEventType.LOADED, present);
-        ad.addAdEventListener(AdEventType.ERROR, finish);
-      } catch {
-        finish();
-      }
-    });
+      void ad.show().catch(finish);
+    } catch {
+      finish();
+    }
   });
 }
 

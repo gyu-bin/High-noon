@@ -61,7 +61,7 @@ import {
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
 import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
 import { AdReviveModal } from '@/components/game/AdReviveModal';
-import { showRewardedAd } from '@/utils/adService';
+import { preloadInterstitial, preloadRewardedAd, showRewardedAd } from '@/utils/adService';
 import { play, playGunshot } from '@/utils/audioService';
 import { speakDuelCue, stopDuelSignalSpeech, warmupDuelSpeech } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
@@ -386,6 +386,10 @@ export default function NpcGameScreen() {
   useFocusEffect(
     useCallback(() => {
       warmupDuelSpeech();
+      // 매치가 진행되는 동안 광고를 미리 받아둔다. (이미 로드돼 있으면 no-op)
+      // 결과 화면은 "이미 준비된" 전면만 띄우므로, 로드가 늦으면 광고 없이 바로 결과가 나온다.
+      preloadInterstitial();
+      preloadRewardedAd();
       if (npcIdStr == null) {
         return () => {
           resetDuel();
