@@ -64,7 +64,11 @@ async function applyOtaUpdateIfAvailable(): Promise<boolean> {
     if (!check.isAvailable) return false;
     await withTimeout(Updates.fetchUpdateAsync(), OTA_SPLASH_TIMEOUT_MS);
     await markOtaJustApplied();
-    await Updates.reloadAsync();
+    try {
+      await Updates.reloadAsync();
+    } catch {
+      return false;
+    }
     return true;
   } catch {
     return false;
