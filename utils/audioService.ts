@@ -11,6 +11,9 @@ export const SOUND_NAMES = [
   'ready_click',
   'steady_click',
   'bang_shot',
+  'cue_ready',
+  'cue_steady',
+  'cue_bang',
   'cue_ready_impact',
   'cue_steady_impact',
   'cue_bang_impact',
@@ -20,15 +23,6 @@ export const SOUND_NAMES = [
   'defeat_thud',
   'heart_break',
   'level_clear',
-  'voice_en_ready',
-  'voice_en_steady',
-  'voice_en_bang',
-  'voice_ko_ready',
-  'voice_ko_steady',
-  'voice_ko_bang',
-  'voice_ja_ready',
-  'voice_ja_steady',
-  'voice_ja_bang',
 ] as const;
 
 export type SoundName = (typeof SOUND_NAMES)[number];
@@ -38,7 +32,11 @@ const SOURCES: Record<SoundName, number> = {
   ready_click: require('@/assets/sounds/ready_click.wav'),
   steady_click: require('@/assets/sounds/steady_click.wav'),
   bang_shot: require('@/assets/sounds/bang_shot.wav'),
-  // 결투 신호 임팩트 — scripts/gen_duel_cue_sounds.py 로 생성
+  // 영어 보이스 클립 (Eddy)
+  cue_ready: require('@/assets/sounds/cue_ready.wav'),
+  cue_steady: require('@/assets/sounds/cue_steady.wav'),
+  cue_bang: require('@/assets/sounds/cue_bang.wav'),
+  // 임팩트 — scripts/gen_duel_cue_sounds.py
   cue_ready_impact: require('@/assets/sounds/cue_ready_impact.wav'),
   cue_steady_impact: require('@/assets/sounds/cue_steady_impact.wav'),
   cue_bang_impact: require('@/assets/sounds/cue_bang_impact.wav'),
@@ -48,32 +46,19 @@ const SOURCES: Record<SoundName, number> = {
   defeat_thud: require('@/assets/sounds/defeat_thud.wav'),
   heart_break: require('@/assets/sounds/heart_break.wav'),
   level_clear: require('@/assets/sounds/level_clear.wav'),
-  // 결투 신호 음성 — scripts/gen_duel_cue_voice.py 로 생성
-  voice_en_ready: require('@/assets/sounds/voice_en_ready.wav'),
-  voice_en_steady: require('@/assets/sounds/voice_en_steady.wav'),
-  voice_en_bang: require('@/assets/sounds/voice_en_bang.wav'),
-  voice_ko_ready: require('@/assets/sounds/voice_ko_ready.wav'),
-  voice_ko_steady: require('@/assets/sounds/voice_ko_steady.wav'),
-  voice_ko_bang: require('@/assets/sounds/voice_ko_bang.wav'),
-  voice_ja_ready: require('@/assets/sounds/voice_ja_ready.wav'),
-  voice_ja_steady: require('@/assets/sounds/voice_ja_steady.wav'),
-  voice_ja_bang: require('@/assets/sounds/voice_ja_bang.wav'),
 };
 
-export type DuelCue = 'ready' | 'steady' | 'bang';
+const DUEL_VOICE_NAMES = {
+  ready: 'cue_ready',
+  steady: 'cue_steady',
+  bang: 'cue_bang',
+} as const satisfies Record<string, SoundName>;
 
-const DUEL_CUE_NAMES = {
+const DUEL_IMPACT_NAMES = {
   ready: 'cue_ready_impact',
   steady: 'cue_steady_impact',
   bang: 'cue_bang_impact',
-} as const satisfies Record<DuelCue, SoundName>;
-
-/** 언어별 미리 구운 결투 음성 (없는 언어는 기기 TTS로 폴백) */
-const DUEL_VOICE_NAMES = {
-  en: { ready: 'voice_en_ready', steady: 'voice_en_steady', bang: 'voice_en_bang' },
-  ko: { ready: 'voice_ko_ready', steady: 'voice_ko_steady', bang: 'voice_ko_bang' },
-  ja: { ready: 'voice_ja_ready', steady: 'voice_ja_steady', bang: 'voice_ja_bang' },
-} as const satisfies Record<string, Record<DuelCue, SoundName>>;
+} as const satisfies Record<string, SoundName>;
 
 const cache = new Map<SoundName, AudioPlayer>();
 let modeReady = false;
@@ -86,7 +71,7 @@ const PLAYER_OPTIONS = {
   keepAudioSessionActive: true as const,
 };
 
-/** SFX·TTS 공용 — speak/재생 직전 호출 (세션·무음 모드 보장) */
+/** SFX·보이스 공용 — 재생 직전 호출 (세션·무음 모드 보장) */
 export async function ensureGameAudioSession(): Promise<void> {
   await setAudioModeAsync({
     playsInSilentMode: true,
@@ -168,20 +153,31 @@ export function play(name: SoundName): void {
   void playInternal(name);
 }
 
-/** 결투 READY/STEADY/BANG 임팩트 — 게임 핵심이라 SFX off여도 재생 */
-export function playDuelCue(cue: DuelCue): void {
-  void playInternal(DUEL_CUE_NAMES[cue]);
+/**
+ * 결투 READY/STEADY/BANG — 임팩트(타이밍 기준) + 영어 보이스.
+ * 게임 핵심이라 SFX off여도 재생.
+ */
+export function playDuelCue(cue: 'ready' | 'steady' | 'bang'): void {
+  void playInternal(DUEL_IMPACT_NAMES[cue]);
+  void playInternal(DUEL_VOICE_NAMES[cue]);
 }
 
-/**
- * 결투 신호 음성 재생. 해당 언어의 음성 파일이 있으면 재생하고 `true`.
- * 없으면 `false` — 호출부가 기기 TTS로 폴백한다.
- */
-export function playDuelVoice(lang: string, cue: DuelCue): boolean {
-  const table = (DUEL_VOICE_NAMES as Record<string, Record<DuelCue, SoundName>>)[lang];
-  if (!table) return false;
-  void playInternal(table[cue]);
-  return true;
+/** 진행 중인 결투 큐(임팩트·보이스) 중단 */
+export function stopDuelCues(): void {
+  const names = [
+    ...Object.values(DUEL_VOICE_NAMES),
+    ...Object.values(DUEL_IMPACT_NAMES),
+  ];
+  for (const name of names) {
+    const player = cache.get(name);
+    if (!player) continue;
+    try {
+      player.pause();
+      void player.seekTo(0);
+    } catch {
+      /* ignore */
+    }
+  }
 }
 
 async function playInternal(name: SoundName): Promise<void> {
