@@ -1,6 +1,7 @@
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { AppState, Platform } from 'react-native';
 
+import { IS_PREVIEW_BUILD } from '@/constants/devFlags';
 import { useProgressStore } from '@/store/progressStore';
 
 /**
@@ -45,7 +46,8 @@ function getProductionInterstitialUnitId(): string {
 }
 
 function getInterstitialUnitId(lib: AdsLib): string {
-  if (__DEV__) {
+  // preview는 번들 ID가 달라 실광고가 안 나온다 (그리고 자기 광고 클릭은 정책 위반)
+  if (__DEV__ || IS_PREVIEW_BUILD) {
     return lib.TestIds.INTERSTITIAL;
   }
   return getProductionInterstitialUnitId();
@@ -83,7 +85,7 @@ function getProductionRewardedUnitId(): string {
 }
 
 function getRewardedUnitId(lib: AdsLib): string {
-  if (__DEV__) return lib.TestIds.REWARDED;
+  if (__DEV__ || IS_PREVIEW_BUILD) return lib.TestIds.REWARDED;
   return getProductionRewardedUnitId();
 }
 

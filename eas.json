@@ -10,7 +10,10 @@
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "preview"
+      }
     },
     "production": {
       "autoIncrement": true,
