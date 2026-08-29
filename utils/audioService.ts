@@ -78,6 +78,12 @@ function duelVoiceName(
 
 /** READY에서 뽑은 보이스 묶음 — STEADY/BANG까지 같은 목소리 유지 */
 let activeVoicePack: number | null = null;
+/**
+ * 지금 울리고 있을 수 있는 큐 이름.
+ * 정지할 때 보이스 15개를 전부 훑으면 네이티브 호출이 최대 30번 나가는데,
+ * 실제로 재생 중인 건 한 개다. 건드릴 대상만 들고 있는다.
+ */
+const activeCueNames = new Set<SoundName>();
 
 const cache = new Map<SoundName, AudioPlayer>();
 let modeReady = false;
@@ -216,7 +222,9 @@ export function playDuelCue(cue: 'ready' | 'steady' | 'bang'): void {
     activeVoicePack = pickVoicePack();
   }
   const pack = activeVoicePack;
-  void playInternal(duelVoiceName(cue, pack));
+  const name = duelVoiceName(cue, pack);
+  activeCueNames.add(name);
+  void playInternal(name);
   if (cue === 'bang') {
     activeVoicePack = null;
   }
@@ -230,13 +238,7 @@ export function stopDuelCues(opts?: { clearPack?: boolean }): void {
   if (opts?.clearPack !== false) {
     activeVoicePack = null;
   }
-  const names: SoundName[] = [];
-  for (let p = 1; p <= DUEL_VOICE_PACK_COUNT; p += 1) {
-    names.push(duelVoiceName('ready', p));
-    names.push(duelVoiceName('steady', p));
-    names.push(duelVoiceName('bang', p));
-  }
-  for (const name of names) {
+  for (const name of activeCueNames) {
     const player = cache.get(name);
     if (!player) continue;
     try {
@@ -246,6 +248,7 @@ export function stopDuelCues(opts?: { clearPack?: boolean }): void {
       /* ignore */
     }
   }
+  activeCueNames.clear();
 }
 
 async function playInternal(name: SoundName): Promise<void> {
