@@ -11,9 +11,21 @@ export const SOUND_NAMES = [
   'ready_click',
   'steady_click',
   'bang_shot',
-  'cue_ready',
-  'cue_steady',
-  'cue_bang',
+  'cue_ready_v1',
+  'cue_ready_v2',
+  'cue_ready_v3',
+  'cue_ready_v4',
+  'cue_ready_v5',
+  'cue_steady_v1',
+  'cue_steady_v2',
+  'cue_steady_v3',
+  'cue_steady_v4',
+  'cue_steady_v5',
+  'cue_bang_v1',
+  'cue_bang_v2',
+  'cue_bang_v3',
+  'cue_bang_v4',
+  'cue_bang_v5',
   'cue_ready_impact',
   'cue_steady_impact',
   'cue_bang_impact',
@@ -27,16 +39,29 @@ export const SOUND_NAMES = [
 
 export type SoundName = (typeof SOUND_NAMES)[number];
 
+/** ElevenLabs 보이스 묶음 개수 (Harry / Liam / Charlie / Will / Adam) */
+export const DUEL_VOICE_PACK_COUNT = 5;
+
 /** 짧은 SFX는 PCM(WAV) — 기기에서 디코더 priming/로딩 지연 없이 즉시 재생 */
 const SOURCES: Record<SoundName, number> = {
   ready_click: require('@/assets/sounds/ready_click.wav'),
   steady_click: require('@/assets/sounds/steady_click.wav'),
   bang_shot: require('@/assets/sounds/bang_shot.wav'),
-  // 영어 보이스 클립 (Eddy)
-  cue_ready: require('@/assets/sounds/cue_ready.wav'),
-  cue_steady: require('@/assets/sounds/cue_steady.wav'),
-  cue_bang: require('@/assets/sounds/cue_bang.wav'),
-  // 임팩트 — scripts/gen_duel_cue_sounds.py
+  cue_ready_v1: require('@/assets/sounds/cue_ready_v1.wav'),
+  cue_ready_v2: require('@/assets/sounds/cue_ready_v2.wav'),
+  cue_ready_v3: require('@/assets/sounds/cue_ready_v3.wav'),
+  cue_ready_v4: require('@/assets/sounds/cue_ready_v4.wav'),
+  cue_ready_v5: require('@/assets/sounds/cue_ready_v5.wav'),
+  cue_steady_v1: require('@/assets/sounds/cue_steady_v1.wav'),
+  cue_steady_v2: require('@/assets/sounds/cue_steady_v2.wav'),
+  cue_steady_v3: require('@/assets/sounds/cue_steady_v3.wav'),
+  cue_steady_v4: require('@/assets/sounds/cue_steady_v4.wav'),
+  cue_steady_v5: require('@/assets/sounds/cue_steady_v5.wav'),
+  cue_bang_v1: require('@/assets/sounds/cue_bang_v1.wav'),
+  cue_bang_v2: require('@/assets/sounds/cue_bang_v2.wav'),
+  cue_bang_v3: require('@/assets/sounds/cue_bang_v3.wav'),
+  cue_bang_v4: require('@/assets/sounds/cue_bang_v4.wav'),
+  cue_bang_v5: require('@/assets/sounds/cue_bang_v5.wav'),
   cue_ready_impact: require('@/assets/sounds/cue_ready_impact.wav'),
   cue_steady_impact: require('@/assets/sounds/cue_steady_impact.wav'),
   cue_bang_impact: require('@/assets/sounds/cue_bang_impact.wav'),
@@ -48,26 +73,28 @@ const SOURCES: Record<SoundName, number> = {
   level_clear: require('@/assets/sounds/level_clear.wav'),
 };
 
-const DUEL_VOICE_NAMES = {
-  ready: 'cue_ready',
-  steady: 'cue_steady',
-  bang: 'cue_bang',
-} as const satisfies Record<string, SoundName>;
-
 const DUEL_IMPACT_NAMES = {
   ready: 'cue_ready_impact',
   steady: 'cue_steady_impact',
   bang: 'cue_bang_impact',
 } as const satisfies Record<string, SoundName>;
 
+function duelVoiceName(
+  cue: 'ready' | 'steady' | 'bang',
+  pack: number,
+): SoundName {
+  const p = Math.min(DUEL_VOICE_PACK_COUNT, Math.max(1, pack));
+  return `cue_${cue}_v${p}` as SoundName;
+}
+
+/** READY에서 뽑은 보이스 묶음 — STEADY/BANG까지 같은 목소리 유지 */
+let activeVoicePack: number | null = null;
+
 const cache = new Map<SoundName, AudioPlayer>();
-let modeReady = false;
 let preloadPromise: Promise<void> | null = null;
 
 const PLAYER_OPTIONS = {
-  /** 로컬 번들 에셋이므로 downloadFirst 불필요(원격 전용 옵션) — 즉시 로드 */
   downloadFirst: false as const,
-  /** 재생 종료 시 세션을 바로 끊지 않아 연속 효과음에 유리 */
   keepAudioSessionActive: true as const,
 };
 
@@ -81,7 +108,6 @@ export async function ensureGameAudioSession(): Promise<void> {
     interruptionMode: 'mixWithOthers',
   });
   await setIsAudioActiveAsync(true);
-  modeReady = true;
 }
 
 async function ensureAudioMode(): Promise<void> {
@@ -153,21 +179,36 @@ export function play(name: SoundName): void {
   void playInternal(name);
 }
 
+function pickVoicePack(): number {
+  return 1 + Math.floor(Math.random() * DUEL_VOICE_PACK_COUNT);
+}
+
 /**
- * 결투 READY/STEADY/BANG — 임팩트(타이밍 기준) + 영어 보이스.
+ * 결투 READY/STEADY/BANG — 임팩트 + 보이스 묶음(1~5) 랜덤.
+ * READY에서 묶음을 고르고, 같은 라운드의 STEADY/BANG은 동일 목소리.
  * 게임 핵심이라 SFX off여도 재생.
  */
 export function playDuelCue(cue: 'ready' | 'steady' | 'bang'): void {
+  if (cue === 'ready' || activeVoicePack == null) {
+    activeVoicePack = pickVoicePack();
+  }
+  const pack = activeVoicePack;
   void playInternal(DUEL_IMPACT_NAMES[cue]);
-  void playInternal(DUEL_VOICE_NAMES[cue]);
+  void playInternal(duelVoiceName(cue, pack));
+  if (cue === 'bang') {
+    activeVoicePack = null;
+  }
 }
 
 /** 진행 중인 결투 큐(임팩트·보이스) 중단 */
 export function stopDuelCues(): void {
-  const names = [
-    ...Object.values(DUEL_VOICE_NAMES),
-    ...Object.values(DUEL_IMPACT_NAMES),
-  ];
+  activeVoicePack = null;
+  const names: SoundName[] = [...Object.values(DUEL_IMPACT_NAMES)];
+  for (let p = 1; p <= DUEL_VOICE_PACK_COUNT; p += 1) {
+    names.push(duelVoiceName('ready', p));
+    names.push(duelVoiceName('steady', p));
+    names.push(duelVoiceName('bang', p));
+  }
   for (const name of names) {
     const player = cache.get(name);
     if (!player) continue;

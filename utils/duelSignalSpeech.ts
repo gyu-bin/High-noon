@@ -19,12 +19,8 @@ export function stopDuelSignalSpeech(): void {
 }
 
 /**
- * READY / STEADY / BANG — 임팩트(타이밍) + 영어 보이스 클립.
- *
- * 임팩트를 보이스와 같이 쳐서, TTS처럼 기기마다 흔들리지 않는
- * 일정한 신호로 반응 측정을 잡는다. TTS는 쓰지 않는다.
- *
- * 총성은 발사 시 `playGunshot`. 게임 핵심 큐라서 SFX off여도 재생.
+ * READY / STEADY / BANG — 임팩트 + ElevenLabs 보이스 묶음(1~5) 랜덤.
+ * READY에서 한 목소리를 고르고 STEADY/BANG까지 유지. TTS 없음.
  */
 export function speakDuelCue(cue: DuelSpeakCue): void {
   duckBgm(true);
