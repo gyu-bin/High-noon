@@ -46,7 +46,6 @@ import {
 } from '@/hooks/usePhoneStageMetrics';
 import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
-import { useProgressStore } from '@/store/progressStore';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
 import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
 import { RM_GAME } from '@/constants/reanimatedGame';
@@ -356,13 +355,11 @@ export default function LocalGameScreen() {
     if (processedKey.current === key) return;
     processedKey.current = key;
 
-    const { recordGlobalReactionSample } = useProgressStore.getState();
-    if (outcome.p1.reactionMs != null) {
-      recordGlobalReactionSample(outcome.p1.reactionMs);
-    }
-    if (outcome.p2.reactionMs != null) {
-      recordGlobalReactionSample(outcome.p2.reactionMs);
-    }
+    // 2인 대결은 개인 평균(`reactionAggregate`)에 넣지 않는다.
+    // 한 기기를 번갈아 쓰는 모드라 p2는 애초에 다른 사람이고, p1이 기기 주인이라는
+    // 보장도 없다. 예전에는 양쪽 기록을 모두 넣어서 "내 평균 반응"에 친구의 탭이
+    // 섞였고, 여기에 걸려 있는 페일 라이더 해금(평균 ≤200ms)이 누구와 플레이했느냐로
+    // 갈렸다.
 
     if (outcome.winner === 'p1' || outcome.winner === 'p2') {
       setFxBurstId((n) => n + 1);

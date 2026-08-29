@@ -1,5 +1,5 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -296,7 +296,15 @@ export default function NpcGameScreen() {
     }
   }, [phase]);
 
-  useLayoutEffect(() => {
+  /**
+   * 뱅 진입 시 NPC 반응을 시뮬레이션하고 발사를 예약한다.
+   *
+   * `useLayoutEffect`였을 때는 이 계산이 커밋 단계에서 동기로 돌아 "BANG" 페인트를
+   * 붙잡았다. 게다가 NPC의 시계가 페인트 전에 출발해서, 화면을 보고 반응하는
+   * 플레이어보다 한 프레임 유리했다. `useEffect`로 옮겨 두 시계의 출발점을 맞춘다.
+   * (`npcRoundSimRef`는 렌더 중엔 읽히지 않고 결과 단계에서만 읽히며 폴백도 있다)
+   */
+  useEffect(() => {
     if (phase !== '뱅' || !npc) {
       clearOpponentShot();
       if (phase !== '뱅') {

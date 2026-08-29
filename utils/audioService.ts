@@ -4,6 +4,7 @@ import {
   setIsAudioActiveAsync,
 } from 'expo-audio';
 import type { AudioPlayer } from 'expo-audio';
+import { AppState } from 'react-native';
 
 import { useSettingsStore } from '@/store/settingsStore';
 
@@ -62,6 +63,8 @@ const DUEL_IMPACT_NAMES = {
 
 const cache = new Map<SoundName, AudioPlayer>();
 let modeReady = false;
+let sessionPromise: Promise<void> | null = null;
+let appStateSub: ReturnType<typeof AppState.addEventListener> | null = null;
 let preloadPromise: Promise<void> | null = null;
 
 const PLAYER_OPTIONS = {
@@ -71,17 +74,47 @@ const PLAYER_OPTIONS = {
   keepAudioSessionActive: true as const,
 };
 
-/** SFX·보이스 공용 — 재생 직전 호출 (세션·무음 모드 보장) */
+/**
+ * SFX·보이스 공용 — 재생 직전 호출 (세션·무음 모드 보장).
+ *
+ * **세션은 한 번만 연다.** 예전에는 효과음을 재생할 때마다 `setAudioModeAsync` +
+ * `setIsAudioActiveAsync`를 다시 호출했다(`modeReady` 가드가 대입만 되고 읽히지 않았다).
+ * 그 두 호출이 하필 뱅 시점에 몰려서 — 임팩트·보이스 2개 재생 × 2회 = 4회 —
+ * 반응 측정이 시작되는 바로 그 순간에 네이티브 작업이 쌓였다. iOS의 오디오 세션
+ * 활성화는 무거워서 프레임 히치를 만들 수 있고, 그 비용은 기기마다 다르다.
+ *
+ * 단, 앱이 백그라운드에 다녀오면 OS가 세션을 내리므로 그때는 다시 열어야 한다.
+ */
 export async function ensureGameAudioSession(): Promise<void> {
-  await setAudioModeAsync({
-    playsInSilentMode: true,
-    shouldPlayInBackground: false,
-    allowsRecording: false,
-    shouldRouteThroughEarpiece: false,
-    interruptionMode: 'mixWithOthers',
+  if (modeReady) return;
+  if (!sessionPromise) {
+    sessionPromise = (async () => {
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: false,
+        allowsRecording: false,
+        shouldRouteThroughEarpiece: false,
+        interruptionMode: 'mixWithOthers',
+      });
+      await setIsAudioActiveAsync(true);
+      modeReady = true;
+      watchForegroundReturn();
+    })().catch((e: unknown) => {
+      sessionPromise = null;
+      throw e;
+    });
+  }
+  return sessionPromise;
+}
+
+/** 백그라운드로 내려가면 세션 재개방이 필요하다고 표시 */
+function watchForegroundReturn(): void {
+  if (appStateSub) return;
+  appStateSub = AppState.addEventListener('change', (next) => {
+    if (next === 'active') return;
+    modeReady = false;
+    sessionPromise = null;
   });
-  await setIsAudioActiveAsync(true);
-  modeReady = true;
 }
 
 async function ensureAudioMode(): Promise<void> {

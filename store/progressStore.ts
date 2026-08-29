@@ -28,6 +28,13 @@ type ProgressStoreState = {
   unlockedCharacterIds: number[];
   /** 망령 사수(4번) 비밀 해금 여부 — UI 공개 연출용 */
   hiddenCharUnlocked: boolean;
+  /**
+   * 페일 라이더(#22) 해금 달성 여부.
+   *
+   * 해금 조건은 평균 반응에 걸려 있는데 평균은 계속 움직이므로, 조건을 실시간으로만
+   * 계산하면 한 번 해금한 유저가 나중에 다시 잠길 수 있다. 달성 시점을 못으로 박아둔다.
+   */
+  paleRiderUnlocked: boolean;
   /** High noon Pro entitlement — 전면 광고 스킵 등 (RevenueCat과 동기화) */
   isAdFree: boolean;
   setAdFree: (value: boolean) => void;
@@ -73,10 +80,13 @@ function isPaleRiderUnlockedFromSnapshot(
   return true;
 }
 
-/** #22 The Pale Rider — 평균 반응 ≤200ms + 1~21 전원 클리어 */
+/** #22 The Pale Rider — 평균 반응 ≤200ms + 1~21 전원 클리어 (한 번 달성하면 유지) */
 export function selectPaleRiderUnlocked(): boolean {
   const s = useProgressStore.getState();
-  return isPaleRiderUnlockedFromSnapshot(s.npcById, s.reactionAggregate);
+  return (
+    s.paleRiderUnlocked ||
+    isPaleRiderUnlockedFromSnapshot(s.npcById, s.reactionAggregate)
+  );
 }
 
 const baseProgress: Pick<
@@ -86,6 +96,7 @@ const baseProgress: Pick<
   | 'reactionAggregate'
   | 'unlockedCharacterIds'
   | 'hiddenCharUnlocked'
+  | 'paleRiderUnlocked'
   | 'isAdFree'
 > = {
   npcById: initialNpcById,
@@ -93,6 +104,7 @@ const baseProgress: Pick<
   reactionAggregate: { sumMs: 0, count: 0 },
   unlockedCharacterIds: [1],
   hiddenCharUnlocked: false,
+  paleRiderUnlocked: false,
   isAdFree: false,
 };
 
@@ -113,13 +125,15 @@ export const useProgressStore = create<ProgressStoreState>()(
             ...s.npcById,
             [id]: { ...prev, cleared: true },
           };
-          const pale = isPaleRiderUnlockedFromSnapshot(npcById, s.reactionAggregate);
+          const pale =
+            s.paleRiderUnlocked ||
+            isPaleRiderUnlockedFromSnapshot(npcById, s.reactionAggregate);
           const cap = pale ? MAX_NPC_ID : MAX_NPC_ID - 1;
           const highestUnlockedNpcId = Math.max(
             s.highestUnlockedNpcId,
             Math.min(id + 1, cap),
           );
-          return { npcById, highestUnlockedNpcId };
+          return { npcById, highestUnlockedNpcId, paleRiderUnlocked: pale };
         }),
 
       recordNpcBestReaction: (npcId, playerMs) =>
@@ -141,11 +155,15 @@ export const useProgressStore = create<ProgressStoreState>()(
       recordGlobalReactionSample: (playerMs) =>
         set((s) => {
           const { sumMs, count } = s.reactionAggregate;
+          const reactionAggregate = {
+            sumMs: sumMs + playerMs,
+            count: count + 1,
+          };
           return {
-            reactionAggregate: {
-              sumMs: sumMs + playerMs,
-              count: count + 1,
-            },
+            reactionAggregate,
+            paleRiderUnlocked:
+              s.paleRiderUnlocked ||
+              isPaleRiderUnlockedFromSnapshot(s.npcById, reactionAggregate),
           };
         }),
 
@@ -172,17 +190,41 @@ export const useProgressStore = create<ProgressStoreState>()(
           reactionAggregate: { sumMs: 0, count: 0 },
           unlockedCharacterIds: [1],
           hiddenCharUnlocked: false,
+          paleRiderUnlocked: false,
         }),
     }),
     {
       name: 'high-noon-progress',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      /**
+       * v1 — 반응속도 측정 기준 변경(손 뗄 때 → 손 닿을 때).
+       *
+       * NPC별 최고기록은 그대로 둔다(새 기준이 더 빨라 자연히 갱신된다). 다만
+       * `reactionAggregate`는 누적 합계라 옛 기준과 새 기준 표본이 섞이면 평균이
+       * 의미를 잃는다 — 페일 라이더 해금이 이 평균에 걸려 있으므로 초기화한다.
+       * 대신 이전 기준으로 이미 해금한 유저는 플래그로 유지해 잠기지 않게 한다.
+       */
+      migrate: (persisted, version) => {
+        const p = (persisted ?? {}) as Partial<ProgressStoreState>;
+        if (version >= 1) return p;
+        const alreadyUnlocked = isPaleRiderUnlockedFromSnapshot(
+          p.npcById ?? {},
+          p.reactionAggregate ?? { sumMs: 0, count: 0 },
+        );
+        return {
+          ...p,
+          reactionAggregate: { sumMs: 0, count: 0 },
+          paleRiderUnlocked: p.paleRiderUnlocked || alreadyUnlocked,
+        };
+      },
       partialize: (s) => ({
         npcById: s.npcById,
         highestUnlockedNpcId: s.highestUnlockedNpcId,
         reactionAggregate: s.reactionAggregate,
         unlockedCharacterIds: s.unlockedCharacterIds,
         hiddenCharUnlocked: s.hiddenCharUnlocked,
+        paleRiderUnlocked: s.paleRiderUnlocked,
         isAdFree: s.isAdFree,
       }),
       merge: (persisted, current) => {
@@ -195,6 +237,7 @@ export const useProgressStore = create<ProgressStoreState>()(
           npcById: mergedNpc,
           unlockedCharacterIds: p.unlockedCharacterIds ?? [1],
           hiddenCharUnlocked: p.hiddenCharUnlocked ?? false,
+          paleRiderUnlocked: p.paleRiderUnlocked ?? false,
           isAdFree: p.isAdFree ?? false,
         };
       },

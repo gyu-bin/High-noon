@@ -146,7 +146,13 @@ export function DuelArenaLayout({
           shootActive ? t('game.tapHintShoot') : t('game.tapHintEarly')
         }
         disabled={!shootCapturesEarly}
-        onPress={onShootPress}
+        /**
+         * `onPress`는 손을 뗄 때 발화한다. 그걸로 재면 반응속도에 "누르고 떼는 시간"이
+         * 통째로 섞여 들어간다(사람마다 수십~100ms대). 반응 측정의 기준은 손이 닿는
+         * 순간이어야 하므로 `onPressIn`을 쓴다. 로컬 2인 대결(`LocalDuelArenaLayout`)이
+         * 쓰던 방식과도 이제 같아져서 두 모드의 기록을 비교할 수 있다.
+         */
+        onPressIn={onShootPress}
         style={StyleSheet.absoluteFill}
       />
 
