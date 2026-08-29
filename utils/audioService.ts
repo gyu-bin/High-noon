@@ -144,6 +144,20 @@ export function playDuelCue(cue: 'ready' | 'steady' | 'bang'): void {
   void playInternal(DUEL_CUE_NAMES[cue]);
 }
 
+/** 진행 중인 결투 큐 보이스 중단 */
+export function stopDuelCues(): void {
+  for (const name of Object.values(DUEL_CUE_NAMES)) {
+    const player = cache.get(name);
+    if (!player) continue;
+    try {
+      player.pause();
+      void player.seekTo(0);
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
 async function playInternal(name: SoundName): Promise<void> {
   try {
     await ensureAudioMode();
