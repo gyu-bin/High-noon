@@ -176,6 +176,24 @@ export default function NpcGameScreen() {
     playGunshot();
   }, []);
 
+  const bangHapticDoneRef = useRef(false);
+
+  /**
+   * 뱅 신호 채널(소리·햅틱). 엔진의 `onBangEnter`로 넘겨 **반응 측정이 시작되는 것과
+   * 같은 시점**에 낸다.
+   *
+   * 예전에는 `phase === '뱅'`을 보는 `useEffect`에서 냈는데, 그건 페인트가 끝난 뒤라
+   * 소리가 한 프레임 늦게 출발했고 렌더가 무거우면 더 밀렸다. 그만큼 소리를 듣고
+   * 반응하는 플레이어가 화면을 보고 반응하는 플레이어보다 불리했다.
+   * (로컬 2인 대결은 처음부터 `onBangEnter`로 내고 있었다)
+   */
+  const triggerBangCue = useCallback(() => {
+    if (bangHapticDoneRef.current) return;
+    bangHapticDoneRef.current = true;
+    speakDuelCue('bang');
+    void trigger('heavy');
+  }, []);
+
   const {
     phase,
     outcome,
@@ -189,6 +207,7 @@ export default function NpcGameScreen() {
     pauseTimers,
     resumeTimers,
   } = useDuelEngine({
+    onBangEnter: triggerBangCue,
     onPlayerShoot: fireGunshot,
     onOpponentShoot: fireGunshot,
   });
@@ -235,7 +254,6 @@ export default function NpcGameScreen() {
   const playerStreakRef = useRef(0);
   const prevBangDelayRef = useRef<number | null>(null);
   const processedOutcomeKey = useRef<string>('');
-  const bangHapticDoneRef = useRef(false);
   const prevPhaseRef = useRef<DuelPhase>(phase);
   const spokenCuesRef = useRef({ ready: false, steady: false });
   const signalHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -328,14 +346,6 @@ export default function NpcGameScreen() {
 
     return clearOpponentShot;
   }, [phase, npc?.id, scheduleOpponentShot, clearOpponentShot]);
-
-  useEffect(() => {
-    if (phase !== '뱅') return;
-    if (bangHapticDoneRef.current) return;
-    bangHapticDoneRef.current = true;
-    speakDuelCue('bang');
-    void trigger('heavy');
-  }, [phase]);
 
   useEffect(() => {
     const prev = prevPhaseRef.current;

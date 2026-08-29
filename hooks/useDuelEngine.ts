@@ -108,6 +108,15 @@ function buildSteadyPlan(
 }
 
 export type DuelEngineOptions = {
+  /**
+   * 뱅 진입 즉시(측정 시작과 같은 시점) 호출. 소리·햅틱 같은 신호 채널을 여기서 낸다.
+   *
+   * 화면의 `useEffect`에서 내면 페인트가 끝난 뒤라 한 프레임 늦게 출발하고, 렌더가
+   * 무거운 프레임에서는 더 밀린다. 그러면 소리를 듣고 반응하는 플레이어가 화면을
+   * 보고 반응하는 플레이어보다 구조적으로 불리해진다. 반응을 재는 시계와 신호를
+   * 내보내는 시점은 같아야 한다. (로컬 2인 엔진의 `onBangEnter`와 같은 역할)
+   */
+  onBangEnter?: () => void;
   /** 플레이어가 뱅 후 유효 탭(발사) */
   onPlayerShoot?: () => void;
   /** NPC 반응 시간에 opponent 발사 */
@@ -118,8 +127,10 @@ export type DuelEngineOptions = {
  * NPC 1인 결투. `start(timing?, { fakeBangCount })` — NPC별 `duelTiming`이 없을 때만 `DEFAULT_DUEL_TIMING`(단계별 1~5초).
  */
 export function useDuelEngine(options?: DuelEngineOptions) {
+  const onBangEnterRef = useRef(options?.onBangEnter);
   const onPlayerShootRef = useRef(options?.onPlayerShoot);
   const onOpponentShootRef = useRef(options?.onOpponentShoot);
+  onBangEnterRef.current = options?.onBangEnter;
   onPlayerShootRef.current = options?.onPlayerShoot;
   onOpponentShootRef.current = options?.onOpponentShoot;
   const [phase, setPhase] = useState<DuelPhase>('대기');
@@ -220,6 +231,7 @@ export function useDuelEngine(options?: DuelEngineOptions) {
     bangStartMsRef.current = t0;
     bangArmedRef.current = true;
     bangTimeoutDeadlineRef.current = Date.now() + BANG_TIMEOUT_MS;
+    onBangEnterRef.current?.();
     phaseRef.current = '뱅';
     setPhase('뱅');
     setSignalText('Bang!');
