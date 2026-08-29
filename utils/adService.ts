@@ -355,7 +355,8 @@ export function showRewardedAd(): Promise<boolean> {
           ad.addAdEventListener(AdEventType.CLOSED, () => finish(earned));
           ad.addAdEventListener(AdEventType.ERROR, () => finish(false));
           ad.addAdEventListener(AdEventType.OPENED, () => {
-            // 실제로 떴다 — 열림 감시를 종료 감시로 교체
+            // OPENED는 참고용 — 보상형은 오버레이 앱으로 뜨는 경우가 많아
+            // AppState가 active로 남을 수 있다. 성공/실패는 EARNED_REWARD + CLOSED로만 확정.
             if (timeoutId) clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
               if (!resolved) {
@@ -364,21 +365,15 @@ export function showRewardedAd(): Promise<boolean> {
             }, AD_SHOW_TIMEOUT_MS);
           });
 
-          // OPENED가 오지 않으면 광고가 안 뜬 것 — "광고 준비 중…"에 묶어두지 않는다.
-          // 앱이 이미 내려가 있으면 이벤트만 놓친 것이므로 종료 감시로 전환한다.
+          // 전면과 달리 "OPENED 없음 + AppState active → 실패"로 단정하면 안 된다.
+          // (보상형이 떠 있는데도 OPENED가 늦거나 누락되면, 시청 중에 false → 결과 화면으로 튕김)
+          // CLOSED / ERROR / 30초 타임아웃만으로 resolve한다.
           if (timeoutId) clearTimeout(timeoutId);
           timeoutId = setTimeout(() => {
-            if (resolved) return;
-            if (AppState.currentState === 'active') {
-              finish(false);
-              return;
+            if (!resolved) {
+              finish(earned);
             }
-            timeoutId = setTimeout(() => {
-              if (!resolved) {
-                finish(earned);
-              }
-            }, AD_SHOW_TIMEOUT_MS);
-          }, AD_OPEN_TIMEOUT_MS);
+          }, AD_SHOW_TIMEOUT_MS);
 
           void ad.show().catch(() => finish(false));
         };

@@ -894,11 +894,13 @@ export default function NpcGameScreen() {
     const pending = adRevivePending;
     if (!pending) return;
 
+    // 모달은 유지한 채 loading만 켠다 — 광고 SDK가 위에 뜨고,
+    // 실패 시에도 모달이 갑자기 사라져 결과로 튕기는 느낌을 줄인다.
     setAdReviveLoading(true);
-    setAdRevivePending(null);
 
     const rewarded = await showRewardedAd();
     setAdReviveLoading(false);
+    setAdRevivePending(null);
 
     if (!rewarded) {
       finishMatchToResult();
