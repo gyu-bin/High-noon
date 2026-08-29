@@ -29,6 +29,14 @@ type ProgressStoreState = {
   /** 망령 사수(4번) 비밀 해금 여부 — UI 공개 연출용 */
   hiddenCharUnlocked: boolean;
   /**
+   * v0(손을 뗄 때 기준) 시절의 누적 평균 보관본.
+   *
+   * 마이그레이션에서 `reactionAggregate`를 비우되 원본은 버리지 않는다. OTA는
+   * 포그라운드 복귀마다 적용될 수 있어서 유저가 바뀐 번들을 곧바로 받는데, 평균을
+   * 그냥 지워버리면 업데이트를 되돌려도 데이터가 돌아오지 않는다.
+   */
+  legacyReactionAggregate: ReactionAggregate | null;
+  /**
    * 페일 라이더(#22) 해금 달성 여부.
    *
    * 해금 조건은 평균 반응에 걸려 있는데 평균은 계속 움직이므로, 조건을 실시간으로만
@@ -96,6 +104,7 @@ const baseProgress: Pick<
   | 'reactionAggregate'
   | 'unlockedCharacterIds'
   | 'hiddenCharUnlocked'
+  | 'legacyReactionAggregate'
   | 'paleRiderUnlocked'
   | 'isAdFree'
 > = {
@@ -104,6 +113,7 @@ const baseProgress: Pick<
   reactionAggregate: { sumMs: 0, count: 0 },
   unlockedCharacterIds: [1],
   hiddenCharUnlocked: false,
+  legacyReactionAggregate: null,
   paleRiderUnlocked: false,
   isAdFree: false,
 };
@@ -190,6 +200,7 @@ export const useProgressStore = create<ProgressStoreState>()(
           reactionAggregate: { sumMs: 0, count: 0 },
           unlockedCharacterIds: [1],
           hiddenCharUnlocked: false,
+          legacyReactionAggregate: null,
           paleRiderUnlocked: false,
         }),
     }),
@@ -215,6 +226,8 @@ export const useProgressStore = create<ProgressStoreState>()(
         return {
           ...p,
           reactionAggregate: { sumMs: 0, count: 0 },
+          // 지우지 않고 옮겨둔다 — 되돌릴 수 있어야 한다
+          legacyReactionAggregate: p.reactionAggregate ?? null,
           paleRiderUnlocked: p.paleRiderUnlocked || alreadyUnlocked,
         };
       },
@@ -224,6 +237,7 @@ export const useProgressStore = create<ProgressStoreState>()(
         reactionAggregate: s.reactionAggregate,
         unlockedCharacterIds: s.unlockedCharacterIds,
         hiddenCharUnlocked: s.hiddenCharUnlocked,
+        legacyReactionAggregate: s.legacyReactionAggregate,
         paleRiderUnlocked: s.paleRiderUnlocked,
         isAdFree: s.isAdFree,
       }),
@@ -237,6 +251,7 @@ export const useProgressStore = create<ProgressStoreState>()(
           npcById: mergedNpc,
           unlockedCharacterIds: p.unlockedCharacterIds ?? [1],
           hiddenCharUnlocked: p.hiddenCharUnlocked ?? false,
+          legacyReactionAggregate: p.legacyReactionAggregate ?? null,
           paleRiderUnlocked: p.paleRiderUnlocked ?? false,
           isAdFree: p.isAdFree ?? false,
         };
