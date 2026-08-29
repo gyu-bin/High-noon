@@ -27,7 +27,8 @@
     "progress": "진행 — 해금 NPC",
     "landscapeHintTitle": "가로로 돌려도 OK",
     "landscapeHintBody": "세로·가로 모두 지원해요.\n편한 방향으로 돌려서 플레이하세요.",
-    "landscapeHintOk": "알겠어요"
+    "landscapeHintOk": "알겠어요",
+    "backup": "진행도 백업"
   },
   "settings": {
     "languageAuto": "자동",
@@ -201,5 +202,27 @@
     "ready": "레디!",
     "steady": "스테디!",
     "bang": "뱅!"
+  },
+  "backup": {
+    "title": "진행도 백업",
+    "desc": "앱을 지우거나 기기를 바꾸면 진행도가 사라집니다. 아래 코드를 보관해 두면 새로 설치한 뒤 되돌릴 수 있습니다.",
+    "exportLabel": "내 백업 코드",
+    "showCode": "코드 보기",
+    "share": "공유하기",
+    "copyHint": "코드를 길게 눌러 복사하거나, 공유하기로 메모·메신저에 보내 두세요.",
+    "importLabel": "코드로 복원",
+    "inputPlaceholder": "백업 코드를 붙여넣으세요",
+    "restore": "복원",
+    "restoreConfirmTitle": "진행도를 덮어쓸까요?",
+    "restoreConfirmBody": "지금 기기의 진행도가 코드의 내용으로 바뀝니다. 되돌릴 수 없습니다.",
+    "doneTitle": "복원 완료",
+    "doneBody": "클리어한 상대 {{count}}명을 되살렸습니다.",
+    "failTitle": "복원하지 못했습니다",
+    "fail": {
+      "format": "백업 코드 형식이 아닙니다. 코드 전체를 붙여넣었는지 확인해 주세요.",
+      "checksum": "코드가 손상됐습니다. 일부만 복사됐을 수 있습니다.",
+      "corrupt": "코드를 읽을 수 없습니다."
+    },
+    "adFreeNote": "광고 제거 구매는 백업 코드에 담기지 않습니다. 스토어의 구매 복원을 이용해 주세요."
   }
 }

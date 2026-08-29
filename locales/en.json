@@ -27,7 +27,8 @@
     "progress": "Progress — Unlocked NPCs",
     "landscapeHintTitle": "Landscape works too",
     "landscapeHintBody": "Portrait and landscape are both supported.\nRotate to whatever feels best.",
-    "landscapeHintOk": "Got it"
+    "landscapeHintOk": "Got it",
+    "backup": "Progress backup"
   },
   "settings": {
     "languageAuto": "Auto",
@@ -201,5 +202,27 @@
     "ready": "READY!",
     "steady": "STEADY!",
     "bang": "BANG!"
+  },
+  "backup": {
+    "title": "Progress Backup",
+    "desc": "Deleting the app or switching devices erases your progress. Keep the code below to restore it after a fresh install.",
+    "exportLabel": "Your backup code",
+    "showCode": "Show code",
+    "share": "Share",
+    "copyHint": "Long-press the code to copy it, or use Share to send it to your notes.",
+    "importLabel": "Restore from code",
+    "inputPlaceholder": "Paste your backup code",
+    "restore": "Restore",
+    "restoreConfirmTitle": "Overwrite progress?",
+    "restoreConfirmBody": "Progress on this device will be replaced by the code. This cannot be undone.",
+    "doneTitle": "Restored",
+    "doneBody": "Brought back {{count}} cleared opponents.",
+    "failTitle": "Couldn't restore",
+    "fail": {
+      "format": "That isn't a backup code. Make sure you pasted the whole thing.",
+      "checksum": "The code is damaged — part of it may be missing.",
+      "corrupt": "The code couldn't be read."
+    },
+    "adFreeNote": "Ad removal purchases aren't included in the backup code. Use Restore Purchases in the store instead."
   }
 }

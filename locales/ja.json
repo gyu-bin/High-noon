@@ -27,7 +27,8 @@
     "progress": "進行状況 — 解放済みNPC",
     "landscapeHintTitle": "横向きでもOK",
     "landscapeHintBody": "縦向き・横向きどちらも対応しています。\n好きな向きでプレイしてください。",
-    "landscapeHintOk": "OK"
+    "landscapeHintOk": "OK",
+    "backup": "進行状況のバックアップ"
   },
   "settings": {
     "languageAuto": "自動",
@@ -201,5 +202,27 @@
     "ready": "レディ!",
     "steady": "ステディ!",
     "bang": "バン!"
+  },
+  "backup": {
+    "title": "進行状況のバックアップ",
+    "desc": "アプリを削除したり端末を変えると進行状況が消えます。下のコードを保管しておけば、再インストール後に戻せます。",
+    "exportLabel": "バックアップコード",
+    "showCode": "コードを表示",
+    "share": "共有",
+    "copyHint": "コードを長押ししてコピーするか、共有でメモなどに送っておいてください。",
+    "importLabel": "コードから復元",
+    "inputPlaceholder": "バックアップコードを貼り付け",
+    "restore": "復元",
+    "restoreConfirmTitle": "進行状況を上書きしますか？",
+    "restoreConfirmBody": "この端末の進行状況がコードの内容に置き換わります。元に戻せません。",
+    "doneTitle": "復元しました",
+    "doneBody": "クリア済みの相手 {{count}} 人を戻しました。",
+    "failTitle": "復元できませんでした",
+    "fail": {
+      "format": "バックアップコードの形式ではありません。全文を貼り付けたか確認してください。",
+      "checksum": "コードが壊れています。一部しかコピーされていない可能性があります。",
+      "corrupt": "コードを読み取れませんでした。"
+    },
+    "adFreeNote": "広告削除の購入はバックアップコードに含まれません。ストアの購入復元をご利用ください。"
   }
 }
