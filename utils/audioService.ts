@@ -26,9 +26,6 @@ export const SOUND_NAMES = [
   'cue_bang_v3',
   'cue_bang_v4',
   'cue_bang_v5',
-  'cue_ready_impact',
-  'cue_steady_impact',
-  'cue_bang_impact',
   'early_tap',
   'win_fanfare',
   'lose_sad',
@@ -62,9 +59,6 @@ const SOURCES: Record<SoundName, number> = {
   cue_bang_v3: require('@/assets/sounds/cue_bang_v3.wav'),
   cue_bang_v4: require('@/assets/sounds/cue_bang_v4.wav'),
   cue_bang_v5: require('@/assets/sounds/cue_bang_v5.wav'),
-  cue_ready_impact: require('@/assets/sounds/cue_ready_impact.wav'),
-  cue_steady_impact: require('@/assets/sounds/cue_steady_impact.wav'),
-  cue_bang_impact: require('@/assets/sounds/cue_bang_impact.wav'),
   early_tap: require('@/assets/sounds/early_tap.wav'),
   win_fanfare: require('@/assets/sounds/win_fanfare.wav'),
   lose_sad: require('@/assets/sounds/lose_sad.wav'),
@@ -72,12 +66,6 @@ const SOURCES: Record<SoundName, number> = {
   heart_break: require('@/assets/sounds/heart_break.wav'),
   level_clear: require('@/assets/sounds/level_clear.wav'),
 };
-
-const DUEL_IMPACT_NAMES = {
-  ready: 'cue_ready_impact',
-  steady: 'cue_steady_impact',
-  bang: 'cue_bang_impact',
-} as const satisfies Record<string, SoundName>;
 
 function duelVoiceName(
   cue: 'ready' | 'steady' | 'bang',
@@ -184,7 +172,7 @@ function pickVoicePack(): number {
 }
 
 /**
- * 결투 READY/STEADY/BANG — 임팩트 + 보이스 묶음(1~5) 랜덤.
+ * 결투 READY/STEADY/BANG — 보이스 묶음(1~5) 랜덤.
  * READY에서 묶음을 고르고, 같은 라운드의 STEADY/BANG은 동일 목소리.
  * 게임 핵심이라 SFX off여도 재생.
  */
@@ -193,17 +181,21 @@ export function playDuelCue(cue: 'ready' | 'steady' | 'bang'): void {
     activeVoicePack = pickVoicePack();
   }
   const pack = activeVoicePack;
-  void playInternal(DUEL_IMPACT_NAMES[cue]);
   void playInternal(duelVoiceName(cue, pack));
   if (cue === 'bang') {
     activeVoicePack = null;
   }
 }
 
-/** 진행 중인 결투 큐(임팩트·보이스) 중단 */
-export function stopDuelCues(): void {
-  activeVoicePack = null;
-  const names: SoundName[] = [...Object.values(DUEL_IMPACT_NAMES)];
+/**
+ * 진행 중인 결투 큐 중단.
+ * @param clearPack 라운드 중단 시에만 true. 큐 전환(READY→STEADY)은 false로 세트 유지.
+ */
+export function stopDuelCues(opts?: { clearPack?: boolean }): void {
+  if (opts?.clearPack !== false) {
+    activeVoicePack = null;
+  }
+  const names: SoundName[] = [];
   for (let p = 1; p <= DUEL_VOICE_PACK_COUNT; p += 1) {
     names.push(duelVoiceName('ready', p));
     names.push(duelVoiceName('steady', p));
