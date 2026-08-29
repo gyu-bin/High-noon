@@ -151,7 +151,7 @@ function main() {
 
   if (opts.applyMode === 'next-launch') {
     console.warn(
-      '[ota:upload] 앱은 스플래시에서 immediate 적용합니다. next-launch 플래그는 기록용입니다.',
+      '[ota:upload] 앱은 스플래시·포그라운드 복귀 시 immediate 적용합니다. next-launch 플래그는 기록용입니다.',
     );
   }
 
