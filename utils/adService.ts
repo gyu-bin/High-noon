@@ -303,11 +303,18 @@ export function showRewardedAd(): Promise<boolean> {
     let earned = false;
     let resolved = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let appStateSubscription: ReturnType<typeof AppState.addEventListener> | null = null;
+    let adOpened = false;
+    let leftForeground = false;
 
     const cleanup = () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
         timeoutId = null;
+      }
+      if (appStateSubscription) {
+        appStateSubscription.remove();
+        appStateSubscription = null;
       }
     };
 
@@ -355,6 +362,7 @@ export function showRewardedAd(): Promise<boolean> {
           ad.addAdEventListener(AdEventType.CLOSED, () => finish(earned));
           ad.addAdEventListener(AdEventType.ERROR, () => finish(false));
           ad.addAdEventListener(AdEventType.OPENED, () => {
+            adOpened = true;
             // 실제로 떴다 — 열림 감시를 종료 감시로 교체
             if (timeoutId) clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
@@ -364,15 +372,30 @@ export function showRewardedAd(): Promise<boolean> {
             }, AD_SHOW_TIMEOUT_MS);
           });
 
+          // AppState 감지 — 광고로 백그라운드 이동 후 돌아왔을 때 grace period 후 결과 처리.
+          appStateSubscription = AppState.addEventListener('change', (nextState) => {
+            if (nextState !== 'active') {
+              leftForeground = true;
+              return;
+            }
+            if (!leftForeground || !adOpened || resolved) return;
+            setTimeout(() => {
+              if (!resolved) {
+                finish(earned);
+              }
+            }, AD_FOREGROUND_GRACE_MS);
+          });
+
           // OPENED가 오지 않으면 광고가 안 뜬 것 — "광고 준비 중…"에 묶어두지 않는다.
-          // 앱이 이미 내려가 있으면 이벤트만 놓친 것이므로 종료 감시로 전환한다.
+          // 단, 앱이 이미 백그라운드로 갔다면 이벤트만 놓친 것이므로 종료 감시로 전환한다.
           if (timeoutId) clearTimeout(timeoutId);
           timeoutId = setTimeout(() => {
             if (resolved) return;
-            if (AppState.currentState === 'active') {
+            if (!leftForeground) {
               finish(false);
               return;
             }
+            adOpened = true;
             timeoutId = setTimeout(() => {
               if (!resolved) {
                 finish(earned);
