@@ -11,9 +11,9 @@ export const SOUND_NAMES = [
   'ready_click',
   'steady_click',
   'bang_shot',
-  'cue_ready',
-  'cue_steady',
-  'cue_bang',
+  'cue_ready_impact',
+  'cue_steady_impact',
+  'cue_bang_impact',
   'early_tap',
   'win_fanfare',
   'lose_sad',
@@ -29,9 +29,10 @@ const SOURCES: Record<SoundName, number> = {
   ready_click: require('@/assets/sounds/ready_click.wav'),
   steady_click: require('@/assets/sounds/steady_click.wav'),
   bang_shot: require('@/assets/sounds/bang_shot.wav'),
-  cue_ready: require('@/assets/sounds/cue_ready.wav'),
-  cue_steady: require('@/assets/sounds/cue_steady.wav'),
-  cue_bang: require('@/assets/sounds/cue_bang.wav'),
+  // 결투 신호 임팩트 — scripts/gen_duel_cue_sounds.py 로 생성
+  cue_ready_impact: require('@/assets/sounds/cue_ready_impact.wav'),
+  cue_steady_impact: require('@/assets/sounds/cue_steady_impact.wav'),
+  cue_bang_impact: require('@/assets/sounds/cue_bang_impact.wav'),
   early_tap: require('@/assets/sounds/early_tap.wav'),
   win_fanfare: require('@/assets/sounds/win_fanfare.wav'),
   lose_sad: require('@/assets/sounds/lose_sad.wav'),
@@ -41,9 +42,9 @@ const SOURCES: Record<SoundName, number> = {
 };
 
 const DUEL_CUE_NAMES = {
-  ready: 'cue_ready',
-  steady: 'cue_steady',
-  bang: 'cue_bang',
+  ready: 'cue_ready_impact',
+  steady: 'cue_steady_impact',
+  bang: 'cue_bang_impact',
 } as const satisfies Record<string, SoundName>;
 
 const cache = new Map<SoundName, AudioPlayer>();

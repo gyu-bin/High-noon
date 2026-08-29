@@ -1,7 +1,7 @@
 import * as Speech from 'expo-speech';
 
 import i18n, { getCurrentLanguage } from '@/locales';
-import { ensureGameAudioSession } from '@/utils/audioService';
+import { ensureGameAudioSession, playDuelCue } from '@/utils/audioService';
 import { duckBgm } from '@/utils/bgmService';
 
 export type DuelSpeakCue = 'ready' | 'steady' | 'bang';
@@ -18,11 +18,15 @@ const FALLBACK_TEXT: Record<DuelSpeakCue, string> = {
   bang: 'Bang!',
 };
 
-/** 큐별 TTS — 짧고 빠르게, 저음→고음으로 긴장 고조 */
+/**
+ * 큐별 TTS — 저음→고음으로 긴장을 쌓고 BANG에서 터뜨린다.
+ * 아래에 임팩트 사운드(서브베이스)가 깔리므로 BANG 피치를 너무 올리면
+ * 목소리만 얇게 떠서 오히려 힘이 빠진다.
+ */
 const CUE_VOICE: Record<DuelSpeakCue, { pitch: number; rate: number }> = {
-  ready: { pitch: 0.68, rate: 1.48 },
-  steady: { pitch: 0.76, rate: 1.58 },
-  bang: { pitch: 1.65, rate: 1.78 },
+  ready: { pitch: 0.62, rate: 1.35 },
+  steady: { pitch: 0.72, rate: 1.5 },
+  bang: { pitch: 1.2, rate: 1.85 },
 };
 
 let warmupPromise: Promise<void> | null = null;
@@ -74,12 +78,18 @@ async function speakDuelCueInternal(cue: DuelSpeakCue): Promise<void> {
 }
 
 /**
- * READY / STEADY / BANG — locale `speech.*` TTS (빠르고 임팩트 있게).
+ * READY / STEADY / BANG — 임팩트 사운드 + locale `speech.*` TTS.
+ *
+ * 임팩트를 먼저(동기로) 때리는 게 중요하다. TTS는 엔진·기기에 따라 발화 시작이
+ * 수십~수백 ms씩 흔들리는데, 이 게임은 그 신호를 보고 반응 속도를 재기 때문이다.
+ * 지연이 일정한 파일 재생이 타이밍 기준을 잡고, 목소리는 그 위에 얹힌다.
+ *
  * 총성은 플레이어·NPC가 실제 발사할 때 `playGunshot`으로 재생.
- * 게임 진행 핵심 큐라서 효과음 설정을 꺼도 항상 읽는다.
+ * 게임 진행 핵심 큐라서 효과음 설정을 꺼도 항상 재생한다.
  */
 export function speakDuelCue(cue: DuelSpeakCue): void {
   duckBgm(true);
+  playDuelCue(cue);
   warmupDuelSpeech();
   void speakDuelCueInternal(cue).catch(() => {
     /* 시뮬레이터·미지원 기기 */
