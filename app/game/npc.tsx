@@ -783,7 +783,8 @@ export default function NpcGameScreen() {
         !adReviveUsedRef.current &&
         npc?.id !== 22;
       if (closeLoss) {
-        adReviveUsedRef.current = true;
+        // 소진 처리는 실제로 부활에 성공했을 때만 (제안 시점에 세우면
+        // 광고 로드 실패 등으로 부활을 못 받아도 기회가 날아간다)
         setAdRevivePending({ ps, ns });
         return;
       }
@@ -907,6 +908,7 @@ export default function NpcGameScreen() {
       return;
     }
 
+    adReviveUsedRef.current = true;
     useGameStore.getState().setScores(pending.ps, Math.max(0, pending.ns - 1));
     setDefeatedSide(null);
     setModalVisible(false);

@@ -14,6 +14,9 @@ export const SOUND_NAMES = [
   'cue_ready',
   'cue_steady',
   'cue_bang',
+  'cue_ready_impact',
+  'cue_steady_impact',
+  'cue_bang_impact',
   'early_tap',
   'win_fanfare',
   'lose_sad',
@@ -29,9 +32,14 @@ const SOURCES: Record<SoundName, number> = {
   ready_click: require('@/assets/sounds/ready_click.wav'),
   steady_click: require('@/assets/sounds/steady_click.wav'),
   bang_shot: require('@/assets/sounds/bang_shot.wav'),
+  // 영어 보이스 클립 (Eddy)
   cue_ready: require('@/assets/sounds/cue_ready.wav'),
   cue_steady: require('@/assets/sounds/cue_steady.wav'),
   cue_bang: require('@/assets/sounds/cue_bang.wav'),
+  // 임팩트 — scripts/gen_duel_cue_sounds.py
+  cue_ready_impact: require('@/assets/sounds/cue_ready_impact.wav'),
+  cue_steady_impact: require('@/assets/sounds/cue_steady_impact.wav'),
+  cue_bang_impact: require('@/assets/sounds/cue_bang_impact.wav'),
   early_tap: require('@/assets/sounds/early_tap.wav'),
   win_fanfare: require('@/assets/sounds/win_fanfare.wav'),
   lose_sad: require('@/assets/sounds/lose_sad.wav'),
@@ -40,10 +48,16 @@ const SOURCES: Record<SoundName, number> = {
   level_clear: require('@/assets/sounds/level_clear.wav'),
 };
 
-const DUEL_CUE_NAMES = {
+const DUEL_VOICE_NAMES = {
   ready: 'cue_ready',
   steady: 'cue_steady',
   bang: 'cue_bang',
+} as const satisfies Record<string, SoundName>;
+
+const DUEL_IMPACT_NAMES = {
+  ready: 'cue_ready_impact',
+  steady: 'cue_steady_impact',
+  bang: 'cue_bang_impact',
 } as const satisfies Record<string, SoundName>;
 
 const cache = new Map<SoundName, AudioPlayer>();
@@ -57,7 +71,7 @@ const PLAYER_OPTIONS = {
   keepAudioSessionActive: true as const,
 };
 
-/** SFX·TTS 공용 — speak/재생 직전 호출 (세션·무음 모드 보장) */
+/** SFX·보이스 공용 — 재생 직전 호출 (세션·무음 모드 보장) */
 export async function ensureGameAudioSession(): Promise<void> {
   await setAudioModeAsync({
     playsInSilentMode: true,
@@ -139,14 +153,22 @@ export function play(name: SoundName): void {
   void playInternal(name);
 }
 
-/** 결투 READY/STEADY/BANG 큐 — 게임 핵심이라 SFX off여도 재생 */
+/**
+ * 결투 READY/STEADY/BANG — 임팩트(타이밍 기준) + 영어 보이스.
+ * 게임 핵심이라 SFX off여도 재생.
+ */
 export function playDuelCue(cue: 'ready' | 'steady' | 'bang'): void {
-  void playInternal(DUEL_CUE_NAMES[cue]);
+  void playInternal(DUEL_IMPACT_NAMES[cue]);
+  void playInternal(DUEL_VOICE_NAMES[cue]);
 }
 
-/** 진행 중인 결투 큐 보이스 중단 */
+/** 진행 중인 결투 큐(임팩트·보이스) 중단 */
 export function stopDuelCues(): void {
-  for (const name of Object.values(DUEL_CUE_NAMES)) {
+  const names = [
+    ...Object.values(DUEL_VOICE_NAMES),
+    ...Object.values(DUEL_IMPACT_NAMES),
+  ];
+  for (const name of names) {
     const player = cache.get(name);
     if (!player) continue;
     try {
