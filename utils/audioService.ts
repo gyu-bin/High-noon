@@ -20,6 +20,15 @@ export const SOUND_NAMES = [
   'defeat_thud',
   'heart_break',
   'level_clear',
+  'voice_en_ready',
+  'voice_en_steady',
+  'voice_en_bang',
+  'voice_ko_ready',
+  'voice_ko_steady',
+  'voice_ko_bang',
+  'voice_ja_ready',
+  'voice_ja_steady',
+  'voice_ja_bang',
 ] as const;
 
 export type SoundName = (typeof SOUND_NAMES)[number];
@@ -39,13 +48,32 @@ const SOURCES: Record<SoundName, number> = {
   defeat_thud: require('@/assets/sounds/defeat_thud.wav'),
   heart_break: require('@/assets/sounds/heart_break.wav'),
   level_clear: require('@/assets/sounds/level_clear.wav'),
+  // 결투 신호 음성 — scripts/gen_duel_cue_voice.py 로 생성
+  voice_en_ready: require('@/assets/sounds/voice_en_ready.wav'),
+  voice_en_steady: require('@/assets/sounds/voice_en_steady.wav'),
+  voice_en_bang: require('@/assets/sounds/voice_en_bang.wav'),
+  voice_ko_ready: require('@/assets/sounds/voice_ko_ready.wav'),
+  voice_ko_steady: require('@/assets/sounds/voice_ko_steady.wav'),
+  voice_ko_bang: require('@/assets/sounds/voice_ko_bang.wav'),
+  voice_ja_ready: require('@/assets/sounds/voice_ja_ready.wav'),
+  voice_ja_steady: require('@/assets/sounds/voice_ja_steady.wav'),
+  voice_ja_bang: require('@/assets/sounds/voice_ja_bang.wav'),
 };
+
+export type DuelCue = 'ready' | 'steady' | 'bang';
 
 const DUEL_CUE_NAMES = {
   ready: 'cue_ready_impact',
   steady: 'cue_steady_impact',
   bang: 'cue_bang_impact',
-} as const satisfies Record<string, SoundName>;
+} as const satisfies Record<DuelCue, SoundName>;
+
+/** 언어별 미리 구운 결투 음성 (없는 언어는 기기 TTS로 폴백) */
+const DUEL_VOICE_NAMES = {
+  en: { ready: 'voice_en_ready', steady: 'voice_en_steady', bang: 'voice_en_bang' },
+  ko: { ready: 'voice_ko_ready', steady: 'voice_ko_steady', bang: 'voice_ko_bang' },
+  ja: { ready: 'voice_ja_ready', steady: 'voice_ja_steady', bang: 'voice_ja_bang' },
+} as const satisfies Record<string, Record<DuelCue, SoundName>>;
 
 const cache = new Map<SoundName, AudioPlayer>();
 let modeReady = false;
@@ -140,9 +168,20 @@ export function play(name: SoundName): void {
   void playInternal(name);
 }
 
-/** 결투 READY/STEADY/BANG 큐 — 게임 핵심이라 SFX off여도 재생 */
-export function playDuelCue(cue: 'ready' | 'steady' | 'bang'): void {
+/** 결투 READY/STEADY/BANG 임팩트 — 게임 핵심이라 SFX off여도 재생 */
+export function playDuelCue(cue: DuelCue): void {
   void playInternal(DUEL_CUE_NAMES[cue]);
+}
+
+/**
+ * 결투 신호 음성 재생. 해당 언어의 음성 파일이 있으면 재생하고 `true`.
+ * 없으면 `false` — 호출부가 기기 TTS로 폴백한다.
+ */
+export function playDuelVoice(lang: string, cue: DuelCue): boolean {
+  const table = (DUEL_VOICE_NAMES as Record<string, Record<DuelCue, SoundName>>)[lang];
+  if (!table) return false;
+  void playInternal(table[cue]);
+  return true;
 }
 
 async function playInternal(name: SoundName): Promise<void> {

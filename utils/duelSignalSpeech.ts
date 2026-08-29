@@ -1,7 +1,7 @@
 import * as Speech from 'expo-speech';
 
 import i18n, { getCurrentLanguage } from '@/locales';
-import { ensureGameAudioSession, playDuelCue } from '@/utils/audioService';
+import { ensureGameAudioSession, playDuelCue, playDuelVoice } from '@/utils/audioService';
 import { duckBgm } from '@/utils/bgmService';
 
 export type DuelSpeakCue = 'ready' | 'steady' | 'bang';
@@ -78,11 +78,12 @@ async function speakDuelCueInternal(cue: DuelSpeakCue): Promise<void> {
 }
 
 /**
- * READY / STEADY / BANG — 임팩트 사운드 + locale `speech.*` TTS.
+ * READY / STEADY / BANG — 임팩트 사운드 + 음성.
  *
- * 임팩트를 먼저(동기로) 때리는 게 중요하다. TTS는 엔진·기기에 따라 발화 시작이
- * 수십~수백 ms씩 흔들리는데, 이 게임은 그 신호를 보고 반응 속도를 재기 때문이다.
- * 지연이 일정한 파일 재생이 타이밍 기준을 잡고, 목소리는 그 위에 얹힌다.
+ * 음성은 `scripts/gen_duel_cue_voice.py`로 미리 구운 파일을 쓴다. 기기 TTS는
+ * 발화 시작이 기기·엔진마다 수십~수백 ms씩 흔들리는데, 이 게임은 그 신호를 보고
+ * 반응 속도를 재기 때문에 그 편차가 그대로 기록에 섞인다. 파일 재생은 지연이
+ * 일정하다. 음성이 없는 언어에서만 기기 TTS로 폴백한다.
  *
  * 총성은 플레이어·NPC가 실제 발사할 때 `playGunshot`으로 재생.
  * 게임 진행 핵심 큐라서 효과음 설정을 꺼도 항상 재생한다.
@@ -90,6 +91,10 @@ async function speakDuelCueInternal(cue: DuelSpeakCue): Promise<void> {
 export function speakDuelCue(cue: DuelSpeakCue): void {
   duckBgm(true);
   playDuelCue(cue);
+
+  const lang = getCurrentLanguage().split('-')[0] ?? 'en';
+  if (playDuelVoice(lang, cue)) return;
+
   warmupDuelSpeech();
   void speakDuelCueInternal(cue).catch(() => {
     /* 시뮬레이터·미지원 기기 */
