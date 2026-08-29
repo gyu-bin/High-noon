@@ -16,6 +16,10 @@ import { AppErrorBoundary } from '@/components/ui/AppErrorBoundary';
 import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
 import { StoreUpdateModal } from '@/components/ui/StoreUpdateModal';
 import { useProgressStore } from '@/store/progressStore';
+import {
+  restoreProgressIfEmpty,
+  startProgressAutoBackup,
+} from '@/utils/progressAutoBackup';
 import { useSettingsStore } from '@/store/settingsStore';
 import { colors } from '@/constants/theme';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
@@ -164,6 +168,13 @@ function RootLayoutContent() {
           waitPersistHydrated(useSettingsStore.persist),
         ]);
         if (cancelled) return;
+
+        // 앱을 지웠다 다시 깐 경우 키체인 스냅샷에서 조용히 되살린다.
+        // hydration 이후여야 한다 — 그 전이면 아직 안 읽힌 진행도를 비었다고 오판한다.
+        await restoreProgressIfEmpty();
+        if (cancelled) return;
+        startProgressAutoBackup();
+
         checkUnlockConditions();
       } catch (err) {
         // 준비 단계 실패가 부팅 자체를 막아선 안 된다. 프리로드는 없어도 플레이는 가능.

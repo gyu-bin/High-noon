@@ -46,7 +46,7 @@ npx expo start
 
 - **Expo SDK 54** · **expo-router** · **TypeScript**
 - **Zustand** (진행도·게임·설정)
-- **expo-audio** · **expo-haptics** · **expo-speech** · **expo-image**
+- **expo-audio** · **expo-haptics** · **expo-secure-store** · **expo-image**
 
 ## 라이선스
 

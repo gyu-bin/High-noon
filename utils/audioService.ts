@@ -195,13 +195,6 @@ export function playGunshot(): void {
   });
 }
 
-/**
- * @deprecated 단일 총성은 `playGunshot` 사용
- */
-export function playBangShotDuel(_staggerMs = 52): void {
-  playGunshot();
-}
-
 /** 짧은 효과음 재생 (설정 off 시 무시) */
 export function play(name: SoundName): void {
   if (!useSettingsStore.getState().soundEnabled) return;
