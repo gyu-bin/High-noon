@@ -126,13 +126,22 @@ export function preloadInterstitial(): void {
   });
 }
 
-/** 광고 표시 후 CLOSED 이벤트가 오지 않을 경우 대비 타임아웃 (ms) */
-const AD_SHOW_TIMEOUT_MS = 30000;
+/**
+ * 광고가 화면에 떠 있는 동안의 최대 대기 시간 (ms).
+ *
+ * 광고가 재생 중인 시간은 "유저가 앱을 기다리는 시간"이 아니라 "유저가 광고를 보는 시간"이다.
+ * 여기서 재촉하면 시청이 끝나기 전에 결과를 확정해 버린다 — 특히 보상형은
+ * `EARNED_REWARD`가 영상 끝에 오므로, 영상 길이보다 짧은 타임아웃은 보상을 통째로 날린다.
+ * 그래서 이 값은 어떤 광고보다도 길게 두고, 이벤트 유실로 인한 영구 대기만 막는 안전망으로 쓴다.
+ */
+const AD_MAX_VISIBLE_MS = 180_000;
 /**
  * show() 후 OPENED가 오지 않으면 광고가 실제로 뜨지 않은 것 —
  * 로딩 오버레이만 남는 상황이므로 이 시간이 지나면 그냥 진행한다. (ms)
  */
 const AD_OPEN_TIMEOUT_MS = 2500;
+/** 보상형 열림 감시 (ms) — 보상을 잃는 쪽이 손해가 크므로 전면보다 여유를 준다 */
+const REWARDED_OPEN_TIMEOUT_MS = 4000;
 /** AppState가 active로 돌아온 뒤 grace period (ms) — CLOSED가 먼저 도착할 여유만 준다 */
 const AD_FOREGROUND_GRACE_MS = 250;
 /** 보상형 로드 대기 최대 시간 (ms) — 유저가 직접 "광고 보기"를 누른 경우에만 적용 */
@@ -218,31 +227,32 @@ export function showStageCompleteAd(): Promise<void> {
       ad.removeAllListeners();
       ad.addAdEventListener(AdEventType.CLOSED, finishAfterClosed);
       ad.addAdEventListener(AdEventType.ERROR, finish);
-      ad.addAdEventListener(AdEventType.OPENED, () => {
-        adOpened = true;
-        // 광고가 실제로 떴다 — 열림 감시 타이머를 종료 감시 타이머로 교체
+      /** 광고가 떠 있는 동안의 안전망 — 이벤트가 유실돼도 영구 대기하지 않도록 */
+      const armVisibleWatchdog = () => {
         if (timeoutId) clearTimeout(timeoutId);
         timeoutId = setTimeout(() => {
           if (!resolved) {
             finishAfterClosed();
           }
-        }, AD_SHOW_TIMEOUT_MS);
+        }, AD_MAX_VISIBLE_MS);
+      };
+
+      ad.addAdEventListener(AdEventType.OPENED, () => {
+        adOpened = true;
+        // 광고가 실제로 떴다 — 열림 감시를 끄고, 이후엔 CLOSED를 기다린다.
+        armVisibleWatchdog();
       });
 
       // OPENED가 오지 않으면 광고가 안 뜬 것 — 오버레이만 띄워두지 않고 바로 진행한다.
       // 단, 앱이 이미 백그라운드로 내려갔다면 이벤트만 놓친 것이므로 종료 감시로 전환한다.
       timeoutId = setTimeout(() => {
-        if (resolved) return;
+        if (resolved || adOpened) return;
         if (!leftForeground) {
           finish();
           return;
         }
         adOpened = true;
-        timeoutId = setTimeout(() => {
-          if (!resolved) {
-            finishAfterClosed();
-          }
-        }, AD_SHOW_TIMEOUT_MS);
+        armVisibleWatchdog();
       }, AD_OPEN_TIMEOUT_MS);
 
       // AppState 감지 — 광고가 실제로 뜬 뒤 앱이 내려갔다가 돌아온 경우에만 완료 처리.
@@ -303,6 +313,8 @@ export function showRewardedAd(): Promise<boolean> {
     let earned = false;
     let resolved = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    /** OPENED 수신 — 광고가 실제로 화면에 떠 있는지 */
+    let adOpened = false;
 
     const cleanup = () => {
       if (timeoutId) {
@@ -354,26 +366,38 @@ export function showRewardedAd(): Promise<boolean> {
           });
           ad.addAdEventListener(AdEventType.CLOSED, () => finish(earned));
           ad.addAdEventListener(AdEventType.ERROR, () => finish(false));
-          ad.addAdEventListener(AdEventType.OPENED, () => {
-            // OPENED는 참고용 — 보상형은 오버레이 앱으로 뜨는 경우가 많아
-            // AppState가 active로 남을 수 있다. 성공/실패는 EARNED_REWARD + CLOSED로만 확정.
+          /**
+           * 광고가 떠 있는 동안의 안전망.
+           * 시청 중에는 절대 재촉하지 않는다 — `EARNED_REWARD`는 영상 끝에 오므로
+           * 영상보다 짧은 타임아웃으로 끊으면 다 보고 온 유저가 보상을 잃는다.
+           * 성공/실패는 EARNED_REWARD + CLOSED로만 확정하고, 이 타이머는
+           * 이벤트가 통째로 유실됐을 때 "광고 준비 중…"에 영원히 갇히는 것만 막는다.
+           */
+          const armVisibleWatchdog = () => {
             if (timeoutId) clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
               if (!resolved) {
                 finish(earned);
               }
-            }, AD_SHOW_TIMEOUT_MS);
+            }, AD_MAX_VISIBLE_MS);
+          };
+
+          ad.addAdEventListener(AdEventType.OPENED, () => {
+            adOpened = true;
+            armVisibleWatchdog();
           });
 
-          // 전면과 달리 "OPENED 없음 + AppState active → 실패"로 단정하면 안 된다.
-          // (보상형이 떠 있는데도 OPENED가 늦거나 누락되면, 시청 중에 false → 결과 화면으로 튕김)
-          // CLOSED / ERROR / 30초 타임아웃만으로 resolve한다.
+          // 열림 감시 — 광고가 아예 안 뜬 경우에만 실패로 끊는다.
+          // 이미 떴거나(OPENED) 앱이 내려가 있으면(= 광고가 앞에 있음) 계속 기다린다.
           if (timeoutId) clearTimeout(timeoutId);
           timeoutId = setTimeout(() => {
-            if (!resolved) {
-              finish(earned);
+            if (resolved || adOpened) return;
+            if (AppState.currentState !== 'active') {
+              armVisibleWatchdog();
+              return;
             }
-          }, AD_SHOW_TIMEOUT_MS);
+            finish(false);
+          }, REWARDED_OPEN_TIMEOUT_MS);
 
           void ad.show().catch(() => finish(false));
         };
