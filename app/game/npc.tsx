@@ -910,7 +910,10 @@ export default function NpcGameScreen() {
     }
 
     adReviveUsedRef.current = true;
-    useGameStore.getState().setScores(pending.ps, Math.max(0, pending.ns - 1));
+    const store = useGameStore.getState();
+    // 접전 패배(2:3) 직전 상태로: 상대 승수 -1, 플레이어 하트 1칸 복구
+    store.setScores(pending.ps, Math.max(0, pending.ns - 1));
+    store.setHearts(1, store.opponentHearts);
     setDefeatedSide(null);
     setModalVisible(false);
     setModal(null);
