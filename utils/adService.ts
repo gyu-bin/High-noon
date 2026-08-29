@@ -296,8 +296,12 @@ export function preloadRewardedAd(): void {
 }
 
 /**
- * 보상형 광고 표시. 유저가 광고를 끝까지 시청해 리워드를 받으면 `true`.
- * - 광고 스킵·에러·미로드 등은 `false`.
+ * 보상형 광고 표시. **광고가 실제로 화면에 노출되면 `true`** — 중간에 닫아도 부여한다.
+ *
+ * 끝까지 시청(`EARNED_REWARD`)을 조건으로 걸면, 접전 끝에 광고까지 본 유저가
+ * 몇 초 차이로 부활을 잃는다. 노출 시점에 이미 임프레션은 집계되므로
+ * 완주 여부는 유저 경험을 깎으면서까지 따질 이유가 없다는 판단.
+ * - 광고가 아예 뜨지 않은 경우(로드 실패·에러·미노출)만 `false`.
  * - `isAdFree`이면 무조건 `true` (광고 제거 유저에게도 리워드 부여).
  * - CLOSED 이벤트 미발생·앱 복귀 등에도 resolve (무한 "광고 준비 중" 방지).
  */
@@ -360,24 +364,28 @@ export function showRewardedAd(): Promise<boolean> {
         const present = () => {
           if (resolved) return;
 
+          /**
+           * 리워드 부여 조건 — 완주(`earned`) 또는 노출(`adOpened`).
+           * 중간에 닫아도 광고는 본 것으로 친다.
+           */
+          const rewardGranted = () => earned || adOpened;
+
           ad.removeAllListeners();
           ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
             earned = true;
           });
-          ad.addAdEventListener(AdEventType.CLOSED, () => finish(earned));
-          ad.addAdEventListener(AdEventType.ERROR, () => finish(false));
+          ad.addAdEventListener(AdEventType.CLOSED, () => finish(rewardGranted()));
+          ad.addAdEventListener(AdEventType.ERROR, () => finish(rewardGranted()));
           /**
            * 광고가 떠 있는 동안의 안전망.
-           * 시청 중에는 절대 재촉하지 않는다 — `EARNED_REWARD`는 영상 끝에 오므로
-           * 영상보다 짧은 타임아웃으로 끊으면 다 보고 온 유저가 보상을 잃는다.
-           * 성공/실패는 EARNED_REWARD + CLOSED로만 확정하고, 이 타이머는
-           * 이벤트가 통째로 유실됐을 때 "광고 준비 중…"에 영원히 갇히는 것만 막는다.
+           * 시청 중에는 재촉하지 않는다 — 이벤트가 통째로 유실됐을 때
+           * "광고 준비 중…"에 영원히 갇히는 것만 막는다.
            */
           const armVisibleWatchdog = () => {
             if (timeoutId) clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
               if (!resolved) {
-                finish(earned);
+                finish(rewardGranted());
               }
             }, AD_MAX_VISIBLE_MS);
           };
@@ -393,6 +401,8 @@ export function showRewardedAd(): Promise<boolean> {
           timeoutId = setTimeout(() => {
             if (resolved || adOpened) return;
             if (AppState.currentState !== 'active') {
+              // OPENED를 놓쳤을 뿐 광고는 앞에 떠 있다 — 노출로 인정한다.
+              adOpened = true;
               armVisibleWatchdog();
               return;
             }
