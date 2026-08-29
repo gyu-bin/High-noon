@@ -50,16 +50,23 @@ export default function CharacterSelectScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (DEV_UNLOCK_ALL_CHARACTERS) {
+      const run = () => {
+        if (DEV_UNLOCK_ALL_CHARACTERS) {
+          checkUnlockConditions();
+          return;
+        }
+        const had4 = useProgressStore.getState().unlockedCharacterIds.includes(4);
         checkUnlockConditions();
+        const has4 = useProgressStore.getState().unlockedCharacterIds.includes(4);
+        if (!had4 && has4) {
+          setRevealPhase('black');
+        }
+      };
+      if (useProgressStore.persist.hasHydrated()) {
+        run();
         return;
       }
-      const had4 = useProgressStore.getState().unlockedCharacterIds.includes(4);
-      checkUnlockConditions();
-      const has4 = useProgressStore.getState().unlockedCharacterIds.includes(4);
-      if (!had4 && has4) {
-        setRevealPhase('black');
-      }
+      return useProgressStore.persist.onFinishHydration(run);
     }, []),
   );
 

@@ -419,7 +419,7 @@ export default function LocalGameScreen() {
     } else {
       defeatRevealTimerRef.current = setTimeout(() => {
         setRoundDefeated(nextRoundDefeated);
-        void play('defeat_thud');
+        setTimeout(() => void play('defeat_thud'), 170);
         void trigger('medium');
         if (heartLost) {
           setTimeout(() => void play('heart_break'), 130);

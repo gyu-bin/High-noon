@@ -48,8 +48,12 @@ function allNpcCleared(
 /**
  * NPC 클리어 수·전원 클리어·평균 반응속도로 캐릭터 해금을 갱신합니다.
  * (진행도 변경 직후·설정 화면 진입 등에서 호출)
+ *
+ * persist hydration 전에는 호출해도 no-op — 기본값 set이 AsyncStorage를 덮어쓰지 않게.
  */
 export function checkUnlockConditions(): void {
+  if (!useProgressStore.persist.hasHydrated()) return;
+
   const { npcById, unlockedCharacterIds, setUnlockedCharacterIds, setHiddenCharUnlocked } =
     useProgressStore.getState();
 

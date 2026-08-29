@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { AppErrorBoundary } from '@/components/ui/AppErrorBoundary';
 import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
 import { StoreUpdateModal } from '@/components/ui/StoreUpdateModal';
+import { useProgressStore } from '@/store/progressStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { colors } from '@/constants/theme';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
@@ -55,6 +56,20 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
         reject(err);
       },
     );
+  });
+}
+
+/** zustand persist가 AsyncStorage에서 복구될 때까지 대기 */
+function waitPersistHydrated(api: {
+  hasHydrated: () => boolean;
+  onFinishHydration: (cb: () => void) => () => void;
+}): Promise<void> {
+  if (api.hasHydrated()) return Promise.resolve();
+  return new Promise((resolve) => {
+    const unsub = api.onFinishHydration(() => {
+      unsub();
+      resolve();
+    });
   });
 }
 
@@ -155,6 +170,13 @@ function RootLayoutContent() {
         if (handOffToReload || cancelled) return;
 
         await preloadTitleHero();
+        if (cancelled) return;
+
+        // hydration 전에 해금 동기화하면 기본 진행도가 AsyncStorage를 덮어씀 (OTA 재기동 시 특히)
+        await Promise.all([
+          waitPersistHydrated(useProgressStore.persist),
+          waitPersistHydrated(useSettingsStore.persist),
+        ]);
         if (cancelled) return;
         checkUnlockConditions();
       } catch (err) {

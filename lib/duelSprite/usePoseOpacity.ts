@@ -72,9 +72,8 @@ export function usePoseOpacity(pose: SpritePose, hasDown = false) {
         easing: Easing.out(Easing.cubic),
         reduceMotion: RM_GAME,
       });
-    } else {
-      shootFrame.value = 0;
     }
+    // shoot 퇴장 시 shootFrame을 0으로 스냅하지 않음 — shoot_01→00 플래시 방지
   }, [
     pose,
     hasDown,
