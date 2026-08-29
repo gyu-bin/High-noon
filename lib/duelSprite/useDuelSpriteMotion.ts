@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import {
   Easing,
   useAnimatedStyle,
@@ -33,7 +33,7 @@ export function useDuelSpriteMotion(
   const knock = duelDefeatKnockback(corner);
   const defeatMs = defeatMotion === 'topple' ? T.defeatToppleMs : T.defeatCollapseMs;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (victoryActive && pose === 'idle') {
       phase.value = 1;
       phase.value = withSequence(
@@ -118,6 +118,7 @@ export function useDuelSpriteMotion(
       return;
     }
     if (pose === 'defeat') {
+      // useLayoutEffect에서 0으로 맞춘 뒤 피격 타임라인 — 첫 프레임 연속성은 스타일 쪽 shoot 잔여로 처리
       phase.value = 0;
       phase.value = withTiming(1, {
         duration: defeatMs,
@@ -188,6 +189,12 @@ export function useDuelSpriteMotion(
       const p = phase.value;
       const dir = knock.rotate >= 0 ? 1 : -1;
 
+      // shoot kick 잔여 → 피격으로 이어 붙이기 (첫 프레임 팝 방지)
+      const entryT = Math.min(1, p / 0.1);
+      const entryE = entryT * entryT * (3 - 2 * entryT);
+      const shootCarryY = -4.2 * (1 - entryE);
+      const shootCarryScale = 0.03 * (1 - entryE);
+
       // ── 공통 구간 ──
       // 1) 피격 휘청 (0 → hitEnd)
       const hitEnd = 0.17;
@@ -216,6 +223,7 @@ export function useDuelSpriteMotion(
         const rot = rotDuringFall * (1 - flattenT);
 
         const ty =
+          shootCarryY +
           knock.y * hitE +
           peakFallY * (fallE * 0.88 + settleE * 0.12) -
           12 * bounce;
@@ -226,7 +234,7 @@ export function useDuelSpriteMotion(
             { translateX: tx },
             { translateY: ty },
             { rotate: `${rot}deg` },
-            { scale: 1 - 0.05 * fallE },
+            { scale: 1 + shootCarryScale - 0.05 * fallE },
           ],
           opacity: 1 - 0.04 * fallE,
         };
@@ -252,7 +260,7 @@ export function useDuelSpriteMotion(
 
       const rot = knock.rotate * hitE + (tipDeg - knock.rotate) * collapseFallE;
       const ty =
-        knock.y * hitE + peakFallY * collapseFallE - 10 * collapseBounce;
+        shootCarryY + knock.y * hitE + peakFallY * collapseFallE - 10 * collapseBounce;
       const tx = knock.x * hitE + fallX * collapseFallE;
 
       return {
@@ -260,7 +268,7 @@ export function useDuelSpriteMotion(
           { translateX: tx },
           { translateY: ty },
           { rotate: `${rot}deg` },
-          { scale: 1 - 0.06 * collapseFallE },
+          { scale: 1 + shootCarryScale - 0.06 * collapseFallE },
         ],
         opacity: 1 - 0.05 * collapseFallE,
       };

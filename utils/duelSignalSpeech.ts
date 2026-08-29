@@ -13,24 +13,21 @@ export function warmupDuelSpeech(): void {
   });
 }
 
-/** 결투 큐 음성 중단 (라운드 리셋·조기탭 등) */
+/** 결투 큐 음성 중단 (라운드 리셋·조기탭 등) — 보이스 세트도 초기화 */
 export function stopDuelSignalSpeech(): void {
-  stopDuelCues();
+  stopDuelCues({ clearPack: true });
 }
 
 /**
- * READY / STEADY / BANG — 임팩트(타이밍) + 영어 보이스 클립.
- *
- * 임팩트를 보이스와 같이 쳐서, TTS처럼 기기마다 흔들리지 않는
- * 일정한 신호로 반응 측정을 잡는다. TTS는 쓰지 않는다.
- *
- * 총성은 발사 시 `playGunshot`. 게임 핵심 큐라서 SFX off여도 재생.
+ * READY / STEADY / BANG — ElevenLabs 보이스 묶음(1~5) 랜덤.
+ * READY에서 한 목소리를 고르고 STEADY/BANG까지 유지. TTS·임팩트 없음.
  */
 export function speakDuelCue(cue: DuelSpeakCue): void {
   duckBgm(true);
   warmupDuelSpeech();
+  // 이전 큐 오디오만 끊고, 세트는 유지 (clearPack이면 STEADY마다 새 목소리)
   if (cue !== 'bang') {
-    stopDuelSignalSpeech();
+    stopDuelCues({ clearPack: false });
   }
   playDuelCue(cue);
 }

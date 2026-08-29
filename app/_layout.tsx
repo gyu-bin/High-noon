@@ -3,11 +3,11 @@ import 'react-native-gesture-handler';
 import i18n, { changeLanguage, i18nInitPromise } from '@/locales';
 
 import { Rye_400Regular, useFonts } from '@expo-google-fonts/rye';
-import { Stack, type ErrorBoundaryProps } from 'expo-router';
+import { Stack, usePathname, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import * as Updates from 'expo-updates';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { AppErrorBoundary } from '@/components/ui/AppErrorBoundary';
 import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
 import { StoreUpdateModal } from '@/components/ui/StoreUpdateModal';
+import { useProgressStore } from '@/store/progressStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { colors } from '@/constants/theme';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
@@ -24,7 +25,8 @@ import { initAds, preloadInterstitial, preloadRewardedAd } from '@/utils/adServi
 import { preloadAll, ensureGameAudioSession } from '@/utils/audioService';
 import { bootMenuBgm } from '@/utils/bgmService';
 import { warmupDuelSpeech } from '@/utils/duelSignalSpeech';
-import { consumeOtaJustApplied, markOtaJustApplied } from '@/utils/otaUpdateFlag';
+import { applyOtaUpdateIfAvailable } from '@/utils/otaApply';
+import { consumeOtaJustApplied } from '@/utils/otaUpdateFlag';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
 import { isStoreUpdateRequired } from '@/utils/storeUpdate';
 // IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
@@ -40,41 +42,22 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return <AppErrorBoundary error={error} retry={retry} />;
 }
 
-const OTA_SPLASH_TIMEOUT_MS = 12_000;
-
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('ota-timeout')), ms);
-    promise.then(
-      (value) => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      (err: unknown) => {
-        clearTimeout(timer);
-        reject(err);
-      },
-    );
+/** zustand persist가 AsyncStorage에서 복구될 때까지 대기 */
+function waitPersistHydrated(api: {
+  hasHydrated: () => boolean;
+  onFinishHydration: (cb: () => void) => () => void;
+}): Promise<void> {
+  if (api.hasHydrated()) return Promise.resolve();
+  return new Promise((resolve) => {
+    const unsub = api.onFinishHydration(() => {
+      unsub();
+      resolve();
+    });
   });
 }
 
-/** 스플래시 유지한 채 OTA 확인·적용. UI 문구 없이 조용히 처리. */
-async function applyOtaUpdateIfAvailable(): Promise<boolean> {
-  if (__DEV__ || !Updates.isEnabled) return false;
-  try {
-    const check = await withTimeout(Updates.checkForUpdateAsync(), OTA_SPLASH_TIMEOUT_MS);
-    if (!check.isAvailable) return false;
-    await withTimeout(Updates.fetchUpdateAsync(), OTA_SPLASH_TIMEOUT_MS);
-    await markOtaJustApplied();
-    try {
-      await Updates.reloadAsync();
-    } catch {
-      return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
+function isInGameRoute(pathname: string): boolean {
+  return pathname === '/game' || pathname.startsWith('/game/');
 }
 
 export default function RootLayout() {
@@ -95,6 +78,10 @@ export default function RootLayout() {
 
 function RootLayoutContent() {
   const { t } = useTranslation();
+  const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
+
   const language = useSettingsStore((s) => s.language);
   const [fontsLoaded, fontError] = useFonts({
     Rye_400Regular,
@@ -131,6 +118,20 @@ function RootLayoutContent() {
     }
   }, []);
 
+  /** 백그라운드 → 포그라운드 복귀 시 OTA 확인·즉시 reload (결투 중 제외) */
+  useEffect(() => {
+    if (!appReady) return;
+
+    const onAppState = (next: AppStateStatus) => {
+      if (next !== 'active') return;
+      if (isInGameRoute(pathnameRef.current)) return;
+      void applyOtaUpdateIfAvailable();
+    };
+
+    const sub = AppState.addEventListener('change', onAppState);
+    return () => sub.remove();
+  }, [appReady]);
+
   useEffect(() => {
     if (!ready) return;
 
@@ -151,10 +152,17 @@ function RootLayoutContent() {
         justUpdated = await consumeOtaJustApplied();
         if (cancelled) return;
 
-        handOffToReload = await applyOtaUpdateIfAvailable();
+        handOffToReload = await applyOtaUpdateIfAvailable({ force: true });
         if (handOffToReload || cancelled) return;
 
         await preloadTitleHero();
+        if (cancelled) return;
+
+        // hydration 전에 해금 동기화하면 기본 진행도가 AsyncStorage를 덮어씀 (OTA 재기동 시 특히)
+        await Promise.all([
+          waitPersistHydrated(useProgressStore.persist),
+          waitPersistHydrated(useSettingsStore.persist),
+        ]);
         if (cancelled) return;
         checkUnlockConditions();
       } catch (err) {

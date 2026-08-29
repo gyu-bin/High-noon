@@ -629,7 +629,8 @@ export default function NpcGameScreen() {
     } else {
       outcomeRevealTimersRef.current.defeat = setTimeout(() => {
         setDefeatedSide(nextDefeatedSide);
-        void play('defeat_thud');
+        // thud는 피격 휘청 peak에 맞춤 (pose 전환 직후 즉시면 컷이 강조됨)
+        setTimeout(() => void play('defeat_thud'), 170);
         void trigger('medium');
         if (playerLostHeart || npcLostHeart) {
           setTimeout(() => void play('heart_break'), 130);
@@ -917,7 +918,10 @@ export default function NpcGameScreen() {
     }
 
     adReviveUsedRef.current = true;
-    useGameStore.getState().setScores(pending.ps, Math.max(0, pending.ns - 1));
+    const store = useGameStore.getState();
+    // 접전 패배(2:3) 직전 상태로: 상대 승수 -1, 플레이어 하트 1칸 복구
+    store.setScores(pending.ps, Math.max(0, pending.ns - 1));
+    store.setHearts(1, store.opponentHearts);
     setDefeatedSide(null);
     setModalVisible(false);
     setModal(null);
