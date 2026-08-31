@@ -1,5 +1,5 @@
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -33,20 +33,13 @@ export default function CharacterSelectScreen() {
   useScreenBgm('menu');
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const hiddenCharUnlocked = useProgressStore((s) => s.hiddenCharUnlocked);
   const unlockedIds = useProgressStore((s) => s.unlockedCharacterIds);
   const selectedCharacterId = useSettingsStore((s) => s.selectedCharacterId);
   const setSelectedCharacterId = useSettingsStore((s) => s.setSelectedCharacterId);
 
   const [revealPhase, setRevealPhase] = useState<RevealPhase>('idle');
 
-  const visibleCharacters = useMemo(
-    () =>
-      DEV_UNLOCK_ALL_CHARACTERS
-        ? [...CHARACTERS]
-        : CHARACTERS.filter((c) => !c.isHidden || hiddenCharUnlocked),
-    [hiddenCharUnlocked],
-  );
+  const visibleCharacters = CHARACTERS;
 
   useFocusEffect(
     useCallback(() => {

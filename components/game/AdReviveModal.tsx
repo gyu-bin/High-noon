@@ -9,16 +9,19 @@ type Props = {
   playerWins: number;
   opponentWins: number;
   loading?: boolean;
+  /** 광고 제거 구매 — 광고 문구 없이 바로 한 판 더 */
+  adFree?: boolean;
   onWatchAd: () => void;
   onDecline: () => void;
 };
 
-/** 접전 패배(예: 2:3) 시 광고 보고 한 판 더 도전 제안 */
+/** 접전 패배(예: 2:3) 시 한 판 더 도전 제안. 미구매 시 보상형 광고. */
 export function AdReviveModal({
   visible,
   playerWins,
   opponentWins,
   loading = false,
+  adFree = false,
   onWatchAd,
   onDecline,
 }: Props) {
@@ -38,16 +41,20 @@ export function AdReviveModal({
           <Text style={styles.score}>
             {playerWins} <Text style={styles.dash}>—</Text> {opponentWins}
           </Text>
-          <Text style={styles.desc}>{t('revive.desc')}</Text>
+          <Text style={styles.desc}>
+            {t(adFree ? 'revive.descAdFree' : 'revive.desc')}
+          </Text>
           <Pressable
-            accessibilityLabel={t('revive.watchAdA11y')}
+            accessibilityLabel={t(adFree ? 'revive.retryA11y' : 'revive.watchAdA11y')}
             accessibilityRole="button"
             onPress={onWatchAd}
             disabled={loading}
             style={[styles.watchBtn, loading && styles.watchBtnDisabled]}
           >
             <Text style={styles.watchText}>
-              {loading ? t('revive.watchAdLoading') : t('revive.watchAd')}
+              {loading
+                ? t('revive.watchAdLoading')
+                : t(adFree ? 'revive.retry' : 'revive.watchAd')}
             </Text>
           </Pressable>
           <Pressable

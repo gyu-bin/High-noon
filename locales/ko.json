@@ -182,9 +182,12 @@
   "revive": {
     "title": "아직 끝난 게 아니야",
     "desc": "광고를 보면 한 판 더 도전할 수 있습니다.\n이번 기회는 한 번뿐입니다.",
+    "descAdFree": "한 판 더 도전할 수 있습니다.\n이번 기회는 한 번뿐입니다.",
     "watchAd": "광고 보고 한 판 더",
     "watchAdLoading": "광고 준비 중…",
     "watchAdA11y": "광고 보고 한 판 더 도전",
+    "retry": "한 판 더",
+    "retryA11y": "한 판 더 도전",
     "declineA11y": "포기하고 결과 보기",
     "giveUp": "포기"
   },

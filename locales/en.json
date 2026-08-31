@@ -182,9 +182,12 @@
   "revive": {
     "title": "It's not over yet",
     "desc": "Watch an ad for one more round.\nThis chance only comes once.",
+    "descAdFree": "You can try one more round.\nThis chance only comes once.",
     "watchAd": "Watch ad & retry",
     "watchAdLoading": "Loading ad…",
     "watchAdA11y": "Watch ad for one more round",
+    "retry": "One more round",
+    "retryA11y": "Play one more round",
     "declineA11y": "Give up and see results",
     "giveUp": "Give Up"
   },

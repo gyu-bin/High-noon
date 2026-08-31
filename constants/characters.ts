@@ -8,7 +8,7 @@ export type PlayerCharacter = {
   id: PlayerCharacterId;
   abilityKey: CharacterAbilityKey | null;
   unlockKey: CharacterUnlockKey;
-  /** 4번 망령 사수만 true — 목록에서 가림 등 */
+  /** 예전 숨김 플래그. 목록에는 모두 보이며, 잠금은 unlockedCharacterIds로만 처리한다. */
   isHidden: boolean;
 };
 
@@ -24,7 +24,7 @@ export const CHARACTERS: readonly PlayerCharacter[] = [
   { id: 1, abilityKey: null, unlockKey: 'default', isHidden: false },
   { id: 2, abilityKey: 'lastStand', unlockKey: 'npc10', isHidden: false },
   { id: 3, abilityKey: 'headshot', unlockKey: 'npc15', isHidden: false },
-  { id: 4, abilityKey: 'revive', unlockKey: 'hidden', isHidden: true },
+  { id: 4, abilityKey: 'revive', unlockKey: 'hidden', isHidden: false },
 ];
 
 export function getCharacterById(id: number): PlayerCharacter | undefined {
