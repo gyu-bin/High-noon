@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { FONT_RYE } from '@/constants/fonts';
 import { colors } from '@/constants/theme';
 
 type Props = {
   onPress: () => void;
-  /** 통일 라벨 — 기본 `뒤로` */
+  /** 기본값은 `common.back` 번역 */
   label?: string;
   /** 헤더 / 결투 오버레이 */
   variant?: 'header' | 'overlay';
@@ -16,10 +17,12 @@ type Props = {
 /** 나무 질감 뒤로가기 — 앱 전역 동일 스타일 */
 export function MenuBackButton({
   onPress,
-  label = '뒤로',
+  label,
   variant = 'header',
   style,
 }: Props) {
+  const { t } = useTranslation();
+  const resolvedLabel = label ?? t('common.back');
   const isOverlay = variant === 'overlay';
 
   return (
@@ -27,7 +30,7 @@ export function MenuBackButton({
       onPress={onPress}
       hitSlop={10}
       accessibilityRole="button"
-      accessibilityLabel={`${label}, 이전 화면`}
+      accessibilityLabel={resolvedLabel}
       style={({ pressed }) => [
         styles.outer,
         isOverlay && styles.outerOverlay,
@@ -49,7 +52,7 @@ export function MenuBackButton({
           { fontFamily: FONT_RYE },
         ]}
       >
-        {label}
+        {resolvedLabel}
       </Text>
     </Pressable>
   );

@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
+import * as Linking from 'expo-linking';
 
 import ko from './ko.json';
 import en from './en.json';
@@ -45,6 +46,15 @@ export function changeLanguage(lang: 'auto' | 'ko' | 'en' | 'ja'): void {
  */
 export function getCurrentLanguage(): string {
   return i18n.language;
+}
+
+/** 스크린샷 딥링크 `high-noon://menu?lang=en` — 앱 i18n을 그대로 켠다. */
+export function languageFromCaptureUrl(url: string | null): 'ko' | 'en' | 'ja' | null {
+  if (!url) return null;
+  const raw = Linking.parse(url).queryParams?.lang;
+  const lang = Array.isArray(raw) ? raw[0] : raw;
+  if (lang === 'ko' || lang === 'en' || lang === 'ja') return lang;
+  return null;
 }
 
 export const i18nInitPromise = i18n.use(initReactI18next).init({

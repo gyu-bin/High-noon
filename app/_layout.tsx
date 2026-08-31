@@ -1,11 +1,12 @@
 import 'react-native-gesture-handler';
 // i18n은 다른 모듈보다 먼저 평가되어야 한다 — import 위치를 위로 유지할 것
-import i18n, { changeLanguage, i18nInitPromise } from '@/locales';
+import i18n, { changeLanguage, i18nInitPromise, languageFromCaptureUrl } from '@/locales';
 
 import { Rye_400Regular, useFonts } from '@expo-google-fonts/rye';
 import { Stack, usePathname, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import * as Linking from 'expo-linking';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -112,6 +113,22 @@ function RootLayoutContent() {
     changeLanguage(language);
   }, [language]);
 
+  /** 캡처 딥링크 `?lang=en|ja|ko` — persist 복구 뒤에 앱 번역을 켠다. */
+  useEffect(() => {
+    if (!appReady) return;
+
+    const apply = (url: string | null) => {
+      const lang = languageFromCaptureUrl(url);
+      if (!lang) return;
+      useSettingsStore.getState().setLanguage(lang);
+      changeLanguage(lang);
+    };
+
+    void Linking.getInitialURL().then(apply);
+    const sub = Linking.addEventListener('url', ({ url }) => apply(url));
+    return () => sub.remove();
+  }, [appReady]);
+
   useEffect(() => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -168,6 +185,12 @@ function RootLayoutContent() {
           waitPersistHydrated(useSettingsStore.persist),
         ]);
         if (cancelled) return;
+
+        const bootLang = languageFromCaptureUrl(await Linking.getInitialURL());
+        if (bootLang) {
+          useSettingsStore.getState().setLanguage(bootLang);
+          changeLanguage(bootLang);
+        }
 
         // 앱을 지웠다 다시 깐 경우 키체인 스냅샷에서 조용히 되살린다.
         // hydration 이후여야 한다 — 그 전이면 아직 안 읽힌 진행도를 비었다고 오판한다.
@@ -229,7 +252,6 @@ function RootLayoutContent() {
         <Stack.Screen name="local-setup" options={{ title: t('nav.localSetup') }} />
         <Stack.Screen name="stats" options={{ title: t('nav.stats') }} />
         <Stack.Screen name="character-select" options={{ title: t('nav.character') }} />
-        <Stack.Screen name="duel" options={{ title: t('nav.duel'), headerShown: true }} />
         <Stack.Screen name="game" options={{ headerShown: false }} />
         <Stack.Screen name="capture" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ headerShown: false }} />

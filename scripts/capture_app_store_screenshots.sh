@@ -13,15 +13,22 @@ SCHEME="${SCHEME:-high-noon}"
 SCENE_WAIT="${SCENE_WAIT:-5}"
 BUILD_FIRST="${BUILD_FIRST:-0}"
 USE_RELEASE="${USE_RELEASE:-1}"
+# ko = 기존 raw/. en|ja 는 raw-en / raw-ja (한국어 원본을 덮어쓰지 않음)
+CAPTURE_LANG="${CAPTURE_LANG:-ko}"
+MARKETING_ONLY="${MARKETING_ONLY:-0}"
 
 OUT_DIR="$ROOT/marketing/app-store-screenshots"
-RAW_DIR="$OUT_DIR/raw"
+if [[ "$CAPTURE_LANG" == "ko" ]]; then
+  RAW_DIR="$OUT_DIR/raw"
+else
+  RAW_DIR="$OUT_DIR/raw-${CAPTURE_LANG}"
+fi
 P67_DIR="$OUT_DIR/6.7-portrait"
 L67_DIR="$OUT_DIR/6.7-landscape"
 P65_DIR="$OUT_DIR/6.5-portrait"
 L65_DIR="$OUT_DIR/6.5-landscape"
 
-mkdir -p "$RAW_DIR" "$P67_DIR" "$L67_DIR" "$P65_DIR" "$L65_DIR"
+mkdir -p "$RAW_DIR"
 
 # name|route|orientation
 SCENES=(
@@ -37,10 +44,89 @@ SCENES=(
   "10-duel-landscape|capture/duel-landscape|landscape"
 )
 
+if [[ "$MARKETING_ONLY" == "1" ]]; then
+  SCENES=(
+    "00-title|index|portrait"
+    "02-npc-select|npc-select|portrait"
+    "07-character-select|character-select|portrait"
+    "03-duel-steady|capture/duel-steady|portrait"
+    "04-duel-bang|capture/duel-bang|portrait"
+    "09-local-duel|capture/local-duel|portrait"
+    "01-menu|menu|portrait"
+  )
+fi
+
 APP_PATH="$ROOT/.derivedData/Build/Products/Release-iphonesimulator/HighNoon.app"
 if [[ "$USE_RELEASE" != "1" ]]; then
   APP_PATH="$ROOT/.derivedData/Build/Products/Debug-iphonesimulator/HighNoon.app"
 fi
+
+apply_capture_language() {
+  local lang="$1"
+  case "$lang" in
+    en) xcrun simctl spawn "$SIMULATOR_UDID" defaults write NSGlobalDomain AppleLanguages -array en
+        xcrun simctl spawn "$SIMULATOR_UDID" defaults write NSGlobalDomain AppleLocale -string en_US
+        ;;
+    ja) xcrun simctl spawn "$SIMULATOR_UDID" defaults write NSGlobalDomain AppleLanguages -array ja
+        xcrun simctl spawn "$SIMULATOR_UDID" defaults write NSGlobalDomain AppleLocale -string ja_JP
+        ;;
+    *)  xcrun simctl spawn "$SIMULATOR_UDID" defaults write NSGlobalDomain AppleLanguages -array ko
+        xcrun simctl spawn "$SIMULATOR_UDID" defaults write NSGlobalDomain AppleLocale -string ko_KR
+        ;;
+  esac
+}
+
+# 앱 persist에 언어를 직접 심는다 (기기 로케일이 한국어여도 강제).
+patch_capture_settings() {
+  python3 - "$BUNDLE_ID" "$CAPTURE_LANG" <<'PY'
+import json, os, sys, time
+bundle, lang = sys.argv[1], sys.argv[2]
+if lang not in ("en", "ja", "ko"):
+    sys.exit(0)
+settings = {
+    "state": {
+        "soundEnabled": True,
+        "musicEnabled": True,
+        "hapticEnabled": True,
+        "localMatchPreset": "bo5",
+        "selectedCharacterId": 1,
+        "language": lang,
+        "landscapeHintSeen": True,
+    },
+    "version": 0,
+}
+key = "high-noon-settings"
+man = None
+data = ""
+for _ in range(20):
+    data = os.popen(f"xcrun simctl get_app_container booted {bundle} data").read().strip()
+    if data and os.path.isdir(data):
+        for root, dirs, files in os.walk(data):
+            if "manifest.json" in files and "RCTAsyncLocalStorage" in root:
+                man = os.path.join(root, "manifest.json")
+                break
+    if man:
+        break
+    time.sleep(0.5)
+if not man:
+    print("no async storage manifest under", data)
+    sys.exit(0)
+try:
+    with open(man) as fh:
+        m = json.load(fh)
+    if not isinstance(m, dict):
+        m = {}
+except Exception:
+    m = {}
+m[key] = json.dumps(settings, ensure_ascii=False)
+with open(man, "w") as fh:
+    json.dump(m, fh, ensure_ascii=False)
+# 일부 RN 버전은 키별 파일도 읽는다
+with open(os.path.join(os.path.dirname(man), key), "w") as fh:
+    fh.write(json.dumps(settings, ensure_ascii=False))
+print("patched language=", lang, "->", man)
+PY
+}
 
 echo "▶ 시뮬레이터 준비: $SIMULATOR_NAME"
 
@@ -121,6 +207,7 @@ xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
 open -a Simulator --args -CurrentDeviceUDID "$SIMULATOR_UDID"
 xcrun simctl bootstatus "$SIMULATOR_UDID" -b
 sleep 2
+apply_capture_language "$CAPTURE_LANG"
 
 build_and_install() {
   if [[ "$USE_RELEASE" == "1" ]]; then
@@ -154,16 +241,24 @@ build_and_install() {
   xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
 }
 
-if [[ "$BUILD_FIRST" == "1" ]] || ! xcrun simctl get_app_container booted "$BUNDLE_ID" data >/dev/null 2>&1 || [[ ! -d "$APP_PATH" ]]; then
+if [[ "$CAPTURE_LANG" != "ko" ]]; then
+  echo "▶ 기존 앱 삭제 (언어 초기화)"
+  xcrun simctl uninstall booted "$BUNDLE_ID" >/dev/null 2>&1 || true
+fi
+if [[ "$BUILD_FIRST" == "1" ]]; then
   build_and_install
-elif [[ "$USE_RELEASE" == "1" ]]; then
-  echo "▶ Release 앱 재설치"
+else
+  echo "▶ 앱 설치 (기존 Release 번들)"
   xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
 fi
 
-echo "▶ 앱 실행"
+echo "▶ 앱 실행 (lang=$CAPTURE_LANG)"
 xcrun simctl terminate booted "$BUNDLE_ID" >/dev/null 2>&1 || true
-xcrun simctl launch booted "$BUNDLE_ID" >/dev/null || true
+xcrun simctl openurl booted "${SCHEME}://menu?lang=${CAPTURE_LANG}" >/dev/null || xcrun simctl launch booted "$BUNDLE_ID" >/dev/null || true
+sleep 5
+patch_capture_settings || true
+xcrun simctl terminate booted "$BUNDLE_ID" >/dev/null 2>&1 || true
+xcrun simctl openurl booted "${SCHEME}://menu?lang=${CAPTURE_LANG}" >/dev/null || true
 sleep 4
 
 open_scene() {
@@ -174,7 +269,7 @@ open_scene() {
   else
     rotate_simulator_portrait
   fi
-  xcrun simctl openurl booted "${SCHEME}://${route}"
+  xcrun simctl openurl booted "${SCHEME}://${route}?lang=${CAPTURE_LANG}"
   sleep "$SCENE_WAIT"
 }
 
@@ -182,6 +277,10 @@ resize_outputs() {
   local raw="$1"
   local base="$2"
   local orient="$3"
+  if [[ "$MARKETING_ONLY" == "1" ]]; then
+    return 0
+  fi
+  mkdir -p "$P67_DIR" "$L67_DIR" "$P65_DIR" "$L65_DIR"
 
   if [[ "$orient" == "landscape" ]]; then
     sips -z 1284 2778 "$raw" --out "$L67_DIR/${base}.png" >/dev/null
@@ -204,9 +303,5 @@ for entry in "${SCENES[@]}"; do
 done
 
 echo ""
-echo "✅ 완료 — App Store 업로드용:"
-echo "   세로 6.7\" : $P67_DIR"
-echo "   가로 6.7\" : $L67_DIR"
-echo "   세로 6.5\" : $P65_DIR"
-echo "   가로 6.5\" : $L65_DIR"
+echo "✅ 완료 — lang=$CAPTURE_LANG"
 echo "   원본       : $RAW_DIR"

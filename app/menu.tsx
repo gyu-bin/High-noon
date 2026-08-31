@@ -14,7 +14,6 @@ import { useTranslation } from 'react-i18next';
 import { LandscapeHintModal } from '@/components/game/LandscapeHintModal';
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { LanguageSelector } from '@/components/settings/LanguageSelector';
-import { ProgressBackupModal } from '@/components/settings/ProgressBackupModal';
 import { WoodButton } from '@/components/ui/WoodButton';
 import {
   META_PANEL_BG,
@@ -55,7 +54,6 @@ export default function MenuScreen() {
   const setLanguage = useSettingsStore((s) => s.setLanguage);
   const setLandscapeHintSeen = useSettingsStore((s) => s.setLandscapeHintSeen);
   const [showLandscapeHint, setShowLandscapeHint] = useState(false);
-  const [backupOpen, setBackupOpen] = useState(false);
 
   useEffect(() => {
     const maybeShow = () => {
@@ -197,15 +195,7 @@ export default function MenuScreen() {
               />
             </View>
             <LanguageSelector value={language} onChange={onLanguageChange} />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('menu.backup')}
-              onPress={() => setBackupOpen(true)}
-              style={styles.backupRow}
-            >
-              <Text style={styles.settingLabel}>{t('menu.backup')}</Text>
-              <Text style={styles.backupChevron}>›</Text>
-            </Pressable>
+            {/* 진행도 수동 백업 UI는 숨김 — 키체인 자동 백업으로 대체 */}
           </View>
 
           <View style={styles.footer}>
@@ -221,7 +211,6 @@ export default function MenuScreen() {
         </ScrollView>
       </View>
       <LandscapeHintModal visible={showLandscapeHint} onDismiss={dismissLandscapeHint} />
-      <ProgressBackupModal visible={backupOpen} onClose={() => setBackupOpen(false)} />
     </MetaScreenShell>
   );
 }
@@ -296,17 +285,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.cream,
     ...metaTextShadow,
-  },
-  backupRow: {
-    marginTop: 6,
-    paddingVertical: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backupChevron: {
-    fontSize: 20,
-    color: 'rgba(214, 199, 176, 0.55)',
   },
   settingsCard: {
     paddingVertical: 14,

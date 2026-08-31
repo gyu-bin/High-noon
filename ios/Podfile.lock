@@ -31,7 +31,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - ExpoAsset (12.0.12):
+  - ExpoAsset (12.0.13):
     - ExpoModulesCore
   - ExpoAudio (1.1.1):
     - ExpoModulesCore
@@ -105,7 +105,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - ExpoSpeech (14.0.8):
+  - ExpoSecureStore (15.0.8):
     - ExpoModulesCore
   - ExpoSplashScreen (31.0.13):
     - ExpoModulesCore
@@ -2271,7 +2271,7 @@ DEPENDENCIES:
   - ExpoLocalization (from `../node_modules/expo-localization/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoScreenOrientation (from `../node_modules/expo-screen-orientation/ios`)
-  - ExpoSpeech (from `../node_modules/expo-speech/ios`)
+  - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - EXStructuredHeaders (from `../node_modules/expo-structured-headers/ios`)
   - EXUpdates (from `../node_modules/expo-updates/ios`)
@@ -2407,8 +2407,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-core"
   ExpoScreenOrientation:
     :path: "../node_modules/expo-screen-orientation/ios"
-  ExpoSpeech:
-    :path: "../node_modules/expo-speech/ios"
+  ExpoSecureStore:
+    :path: "../node_modules/expo-secure-store/ios"
   ExpoSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
   EXStructuredHeaders:
@@ -2581,7 +2581,7 @@ SPEC CHECKSUMS:
   EXJSONUtils: 1d3e4590438c3ee593684186007028a14b3686cd
   EXManifests: 378c7742de02a8605093b1c82b5774d8f9875cec
   Expo: edf5879dd9f83d2aa5b05d012412c810bc182ac1
-  ExpoAsset: f867e55ceb428aab99e1e8c082b5aee7c159ea18
+  ExpoAsset: 9e5a7c9c0a9fb83ad5b2bb365141f2bd7f289b66
   ExpoAudio: e4cfe3a2f3317b8487460685385a9867a07fb4fb
   ExpoFileSystem: a8e7fb1e958471764fb48d281cf9fa81a9e4d77c
   ExpoFont: dfb7c572372b610da45b41e3b436321fd6a97215
@@ -2594,7 +2594,7 @@ SPEC CHECKSUMS:
   ExpoLocalization: d936ff63557366e2e487264f5b495b1f0637fabd
   ExpoModulesCore: 9e6a5514828e7dd5ded9e99d33557be2d284e660
   ExpoScreenOrientation: 4a7d3cead7465ba6520ef80df919cda595554594
-  ExpoSpeech: d22b56570ccfab5a27112dc9691f1ac83537de26
+  ExpoSecureStore: d32f751874a2ceb5aaeebeb3578e165c1ba2b24a
   ExpoSplashScreen: bc3cffefca2716e5f22350ca109badd7e50ec14d
   EXStructuredHeaders: c951e77f2d936f88637421e9588c976da5827368
   EXUpdates: fda340272f199903b456f578aefe1d274c6e03bd
