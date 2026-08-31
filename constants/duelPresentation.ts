@@ -27,7 +27,7 @@ export const DUEL_FIGURE_SHADOW = {
 export const DUEL_EARLY_MODAL_DELAY_MS = 80;
 
 /** 결과 직후 shoot 포즈 유지 → defeat 전환 전 피격 순간 */
-export const DUEL_DEFEAT_REVEAL_DELAY_MS = 300;
+export const DUEL_DEFEAT_REVEAL_DELAY_MS = 250;
 
 /** 쓰러지는 연출(넉백→낙하→착지·먼지)이 끝난 뒤 라운드 모달 표시 */
 export const DUEL_DEFEAT_MODAL_DELAY_MS = 1900;

@@ -640,12 +640,13 @@ export default function NpcGameScreen() {
     } else {
       outcomeRevealTimersRef.current.defeat = setTimeout(() => {
         setDefeatedSide(nextDefeatedSide);
-        // thud는 피격 휘청 peak에 맞춤 (pose 전환 직후 즉시면 컷이 강조됨)
-        setTimeout(() => void play('defeat_thud'), 170);
-        void trigger('medium');
-        if (playerLostHeart || npcLostHeart) {
-          setTimeout(() => void play('heart_break'), 130);
-        }
+        requestAnimationFrame(() => {
+          setTimeout(() => void play('defeat_thud'), 170);
+          void trigger('medium');
+          if (playerLostHeart || npcLostHeart) {
+            setTimeout(() => void play('heart_break'), 130);
+          }
+        });
         outcomeRevealTimersRef.current.defeat = null;
       }, DUEL_DEFEAT_REVEAL_DELAY_MS);
     }

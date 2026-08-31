@@ -22,30 +22,30 @@ export function DuelFigureSlot({ corner, pose, figW, figH, children }: Props) {
 
   return (
     <View style={[styles.slot, { width: figW, minHeight: figH + 10 }]}>
-      {!fallen ? (
-        <>
-          <View
-            pointerEvents="none"
-            style={[
-              styles.groundShadow,
-              {
-                width: Math.round(figW * shadow.widthRatio),
-                bottom: shadow.bottom,
-                opacity: shadow.opacity,
-              },
-            ]}
-          />
-          <LinearGradient
-            pointerEvents="none"
-            colors={['transparent', 'rgba(255, 196, 130, 0.08)', 'transparent']}
-            locations={[0, 0.55, 1]}
-            style={[
-              styles.groundGlow,
-              { width: Math.round(figW * 0.88), height: Math.round(figH * 0.18) },
-            ]}
-          />
-        </>
-      ) : null}
+      <View
+        pointerEvents="none"
+        style={[
+          styles.groundShadow,
+          {
+            width: Math.round(figW * shadow.widthRatio),
+            bottom: shadow.bottom,
+            opacity: fallen ? 0 : shadow.opacity,
+          },
+        ]}
+      />
+      <LinearGradient
+        pointerEvents="none"
+        colors={['transparent', 'rgba(255, 196, 130, 0.08)', 'transparent']}
+        locations={[0, 0.55, 1]}
+        style={[
+          styles.groundGlow,
+          {
+            width: Math.round(figW * 0.88),
+            height: Math.round(figH * 0.18),
+            opacity: fallen ? 0 : 1,
+          },
+        ]}
+      />
       <View style={{ transform: duelFigureTransform(corner, pose) }}>{children}</View>
     </View>
   );

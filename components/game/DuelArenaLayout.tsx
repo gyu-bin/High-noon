@@ -18,7 +18,6 @@ import {
 import { DuelFigureSlot } from '@/components/game/DuelFigureSlot';
 import { FONT_RYE } from '@/constants/fonts';
 import {
-  DUEL_PLAYER_DEFEAT_LIFT_PX,
   duelFigureSize,
   duelFigureSizeLandscape,
   duelFlipHorizontal,
@@ -131,10 +130,12 @@ export function DuelArenaLayout({
   // 가로 — 서부극 정면 대치: 같은 지면선, 좌(플레이어)·우(NPC)
   const groundBottom = Math.max(paddingBottom + 30, Math.round(height * 0.09));
   const sideInset = Math.round(width * 0.07);
-  const playerDefeatLift =
-    !landscape && playerPose === 'defeat' ? DUEL_PLAYER_DEFEAT_LIFT_PX : 0;
-  // landscape — 이미 같은 지면선이므로 낮게 제자리 착지 (portrait은 기본: 앞쪽 지면으로 추락)
-  const defeatDropPx = landscape ? Math.round(figH * 0.05) : undefined;
+  // landscape — 같은 지면선에서 제자리 착지
+  // portrait 플레이어 — 하단 HUD를 피해 짧게 주저앉음 (존을 들어 올리면 피격이 떠 보임)
+  const npcDefeatDropPx = landscape ? Math.round(figH * 0.05) : Math.round(figH * 0.22);
+  const playerDefeatDropPx = landscape
+    ? Math.round(figH * 0.05)
+    : Math.round(figH * 0.16);
 
   return (
     <View style={[styles.root, { width, height }]}>
@@ -213,7 +214,7 @@ export function DuelArenaLayout({
             pose={npcPose}
             victoryActive={npcVictoryActive}
             duelCorner={npcCorner}
-            defeatDropPx={defeatDropPx}
+            defeatDropPx={npcDefeatDropPx}
           />
         </DuelFigureSlot>
       </View>
@@ -233,7 +234,6 @@ export function DuelArenaLayout({
                   width,
                   height: height * 0.52,
                   bottom: 0,
-                  paddingBottom: 96 + playerDefeatLift,
                 },
               ]
         }
@@ -247,7 +247,7 @@ export function DuelArenaLayout({
             pose={playerPose}
             victoryActive={playerVictoryActive}
             duelCorner={playerCorner}
-            defeatDropPx={defeatDropPx}
+            defeatDropPx={playerDefeatDropPx}
           />
         </DuelFigureSlot>
       </View>

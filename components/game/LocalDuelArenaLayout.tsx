@@ -19,7 +19,6 @@ import {
 import { HeartStrip } from '@/components/game/HeartStrip';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import {
-  DUEL_PLAYER_DEFEAT_LIFT_PX,
   duelFigureSize,
   duelFigureSizeLandscape,
   duelFlipHorizontal,
@@ -96,12 +95,8 @@ export function LocalDuelArenaLayout({
     ? duelFigureSizeLandscape(height)
     : duelFigureSize(width);
   const boardPhase = signalPhase ?? enginePhaseToSignalBoardPhase(phase);
-  // P1 쓰러짐 — 하단 점수 바·화면 밖으로 몸이 잘리지 않게 존을 올림 (NPC전과 동일)
-  const p1DefeatLift = !landscape && p1Pose === 'defeat' ? DUEL_PLAYER_DEFEAT_LIFT_PX : 0;
-  // P2 portrait — 상단 절반이 180° 회전 → defeat 시 +paddingTop/+낙하는 물리 상단(노치) 쪽으로 밀려 숨음
-  const p2DefeatLift = !landscape && p2Pose === 'defeat' ? DUEL_PLAYER_DEFEAT_LIFT_PX : 0;
   const p2PortraitDefeatDrop =
-    !landscape && p2Pose === 'defeat' ? -Math.round(figH * 0.34) : undefined;
+    !landscape && p2Pose === 'defeat' ? -Math.round(figH * 0.16) : undefined;
   const p2LandscapeDefeatDrop =
     landscape && p2Pose === 'defeat' ? Math.round(figH * 0.05) : undefined;
   // 가로 — NPC 결투와 동일한 사이드·지면 간격
@@ -109,8 +104,8 @@ export function LocalDuelArenaLayout({
   const groundBottom = Math.max(paddingBottom + 30, Math.round(height * 0.09));
   // 세로 — 캐릭터를 각 절반 안쪽(스플릿 라인) 쪽에 배치
   const halfInnerPad = 84;
-  /** portrait P2 — 180° 회전 후 물리 상단(다이나믹 아일랜드)과 겹치지 않게 · defeat는 스플릿 쪽으로 */
-  const p2PortraitPadTop = Math.max(8, 52 - p2DefeatLift);
+  /** portrait P2 — 180° 회전 후 물리 상단(다이나믹 아일랜드)과 겹치지 않게 */
+  const p2PortraitPadTop = 52;
   const navTopPortrait = height / 2 + 10;
 
   return (
@@ -219,7 +214,7 @@ export function LocalDuelArenaLayout({
           style={
             landscape
               ? [styles.p1Zone, { paddingLeft: sideInset, paddingBottom: groundBottom }]
-              : [styles.p1Zone, { paddingBottom: halfInnerPad + p1DefeatLift }]
+              : [styles.p1Zone, { paddingBottom: halfInnerPad }]
           }
         >
           <DuelFigureSlot corner="bottomLeft" pose={p1Pose} figW={figW} figH={figH}>
@@ -229,7 +224,11 @@ export function LocalDuelArenaLayout({
               height={figH}
               flipHorizontal={duelFlipHorizontal('bottomLeft')}
               pose={p1Pose}
-              defeatDropPx={landscape && p1Pose === 'defeat' ? Math.round(figH * 0.05) : undefined}
+              defeatDropPx={
+                landscape
+                  ? Math.round(figH * 0.05)
+                  : Math.round(figH * 0.16)
+              }
             />
           </DuelFigureSlot>
         </View>

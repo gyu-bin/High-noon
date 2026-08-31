@@ -112,8 +112,6 @@ export const DefeatDustOverlay = memo(function DefeatDustOverlay({
   impactDelayMs,
   groundOffsetY = 0,
 }: Props) {
-  if (!active) return null;
-
   return (
     <View
       pointerEvents="none"
