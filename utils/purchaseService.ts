@@ -4,7 +4,7 @@
  * App Store Connect 상품 ID는 아래 상수와 반드시 일치해야 한다.
  * ASC에 미등록·판매불가면 fetchProducts가 비고, 구매 시트가 뜨지 않는다.
  *
- * IAP_ENABLED=false 이면 UI·init·구매 전부 비활성 (유료 앱 계약 전까지).
+ * IAP_ENABLED=false 이면 UI·init·구매 전부 비활성.
  */
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
