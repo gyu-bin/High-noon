@@ -16,6 +16,8 @@
     "vsNpcHint": "Go to opponent list",
     "localDuel": "2P Duel",
     "localDuelHint": "Pick rounds, then play on one device",
+    "ranking": "World Ranking",
+    "rankingHint": "Async duel against global records",
     "more": "More",
     "stats": "Stats",
     "character": "Character",
@@ -28,7 +30,24 @@
     "landscapeHintTitle": "Landscape works too",
     "landscapeHintBody": "Portrait and landscape are both supported.\nRotate to whatever feels best.",
     "landscapeHintOk": "Got it",
-    "backup": "Progress backup"
+    "backup": "Progress backup",
+    "iapTitle": "Remove Ads",
+    "iapActiveTitle": "Ads Removed",
+    "iapDesc": "Removes interstitial ads between matches. One-time purchase · forever.",
+    "iapThanks": "Thanks for your purchase.",
+    "iapWarn": "Couldn't load the store product yet, or it isn't ready for sale. Check your network and App Store login, then try again.",
+    "iapBuy": "Buy",
+    "iapBuying": "Working…",
+    "iapBuyA11y": "Buy ad removal",
+    "iapRestore": "Restore Purchases",
+    "iapRestoreA11y": "Restore previous purchases",
+    "iapPurchaseDoneTitle": "Purchase complete",
+    "iapPurchaseDoneBody": "Purchase complete. Ad removal will apply shortly.",
+    "iapPurchaseFailTitle": "Purchase unavailable",
+    "iapRestoreOkTitle": "Restored",
+    "iapRestoreOkBody": "Your previous ad removal purchase was restored.",
+    "iapRestoreNoneTitle": "Nothing to restore",
+    "iapRestoreNoneBody": "No purchases found for this account."
   },
   "settings": {
     "languageAuto": "Auto",
@@ -224,5 +243,25 @@
       "corrupt": "The code couldn't be read."
     },
     "adFreeNote": "Ad removal purchases aren't included in the backup code. Use Restore Purchases in the store instead."
+  },
+  "ranking": {
+    "title": "World Ranking",
+    "sub": "Best-of-3 async duels against global ghosts",
+    "you": "Your profile",
+    "rankLine": "{{tier}} · {{rating}} · #{{rank}}",
+    "recordLine": "{{wins}}W {{losses}}L",
+    "duel": "Duel",
+    "matching": "Finding opponent…",
+    "refresh": "Refresh",
+    "leaderboard": "Leaderboard",
+    "leaderboardEmpty": "No ranks yet. Be the first gunslinger.",
+    "notConfigured": "Server not configured. Check EXPO_PUBLIC_SUPABASE_URL / ANON_KEY.",
+    "abort": "Leave to ranking",
+    "roundDraw": "Draw — rematch",
+    "share": "Share result",
+    "duelAgain": "Duel again",
+    "backHub": "Ranking hub",
+    "avgLine": "Avg {{avg}}ms",
+    "ratingLine": "Rating {{before}} → {{after}} ({{delta}})"
   }
 }

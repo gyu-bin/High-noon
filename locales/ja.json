@@ -16,6 +16,8 @@
     "vsNpcHint": "対戦相手リストへ",
     "localDuel": "2人対戦",
     "localDuelHint": "ラウンド数を選び、同じ端末で2人プレイ",
+    "ranking": "世界ランキング",
+    "rankingHint": "世界中の記録と非同期デュエル",
     "more": "その他",
     "stats": "記録",
     "character": "キャラクター",
@@ -28,7 +30,24 @@
     "landscapeHintTitle": "横向きでもOK",
     "landscapeHintBody": "縦向き・横向きどちらも対応しています。\n好きな向きでプレイしてください。",
     "landscapeHintOk": "OK",
-    "backup": "進行状況のバックアップ"
+    "backup": "進行状況のバックアップ",
+    "iapTitle": "広告削除",
+    "iapActiveTitle": "広告削除が有効です",
+    "iapDesc": "マッチ間のインタースティシャル広告を削除します。買い切り・永久。",
+    "iapThanks": "ご購入ありがとうございます。",
+    "iapWarn": "ストア商品を読み込めないか、まだ販売準備ができていません。ネットワークとApp Storeログインを確認してから再試行してください。",
+    "iapBuy": "購入する",
+    "iapBuying": "処理中…",
+    "iapBuyA11y": "広告削除を購入",
+    "iapRestore": "購入を復元",
+    "iapRestoreA11y": "以前の購入を復元",
+    "iapPurchaseDoneTitle": "購入完了",
+    "iapPurchaseDoneBody": "購入が完了しました。広告削除はまもなく適用されます。",
+    "iapPurchaseFailTitle": "購入できません",
+    "iapRestoreOkTitle": "復元完了",
+    "iapRestoreOkBody": "以前購入した広告削除を復元しました。",
+    "iapRestoreNoneTitle": "復元する項目なし",
+    "iapRestoreNoneBody": "このアカウントの購入が見つかりませんでした。"
   },
   "settings": {
     "languageAuto": "自動",
@@ -224,5 +243,25 @@
       "corrupt": "コードを読み取れませんでした。"
     },
     "adFreeNote": "広告削除の購入はバックアップコードに含まれません。ストアの購入復元をご利用ください。"
+  },
+  "ranking": {
+    "title": "世界ランキング",
+    "sub": "世界の記録と3本先取の非同期デュエル",
+    "you": "あなたのプロフィール",
+    "rankLine": "{{tier}} · {{rating}} · #{{rank}}",
+    "recordLine": "{{wins}}勝 {{losses}}敗",
+    "duel": "デュエル",
+    "matching": "相手を探しています…",
+    "refresh": "更新",
+    "leaderboard": "リーダーボード",
+    "leaderboardEmpty": "まだ順位がありません。最初のガンマンになりましょう。",
+    "notConfigured": "サーバー設定がありません。EXPO_PUBLIC_SUPABASE_URL / ANON_KEY を確認してください。",
+    "abort": "ランキングへ戻る",
+    "roundDraw": "引き分け — 再戦",
+    "share": "結果を共有",
+    "duelAgain": "もう一度デュエル",
+    "backHub": "ランキングハブ",
+    "avgLine": "平均 {{avg}}ms",
+    "ratingLine": "レーティング {{before}} → {{after}} ({{delta}})"
   }
 }

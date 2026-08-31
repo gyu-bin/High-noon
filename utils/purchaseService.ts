@@ -11,8 +11,8 @@ import { Platform } from 'react-native';
 
 import { useProgressStore } from '@/store/progressStore';
 
-/** 광고 제거 결제 ON/OFF — 다시 켤 때 true */
-export const IAP_ENABLED = false;
+/** 광고 제거 결제 ON/OFF */
+export const IAP_ENABLED = true;
 
 /** iOS · Android 공통 상품 ID — App Store Connect / Play Console과 동일해야 함 */
 export const AD_REMOVAL_PRODUCT_ID = 'com.highnoon.app.remove_ads';

@@ -16,6 +16,8 @@
     "vsNpcHint": "NPC 목록으로 이동합니다",
     "localDuel": "2인 대결",
     "localDuelHint": "판수를 고른 뒤 같은 기기에서 둘이 플레이합니다",
+    "ranking": "세계 랭킹",
+    "rankingHint": "전 세계 기록과 비동기 결투합니다",
     "more": "더보기",
     "stats": "기록",
     "character": "캐릭터",
@@ -28,7 +30,24 @@
     "landscapeHintTitle": "가로로 돌려도 OK",
     "landscapeHintBody": "세로·가로 모두 지원해요.\n편한 방향으로 돌려서 플레이하세요.",
     "landscapeHintOk": "알겠어요",
-    "backup": "진행도 백업"
+    "backup": "진행도 백업",
+    "iapTitle": "광고 제거",
+    "iapActiveTitle": "광고 제거 활성화됨",
+    "iapDesc": "매치 사이 전면 광고를 제거합니다. 1회 결제 · 영구 소유.",
+    "iapThanks": "구매해주셔서 감사합니다.",
+    "iapWarn": "스토어 상품을 불러오는 중이거나 아직 판매 준비가 안 됐습니다. 네트워크·App Store 로그인 후 다시 시도해 주세요.",
+    "iapBuy": "구매하기",
+    "iapBuying": "처리 중…",
+    "iapBuyA11y": "광고 제거 구매",
+    "iapRestore": "구매 복원",
+    "iapRestoreA11y": "이전 구매 복원",
+    "iapPurchaseDoneTitle": "결제 완료",
+    "iapPurchaseDoneBody": "구매가 완료되었습니다. 광고 제거가 곧 적용됩니다.",
+    "iapPurchaseFailTitle": "결제 불가",
+    "iapRestoreOkTitle": "복원 완료",
+    "iapRestoreOkBody": "이전에 구매한 광고 제거가 복원되었습니다.",
+    "iapRestoreNoneTitle": "복원 결과 없음",
+    "iapRestoreNoneBody": "이 계정에서 구매한 항목을 찾지 못했습니다."
   },
   "settings": {
     "languageAuto": "자동",
@@ -224,5 +243,25 @@
       "corrupt": "코드를 읽을 수 없습니다."
     },
     "adFreeNote": "광고 제거 구매는 백업 코드에 담기지 않습니다. 스토어의 구매 복원을 이용해 주세요."
+  },
+  "ranking": {
+    "title": "세계 랭킹",
+    "sub": "전 세계 기록과 3판 2선 비동기 결투",
+    "you": "내 프로필",
+    "rankLine": "{{tier}} · {{rating}} · #{{rank}}",
+    "recordLine": "{{wins}}승 {{losses}}패",
+    "duel": "결투하기",
+    "matching": "상대 찾는 중…",
+    "refresh": "새로고침",
+    "leaderboard": "리더보드",
+    "leaderboardEmpty": "아직 순위가 없습니다. 첫 결투의 주인공이 되세요.",
+    "notConfigured": "서버 설정이 없습니다. EXPO_PUBLIC_SUPABASE_URL / ANON_KEY 를 확인하세요.",
+    "abort": "랭킹으로 나가기",
+    "roundDraw": "동점 — 재결투",
+    "share": "결과 공유",
+    "duelAgain": "다시 결투",
+    "backHub": "랭킹 허브",
+    "avgLine": "평균 {{avg}}ms",
+    "ratingLine": "레이팅 {{before}} → {{after}} ({{delta}})"
   }
 }

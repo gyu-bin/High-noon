@@ -34,8 +34,7 @@ import { applyOtaUpdateIfAvailable } from '@/utils/otaApply';
 import { consumeOtaJustApplied } from '@/utils/otaUpdateFlag';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
 import { isStoreUpdateRequired } from '@/utils/storeUpdate';
-// IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
-// import { initPurchases } from '@/utils/purchaseService';
+import { initPurchases } from '@/utils/purchaseService';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -219,6 +218,7 @@ function RootLayoutContent() {
             preloadInterstitial();
             preloadRewardedAd();
           });
+          void initPurchases();
         }
       }
     }
