@@ -47,3 +47,30 @@ export async function prefetchDuelSprites(
     uris.map((uri) => Image.prefetch(uri, { cachePolicy: 'memory-disk' }).catch(() => false)),
   );
 }
+
+export async function prefetchPlayerDuelSprites(
+  ...characterIds: number[]
+): Promise<void> {
+  const seen = new Set<string>();
+  const uris: string[] = [];
+
+  const push = (src: ImageSourcePropType | undefined) => {
+    if (!src) return;
+    const uri = assetUri(src);
+    if (!uri || seen.has(uri)) return;
+    seen.add(uri);
+    uris.push(uri);
+  };
+
+  for (const characterId of characterIds) {
+    for (const pose of POSES) {
+      push(getPlayerSpriteSource(characterId, pose));
+    }
+    push(getPlayerDownSource(characterId));
+    getPlayerShootFrames(characterId)?.forEach(push);
+  }
+
+  await Promise.all(
+    uris.map((uri) => Image.prefetch(uri, { cachePolicy: 'memory-disk' }).catch(() => false)),
+  );
+}

@@ -85,6 +85,14 @@ type Props = {
   hideBottomHud?: boolean;
   /** landscape — 좌우 정면 대치 (기본 portrait 대각선) */
   orientation?: 'portrait' | 'landscape';
+  /** 랭킹 등 — NPC 이름 대신 표시 */
+  opponentName?: string;
+  /** 있으면 NPC 스프라이트 대신 플레이어 캐릭터를 상대 슬롯에 씀 */
+  opponentCharacterId?: number;
+  /** 선승 수. 기본 3 (NPC). 랭킹은 2 */
+  winsNeeded?: number;
+  /** 티어 필 문구. 없으면 NPC 티어 라벨 */
+  tierLabel?: string;
 };
 
 export function DuelArenaLayout({
@@ -117,6 +125,10 @@ export function DuelArenaLayout({
   playerTapAckStyle,
   hideBottomHud = false,
   orientation = 'portrait',
+  opponentName,
+  opponentCharacterId,
+  winsNeeded = WINS_TO_END,
+  tierLabel: tierLabelProp,
 }: Props) {
   const { t } = useTranslation();
   const landscape = orientation === 'landscape';
@@ -126,8 +138,8 @@ export function DuelArenaLayout({
 
   const npcCorner: DuelCorner = 'topRight';
   const playerCorner: DuelCorner = 'bottomLeft';
-  const npcLabel = getNpcDisplayName(t, npcId);
-  const tierLabel = getNpcTierLabel(t, tier);
+  const npcLabel = opponentName ?? getNpcDisplayName(t, npcId);
+  const tierLabel = tierLabelProp ?? getNpcTierLabel(t, tier);
   // 가로 — 서부극 정면 대치: 같은 지면선, 좌(플레이어)·우(NPC)
   const groundBottom = Math.max(paddingBottom + 30, Math.round(height * 0.09));
   const sideInset = Math.round(width * 0.07);
@@ -205,16 +217,29 @@ export function DuelArenaLayout({
         }
       >
         <DuelFigureSlot corner={npcCorner} pose={npcPose} figW={figW} figH={figH}>
-          <NpcCharacterSprite
-            npcId={npcId}
-            width={figW}
-            height={figH}
-            flipHorizontal={duelFlipHorizontal(npcCorner)}
-            pose={npcPose}
-            victoryActive={npcVictoryActive}
-            duelCorner={npcCorner}
-            defeatDropPx={defeatDropPx}
-          />
+          {opponentCharacterId != null ? (
+            <PlayerCharacterSprite
+              characterId={opponentCharacterId}
+              width={figW}
+              height={figH}
+              flipHorizontal={duelFlipHorizontal(npcCorner)}
+              pose={npcPose}
+              victoryActive={npcVictoryActive}
+              duelCorner={npcCorner}
+              defeatDropPx={defeatDropPx}
+            />
+          ) : (
+            <NpcCharacterSprite
+              npcId={npcId}
+              width={figW}
+              height={figH}
+              flipHorizontal={duelFlipHorizontal(npcCorner)}
+              pose={npcPose}
+              victoryActive={npcVictoryActive}
+              duelCorner={npcCorner}
+              defeatDropPx={defeatDropPx}
+            />
+          )}
         </DuelFigureSlot>
       </View>
 
@@ -289,7 +314,7 @@ export function DuelArenaLayout({
         </View>
         <View style={styles.metaRow}>
           <Text style={[styles.tierPill, INK_THEME && styles.tierPillInk]}>{tierLabel}</Text>
-          <HeartRow filled={opponentHearts} max={3} />
+          <HeartRow filled={opponentHearts} max={winsNeeded} />
         </View>
       </View>
 
@@ -299,12 +324,12 @@ export function DuelArenaLayout({
           pointerEvents="none"
           style={[styles.hudBottom, { paddingBottom: paddingBottom + 12 }]}
         >
-          <HeartRow filled={playerHearts} max={3} />
+          <HeartRow filled={playerHearts} max={winsNeeded} />
           <Text style={[styles.scoreLine, INK_THEME && styles.scoreLineInk]}>
             {t('game.scoreLine', {
               p1: playerScore,
               p2: opponentScore,
-              wins: WINS_TO_END,
+              wins: winsNeeded,
             })}
           </Text>
           {shootActive ? (

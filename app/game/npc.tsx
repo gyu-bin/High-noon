@@ -1,4 +1,4 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -49,6 +49,7 @@ import { useScreenBgm } from '@/hooks/useScreenBgm';
 import {
   usePhoneStageMetrics,
 } from '@/hooks/usePhoneStageMetrics';
+import { useDailyMissionStore, whenDailyMissionsReady } from '@/store/dailyMissionStore';
 import { useGameStore } from '@/store/gameStore';
 import { selectPaleRiderUnlocked, useProgressStore } from '@/store/progressStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -68,6 +69,21 @@ import { trigger } from '@/utils/hapticService';
 
 const WINS_TO_END = 3;
 const HEARTS = 3;
+
+function firstSearchParam(v?: string | string[]): string | undefined {
+  if (v == null) return undefined;
+  const s = Array.isArray(v) ? v[0] : v;
+  return s === '' ? undefined : s;
+}
+
+/** 데일리로 캠페인보다 앞선 보스를 깨도 해금이 건너뛰지 않게. */
+function recordNpcWinIfAllowed(npcId: number, fromDaily: boolean) {
+  if (fromDaily) {
+    const unlocked = useProgressStore.getState().highestUnlockedNpcId;
+    if (npcId > unlocked) return;
+  }
+  useProgressStore.getState().markNpcCleared(npcId);
+}
 
 // 네이티브 모듈 미포함 구버전 빌드에서도 동작하도록 lazy 로드
 let ScreenOrientation: typeof import('expo-screen-orientation') | null = null;
@@ -128,13 +144,12 @@ export default function NpcGameScreen() {
     }),
     [insets.top, insets.right, insets.left],
   );
-  const { npcId: npcIdRaw } = useLocalSearchParams<{ npcId?: string | string[] }>();
-  const npcIdStr = useMemo(() => {
-    const v = npcIdRaw;
-    if (v == null) return undefined;
-    const s = Array.isArray(v) ? v[0] : v;
-    return s === '' ? undefined : s;
-  }, [npcIdRaw]);
+  const { npcId: npcIdRaw, fromDaily: fromDailyRaw } = useLocalSearchParams<{
+    npcId?: string | string[];
+    fromDaily?: string | string[];
+  }>();
+  const npcIdStr = useMemo(() => firstSearchParam(npcIdRaw), [npcIdRaw]);
+  const fromDaily = firstSearchParam(fromDailyRaw) === '1';
   const npcId = useMemo(() => {
     if (npcIdStr == null) return NaN;
     const n = Number(npcIdStr);
@@ -160,6 +175,10 @@ export default function NpcGameScreen() {
   const duelBgmTrack = npc?.bossFlag ? ('boss' as const) : ('duel' as const);
   useScreenBgm(npc ? duelBgmTrack : null, true);
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
+  const [dailyReady, setDailyReady] = useState(false);
+  useEffect(() => {
+    return whenDailyMissionsReady(() => setDailyReady(true));
+  }, []);
 
   const currentRound = useGameStore((s) => s.currentRound);
   const playerScore = useGameStore((s) => s.playerScore);
@@ -414,14 +433,29 @@ export default function NpcGameScreen() {
           resetDuel();
         };
       }
+      if (fromDaily && !dailyReady) {
+        return undefined;
+      }
+      const dailyBossOk =
+        fromDaily &&
+        npc != null &&
+        Number.isFinite(npcId) &&
+        npcId !== 22;
+      if (dailyBossOk) {
+        useDailyMissionStore.getState().ensureToday(highestUnlocked);
+      }
+      const isTodayBoss =
+        dailyBossOk &&
+        useDailyMissionStore.getState().todayBossNpcId === npcId;
       const canAccess =
         DEV_UNLOCK_ALL_NPCS ||
+        isTodayBoss ||
         (npc &&
           Number.isFinite(npcId) &&
           npcId >= 1 &&
           (npcId === 22 ? selectPaleRiderUnlocked() : npcId <= highestUnlocked));
       if (!canAccess) {
-        router.replace('/npc-select');
+        router.replace((fromDaily ? '/ranking' : '/npc-select') as Href);
         return undefined;
       }
       let cancelled = false;
@@ -453,6 +487,8 @@ export default function NpcGameScreen() {
       npc,
       npcId,
       highestUnlocked,
+      fromDaily,
+      dailyReady,
       router,
       startMatch,
       resetDuel,
@@ -809,7 +845,7 @@ export default function NpcGameScreen() {
         return;
       }
       if (ps >= WINS_TO_END) {
-        useProgressStore.getState().markNpcCleared(npc!.id);
+        recordNpcWinIfAllowed(npc!.id, fromDaily);
       }
       const m = modalDataRef.current;
       const lr = useGameStore.getState().lastReaction;
@@ -836,6 +872,7 @@ export default function NpcGameScreen() {
           npcMs: npcMsStr,
           lossReason,
           dayNight: battleDayNight,
+          fromDaily: fromDaily ? '1' : '0',
         },
       });
       return;
@@ -845,7 +882,7 @@ export default function NpcGameScreen() {
     nextRound();
     resetDuel();
     startRoundDuel();
-  }, [npc, nextRound, resetDuel, router, startRoundDuel, headshotOffered, setAbilityUsed, battleDayNight]);
+  }, [npc, nextRound, resetDuel, router, startRoundDuel, headshotOffered, setAbilityUsed, battleDayNight, fromDaily]);
 
   /** 뱅 이전에도 탭을 엔진으로 넘겨 얼리 즉시 패배(누르고 있다가 뱅 때 손 떼면 이기는 버그 방지) */
   const shootCapturesEarly =
@@ -873,8 +910,12 @@ export default function NpcGameScreen() {
   const leaveToNpcSelect = useCallback(() => {
     setPaused(false);
     resetDuel();
-    router.back();
-  }, [resetDuel, router]);
+    if (fromDaily) {
+      router.replace('/ranking' as Href);
+    } else {
+      router.back();
+    }
+  }, [fromDaily, resetDuel, router]);
 
   const leaveToMainMenu = useCallback(() => {
     setPaused(false);
@@ -887,7 +928,7 @@ export default function NpcGameScreen() {
     const ps = useGameStore.getState().playerScore;
     const ns = useGameStore.getState().opponentScore;
     if (ps >= WINS_TO_END) {
-      useProgressStore.getState().markNpcCleared(npc!.id);
+      recordNpcWinIfAllowed(npc!.id, fromDaily);
     }
     const lr = useGameStore.getState().lastReaction;
     router.replace({
@@ -902,9 +943,10 @@ export default function NpcGameScreen() {
         npcMs: lr.npcMs != null ? String(lr.npcMs) : '',
         lossReason: '',
         dayNight: battleDayNight,
+        fromDaily: fromDaily ? '1' : '0',
       },
     });
-  }, [npc, router, battleDayNight]);
+  }, [npc, router, battleDayNight, fromDaily]);
 
   const onAdReviveDecline = useCallback(() => {
     setAdRevivePending(null);
@@ -1061,7 +1103,9 @@ export default function NpcGameScreen() {
             visible={paused}
             onResume={() => setPaused(false)}
             onSecondaryExit={leaveToNpcSelect}
-            secondaryLabel={t('game.toOpponentSelect')}
+            secondaryLabel={
+              fromDaily ? t('ranking.backHub') : t('game.toOpponentSelect')
+            }
             onMainMenu={leaveToMainMenu}
           />
 

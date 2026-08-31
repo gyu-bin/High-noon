@@ -1,38 +1,72 @@
-import { Stack, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Stack, useRouter, type Href } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
+import { DuelArenaLayout } from '@/components/game/DuelArenaLayout';
+import {
+  enginePhaseToSignalBoardPhase,
+  type DuelSignalBoardPhase,
+} from '@/components/game/DuelSignalBoard';
+import { DuelFullBackground } from '@/components/game/DuelFullBackground';
 import { PauseMenuModal } from '@/components/game/PauseMenuModal';
+import { SceneBackground } from '@/components/game/SceneBackground';
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
-import { FONT_RYE } from '@/constants/fonts';
-import { PVP_MAX_ROUNDS, PVP_WINS_NEEDED } from '@/constants/pvpRanks';
+import {
+  DUEL_DEFEAT_MODAL_DELAY_MS,
+  DUEL_DEFEAT_REVEAL_DELAY_MS,
+} from '@/constants/duelPresentation';
+import { DUEL_VISUAL_THEME, MINIMAL_DUEL } from '@/constants/duelTheme';
+import { pickBattleDayNight } from '@/constants/gameImages';
+import { RM_GAME } from '@/constants/reanimatedGame';
+import {
+  PVP_MAX_ROUNDS,
+  PVP_WINS_NEEDED,
+  averageSampleMs,
+} from '@/constants/pvpRanks';
 import { colors } from '@/constants/theme';
+import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
 import { useGhostDuelEngine } from '@/hooks/useGhostDuelEngine';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
-import { play } from '@/utils/audioService';
-import { speakDuelCue } from '@/utils/duelSignalSpeech';
-import { formatReactionMs } from '@/utils/formatReactionMs';
-import { trigger } from '@/utils/hapticService';
 import { pvpSubmitMatch } from '@/lib/supabase/pvpApi';
+import { completeDailyAfterReady } from '@/store/dailyMissionStore';
 import { usePvpStore } from '@/store/pvpStore';
+import { useRankingRewardStore } from '@/store/rankingRewardStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import type { PvpMatchResult, PvpRoundRecord } from '@/types/pvp';
+import { playGunshot } from '@/utils/audioService';
+import { speakDuelCue } from '@/utils/duelSignalSpeech';
+import { trigger } from '@/utils/hapticService';
+import { simulateTargetReactionMs } from '@/utils/npcAI';
+import {
+  prefetchDuelSprites,
+  prefetchPlayerDuelSprites,
+} from '@/utils/preloadDuelSprites';
+import {
+  npcSpritePoseFromPhase,
+  playerSpritePoseFromPhase,
+} from '@/utils/spritePose';
 
 export default function RankingDuelScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   useScreenBgm('duel');
-  const { stageWidth: winW, stageHeight: winH } = usePhoneStageMetrics();
+  const stage = usePhoneStageMetrics();
+  const winW = stage.windowWidth;
+  const winH = stage.windowHeight;
+  const isLandscape = winW > winH;
+  const selectedCharacterId = useSettingsStore((s) => s.selectedCharacterId);
 
   const opponent = usePvpStore((s) => s.opponent);
   const profile = usePvpStore((s) => s.profile);
@@ -43,71 +77,108 @@ export default function RankingDuelScreen() {
 
   const [playerWins, setPlayerWins] = useState(0);
   const [oppWins, setOppWins] = useState(0);
-  const [roundIndex, setRoundIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [roundBanner, setRoundBanner] = useState<string | null>(null);
+  const [defeatedSide, setDefeatedSide] = useState<'player' | 'npc' | null>(null);
+  const [playerShootFlash, setPlayerShootFlash] = useState(false);
+  const [signalBoardPhase, setSignalBoardPhase] =
+    useState<DuelSignalBoardPhase>('idle');
 
   const roundsRef = useRef<PvpRoundRecord[]>([]);
   const playerWinsRef = useRef(0);
   const oppWinsRef = useRef(0);
   const finishingRef = useRef(false);
-  const roundIndexRef = useRef(0);
+  const processedOutcomeRef = useRef<object | null>(null);
+  const playerTapAck = useSharedValue(0);
+
+  const overlayPad = useMemo(
+    () => ({
+      top: insets.top + 6,
+      right: 12 + insets.right,
+      left: 12 + insets.left,
+    }),
+    [insets.top, insets.right, insets.left],
+  );
+
+  const ghostAvgMs = useMemo(() => {
+    if (!opponent) return 280;
+    return averageSampleMs(opponent.sample_ms);
+  }, [opponent]);
+
+  const battleDayNight = useMemo(
+    () => pickBattleDayNight(opponent?.character_id ?? 1),
+    [opponent?.character_id],
+  );
 
   const leave = useCallback(() => {
-    router.replace('/ranking');
+    router.replace('/ranking' as Href);
   }, [router]);
+
+  const fireGunshot = useCallback(() => {
+    playGunshot();
+  }, []);
 
   const {
     phase,
-    signalText,
     outcome,
     start,
     tap,
     reset,
+    isBangReactionArmed,
     pauseTimers,
     resumeTimers,
   } = useGhostDuelEngine({
     onBangEnter: () => {
       void speakDuelCue('bang');
-      void play('bang_shot');
+      void trigger('heavy');
     },
     onBangTap: () => {
       void trigger('medium');
-      void play('bang_shot');
+      fireGunshot();
     },
     onGhostFire: () => {
-      void play('bang_shot');
+      fireGunshot();
     },
   });
 
-  // Guard: no opponent → back to hub
+  useDuelBgmDuck(phase);
+
   useEffect(() => {
     if (!opponent) {
-      router.replace('/ranking');
+      router.replace('/ranking' as Href);
     }
   }, [opponent, router]);
 
-  const startRound = useCallback(
-    (idx: number) => {
-      if (!opponent) return;
-      const ms = opponent.sample_ms[idx] ?? opponent.sample_ms[0];
-      setRoundBanner(null);
-      start(ms);
-    },
-    [opponent, start],
-  );
+  useEffect(() => {
+    if (!opponent) return;
+    const playerId = useSettingsStore.getState().selectedCharacterId;
+    const cosmetic = opponent.cosmetic_npc_id;
+    if (cosmetic != null && cosmetic > 0) {
+      void prefetchDuelSprites(cosmetic, playerId);
+    } else {
+      void prefetchPlayerDuelSprites(playerId, opponent.character_id);
+    }
+  }, [opponent]);
+
+  const startRound = useCallback(() => {
+    if (!opponent) return;
+    setRoundBanner(null);
+    setDefeatedSide(null);
+    setPlayerShootFlash(false);
+    start(simulateTargetReactionMs(ghostAvgMs));
+  }, [ghostAvgMs, opponent, start]);
 
   useEffect(() => {
     if (!opponent) return;
-    roundIndexRef.current = 0;
     playerWinsRef.current = 0;
     oppWinsRef.current = 0;
     roundsRef.current = [];
+    finishingRef.current = false;
+    processedOutcomeRef.current = null;
     setPlayerWins(0);
     setOppWins(0);
-    setRoundIndex(0);
-    const tmr = setTimeout(() => startRound(0), 400);
+    const tmr = setTimeout(() => startRound(), 400);
     return () => clearTimeout(tmr);
   }, [opponent, startRound]);
 
@@ -121,6 +192,34 @@ export default function RankingDuelScreen() {
     if (phase === '집중') void speakDuelCue('steady');
   }, [phase]);
 
+  useEffect(() => {
+    setSignalBoardPhase(enginePhaseToSignalBoardPhase(phase));
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== '뱅' && phase !== '결과') {
+      setPlayerShootFlash(false);
+    }
+  }, [phase]);
+
+  const playerTapAckStyle = useAnimatedStyle(() => ({
+    opacity: playerTapAck.value,
+  }));
+
+  const pulsePlayerTapAck = useCallback(
+    (kind: 'bang' | 'other') => {
+      cancelAnimation(playerTapAck);
+      playerTapAck.value = 0;
+      const peak = kind === 'bang' ? 0.22 : 0.14;
+      const upMs = kind === 'bang' ? 100 : 70;
+      playerTapAck.value = withSequence(
+        withTiming(peak, { duration: upMs, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME }),
+        withTiming(0, { duration: 220, easing: Easing.in(Easing.quad), reduceMotion: RM_GAME }),
+      );
+    },
+    [playerTapAck],
+  );
+
   const finishMatch = useCallback(
     async (finalPlayerWins: number, finalOppWins: number, records: PvpRoundRecord[]) => {
       if (!opponent || finishingRef.current) return;
@@ -131,7 +230,6 @@ export default function RankingDuelScreen() {
       if (finalPlayerWins > finalOppWins) result = 'win';
       else if (finalOppWins > finalPlayerWins) result = 'loss';
 
-      // Pad to 3 slots for server
       const playerRounds: (number | null)[] = [null, null, null];
       const opponentRounds: number[] = [
         opponent.sample_ms[0],
@@ -148,8 +246,14 @@ export default function RankingDuelScreen() {
       setScores(finalPlayerWins, finalOppWins);
       usePvpStore.setState({ rounds: records });
 
+      completeDailyAfterReady(
+        result === 'win' ? ['rankingPlay', 'rankingWin'] : ['rankingPlay'],
+      );
+
       try {
         const characterId = useSettingsStore.getState().selectedCharacterId;
+        const cosmeticNpcId =
+          useRankingRewardStore.getState().selectedCosmeticNpcId;
         const submit = await pvpSubmitMatch({
           opponentId: opponent.id,
           opponentIsBot: opponent.is_bot,
@@ -159,8 +263,10 @@ export default function RankingDuelScreen() {
           scoreOpponent: finalOppWins,
           result,
           characterId,
+          cosmeticNpcId,
         });
         setLastSubmit(submit);
+        useRankingRewardStore.getState().recordSeasonPeak(submit.rank_tier);
         if (profile) {
           setProfile({
             ...profile,
@@ -176,21 +282,15 @@ export default function RankingDuelScreen() {
       }
 
       setSubmitting(false);
-      router.replace('/ranking/result');
+      router.replace('/ranking/result' as Href);
     },
-    [
-      opponent,
-      profile,
-      router,
-      setLastSubmit,
-      setProfile,
-      setScores,
-    ],
+    [opponent, profile, router, setLastSubmit, setProfile, setScores],
   );
 
-  // Handle round outcome
   useEffect(() => {
     if (!outcome || phase !== '결과' || finishingRef.current) return;
+    if (processedOutcomeRef.current === outcome) return;
+    processedOutcomeRef.current = outcome;
 
     const record: PvpRoundRecord = {
       playerMs: outcome.playerMs,
@@ -206,7 +306,6 @@ export default function RankingDuelScreen() {
     let ow = oppWinsRef.current;
     if (outcome.winner === 'player') pw += 1;
     if (outcome.winner === 'opponent') ow += 1;
-    // draw → replay same round index (no score change), don't advance
     playerWinsRef.current = pw;
     oppWinsRef.current = ow;
     setPlayerWins(pw);
@@ -226,27 +325,59 @@ export default function RankingDuelScreen() {
       (outcome.winner !== 'draw' &&
         roundsRef.current.filter((r) => r.winner !== 'draw').length >= PVP_MAX_ROUNDS);
 
-    // Count only decisive rounds toward round index advance
-    if (outcome.winner !== 'draw') {
-      roundIndexRef.current += 1;
-      setRoundIndex(roundIndexRef.current);
-    }
+    const revealDelay =
+      outcome.winner === 'draw' ? 80 : DUEL_DEFEAT_REVEAL_DELAY_MS;
+    const nextDelay =
+      outcome.winner === 'draw' ? 900 : DUEL_DEFEAT_MODAL_DELAY_MS;
 
-    const delay = setTimeout(() => {
+    const revealT = setTimeout(() => {
+      if (outcome.winner === 'player') setDefeatedSide('npc');
+      else if (outcome.winner === 'opponent') setDefeatedSide('player');
+    }, revealDelay);
+
+    const nextT = setTimeout(() => {
       if (matchOver) {
         void finishMatch(pw, ow, roundsRef.current);
         return;
       }
-      // draw: same sample again; else next sample
-      const nextIdx =
-        outcome.winner === 'draw'
-          ? Math.min(roundIndexRef.current, PVP_MAX_ROUNDS - 1)
-          : Math.min(roundIndexRef.current, PVP_MAX_ROUNDS - 1);
-      startRound(nextIdx);
-    }, 1400);
+      startRound();
+    }, nextDelay);
 
-    return () => clearTimeout(delay);
+    return () => {
+      clearTimeout(revealT);
+      clearTimeout(nextT);
+    };
   }, [outcome, phase, finishMatch, pushRound, startRound, t]);
+
+  const holdResultShoot = phase === '결과' && defeatedSide == null;
+  const npcPose = useMemo(() => {
+    if (defeatedSide === 'npc') return 'defeat' as const;
+    if (defeatedSide === 'player') return 'idle' as const;
+    return npcSpritePoseFromPhase(phase, holdResultShoot);
+  }, [defeatedSide, phase, holdResultShoot]);
+  const playerPose = useMemo(() => {
+    if (defeatedSide === 'player') return 'defeat' as const;
+    if (defeatedSide === 'npc') return 'idle' as const;
+    return playerSpritePoseFromPhase(phase, playerShootFlash, holdResultShoot);
+  }, [defeatedSide, phase, playerShootFlash, holdResultShoot]);
+
+  const shootCapturesEarly =
+    phase !== '대기' && phase !== '결과' && !paused && !submitting;
+  const shootActive = shootCapturesEarly && isBangReactionArmed();
+
+  const onShootPress = useCallback(() => {
+    if (!shootCapturesEarly) return;
+    const armed = isBangReactionArmed();
+    if (armed) {
+      pulsePlayerTapAck('bang');
+      setPlayerShootFlash(true);
+    } else {
+      pulsePlayerTapAck('other');
+      void trigger('light');
+      setPlayerShootFlash(true);
+    }
+    tap();
+  }, [isBangReactionArmed, pulsePlayerTapAck, shootCapturesEarly, tap]);
 
   if (!opponent) {
     return (
@@ -256,73 +387,104 @@ export default function RankingDuelScreen() {
     );
   }
 
-  const signalColor =
-    phase === '뱅' ? '#F5E6C8' : phase === '집중' ? '#E8A82A' : colors.sand;
+  const cosmeticId = opponent.cosmetic_npc_id;
+  const useNpcSprite = cosmeticId != null && cosmeticId > 0;
+  const playerHearts = Math.max(0, PVP_WINS_NEEDED - oppWins);
+  const opponentHearts = Math.max(0, PVP_WINS_NEEDED - playerWins);
+
+  const arena = (
+    <>
+      <DuelArenaLayout
+        width={winW}
+        height={winH}
+        paddingTop={overlayPad.top}
+        paddingBottom={insets.bottom}
+        paddingRight={overlayPad.right}
+        npcId={useNpcSprite ? (cosmeticId as number) : 1}
+        tier="gold"
+        bossFlag={false}
+        npcPose={npcPose}
+        npcVictoryActive={defeatedSide === 'player'}
+        playerVictoryActive={defeatedSide === 'npc'}
+        playerCharacterId={selectedCharacterId}
+        playerPose={playerPose}
+        signalPhase={signalBoardPhase}
+        blindBangText={false}
+        invertSignalColors={false}
+        opponentHearts={opponentHearts}
+        playerHearts={playerHearts}
+        playerScore={playerWins}
+        opponentScore={oppWins}
+        shootCapturesEarly={shootCapturesEarly}
+        shootActive={shootActive}
+        onShootPress={onShootPress}
+        onPause={() => setPaused(true)}
+        pauseDisabled={submitting}
+        playerTapAckStyle={playerTapAckStyle}
+        hideBottomHud={submitting}
+        orientation={isLandscape ? 'landscape' : 'portrait'}
+        opponentName={opponent.display_name}
+        opponentCharacterId={useNpcSprite ? undefined : opponent.character_id}
+        winsNeeded={PVP_WINS_NEEDED}
+        tierLabel={opponent.rank_tier}
+      />
+
+      {roundBanner ? (
+        <View pointerEvents="none" style={styles.roundBannerWrap}>
+          <Text style={styles.roundBanner}>{roundBanner}</Text>
+        </View>
+      ) : null}
+
+      {submitting ? (
+        <View style={styles.submitting} pointerEvents="auto">
+          <ActivityIndicator color={colors.gold} />
+        </View>
+      ) : null}
+
+      <PauseMenuModal
+        visible={paused}
+        onResume={() => setPaused(false)}
+        onSecondaryExit={() => {
+          setPaused(false);
+          reset();
+          leave();
+        }}
+        secondaryLabel={t('ranking.abort')}
+        onMainMenu={() => {
+          setPaused(false);
+          reset();
+          router.replace('/menu');
+        }}
+      />
+    </>
+  );
+
+  const arenaShellProps = {
+    style: { width: winW, height: winH } as const,
+    contentWidth: winW,
+    contentHeight: winH,
+  };
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <PhoneStageShell>
-        <View style={[styles.root, { width: winW, height: winH }]}>
-          <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-            <Pressable onPress={() => setPaused(true)} hitSlop={12}>
-              <Text style={styles.pause}>⏸</Text>
-            </Pressable>
-            <Text style={styles.score}>
-              {playerWins} — {oppWins}
-            </Text>
-            <Text style={styles.roundLabel}>
-              R{Math.min(roundIndex + 1, PVP_MAX_ROUNDS)}
-            </Text>
-          </View>
-
-          <View style={styles.vsRow}>
-            <Text style={styles.vsName} numberOfLines={1}>
-              {profile?.display_name ?? t('result.me')}
-            </Text>
-            <Text style={[styles.vsVs, { fontFamily: FONT_RYE }]}>VS</Text>
-            <Text style={styles.vsName} numberOfLines={1}>
-              {opponent.display_name}
-            </Text>
-          </View>
-
-          <Pressable style={styles.tapArea} onPress={tap}>
-            <Text style={[styles.signal, { color: signalColor, fontFamily: FONT_RYE }]}>
-              {roundBanner ?? (signalText || t('game.waitForBang'))}
-            </Text>
-            {phase === '결과' && outcome ? (
-              <Text style={styles.msLine}>
-                {outcome.playerMs != null ? formatReactionMs(outcome.playerMs) : '—'}
-                {' ms  vs  '}
-                {outcome.opponentMs != null
-                  ? formatReactionMs(outcome.opponentMs)
-                  : '—'}
-                {' ms'}
-              </Text>
-            ) : (
-              <Text style={styles.hint}>{t('game.tapAnywhere')}</Text>
-            )}
-            {submitting ? (
-              <ActivityIndicator color={colors.gold} style={{ marginTop: 16 }} />
-            ) : null}
-          </Pressable>
-        </View>
-
-        <PauseMenuModal
-          visible={paused}
-          onResume={() => setPaused(false)}
-          onSecondaryExit={() => {
-            setPaused(false);
-            reset();
-            leave();
-          }}
-          secondaryLabel={t('ranking.abort')}
-          onMainMenu={() => {
-            setPaused(false);
-            reset();
-            router.replace('/menu');
-          }}
-        />
+      <PhoneStageShell
+        edgeToEdge
+        backgroundColor={DUEL_VISUAL_THEME === 'minimal' ? MINIMAL_DUEL.stageEdge : undefined}
+      >
+        {DUEL_VISUAL_THEME === 'minimal' ? (
+          <SceneBackground
+            {...arenaShellProps}
+            solidColor={MINIMAL_DUEL.bg}
+            dimColor="transparent"
+          >
+            {arena}
+          </SceneBackground>
+        ) : (
+          <DuelFullBackground {...arenaShellProps} variant={battleDayNight}>
+            {arena}
+          </DuelFullBackground>
+        )}
       </PhoneStageShell>
     </>
   );
@@ -335,65 +497,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#1a1208',
   },
-  root: {
-    flex: 1,
-    backgroundColor: '#1a1208',
-  },
-  topBar: {
-    flexDirection: 'row',
+  roundBannerWrap: {
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    justifyContent: 'center',
+    zIndex: 12,
+    paddingTop: 80,
   },
-  pause: { color: colors.sand, fontSize: 22 },
-  score: {
+  roundBanner: {
     color: colors.gold,
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: '800',
-    fontVariant: ['tabular-nums'],
-  },
-  roundLabel: { color: colors.sand, fontSize: 14, fontWeight: '700' },
-  vsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingHorizontal: 16,
-    marginTop: 12,
-  },
-  vsName: {
-    flex: 1,
-    color: colors.cream,
-    fontSize: 13,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  vsVs: { color: colors.gold, fontSize: 16, letterSpacing: 2 },
-  tapArea: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  signal: {
-    fontSize: 48,
-    letterSpacing: 4,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.8)',
+    letterSpacing: 2,
+    textShadowColor: 'rgba(0,0,0,0.85)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
   },
-  hint: {
-    marginTop: 20,
-    color: 'rgba(245,230,200,0.55)',
-    fontSize: 13,
-    letterSpacing: 2,
-  },
-  msLine: {
-    marginTop: 16,
-    color: colors.sand,
-    fontSize: 16,
-    fontWeight: '700',
-    fontVariant: ['tabular-nums'],
+  submitting: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(8, 4, 2, 0.45)',
+    zIndex: 20,
   },
 });

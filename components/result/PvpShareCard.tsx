@@ -22,6 +22,7 @@ type Props = {
   title: string;
   avgLabel: string;
   dailyBadge?: string | null;
+  seasonBadge?: string | null;
   cosmeticLabel?: string | null;
 };
 
@@ -38,6 +39,7 @@ export function PvpShareCard({
   title,
   avgLabel,
   dailyBadge,
+  seasonBadge,
   cosmeticLabel,
 }: Props) {
   return (
@@ -116,6 +118,7 @@ export function PvpShareCard({
       </View>
 
       {dailyBadge ? <Text style={styles.badge}>🏅 {dailyBadge}</Text> : null}
+      {seasonBadge ? <Text style={styles.badge}>⭐ {seasonBadge}</Text> : null}
     </View>
   );
 }

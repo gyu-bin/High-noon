@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
@@ -202,7 +202,7 @@ export default function MenuScreen() {
               <WoodButton
                 title={t('menu.ranking')}
                 accessibilityHint={t('menu.rankingHint')}
-                onPress={() => router.push('/ranking')}
+                onPress={() => router.push('/ranking' as Href)}
                 style={styles.primaryBtn}
               />
             </View>

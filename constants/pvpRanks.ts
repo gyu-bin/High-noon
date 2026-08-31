@@ -35,3 +35,48 @@ export function formatRatingDelta(delta: number): string {
   if (delta > 0) return `+${delta}`;
   return `${delta}`;
 }
+
+export function parseRankTier(value: string): PvpRankTier {
+  if ((RANK_TIER_ORDER as string[]).includes(value)) return value as PvpRankTier;
+  return 'bronze';
+}
+
+export function tierRankIndex(tier: PvpRankTier): number {
+  return RANK_TIER_ORDER.indexOf(tier);
+}
+
+export function higherRankTier(a: PvpRankTier, b: PvpRankTier): PvpRankTier {
+  return tierRankIndex(a) >= tierRankIndex(b) ? a : b;
+}
+
+export function isRankTierUpgrade(beforeRating: number, afterTier: string): boolean {
+  return (
+    tierRankIndex(ratingToRankTier(beforeRating)) <
+    tierRankIndex(parseRankTier(afterTier))
+  );
+}
+
+export function currentSeasonKey(d = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
+
+export function formatSeasonKey(key: string, locale: string): string {
+  const [ys, ms] = key.split('-');
+  const y = Number(ys);
+  const month = Number(ms);
+  if (!Number.isFinite(y) || !Number.isFinite(month)) return key;
+  if (locale.startsWith('ko')) return `${y}년 ${month}월`;
+  if (locale.startsWith('ja')) return `${y}年${month}月`;
+  return new Date(y, month - 1, 1).toLocaleString('en', {
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+export function averageSampleMs(samples: readonly number[]): number {
+  const vals = samples.filter((n) => Number.isFinite(n) && n > 0);
+  if (vals.length === 0) return 280;
+  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+}

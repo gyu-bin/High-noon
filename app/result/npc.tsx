@@ -33,6 +33,8 @@ import { getNpcById } from '@/constants/npcs';
 import { getNpcDisplayName } from '@/utils/npcLabels';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
+import { useDailyMissionStore, whenDailyMissionsReady } from '@/store/dailyMissionStore';
+import { useProgressStore } from '@/store/progressStore';
 import { bgmPlay } from '@/utils/audioService';
 import { showStageCompleteAd } from '@/utils/adService';
 import { trigger } from '@/utils/hapticService';
@@ -147,6 +149,7 @@ export default function NpcResultScreen() {
     npcMs: npcMsParam,
     lossReason: lossReasonParam,
     dayNight: dayNightParam,
+    fromDaily: fromDailyParam,
   } = useLocalSearchParams<{
     npcId?: string;
     won?: string;
@@ -157,6 +160,7 @@ export default function NpcResultScreen() {
     npcMs?: string;
     lossReason?: string;
     dayNight?: string;
+    fromDaily?: string;
   }>();
 
   const id = Number(npcId);
@@ -172,6 +176,20 @@ export default function NpcResultScreen() {
   const npcMs = Number.isFinite(npcMsRaw) ? npcMsRaw : null;
   const lossReason = (lossReasonParam ?? '') as LossReason;
   const faster = whoFaster(playerMs, npcMs);
+  const fromDaily =
+    (Array.isArray(fromDailyParam) ? fromDailyParam[0] : fromDailyParam) === '1';
+
+  useEffect(() => {
+    if (!victory || !Number.isFinite(id)) return;
+    return whenDailyMissionsReady(() => {
+      const highest = useProgressStore.getState().highestUnlockedNpcId;
+      const daily = useDailyMissionStore.getState();
+      daily.ensureToday(highest);
+      if (useDailyMissionStore.getState().todayBossNpcId === id) {
+        daily.complete('todayBoss');
+      }
+    });
+  }, [victory, id]);
 
   // 승패 무관 광고 플로우를 거친 뒤 연출 시작
   const [adFlowComplete, setAdFlowComplete] = useState(false);
@@ -236,13 +254,20 @@ export default function NpcResultScreen() {
     if (!Number.isFinite(id)) return;
     router.replace({
       pathname: '/game/npc',
-      params: { npcId: String(id) },
+      params: {
+        npcId: String(id),
+        ...(fromDaily ? { fromDaily: '1' } : {}),
+      },
     } as Href);
-  }, [router, id]);
+  }, [router, id, fromDaily]);
 
   const onNpcSelect = useCallback(() => {
+    if (fromDaily) {
+      router.replace('/ranking' as Href);
+      return;
+    }
     router.dismissTo('/npc-select');
-  }, [router]);
+  }, [fromDaily, router]);
 
   const showContent = adFlowComplete;
 
@@ -313,7 +338,7 @@ export default function NpcResultScreen() {
             <View style={styles.btnCol}>
               <WoodButton title={t('result.retry')} onPress={onRetry} style={styles.btn} />
               <WoodButton
-                title={t('result.toOpponentSelect')}
+                title={fromDaily ? t('ranking.backHub') : t('result.toOpponentSelect')}
                 onPress={onNpcSelect}
                 style={styles.btnSecondary}
                 textStyle={styles.btnSecondaryText}

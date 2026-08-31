@@ -78,6 +78,13 @@ export function simulateNpcReaction(input: SimulateNpcReactionInput): NpcReactio
   return { reactionMs: clamped, npcEarlyTap: false };
 }
 
+/** 랭킹 고스트 — 평균 ms 주변만 흔들림. 특수능력·얼리 오발 없음. */
+export function simulateTargetReactionMs(reactionMs: number): number {
+  const half = jitterHalfMsFromTarget(reactionMs);
+  const ms = reactionMs + (Math.random() * 2 - 1) * half;
+  return Math.max(36, Math.round(ms));
+}
+
 /** #17 Dryden: 페이크 유도 배율(확률식 연동 시) */
 export function getNpcFakeLureMultiplier(npcId: number): number {
   return npcId === 17 ? 2 : 1;

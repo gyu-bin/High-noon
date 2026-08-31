@@ -1,7 +1,8 @@
-import { Stack, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { Stack, useRouter, type Href } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,9 +12,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
+import { CosmeticPicker } from '@/components/ranking/CosmeticPicker';
+import { DailyMissionsCard } from '@/components/ranking/DailyMissionsCard';
+import { SeasonBadgesRow } from '@/components/ranking/SeasonBadgesRow';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import { WoodButton } from '@/components/ui/WoodButton';
 import { FONT_RYE } from '@/constants/fonts';
+import { parseRankTier } from '@/constants/pvpRanks';
 import {
   META_PANEL_BG,
   META_PANEL_BORDER,
@@ -22,10 +27,22 @@ import {
 import { colors } from '@/constants/theme';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
-import { pvpLeaderboard, pvpLogin, pvpMatchmake } from '@/lib/supabase/pvpApi';
+import {
+  pvpLeaderboard,
+  pvpLogin,
+  pvpMatchmake,
+  pvpRerollDisplayName,
+} from '@/lib/supabase/pvpApi';
 import { usePvpStore } from '@/store/pvpStore';
+import {
+  useRankingRewardStore,
+  whenRankingRewardsReady,
+} from '@/store/rankingRewardStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import type { PvpLeaderboardEntry, PvpProfile } from '@/types/pvp';
+import type { PvpLeaderboardEntry } from '@/types/pvp';
+import { trigger } from '@/utils/hapticService';
+
+const REROLL_COOLDOWN_MS = 1200;
 
 export default function RankingHubScreen() {
   const { t } = useTranslation();
@@ -36,12 +53,18 @@ export default function RankingHubScreen() {
   const setProfile = usePvpStore((s) => s.setProfile);
   const beginMatch = usePvpStore((s) => s.beginMatch);
   const profile = usePvpStore((s) => s.profile);
+  const recordSeasonPeak = useRankingRewardStore((s) => s.recordSeasonPeak);
+  const setCosmeticNpcId = useRankingRewardStore((s) => s.setCosmeticNpcId);
 
   const [loading, setLoading] = useState(true);
   const [matching, setMatching] = useState(false);
+  const [rerolling, setRerolling] = useState(false);
+  const [nameDim, setNameDim] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [board, setBoard] = useState<PvpLeaderboardEntry[]>([]);
   const [meRank, setMeRank] = useState<number | null>(null);
+  const lastRerollAt = useRef(0);
+  const dimTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const onBack = useCallback(() => {
     if (router.canGoBack()) router.back();
@@ -57,8 +80,15 @@ export default function RankingHubScreen() {
     setLoading(true);
     setError(null);
     try {
-      const me = (await pvpLogin()) as PvpProfile;
+      await whenRankingRewardsReady();
+      const me = await pvpLogin();
       setProfile(me);
+      recordSeasonPeak(me.rank_tier);
+      const localCosmetic =
+        useRankingRewardStore.getState().selectedCosmeticNpcId;
+      if (localCosmetic == null && me.cosmetic_npc_id != null) {
+        setCosmeticNpcId(me.cosmetic_npc_id);
+      }
       const lb = await pvpLeaderboard(30);
       setBoard(lb.entries ?? []);
       setMeRank(lb.me?.rank ?? null);
@@ -80,11 +110,17 @@ export default function RankingHubScreen() {
     } finally {
       setLoading(false);
     }
-  }, [setProfile, t]);
+  }, [recordSeasonPeak, setCosmeticNpcId, setProfile, t]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    return () => {
+      if (dimTimer.current) clearTimeout(dimTimer.current);
+    };
+  }, []);
 
   const startDuel = useCallback(async () => {
     if (matching) return;
@@ -97,7 +133,7 @@ export default function RankingHubScreen() {
         ...payload,
         player: { ...payload.player, character_id: characterId },
       });
-      router.push('/ranking/duel');
+      router.push('/ranking/duel' as Href);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
@@ -105,6 +141,27 @@ export default function RankingHubScreen() {
       setMatching(false);
     }
   }, [beginMatch, matching, router]);
+
+  const rerollName = useCallback(async () => {
+    if (rerolling) return;
+    const now = Date.now();
+    if (now - lastRerollAt.current < REROLL_COOLDOWN_MS) return;
+    lastRerollAt.current = now;
+    setRerolling(true);
+    setError(null);
+    try {
+      const updated = await pvpRerollDisplayName();
+      setProfile(updated);
+      void trigger('selection');
+      setNameDim(true);
+      if (dimTimer.current) clearTimeout(dimTimer.current);
+      dimTimer.current = setTimeout(() => setNameDim(false), 180);
+    } catch {
+      setError(t('ranking.nicknameRerollFailed'));
+    } finally {
+      setRerolling(false);
+    }
+  }, [rerolling, setProfile, t]);
 
   return (
     <>
@@ -128,6 +185,8 @@ export default function RankingHubScreen() {
           </Text>
           <Text style={styles.sub}>{t('ranking.sub')}</Text>
 
+          <DailyMissionsCard />
+
           {loading ? (
             <ActivityIndicator color={colors.gold} style={{ marginTop: 24 }} />
           ) : (
@@ -135,12 +194,30 @@ export default function RankingHubScreen() {
               {profile ? (
                 <View style={styles.card}>
                   <Text style={styles.label}>{t('ranking.you')}</Text>
-                  <Text style={[styles.name, { fontFamily: FONT_RYE }]}>
+                  <Text
+                    style={[
+                      styles.name,
+                      { fontFamily: FONT_RYE, opacity: nameDim ? 0.4 : 1 },
+                    ]}
+                  >
                     {profile.display_name}
                   </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t('ranking.nicknameReroll')}
+                    disabled={rerolling}
+                    onPress={() => void rerollName()}
+                    style={styles.reroll}
+                  >
+                    <Text style={styles.rerollText}>
+                      {rerolling
+                        ? t('ranking.nicknameRerolling')
+                        : t('ranking.nicknameReroll')}
+                    </Text>
+                  </Pressable>
                   <Text style={styles.meta}>
                     {t('ranking.rankLine', {
-                      tier: profile.rank_tier,
+                      tier: t(`npcs.tier.${parseRankTier(profile.rank_tier)}`),
                       rating: profile.rating,
                       rank: meRank ?? '—',
                     })}
@@ -154,8 +231,12 @@ export default function RankingHubScreen() {
                 </View>
               ) : null}
 
+              <SeasonBadgesRow />
+              <CosmeticPicker />
+
               {error ? <Text style={styles.error}>{error}</Text> : null}
 
+              <Text style={styles.rewardHint}>{t('ranking.duelRewardHint')}</Text>
               <WoodButton
                 title={matching ? t('ranking.matching') : t('ranking.duel')}
                 onPress={() => void startDuel()}
@@ -228,8 +309,20 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   name: { color: colors.cream, fontSize: 22, letterSpacing: 1 },
+  reroll: { alignSelf: 'flex-start', paddingVertical: 4 },
+  rerollText: {
+    color: colors.gold,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+  },
   meta: { color: colors.sand, fontSize: 13 },
   error: { color: '#E8A0A0', fontSize: 13, marginVertical: 4 },
+  rewardHint: {
+    color: colors.sand,
+    fontSize: 12,
+    fontWeight: '600',
+  },
   primary: { marginTop: 4 },
   secondary: { opacity: 0.92 },
   section: {

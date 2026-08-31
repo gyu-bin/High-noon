@@ -12,6 +12,8 @@ export type ShareResultInput = {
   challengeLine: string;
   /** 데일리 챌린지 완료 시 뱃지 카피 */
   dailyBadge?: string | null;
+  seasonBadge?: string | null;
+  cosmeticLabel?: string | null;
   resultVictory: string;
   resultDefeat: string;
   resultDraw: string;
@@ -53,6 +55,12 @@ export function buildPvpShareText(input: ShareResultInput): string {
   ];
   if (input.dailyBadge) {
     out.push(`🏅 ${input.dailyBadge}`);
+  }
+  if (input.seasonBadge) {
+    out.push(`⭐ ${input.seasonBadge}`);
+  }
+  if (input.cosmeticLabel) {
+    out.push(`🤠 ${input.cosmeticLabel}`);
   }
   out.push(input.challengeLine);
   return out.join('\n');

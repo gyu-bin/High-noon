@@ -69,6 +69,27 @@ export async function pvpSubmitMatch(input: {
   return data as PvpSubmitResult;
 }
 
+export async function pvpSetCosmeticNpc(
+  cosmeticNpcId: number | null,
+): Promise<PvpProfile> {
+  const key = await requireDeviceKey();
+  const { data, error } = await getSupabase().rpc('pvp_set_cosmetic_npc', {
+    p_device_key: key,
+    p_cosmetic_npc_id: cosmeticNpcId,
+  });
+  if (error) throw error;
+  return data as PvpProfile;
+}
+
+export async function pvpRerollDisplayName(): Promise<PvpProfile> {
+  const key = await requireDeviceKey();
+  const { data, error } = await getSupabase().rpc('pvp_reroll_display_name', {
+    p_device_key: key,
+  });
+  if (error) throw error;
+  return data as PvpProfile;
+}
+
 export async function pvpLeaderboard(limit = 50): Promise<PvpLeaderboardResult> {
   const key = await requireDeviceKey();
   const { data, error } = await getSupabase().rpc('pvp_leaderboard', {

@@ -1,24 +1,28 @@
-import { Stack, useRouter } from 'expo-router';
-import { useCallback, useMemo } from 'react';
-import { Share, StyleSheet, Text, View } from 'react-native';
+import { Stack, useRouter, type Href } from 'expo-router';
+import { useCallback, useEffect, useMemo } from 'react';
+import { ScrollView, Share, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
+import { RankingRewardCard } from '@/components/ranking/RankingRewardCard';
+import { PvpShareCard } from '@/components/result/PvpShareCard';
 import { WoodButton } from '@/components/ui/WoodButton';
-import { FONT_RYE } from '@/constants/fonts';
-import { formatRatingDelta } from '@/constants/pvpRanks';
 import {
-  META_PANEL_BG,
-  META_PANEL_BORDER,
-  metaTextShadow,
-} from '@/constants/westernBackground';
-import { colors } from '@/constants/theme';
+  currentSeasonKey,
+  formatSeasonKey,
+  isRankTierUpgrade,
+  parseRankTier,
+} from '@/constants/pvpRanks';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
-import { formatReactionMs } from '@/utils/formatReactionMs';
 import { pvpMatchmake } from '@/lib/supabase/pvpApi';
+import { useDailyMissionStore } from '@/store/dailyMissionStore';
 import { usePvpStore } from '@/store/pvpStore';
+import { useRankingRewardStore } from '@/store/rankingRewardStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { getNpcDisplayName } from '@/utils/npcLabels';
+import { buildPvpShareText } from '@/utils/pvpShareText';
+import { trigger } from '@/utils/hapticService';
 
 export default function RankingResultScreen() {
   const { t, i18n } = useTranslation();
@@ -33,9 +37,35 @@ export default function RankingResultScreen() {
   const opponentWins = usePvpStore((s) => s.opponentWins);
   const lastSubmit = usePvpStore((s) => s.lastSubmit);
   const beginMatch = usePvpStore((s) => s.beginMatch);
+  const dailyAllDone = useDailyMissionStore(
+    (s) => s.rankingPlay && s.rankingWin && s.todayBoss,
+  );
+  const cosmeticId = useRankingRewardStore((s) => s.selectedCosmeticNpcId);
+  const seasonPeaks = useRankingRewardStore((s) => s.seasonPeaks);
+  const recordSeasonPeak = useRankingRewardStore((s) => s.recordSeasonPeak);
 
   const won = playerWins > opponentWins;
   const draw = playerWins === opponentWins;
+  const dailyBadge = dailyAllDone ? t('ranking.dailyBadge') : null;
+  const tierUp = lastSubmit
+    ? isRankTierUpgrade(lastSubmit.rating_before, lastSubmit.rank_tier)
+    : false;
+  const seasonKey = currentSeasonKey();
+  const seasonTier = parseRankTier(
+    seasonPeaks[seasonKey] ?? lastSubmit?.rank_tier ?? 'bronze',
+  );
+  const seasonBadge = t('ranking.seasonShareBadge', {
+    season: formatSeasonKey(seasonKey, i18n.language),
+    tier: t(`npcs.tier.${seasonTier}`),
+  });
+  const cosmeticLabel =
+    cosmeticId != null ? getNpcDisplayName(t, cosmeticId) : null;
+
+  useEffect(() => {
+    if (!lastSubmit) return;
+    recordSeasonPeak(lastSubmit.rank_tier);
+    if (tierUp) void trigger('success');
+  }, [lastSubmit, recordSeasonPeak, tierUp]);
 
   const avgMs = useMemo(() => {
     const vals = rounds
@@ -45,46 +75,48 @@ export default function RankingResultScreen() {
     return vals.reduce((a, b) => a + b, 0) / vals.length;
   }, [rounds]);
 
-  const shareText = useMemo(() => {
-    const lines = rounds.map((r, i) => {
-      const mine = r.playerMs != null ? `${Math.round(r.playerMs)}` : '—';
-      const theirs = r.opponentMs != null ? `${Math.round(r.opponentMs)}` : '—';
-      const mark =
-        r.winner === 'player' ? '✓' : r.winner === 'opponent' ? '✗' : '=';
-      return `${i + 1}  ${mine}ms vs ${theirs}ms  ${mark}`;
-    });
-    const resultLabel = won
-      ? t('result.victory')
-      : draw
-        ? t('result.draw')
-        : t('result.defeat');
-    const avg = avgMs != null ? `${Math.round(avgMs)}ms` : '—';
-    const challenge =
-      i18n.language === 'ko'
-        ? '나보다 빠른 사람 있어?'
-        : i18n.language === 'ja'
-          ? '俺より速い奴いる？'
-          : 'Think you\'re faster?';
-    return [
-      'HIGH NOON · RANKING',
-      `${profile?.display_name ?? 'Me'} vs ${opponent?.display_name ?? 'Opponent'}`,
-      ...lines,
-      `${resultLabel}  ${playerWins}–${opponentWins}  ·  AVG ${avg}`,
-      challenge,
-      'https://highnoon.game',
-    ].join('\n');
-  }, [
-    avgMs,
-    draw,
-    i18n.language,
-    opponent?.display_name,
-    playerWins,
-    opponentWins,
-    profile?.display_name,
-    rounds,
-    t,
-    won,
-  ]);
+  const playerName = profile?.display_name ?? t('result.me');
+  const opponentName = opponent?.display_name ?? t('result.opponent');
+  const title = won
+    ? t('result.victory')
+    : draw
+      ? t('result.draw')
+      : t('result.defeat');
+
+  const shareText = useMemo(
+    () =>
+      buildPvpShareText({
+        playerName,
+        opponentName,
+        rounds,
+        playerWins,
+        opponentWins,
+        avgMs,
+        won,
+        draw,
+        challengeLine: t('ranking.shareChallenge'),
+        dailyBadge,
+        seasonBadge,
+        cosmeticLabel,
+        resultVictory: t('result.victory'),
+        resultDefeat: t('result.defeat'),
+        resultDraw: t('result.draw'),
+      }),
+    [
+      avgMs,
+      dailyBadge,
+      seasonBadge,
+      cosmeticLabel,
+      draw,
+      opponentName,
+      opponentWins,
+      playerName,
+      playerWins,
+      rounds,
+      t,
+      won,
+    ],
+  );
 
   const onShare = useCallback(() => {
     void Share.share({ message: shareText }).catch(() => {});
@@ -98,93 +130,58 @@ export default function RankingResultScreen() {
         ...payload,
         player: { ...payload.player, character_id: characterId },
       });
-      router.replace('/ranking/duel');
+      router.replace('/ranking/duel' as Href);
     } catch {
-      router.replace('/ranking');
+      router.replace('/ranking' as Href);
     }
   }, [beginMatch, router]);
-
-  const title = won
-    ? t('result.victory')
-    : draw
-      ? t('result.draw')
-      : t('result.defeat');
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <MetaScreenShell>
-        <View
-          style={[
-            styles.root,
-            {
-              paddingTop: insets.top + 16,
-              paddingBottom: insets.bottom + 20,
-            },
-          ]}
+        <ScrollView
+          style={styles.root}
+          contentContainerStyle={{
+            paddingTop: insets.top + 16,
+            paddingBottom: insets.bottom + 20,
+            gap: 12,
+          }}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.eyebrow, { fontFamily: FONT_RYE }]}>
-            HIGH NOON
-          </Text>
-          <Text
-            style={[
-              styles.title,
-              { fontFamily: FONT_RYE, color: won ? colors.gold : '#E8A0A0' },
-            ]}
-          >
-            {title}
-          </Text>
-          <Text style={styles.score}>
-            {playerWins} — {opponentWins}
-          </Text>
+          <PvpShareCard
+            playerName={playerName}
+            opponentName={opponentName}
+            rounds={rounds}
+            playerWins={playerWins}
+            opponentWins={opponentWins}
+            avgMs={avgMs}
+            won={won}
+            draw={draw}
+            title={title}
+            avgLabel={t('ranking.avgCaption')}
+            dailyBadge={dailyBadge}
+            seasonBadge={seasonBadge}
+            cosmeticLabel={cosmeticLabel}
+          />
 
-          <View style={styles.card}>
-            {rounds.map((r, i) => (
-              <View key={i} style={styles.roundRow}>
-                <Text style={styles.roundIdx}>{i + 1}</Text>
-                <Text style={styles.roundMs}>
-                  {r.playerMs != null ? formatReactionMs(r.playerMs) : '—'}
-                  {' vs '}
-                  {r.opponentMs != null ? formatReactionMs(r.opponentMs) : '—'}
-                </Text>
-                <Text
-                  style={[
-                    styles.roundMark,
-                    r.winner === 'player' && styles.markWin,
-                    r.winner === 'opponent' && styles.markLose,
-                  ]}
-                >
-                  {r.winner === 'player'
-                    ? '✓'
-                    : r.winner === 'opponent'
-                      ? '✗'
-                      : '='}
-                </Text>
-              </View>
-            ))}
-            <Text style={styles.avg}>
-              {t('ranking.avgLine', {
-                avg: avgMs != null ? Math.round(avgMs) : '—',
-              })}
-            </Text>
-            {lastSubmit ? (
-              <Text style={styles.rating}>
-                {t('ranking.ratingLine', {
-                  before: lastSubmit.rating_before,
-                  after: lastSubmit.rating_after,
-                  delta: formatRatingDelta(lastSubmit.rating_delta),
-                })}
-              </Text>
-            ) : null}
-          </View>
+          {lastSubmit ? (
+            <RankingRewardCard
+              ratingBefore={lastSubmit.rating_before}
+              ratingAfter={lastSubmit.rating_after}
+              ratingDelta={lastSubmit.rating_delta}
+              tierAfter={lastSubmit.rank_tier}
+              tierUp={tierUp}
+            />
+          ) : null}
 
           <WoodButton title={t('ranking.share')} onPress={onShare} />
           <WoodButton title={t('ranking.duelAgain')} onPress={() => void onAgain()} />
           <WoodButton
             title={t('ranking.backHub')}
-            onPress={() => router.replace('/ranking')}
+            onPress={() => router.replace('/ranking' as Href)}
           />
-        </View>
+        </ScrollView>
       </MetaScreenShell>
     </>
   );
@@ -194,70 +191,5 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     paddingHorizontal: 24,
-    gap: 12,
-  },
-  eyebrow: {
-    color: colors.sand,
-    fontSize: 14,
-    letterSpacing: 3,
-    ...metaTextShadow,
-  },
-  title: {
-    fontSize: 36,
-    letterSpacing: 2,
-    ...metaTextShadow,
-  },
-  score: {
-    color: colors.cream,
-    fontSize: 28,
-    fontWeight: '800',
-    fontVariant: ['tabular-nums'],
-    marginBottom: 4,
-  },
-  card: {
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: META_PANEL_BG,
-    borderWidth: 1,
-    borderColor: META_PANEL_BORDER,
-    gap: 8,
-    marginBottom: 8,
-  },
-  roundRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  roundIdx: {
-    width: 18,
-    color: colors.sand,
-    fontWeight: '700',
-  },
-  roundMs: {
-    flex: 1,
-    color: colors.cream,
-    fontSize: 16,
-    fontWeight: '700',
-    fontVariant: ['tabular-nums'],
-  },
-  roundMark: {
-    width: 22,
-    textAlign: 'center',
-    color: colors.sand,
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  markWin: { color: colors.gold },
-  markLose: { color: '#E8A0A0' },
-  avg: {
-    marginTop: 6,
-    color: colors.sand,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  rating: {
-    color: colors.gold,
-    fontSize: 13,
-    fontWeight: '700',
   },
 });
