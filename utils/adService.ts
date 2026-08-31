@@ -59,8 +59,8 @@ let interstitial: ReturnType<AdsLib['InterstitialAd']['createForAdRequest']> | n
 
 /** 전면 노출 주기 — N번째 매치 완료마다 1회 (승패 무관) */
 const MATCHES_PER_INTERSTITIAL = 2;
-/** 연속 전면 최소 간격. 한 판이 수 초인 게임이라 주기만으로는 간격이 너무 좁다 */
-const STAGE_AD_COOLDOWN_MS = 60_000;
+/** 연속 전면 최소 간격. 0이면 판수 주기만 본다. */
+const STAGE_AD_COOLDOWN_MS = 0;
 
 let lastStageInterstitialClosedAt = 0;
 let matchesSinceLastAd = 0;

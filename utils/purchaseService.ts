@@ -10,9 +10,14 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
 
 import { useProgressStore } from '@/store/progressStore';
+import { compareStoreVersions } from '@/utils/storeUpdate';
 
-/** 광고 제거 결제 ON/OFF */
-export const IAP_ENABLED = true;
+/**
+ * 광고 제거 IAP는 1.4 네이티브부터.
+ * 1.3 스토어 바이너리에 이 JS를 OTA로 넣으면 StoreKit 초기화가 앱을 죽인다.
+ */
+export const IAP_ENABLED =
+  compareStoreVersions(Constants.nativeAppVersion ?? '0', '1.4') >= 0;
 
 /** iOS · Android 공통 상품 ID — App Store Connect / Play Console과 동일해야 함 */
 export const AD_REMOVAL_PRODUCT_ID = 'com.highnoon.app.remove_ads';
@@ -56,7 +61,7 @@ function settlePendingPurchase(result: PurchaseOutcome) {
 }
 
 async function getIapLib(): Promise<IapLib | null> {
-  if (!USE_NATIVE_IAP) return null;
+  if (!IAP_ENABLED || !USE_NATIVE_IAP) return null;
   if (!iapLibPromise) {
     iapLibPromise = import('react-native-iap').catch(() => null);
   }
