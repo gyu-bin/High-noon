@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -28,13 +29,12 @@ import { useProgressStore } from '@/store/progressStore';
 import { useSettingsStore, type AppLanguage } from '@/store/settingsStore';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { playBgm, syncBgmWithSettings } from '@/utils/bgmService';
-// IAP 임시 비활성 — 다시 켤 때 purchaseService.IAP_ENABLED=true 와 함께 주석 해제
-// import {
-//   fetchAdRemovalProduct,
-//   purchaseAdRemoval,
-//   purchasesRuntimeEnabled,
-//   restorePurchases,
-// } from '@/utils/purchaseService';
+import {
+  fetchAdRemovalProduct,
+  purchaseAdRemoval,
+  purchasesRuntimeEnabled,
+  restorePurchases,
+} from '@/utils/purchaseService';
 
 export default function MenuScreen() {
   const { t } = useTranslation();
@@ -55,6 +55,13 @@ export default function MenuScreen() {
   const setLandscapeHintSeen = useSettingsStore((s) => s.setLandscapeHintSeen);
   const [showLandscapeHint, setShowLandscapeHint] = useState(false);
 
+  const isAdFree = useProgressStore((s) => s.isAdFree);
+  const [purchaseBusy, setPurchaseBusy] = useState(false);
+  const [adRemovalPrice, setAdRemovalPrice] = useState<string | null>(null);
+  const [productReady, setProductReady] = useState(false);
+  const [productLoadTried, setProductLoadTried] = useState(false);
+  const iapAvailable = purchasesRuntimeEnabled();
+
   useEffect(() => {
     const maybeShow = () => {
       if (!useSettingsStore.getState().landscapeHintSeen) {
@@ -67,6 +74,35 @@ export default function MenuScreen() {
     }
     return useSettingsStore.persist.onFinishHydration(maybeShow);
   }, []);
+
+  useEffect(() => {
+    if (!iapAvailable || isAdFree) return;
+    let cancelled = false;
+    let attempt = 0;
+
+    const load = async () => {
+      const p = await fetchAdRemovalProduct();
+      if (cancelled) return;
+      if (p) {
+        setAdRemovalPrice(p.localizedPrice || null);
+        setProductReady(true);
+        setProductLoadTried(true);
+        return;
+      }
+      attempt += 1;
+      setProductLoadTried(true);
+      if (attempt < 6) {
+        setTimeout(() => {
+          if (!cancelled) void load();
+        }, 1500);
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [iapAvailable, isAdFree]);
 
   const dismissLandscapeHint = useCallback(() => {
     setShowLandscapeHint(false);
@@ -81,14 +117,40 @@ export default function MenuScreen() {
     [setLanguage],
   );
 
-  // --- IAP 임시 비활성 ---
-  // const isAdFree = useProgressStore((s) => s.isAdFree);
-  // const [purchaseBusy, setPurchaseBusy] = useState(false);
-  // const [adRemovalPrice, setAdRemovalPrice] = useState<string | null>(null);
-  // const [productReady, setProductReady] = useState(false);
-  // const [productLoadTried, setProductLoadTried] = useState(false);
-  // const iapAvailable = purchasesRuntimeEnabled();
-  // ... fetch / purchase / restore handlers omitted while IAP_ENABLED=false
+  const onPurchaseAdRemoval = useCallback(async () => {
+    if (isAdFree || purchaseBusy) return;
+    setPurchaseBusy(true);
+    try {
+      const result = await purchaseAdRemoval();
+      if (result.ok) {
+        if (!useProgressStore.getState().isAdFree) {
+          Alert.alert(
+            t('menu.iapPurchaseDoneTitle'),
+            t('menu.iapPurchaseDoneBody'),
+          );
+        }
+        return;
+      }
+      if (result.reason === 'cancelled') return;
+      Alert.alert(t('menu.iapPurchaseFailTitle'), result.message);
+    } finally {
+      setPurchaseBusy(false);
+    }
+  }, [isAdFree, purchaseBusy, t]);
+
+  const onRestorePurchases = useCallback(async () => {
+    if (purchaseBusy) return;
+    setPurchaseBusy(true);
+    try {
+      const restored = await restorePurchases();
+      Alert.alert(
+        restored ? t('menu.iapRestoreOkTitle') : t('menu.iapRestoreNoneTitle'),
+        restored ? t('menu.iapRestoreOkBody') : t('menu.iapRestoreNoneBody'),
+      );
+    } finally {
+      setPurchaseBusy(false);
+    }
+  }, [purchaseBusy, t]);
 
   useScreenBgm('menu');
 
@@ -195,7 +257,6 @@ export default function MenuScreen() {
               />
             </View>
             <LanguageSelector value={language} onChange={onLanguageChange} />
-            {/* 진행도 수동 백업 UI는 숨김 — 키체인 자동 백업으로 대체 */}
           </View>
 
           <View style={styles.footer}>
@@ -205,9 +266,50 @@ export default function MenuScreen() {
             </Text>
           </View>
 
-          {/* IAP 임시 비활성 — purchaseService.IAP_ENABLED=true 로 켠 뒤 아래 블록 복구
-          {iapAvailable ? ( ... 광고 제거 / 구매 복원 UI ... ) : null}
-          */}
+          {iapAvailable ? (
+            <View style={styles.iapCard}>
+              {isAdFree ? (
+                <>
+                  <Text style={styles.iapTitle}>{t('menu.iapActiveTitle')}</Text>
+                  <Text style={styles.iapDesc}>{t('menu.iapThanks')}</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.iapTitle}>{t('menu.iapTitle')}</Text>
+                  <Text style={styles.iapDesc}>{t('menu.iapDesc')}</Text>
+                  {productLoadTried && !productReady ? (
+                    <Text style={styles.iapWarn}>{t('menu.iapWarn')}</Text>
+                  ) : null}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t('menu.iapBuyA11y')}
+                    disabled={purchaseBusy}
+                    onPress={onPurchaseAdRemoval}
+                    style={({ pressed }) => [
+                      styles.iapBuyBtn,
+                      pressed && styles.iapBuyBtnPressed,
+                      purchaseBusy && styles.iapBuyBtnDisabled,
+                    ]}
+                  >
+                    <Text style={styles.iapBuyText}>
+                      {purchaseBusy
+                        ? t('menu.iapBuying')
+                        : `${t('menu.iapBuy')}${adRemovalPrice ? ` · ${adRemovalPrice}` : ''}`}
+                    </Text>
+                  </Pressable>
+                </>
+              )}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('menu.iapRestoreA11y')}
+                disabled={purchaseBusy}
+                onPress={onRestorePurchases}
+                style={styles.iapRestoreBtn}
+              >
+                <Text style={styles.iapRestoreText}>{t('menu.iapRestore')}</Text>
+              </Pressable>
+            </View>
+          ) : null}
         </ScrollView>
       </View>
       <LandscapeHintModal visible={showLandscapeHint} onDismiss={dismissLandscapeHint} />
@@ -339,73 +441,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     ...metaTextShadow,
   },
-  /* 인앱 결제 UI 비활성화
-  adRemovalRow: {
-    alignItems: 'center',
-    paddingTop: 2,
-  },
-  proRow: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  proColumn: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  manageSubBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    backgroundColor: META_PANEL_BG,
-    borderWidth: 1,
-    borderColor: META_PANEL_BORDER,
-    minWidth: 160,
-    alignItems: 'center',
-  },
-  manageSubBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.cream,
-  },
-  restoreBtn: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-  },
-  btnPressed: {
-    opacity: 0.82,
-  },
-  btnDisabled: {
-    opacity: 0.5,
-  },
-  restoreBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.sand,
-    textDecorationLine: 'underline',
-  },
-  adFreeLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.cream,
-    ...metaTextShadow,
-  },
-  adRemovalBtn: {
-    paddingVertical: 11,
-    paddingHorizontal: 18,
-    borderRadius: 10,
-    backgroundColor: META_PANEL_BG,
-    borderWidth: 1,
-    borderColor: META_PANEL_BORDER,
-    minWidth: 200,
-    alignItems: 'center',
-  },
-  adRemovalBtnText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: colors.gold,
-    ...metaTextShadow,
-  },
-  */
   iapCard: {
     paddingVertical: 14,
     paddingHorizontal: 16,

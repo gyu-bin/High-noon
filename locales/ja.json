@@ -28,7 +28,24 @@
     "landscapeHintTitle": "横向きでもOK",
     "landscapeHintBody": "縦向き・横向きどちらも対応しています。\n好きな向きでプレイしてください。",
     "landscapeHintOk": "OK",
-    "backup": "進行状況のバックアップ"
+    "backup": "進行状況のバックアップ",
+    "iapTitle": "広告削除",
+    "iapActiveTitle": "広告削除が有効です",
+    "iapDesc": "マッチ間のインタースティシャル広告を削除します。買い切り・永久。",
+    "iapThanks": "ご購入ありがとうございます。",
+    "iapWarn": "ストア商品を読み込めないか、まだ販売準備ができていません。ネットワークとApp Storeログインを確認してから再試行してください。",
+    "iapBuy": "購入する",
+    "iapBuying": "処理中…",
+    "iapBuyA11y": "広告削除を購入",
+    "iapRestore": "購入を復元",
+    "iapRestoreA11y": "以前の購入を復元",
+    "iapPurchaseDoneTitle": "購入完了",
+    "iapPurchaseDoneBody": "購入が完了しました。広告削除はまもなく適用されます。",
+    "iapPurchaseFailTitle": "購入できません",
+    "iapRestoreOkTitle": "復元完了",
+    "iapRestoreOkBody": "以前購入した広告削除を復元しました。",
+    "iapRestoreNoneTitle": "復元する項目なし",
+    "iapRestoreNoneBody": "このアカウントの購入が見つかりませんでした。"
   },
   "settings": {
     "languageAuto": "自動",
@@ -167,7 +184,10 @@
     "watchAdLoading": "広告準備中…",
     "watchAdA11y": "広告を見てもう1ラウンド",
     "declineA11y": "諦めて結果を見る",
-    "giveUp": "諦める"
+    "giveUp": "諦める",
+    "descAdFree": "もう1ラウンド挑戦できます。\nこのチャンスは一度だけです。",
+    "retry": "もう1ラウンド",
+    "retryA11y": "もう1ラウンド挑戦"
   },
   "error": {
     "title": "問題が発生しました",
