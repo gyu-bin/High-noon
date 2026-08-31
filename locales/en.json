@@ -28,7 +28,24 @@
     "landscapeHintTitle": "Landscape works too",
     "landscapeHintBody": "Portrait and landscape are both supported.\nRotate to whatever feels best.",
     "landscapeHintOk": "Got it",
-    "backup": "Progress backup"
+    "backup": "Progress backup",
+    "iapTitle": "Remove Ads",
+    "iapActiveTitle": "Ads Removed",
+    "iapDesc": "Removes interstitial ads between matches. One-time purchase · forever.",
+    "iapThanks": "Thanks for your purchase.",
+    "iapWarn": "Couldn't load the store product yet, or it isn't ready for sale. Check your network and App Store login, then try again.",
+    "iapBuy": "Buy",
+    "iapBuying": "Working…",
+    "iapBuyA11y": "Buy ad removal",
+    "iapRestore": "Restore Purchases",
+    "iapRestoreA11y": "Restore previous purchases",
+    "iapPurchaseDoneTitle": "Purchase complete",
+    "iapPurchaseDoneBody": "Purchase complete. Ad removal will apply shortly.",
+    "iapPurchaseFailTitle": "Purchase unavailable",
+    "iapRestoreOkTitle": "Restored",
+    "iapRestoreOkBody": "Your previous ad removal purchase was restored.",
+    "iapRestoreNoneTitle": "Nothing to restore",
+    "iapRestoreNoneBody": "No purchases found for this account."
   },
   "settings": {
     "languageAuto": "Auto",
@@ -167,7 +184,10 @@
     "watchAdLoading": "Loading ad…",
     "watchAdA11y": "Watch ad for one more round",
     "declineA11y": "Give up and see results",
-    "giveUp": "Give Up"
+    "giveUp": "Give Up",
+    "descAdFree": "You can try one more round.\nThis chance only comes once.",
+    "retry": "One more round",
+    "retryA11y": "Play one more round"
   },
   "error": {
     "title": "Something went wrong",

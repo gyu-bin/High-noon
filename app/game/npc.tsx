@@ -237,6 +237,7 @@ export default function NpcGameScreen() {
   const [adRevivePending, setAdRevivePending] = useState<null | { ps: number; ns: number }>(null);
   const [adReviveLoading, setAdReviveLoading] = useState(false);
   const adReviveUsedRef = useRef(false);
+  const isAdFree = useProgressStore((s) => s.isAdFree);
   const [abilityOverlay, setAbilityOverlay] = useState<AbilityOverlayType>(null);
   const [headshotOffered, setHeadshotOffered] = useState(false);
   const [earlyOverlay, setEarlyOverlay] = useState(false);
@@ -914,12 +915,16 @@ export default function NpcGameScreen() {
     const pending = adRevivePending;
     if (!pending) return;
 
-    // 모달은 유지한 채 loading만 켠다 — 광고 SDK가 위에 뜨고,
-    // 실패 시에도 모달이 갑자기 사라져 결과로 튕기는 느낌을 줄인다.
-    setAdReviveLoading(true);
+    const adFree = useProgressStore.getState().isAdFree;
+    let rewarded = adFree;
+    if (!adFree) {
+      // 모달은 유지한 채 loading만 켠다 — 광고 SDK가 위에 뜨고,
+      // 실패 시에도 모달이 갑자기 사라져 결과로 튕기는 느낌을 줄인다.
+      setAdReviveLoading(true);
+      rewarded = await showRewardedAd();
+      setAdReviveLoading(false);
+    }
 
-    const rewarded = await showRewardedAd();
-    setAdReviveLoading(false);
     setAdRevivePending(null);
 
     if (!rewarded) {
@@ -1065,6 +1070,7 @@ export default function NpcGameScreen() {
             playerWins={adRevivePending?.ps ?? 0}
             opponentWins={adRevivePending?.ns ?? 0}
             loading={adReviveLoading}
+            adFree={isAdFree}
             onWatchAd={onAdReviveWatchAd}
             onDecline={onAdReviveDecline}
           />
