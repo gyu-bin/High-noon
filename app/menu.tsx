@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
@@ -35,6 +35,7 @@ import {
   purchasesRuntimeEnabled,
   restorePurchases,
 } from '@/utils/purchaseService';
+import { preloadInterstitial } from '@/utils/adService';
 
 export default function MenuScreen() {
   const { t } = useTranslation();
@@ -61,6 +62,12 @@ export default function MenuScreen() {
   const [productReady, setProductReady] = useState(false);
   const [productLoadTried, setProductLoadTried] = useState(false);
   const iapAvailable = purchasesRuntimeEnabled();
+
+  useFocusEffect(
+    useCallback(() => {
+      preloadInterstitial();
+    }, []),
+  );
 
   useEffect(() => {
     const maybeShow = () => {

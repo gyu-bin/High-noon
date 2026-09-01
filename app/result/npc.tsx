@@ -1,7 +1,6 @@
-import { useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   StyleSheet,
   Text,
   View,
@@ -34,7 +33,6 @@ import { getNpcDisplayName } from '@/utils/npcLabels';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { bgmPlay } from '@/utils/audioService';
-import { showStageCompleteAd } from '@/utils/adService';
 import { trigger } from '@/utils/hapticService';
 
 type LossReason = 'early' | 'timeout' | 'slower' | '';
@@ -173,30 +171,11 @@ export default function NpcResultScreen() {
   const lossReason = (lossReasonParam ?? '') as LossReason;
   const faster = whoFaster(playerMs, npcMs);
 
-  const [adFlowComplete, setAdFlowComplete] = useState(false);
-  const adHandledKeyRef = useRef<string | null>(null);
-  const resultSessionKey = `${npcId ?? ''}-${won ?? ''}-${playerWins ?? ''}-${npcWins ?? ''}-${completionStamp ?? ''}`;
+  const [adFlowComplete] = useState(true);
 
   const titleScale = useSharedValue(victory ? 0.85 : 1);
   const fxStartedRef = useRef(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (adHandledKeyRef.current === resultSessionKey) {
-        setAdFlowComplete(true);
-        return;
-      }
-      adHandledKeyRef.current = resultSessionKey;
-      setAdFlowComplete(false);
-      let cancelled = false;
-      void showStageCompleteAd().then(() => {
-        if (!cancelled) setAdFlowComplete(true);
-      });
-      return () => {
-        cancelled = true;
-      };
-    }, [resultSessionKey]),
-  );
   useEffect(() => {
     if (!adFlowComplete || !victory) return;
     titleScale.value = 0.85;
@@ -244,13 +223,6 @@ export default function NpcResultScreen() {
   return (
     <PhoneStageShell edgeToEdge>
       <OutcomeBackdrop variant={dayNight} width={winW} height={winH}>
-        {!adFlowComplete ? (
-          <View style={styles.adLoading} pointerEvents="auto">
-            <ActivityIndicator size="large" color={colors.cream} />
-            <Text style={styles.adLoadingText}>{t('common.loading')}</Text>
-          </View>
-        ) : null}
-
         {showContent && victory ? (
           <VictorySparkles width={winW} seed={completionStamp ?? 'win'} />
         ) : null}

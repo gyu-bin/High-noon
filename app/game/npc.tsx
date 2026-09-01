@@ -61,7 +61,7 @@ import {
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
 import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
 import { AdReviveModal } from '@/components/game/AdReviveModal';
-import { preloadInterstitial, preloadRewardedAd, showRewardedAd } from '@/utils/adService';
+import { preloadInterstitial, preloadRewardedAd, showRewardedAd, showStageCompleteAd } from '@/utils/adService';
 import { play, playGunshot } from '@/utils/audioService';
 import { speakDuelCue, stopDuelSignalSpeech, warmupDuelSpeech } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
@@ -776,6 +776,53 @@ export default function NpcGameScreen() {
     setAbilityOverlay('headshot');
   }, []);
 
+  const goToMatchResult = useCallback(
+    async (params: {
+      won: boolean;
+      playerWins: number;
+      npcWins: number;
+      playerMs: string;
+      npcMs: string;
+      lossReason: string;
+    }) => {
+      const completionStamp = String(Date.now());
+      await showStageCompleteAd(completionStamp);
+      router.replace({
+        pathname: '/result/npc',
+        params: {
+          npcId: String(npc!.id),
+          won: params.won ? '1' : '0',
+          playerWins: String(params.playerWins),
+          npcWins: String(params.npcWins),
+          completionStamp,
+          playerMs: params.playerMs,
+          npcMs: params.npcMs,
+          lossReason: params.lossReason,
+          dayNight: battleDayNight,
+        },
+      });
+    },
+    [router, npc, battleDayNight],
+  );
+
+  /** 광고 부활 결과 처리 — 성공 시 상대 마지막 승 롤백 후 다음 라운드, 실패·거절 시 정상 결과 화면으로 */
+  const finishMatchToResult = useCallback(() => {
+    const ps = useGameStore.getState().playerScore;
+    const ns = useGameStore.getState().opponentScore;
+    if (ps >= WINS_TO_END) {
+      useProgressStore.getState().markNpcCleared(npc!.id);
+    }
+    const lr = useGameStore.getState().lastReaction;
+    void goToMatchResult({
+      won: ps >= WINS_TO_END,
+      playerWins: ps,
+      npcWins: ns,
+      playerMs: lr.playerMs != null ? String(lr.playerMs) : '',
+      npcMs: lr.npcMs != null ? String(lr.npcMs) : '',
+      lossReason: '',
+    });
+  }, [goToMatchResult, npc]);
+
   const onContinue = useCallback(() => {
     if (outcomeRevealTimersRef.current.defeat != null) {
       clearTimeout(outcomeRevealTimersRef.current.defeat);
@@ -825,19 +872,13 @@ export default function NpcGameScreen() {
         if (m.playerMs != null) playerMsStr = String(m.playerMs);
         if (m.npcMs != null) npcMsStr = String(m.npcMs);
       }
-      router.replace({
-        pathname: '/result/npc',
-        params: {
-          npcId: String(npc!.id),
-          won: ps >= WINS_TO_END ? '1' : '0',
-          playerWins: String(ps),
-          npcWins: String(ns),
-          completionStamp: String(Date.now()),
-          playerMs: playerMsStr,
-          npcMs: npcMsStr,
-          lossReason,
-          dayNight: battleDayNight,
-        },
+      void goToMatchResult({
+        won: ps >= WINS_TO_END,
+        playerWins: ps,
+        npcWins: ns,
+        playerMs: playerMsStr,
+        npcMs: npcMsStr,
+        lossReason,
       });
       return;
     }
@@ -846,7 +887,7 @@ export default function NpcGameScreen() {
     nextRound();
     resetDuel();
     startRoundDuel();
-  }, [npc, nextRound, resetDuel, router, startRoundDuel, headshotOffered, setAbilityUsed, battleDayNight]);
+  }, [npc, nextRound, resetDuel, startRoundDuel, headshotOffered, setAbilityUsed, goToMatchResult]);
 
   /** 뱅 이전에도 탭을 엔진으로 넘겨 얼리 즉시 패배(누르고 있다가 뱅 때 손 떼면 이기는 버그 방지) */
   const shootCapturesEarly =
@@ -882,30 +923,6 @@ export default function NpcGameScreen() {
     resetDuel();
     router.replace('/menu');
   }, [resetDuel, router]);
-
-  /** 광고 부활 결과 처리 — 성공 시 상대 마지막 승 롤백 후 다음 라운드, 실패·거절 시 정상 결과 화면으로 */
-  const finishMatchToResult = useCallback(() => {
-    const ps = useGameStore.getState().playerScore;
-    const ns = useGameStore.getState().opponentScore;
-    if (ps >= WINS_TO_END) {
-      useProgressStore.getState().markNpcCleared(npc!.id);
-    }
-    const lr = useGameStore.getState().lastReaction;
-    router.replace({
-      pathname: '/result/npc',
-      params: {
-        npcId: String(npc!.id),
-        won: ps >= WINS_TO_END ? '1' : '0',
-        playerWins: String(ps),
-        npcWins: String(ns),
-        completionStamp: String(Date.now()),
-        playerMs: lr.playerMs != null ? String(lr.playerMs) : '',
-        npcMs: lr.npcMs != null ? String(lr.npcMs) : '',
-        lossReason: '',
-        dayNight: battleDayNight,
-      },
-    });
-  }, [npc, router, battleDayNight]);
 
   const onAdReviveDecline = useCallback(() => {
     setAdRevivePending(null);

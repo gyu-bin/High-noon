@@ -15,7 +15,7 @@
     "eas-build-pre-install": "node scripts/sync-store-version.js",
     "build:ios:production": "node scripts/bump-store-version.js && eas build --platform ios --profile production --auto-submit",
     "ota:upload": "node scripts/ota-upload.js",
-    "update:production": "node scripts/ota-upload.js --channel production --platform ios",
+    "update:production": "node scripts/ota-upload.js --channel production --platform all",
     "update:preview": "node scripts/ota-upload.js --channel preview --platform ios",
     "update:production:android": "node scripts/ota-upload.js --channel production --platform android",
     "update:preview:android": "node scripts/ota-upload.js --channel preview --platform android"
