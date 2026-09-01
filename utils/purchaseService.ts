@@ -2,6 +2,7 @@
  * 인앱 결제 (react-native-iap) — 광고 제거 Non-consumable 1종.
  *
  * App Store Connect / Play Console 상품 ID는 아래 상수와 반드시 일치해야 한다.
+ * Play 태그만 20자 이하·하이픈(-) 규칙 (제품 ID는 점·밑줄 허용).
  * 미등록·판매불가면 fetchProducts가 비고, 구매 시트가 뜨지 않는다.
  *
  * IAP_ENABLED=false 이면 UI·init·구매 전부 비활성.
@@ -31,11 +32,26 @@ if (Platform.OS !== 'web') {
  */
 export const IAP_ENABLED = true;
 
-/** iOS · Android 공통 상품 ID — App Store Connect / Play Console과 동일해야 함 */
-export const AD_REMOVAL_PRODUCT_ID = 'com.highnoon.app.remove_ads';
+/** iOS — App Store Connect (리버스 DNS 형식) */
+export const AD_REMOVAL_PRODUCT_ID_IOS = 'com.highnoon.app.remove_ads';
+
+/** Android — Play Console 일회성 제품 ID (iOS와 동일 SKU) */
+export const AD_REMOVAL_PRODUCT_ID_ANDROID = 'com.highnoon.app.remove_ads';
+
+/** 현재 플랫폼 스토어 상품 ID */
+export function getAdRemovalProductId(): string {
+  return Platform.OS === 'android'
+    ? AD_REMOVAL_PRODUCT_ID_ANDROID
+    : AD_REMOVAL_PRODUCT_ID_IOS;
+}
+
+/** @deprecated getAdRemovalProductId() 사용 — iOS ID (하위 호환) */
+export const AD_REMOVAL_PRODUCT_ID = AD_REMOVAL_PRODUCT_ID_IOS;
 
 export const HIGH_NOON_PRO_ENTITLEMENT_ID = 'High noon Pro';
-export const STORE_PRODUCT_IDS = { lifetime: AD_REMOVAL_PRODUCT_ID } as const;
+export const STORE_PRODUCT_IDS = {
+  lifetime: AD_REMOVAL_PRODUCT_ID_IOS,
+} as const;
 export type HighNoonStoreProductId = keyof typeof STORE_PRODUCT_IDS;
 
 export type PurchaseOutcome =
@@ -194,13 +210,11 @@ function purchaseMatchesAdRemoval(p: {
   id?: string | null;
   ids?: string[] | null;
 }): boolean {
-  if (
-    p.productId === AD_REMOVAL_PRODUCT_ID ||
-    p.id === AD_REMOVAL_PRODUCT_ID
-  ) {
-    return true;
-  }
-  return p.ids?.includes(AD_REMOVAL_PRODUCT_ID) ?? false;
+  const ids = [AD_REMOVAL_PRODUCT_ID_IOS, AD_REMOVAL_PRODUCT_ID_ANDROID];
+  return ids.some(
+    (sku) =>
+      p.productId === sku || p.id === sku || p.ids?.includes(sku) === true,
+  );
 }
 
 function attachPurchaseListeners(lib: IapLib): void {
@@ -215,7 +229,7 @@ function attachPurchaseListeners(lib: IapLib): void {
       } else if (pendingPurchase) {
         // 예상 SKU와 필드명이 다를 때 ids 배열로 한 번 더 확인
         const ids = (purchase as { ids?: string[] | null }).ids;
-        if (ids?.includes(AD_REMOVAL_PRODUCT_ID)) {
+        if (ids?.includes(getAdRemovalProductId())) {
           useProgressStore.getState().setAdFree(true);
           settlePendingPurchase({ ok: true });
         }
@@ -253,7 +267,7 @@ async function detectAdRemovalOwnership(lib: IapLib): Promise<boolean> {
     ).currentEntitlementIOS;
     if (typeof currentEntitlement === 'function') {
       try {
-        const entitlement = await currentEntitlement(AD_REMOVAL_PRODUCT_ID);
+        const entitlement = await currentEntitlement(getAdRemovalProductId());
         if (entitlement && purchaseMatchesAdRemoval(entitlement)) return true;
       } catch {
         // 다음 방법 시도
@@ -372,7 +386,7 @@ function normalizeAdRemovalProduct(
   if (!raw || typeof raw !== 'object') return null;
   const rec = raw as Record<string, unknown>;
   const productId = String(rec.id ?? rec.productId ?? '');
-  if (productId !== AD_REMOVAL_PRODUCT_ID) return null;
+  if (productId !== getAdRemovalProductId()) return null;
   const localizedPrice =
     typeof rec.displayPrice === 'string'
       ? rec.displayPrice
@@ -397,9 +411,10 @@ export async function fetchAdRemovalProduct(): Promise<{
   const lib = await getIapLib();
   if (!lib || !ready) return null;
 
+  const sku = getAdRemovalProductId();
   try {
     const products = await lib.fetchProducts({
-      skus: [AD_REMOVAL_PRODUCT_ID],
+      skus: [sku],
       type: 'in-app',
     });
     for (const item of productsToList(products)) {
@@ -412,7 +427,7 @@ export async function fetchAdRemovalProduct(): Promise<{
 
   try {
     const products = await lib.fetchProducts({
-      skus: [AD_REMOVAL_PRODUCT_ID],
+      skus: [sku],
       type: 'all',
     });
     for (const item of productsToList(products)) {
@@ -473,8 +488,8 @@ export async function purchaseAdRemoval(): Promise<PurchaseOutcome> {
         await lib.requestPurchase({
           type: 'in-app',
           request: {
-            apple: { sku: AD_REMOVAL_PRODUCT_ID },
-            google: { skus: [AD_REMOVAL_PRODUCT_ID] },
+            apple: { sku: AD_REMOVAL_PRODUCT_ID_IOS },
+            google: { skus: [AD_REMOVAL_PRODUCT_ID_ANDROID] },
           },
         });
         // 성공/실패는 purchaseUpdated / purchaseError 리스너가 settle
