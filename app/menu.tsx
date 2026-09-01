@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -55,10 +54,6 @@ export default function MenuScreen() {
   const setHapticEnabled = useSettingsStore((s) => s.setHapticEnabled);
   const setLanguage = useSettingsStore((s) => s.setLanguage);
   const setLandscapeHintSeen = useSettingsStore((s) => s.setLandscapeHintSeen);
-  const iapActiveCardDismissed = useSettingsStore((s) => s.iapActiveCardDismissed);
-  const setIapActiveCardDismissed = useSettingsStore(
-    (s) => s.setIapActiveCardDismissed,
-  );
   const [showLandscapeHint, setShowLandscapeHint] = useState(false);
 
   const isAdFree = useProgressStore((s) => s.isAdFree);
@@ -67,7 +62,6 @@ export default function MenuScreen() {
   const [productReady, setProductReady] = useState(false);
   const [productLoadTried, setProductLoadTried] = useState(false);
   const iapAvailable = purchasesRuntimeEnabled();
-  const showIapCard = iapAvailable && !(isAdFree && iapActiveCardDismissed);
 
   useFocusEffect(
     useCallback(() => {
@@ -279,52 +273,40 @@ export default function MenuScreen() {
             </Text>
           </View>
 
-          {showIapCard ? (
+          {iapAvailable && isAdFree ? (
+            <Text
+              accessibilityRole="text"
+              accessibilityLabel={t('menu.iapPurchasedBadge')}
+              style={styles.iapPurchasedBadge}
+            >
+              {t('menu.iapPurchasedBadge')}
+            </Text>
+          ) : null}
+
+          {iapAvailable && !isAdFree ? (
             <View style={styles.iapCard}>
-              {isAdFree ? (
-                <>
-                  <View style={styles.iapActiveHeader}>
-                    <Text style={[styles.iapTitle, styles.iapTitleFlex]}>
-                      {t('menu.iapActiveTitle')}
-                    </Text>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={t('menu.iapActiveDismissA11y')}
-                      hitSlop={10}
-                      onPress={() => setIapActiveCardDismissed(true)}
-                      style={styles.iapDismissBtn}
-                    >
-                      <Ionicons name="close" size={20} color={colors.sand} />
-                    </Pressable>
-                  </View>
-                  <Text style={styles.iapDesc}>{t('menu.iapThanks')}</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.iapTitle}>{t('menu.iapTitle')}</Text>
-                  <Text style={styles.iapDesc}>{t('menu.iapDesc')}</Text>
-                  {productLoadTried && !productReady ? (
-                    <Text style={styles.iapWarn}>{t('menu.iapWarn')}</Text>
-                  ) : null}
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={t('menu.iapBuyA11y')}
-                    disabled={purchaseBusy}
-                    onPress={onPurchaseAdRemoval}
-                    style={({ pressed }) => [
-                      styles.iapBuyBtn,
-                      pressed && styles.iapBuyBtnPressed,
-                      purchaseBusy && styles.iapBuyBtnDisabled,
-                    ]}
-                  >
-                    <Text style={styles.iapBuyText}>
-                      {purchaseBusy
-                        ? t('menu.iapBuying')
-                        : `${t('menu.iapBuy')}${adRemovalPrice ? ` · ${adRemovalPrice}` : ''}`}
-                    </Text>
-                  </Pressable>
-                </>
-              )}
+              <Text style={styles.iapTitle}>{t('menu.iapTitle')}</Text>
+              <Text style={styles.iapDesc}>{t('menu.iapDesc')}</Text>
+              {productLoadTried && !productReady ? (
+                <Text style={styles.iapWarn}>{t('menu.iapWarn')}</Text>
+              ) : null}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('menu.iapBuyA11y')}
+                disabled={purchaseBusy}
+                onPress={onPurchaseAdRemoval}
+                style={({ pressed }) => [
+                  styles.iapBuyBtn,
+                  pressed && styles.iapBuyBtnPressed,
+                  purchaseBusy && styles.iapBuyBtnDisabled,
+                ]}
+              >
+                <Text style={styles.iapBuyText}>
+                  {purchaseBusy
+                    ? t('menu.iapBuying')
+                    : `${t('menu.iapBuy')}${adRemovalPrice ? ` · ${adRemovalPrice}` : ''}`}
+                </Text>
+              </Pressable>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t('menu.iapRestoreA11y')}
@@ -476,16 +458,14 @@ const styles = StyleSheet.create({
     borderColor: META_PANEL_BORDER,
     gap: 10,
   },
-  iapActiveHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  iapTitleFlex: {
-    flex: 1,
-  },
-  iapDismissBtn: {
-    padding: 2,
+  iapPurchasedBadge: {
+    alignSelf: 'center',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    color: colors.sand,
+    opacity: 0.75,
+    ...metaTextShadow,
   },
   iapTitle: {
     fontSize: 14,

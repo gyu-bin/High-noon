@@ -31,7 +31,7 @@
     "backup": "진행도 백업",
     "iapTitle": "광고 제거",
     "iapActiveTitle": "광고 제거 활성화됨",
-    "iapActiveDismissA11y": "광고 제거 안내 닫기",
+    "iapPurchasedBadge": "구매완료 · 광고 제거",
     "iapDesc": "매치 사이 전면 광고를 제거합니다. 1회 결제 · 영구 소유.",
     "iapThanks": "구매해주셔서 감사합니다.",
     "iapWarn": "스토어 상품을 불러오는 중이거나 아직 판매 준비가 안 됐습니다. 네트워크·App Store 로그인 후 다시 시도해 주세요.",

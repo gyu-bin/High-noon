@@ -1,14 +1,14 @@
 /**
  * 인앱 결제 (react-native-iap) — 광고 제거 Non-consumable 1종.
  *
- * App Store Connect 상품 ID는 아래 상수와 반드시 일치해야 한다.
- * ASC에 미등록·판매불가면 fetchProducts가 비고, 구매 시트가 뜨지 않는다.
+ * App Store Connect / Play Console 상품 ID는 아래 상수와 반드시 일치해야 한다.
+ * 미등록·판매불가면 fetchProducts가 비고, 구매 시트가 뜨지 않는다.
  *
  * IAP_ENABLED=false 이면 UI·init·구매 전부 비활성.
  *
- * Android: react-native-iap 15는 Nitro 기반이라, 모듈이 없거나 Play Billing이
- * 준비되지 않은 기기에서 부팅 직후 init하면 프로세스가 죽을 수 있다.
- * → Nitro 가용성 확인 + 부팅 시에는 Android init을 건너뛴다(메뉴에서 lazy).
+ * Android는 부팅 직후 BillingClient init을 피하고(메뉴에서 lazy),
+ * Nitro 모듈이 있을 때만 로드한다. BILLING 권한만 단독으로 넣지 말 것 —
+ * Play가 AIDL로 오인한다. billingclient는 react-native-iap이 가져온다.
  */
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { requireOptionalNativeModule } from 'expo-modules-core';
@@ -40,15 +40,10 @@ export type PurchaseOutcome =
     };
 
 const USE_NATIVE_IAP =
-  Platform.OS === 'ios' &&
+  Platform.OS !== 'web' &&
   Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
 
-/**
- * Android는 1.4 내부테스트에서 켜자마자 크래시가 재현됨.
- * react-native-iap(Nitro) 네이티브 로드/부팅 init이 유력 원인이라
- * 당분간 Android IAP는 끈다. (광고·게임 플레이는 유지, iOS IAP만 활성)
- * → 재빌드 시 `react-native.config.js`에서 Android autolink도 제외.
- */
+/** react-native-iap 15는 NitroModules 런타임이 있어야 HybridObject를 만든다 */
 function hasNitroRuntime(): boolean {
   try {
     return requireOptionalNativeModule('NitroModules') != null;

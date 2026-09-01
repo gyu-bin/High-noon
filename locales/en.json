@@ -31,7 +31,7 @@
     "backup": "Progress backup",
     "iapTitle": "Remove Ads",
     "iapActiveTitle": "Ads Removed",
-    "iapActiveDismissA11y": "Dismiss ads removed notice",
+    "iapPurchasedBadge": "Purchased · Ads removed",
     "iapDesc": "Removes interstitial ads between matches. One-time purchase · forever.",
     "iapThanks": "Thanks for your purchase.",
     "iapWarn": "Couldn't load the store product yet, or it isn't ready for sale. Check your network and App Store login, then try again.",

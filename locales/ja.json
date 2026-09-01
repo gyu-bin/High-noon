@@ -31,7 +31,7 @@
     "backup": "進行状況のバックアップ",
     "iapTitle": "広告削除",
     "iapActiveTitle": "広告削除が有効です",
-    "iapActiveDismissA11y": "広告削除のお知らせを閉じる",
+    "iapPurchasedBadge": "購入済み · 広告削除",
     "iapDesc": "マッチ間のインタースティシャル広告を削除します。買い切り・永久。",
     "iapThanks": "ご購入ありがとうございます。",
     "iapWarn": "ストア商品を読み込めないか、まだ販売準備ができていません。ネットワークとApp Storeログインを確認してから再試行してください。",
