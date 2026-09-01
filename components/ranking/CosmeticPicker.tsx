@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { NpcCharacterSprite } from '@/components/game/CharacterSprites';
+import { RankingPortrait } from '@/components/ranking/RankingPortrait';
 import { FONT_RYE } from '@/constants/fonts';
 import {
   META_PANEL_BG,
@@ -12,18 +12,25 @@ import { colors } from '@/constants/theme';
 import { getNpcById } from '@/constants/npcs';
 import { selectPaleRiderUnlocked, useProgressStore } from '@/store/progressStore';
 import { useRankingRewardStore } from '@/store/rankingRewardStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { pvpSetCosmeticNpc } from '@/lib/supabase/pvpApi';
 import { usePvpStore } from '@/store/pvpStore';
 import { getNpcDisplayName } from '@/utils/npcLabels';
 import { unlockedCosmeticNpcIds } from '@/utils/pvpRewards';
 import { trigger } from '@/utils/hapticService';
 
-export function CosmeticPicker() {
+type Props = {
+  /** 모달 안에서 쓸 때 중복 제목 숨김 */
+  compact?: boolean;
+};
+
+export function CosmeticPicker({ compact = false }: Props) {
   const { t } = useTranslation();
   const npcById = useProgressStore((s) => s.npcById);
   const paleFlag = useProgressStore((s) => s.paleRiderUnlocked);
   const selected = useRankingRewardStore((s) => s.selectedCosmeticNpcId);
   const setCosmeticNpcId = useRankingRewardStore((s) => s.setCosmeticNpcId);
+  const characterId = useSettingsStore((s) => s.selectedCharacterId);
   const profile = usePvpStore((s) => s.profile);
   const setProfile = usePvpStore((s) => s.setProfile);
 
@@ -54,11 +61,17 @@ export function CosmeticPicker() {
   );
 
   return (
-    <View style={styles.card}>
-      <Text style={[styles.head, { fontFamily: FONT_RYE }]}>
-        {t('ranking.cosmeticTitle')}
-      </Text>
-      <Text style={styles.sub}>{t('ranking.cosmeticSub')}</Text>
+    <View style={[styles.card, compact && styles.cardCompact]}>
+      {!compact ? (
+        <>
+          <Text style={[styles.head, { fontFamily: FONT_RYE }]}>
+            {t('ranking.cosmeticTitle')}
+          </Text>
+          <Text style={styles.sub}>{t('ranking.cosmeticSub')}</Text>
+        </>
+      ) : (
+        <Text style={styles.sub}>{t('ranking.cosmeticSub')}</Text>
+      )}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -70,9 +83,12 @@ export function CosmeticPicker() {
           onPress={() => void apply(null)}
           style={[styles.chip, selected == null && styles.chipOn]}
         >
-          <View style={styles.spriteBox}>
-            <Text style={styles.meMark}>ME</Text>
-          </View>
+          <RankingPortrait
+            width={96}
+            height={112}
+            characterId={characterId}
+            cosmeticNpcId={null}
+          />
           <Text style={styles.chipName} numberOfLines={1}>
             {t('ranking.cosmeticDefault')}
           </Text>
@@ -89,9 +105,12 @@ export function CosmeticPicker() {
               onPress={() => void apply(id)}
               style={[styles.chip, on && styles.chipOn]}
             >
-              <View style={styles.spriteBox}>
-                <NpcCharacterSprite npcId={id} width={48} height={54} pose="idle" />
-              </View>
+              <RankingPortrait
+                width={96}
+                height={112}
+                cosmeticNpcId={id}
+                characterId={characterId}
+              />
               <Text style={styles.chipName} numberOfLines={1}>
                 {getNpcDisplayName(t, id)}
               </Text>
@@ -113,7 +132,13 @@ const styles = StyleSheet.create({
     backgroundColor: META_PANEL_BG,
     borderWidth: 1,
     borderColor: META_PANEL_BORDER,
-    gap: 8,
+    gap: 10,
+  },
+  cardCompact: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    paddingHorizontal: 0,
+    paddingTop: 0,
   },
   head: {
     color: colors.gold,
@@ -123,39 +148,32 @@ const styles = StyleSheet.create({
   sub: {
     color: colors.sand,
     fontSize: 12,
+    lineHeight: 17,
   },
   row: {
-    gap: 8,
-    paddingVertical: 4,
+    gap: 12,
+    paddingVertical: 6,
+    paddingRight: 8,
   },
   chip: {
-    width: 88,
-    padding: 8,
-    borderRadius: 10,
+    width: 118,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingHorizontal: 8,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: META_PANEL_BORDER,
-    backgroundColor: 'rgba(12, 6, 4, 0.28)',
+    backgroundColor: 'rgba(12, 6, 4, 0.35)',
     alignItems: 'center',
-    gap: 4,
+    gap: 8,
   },
   chipOn: {
-    borderColor: 'rgba(232, 197, 71, 0.7)',
-  },
-  spriteBox: {
-    width: 48,
-    height: 54,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  meMark: {
-    color: colors.gold,
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 1,
+    borderColor: colors.gold,
+    backgroundColor: 'rgba(232, 197, 71, 0.12)',
   },
   chipName: {
     color: colors.cream,
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '700',
     textAlign: 'center',
     width: '100%',
@@ -163,5 +181,6 @@ const styles = StyleSheet.create({
   empty: {
     color: colors.sand,
     fontSize: 12,
+    lineHeight: 17,
   },
 });

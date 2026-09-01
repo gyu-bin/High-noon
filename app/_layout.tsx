@@ -255,6 +255,8 @@ function RootLayoutContent() {
         <Stack.Screen name="game" options={{ headerShown: false }} />
         <Stack.Screen name="capture" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ headerShown: false }} />
+        <Stack.Screen name="ranking" options={{ headerShown: false }} />
+        <Stack.Screen name="admin" options={{ headerShown: false }} />
       </Stack>
       <OtaUpdatedToast visible={otaToastVisible} onHidden={hideOtaToast} />
       <StoreUpdateModal visible={storeUpdateVisible} onDismiss={dismissStoreUpdate} />
