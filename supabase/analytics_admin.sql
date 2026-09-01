@@ -27,6 +27,7 @@ create index if not exists analytics_match_events_npc_id_idx
   on public.analytics_match_events (npc_id);
 
 alter table public.analytics_match_events enable row level security;
+alter table public.app_settings enable row level security;
 
 create or replace function public.analytics_record_match(
   p_device_key text,
@@ -42,7 +43,7 @@ create or replace function public.analytics_record_match(
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   if p_device_key is null or length(p_device_key) < 16 then
