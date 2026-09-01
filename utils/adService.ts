@@ -3,7 +3,7 @@ import { AppState, Platform } from 'react-native';
 
 import { IS_PREVIEW_BUILD } from '@/constants/devFlags';
 import { useProgressStore } from '@/store/progressStore';
-import { purchasesRuntimeEnabled } from '@/utils/purchaseService';
+import { IAP_ENABLED } from '@/utils/purchaseService';
 
 /**
  * 광고 ON/OFF.
@@ -167,9 +167,9 @@ const REWARDED_LOAD_TIMEOUT_MS = 6000;
 /** 2매치마다 전면 노출 시 로드 대기 (ms) */
 const INTERSTITIAL_LOAD_WAIT_MS = 20_000;
 
-/** 광고 제거는 IAP가 실제로 동작하는 빌드(1.4+)에서만 인정. 1.3에 남은 테스트 구매 플래그는 무시. */
+/** 광고 제거는 1.4+ 네이티브에서만 인정. 1.3에 남은 테스트 구매 플래그는 무시. */
 function isAdFreeActive(): boolean {
-  return purchasesRuntimeEnabled() && useProgressStore.getState().isAdFree;
+  return IAP_ENABLED && useProgressStore.getState().isAdFree;
 }
 
 /**

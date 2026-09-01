@@ -34,6 +34,10 @@ import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { bgmPlay } from '@/utils/audioService';
 import { trigger } from '@/utils/hapticService';
+import {
+  firstSearchParam,
+  peekNpcMatchResult,
+} from '@/utils/npcMatchResult';
 
 type LossReason = 'early' | 'timeout' | 'slower' | '';
 
@@ -146,29 +150,48 @@ export default function NpcResultScreen() {
     lossReason: lossReasonParam,
     dayNight: dayNightParam,
   } = useLocalSearchParams<{
-    npcId?: string;
-    won?: string;
-    playerWins?: string;
-    npcWins?: string;
-    completionStamp?: string;
-    playerMs?: string;
-    npcMs?: string;
-    lossReason?: string;
-    dayNight?: string;
+    npcId?: string | string[];
+    won?: string | string[];
+    playerWins?: string | string[];
+    npcWins?: string | string[];
+    completionStamp?: string | string[];
+    playerMs?: string | string[];
+    npcMs?: string | string[];
+    lossReason?: string | string[];
+    dayNight?: string | string[];
   }>();
 
-  const id = Number(npcId);
-  const npc = getNpcById(id);
-  const victory = won === '1';
-  const dayNight = dayNightParam === 'night' ? 'night' : 'day';
+  const remembered = peekNpcMatchResult();
+  const npcIdStr = firstSearchParam(npcId) ?? remembered?.npcId;
+  const wonStr =
+    firstSearchParam(won) ??
+    (remembered != null ? (remembered.won ? '1' : '0') : undefined);
+  const playerWinsStr =
+    firstSearchParam(playerWins) ??
+    (remembered != null ? String(remembered.playerWins) : undefined);
+  const npcWinsStr =
+    firstSearchParam(npcWins) ??
+    (remembered != null ? String(remembered.npcWins) : undefined);
+  const completionStampStr =
+    firstSearchParam(completionStamp) ?? remembered?.completionStamp;
+  const playerMsStr = firstSearchParam(playerMsParam) ?? remembered?.playerMs;
+  const npcMsStr = firstSearchParam(npcMsParam) ?? remembered?.npcMs;
+  const lossReasonStr = firstSearchParam(lossReasonParam) ?? remembered?.lossReason ?? '';
+  const dayNightStr = firstSearchParam(dayNightParam) ?? remembered?.dayNight;
+
+  const id = Number(npcIdStr);
+  const npc = Number.isFinite(id) ? getNpcById(id) : undefined;
+  const outcomeKnown = wonStr === '1' || wonStr === '0';
+  const victory = wonStr === '1';
+  const dayNight = dayNightStr === 'night' ? 'night' : 'day';
   const theme = victory ? OUTCOME_VICTORY : OUTCOME_DEFEAT;
 
   const playerMsRaw =
-    playerMsParam != null && playerMsParam !== '' ? Number(playerMsParam) : NaN;
-  const npcMsRaw = npcMsParam != null && npcMsParam !== '' ? Number(npcMsParam) : NaN;
+    playerMsStr != null && playerMsStr !== '' ? Number(playerMsStr) : NaN;
+  const npcMsRaw = npcMsStr != null && npcMsStr !== '' ? Number(npcMsStr) : NaN;
   const playerMs = Number.isFinite(playerMsRaw) ? playerMsRaw : null;
   const npcMs = Number.isFinite(npcMsRaw) ? npcMsRaw : null;
-  const lossReason = (lossReasonParam ?? '') as LossReason;
+  const lossReason = lossReasonStr as LossReason;
   const faster = whoFaster(playerMs, npcMs);
 
   const [adFlowComplete] = useState(true);
@@ -177,7 +200,7 @@ export default function NpcResultScreen() {
   const fxStartedRef = useRef(false);
 
   useEffect(() => {
-    if (!adFlowComplete || !victory) return;
+    if (!adFlowComplete || !outcomeKnown || !victory) return;
     titleScale.value = 0.85;
     titleScale.value = withSequence(
       withTiming(1.08, {
@@ -187,10 +210,10 @@ export default function NpcResultScreen() {
       }),
       withTiming(1, { duration: 200, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME }),
     );
-  }, [adFlowComplete, victory, titleScale]);
+  }, [adFlowComplete, outcomeKnown, victory, titleScale]);
 
   useEffect(() => {
-    if (!adFlowComplete) return;
+    if (!adFlowComplete || !outcomeKnown) return;
     if (fxStartedRef.current) return;
     fxStartedRef.current = true;
     if (victory) {
@@ -200,7 +223,7 @@ export default function NpcResultScreen() {
       void bgmPlay('result_lose');
       void trigger('error');
     }
-  }, [adFlowComplete, victory]);
+  }, [adFlowComplete, outcomeKnown, victory]);
 
   const titleAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: titleScale.value }],
@@ -223,11 +246,12 @@ export default function NpcResultScreen() {
   return (
     <PhoneStageShell edgeToEdge>
       <OutcomeBackdrop variant={dayNight} width={winW} height={winH}>
-        {showContent && victory ? (
-          <VictorySparkles width={winW} seed={completionStamp ?? 'win'} />
+        {showContent && outcomeKnown && victory ? (
+          <VictorySparkles width={winW} seed={completionStampStr ?? 'win'} />
         ) : null}
 
         <View style={[styles.content, !showContent && styles.contentHidden]}>
+          {outcomeKnown ? (
           <Animated.View
             entering={FadeInDown.duration(420).springify().damping(18)}
             style={[styles.panel, { borderColor: theme.badgeBorder }]}
@@ -271,7 +295,7 @@ export default function NpcResultScreen() {
             <View style={styles.scorePill}>
               <Text style={styles.scoreLabel}>{t('result.finalScore')}</Text>
               <Text style={[styles.scoreValue, { fontFamily: FONT_RYE }]}>
-                {playerWins ?? '0'} — {npcWins ?? '0'}
+                {playerWinsStr ?? '0'} — {npcWinsStr ?? '0'}
               </Text>
             </View>
 
@@ -287,6 +311,7 @@ export default function NpcResultScreen() {
               />
             </View>
           </Animated.View>
+          ) : null}
         </View>
       </OutcomeBackdrop>
     </PhoneStageShell>

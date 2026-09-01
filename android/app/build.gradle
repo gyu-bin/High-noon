@@ -88,11 +88,12 @@ android {
     namespace 'com.highnoon.game'
     defaultConfig {
         missingDimensionStrategy "platform", "play"
+
         applicationId 'com.highnoon.game'
         minSdk = rootProject.ext.minSdkVersion
         targetSdk = rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.4"
+        versionName "1.4.1"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
@@ -153,6 +154,7 @@ android {
 
 dependencies {
     implementation "io.github.hyochan.openiap:openiap-google:3.5.0"
+
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 

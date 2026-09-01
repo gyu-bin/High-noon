@@ -8,7 +8,12 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, type AppStateStatus } from 'react-native';
+import {
+  AppState,
+  InteractionManager,
+  Platform,
+  type AppStateStatus,
+} from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
@@ -62,6 +67,39 @@ function waitPersistHydrated(api: {
 
 function isInGameRoute(pathname: string): boolean {
   return pathname === '/game' || pathname.startsWith('/game/');
+}
+
+/** 스플래시를 내리기 전에 첫 프레임을 그릴 시간을 준다 — 배경 깜빡임 완화 */
+function waitForNextFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve());
+    });
+  });
+}
+
+/** 부팅 직후 사운드·광고·이미지 프리로드 — Android는 터치 반응 후로 미룬다 */
+function scheduleBootSideEffects(): void {
+  const run = () => {
+    void preloadAll();
+    void ensureGameAudioSession();
+    warmupDuelSpeech();
+    void bootMenuBgm();
+    void preloadSceneImages();
+    void initAds().then(() => {
+      preloadInterstitial();
+      preloadRewardedAd();
+    });
+    void initPurchasesOnBoot();
+  };
+
+  if (Platform.OS === 'android') {
+    InteractionManager.runAfterInteractions(() => {
+      setTimeout(run, 350);
+    });
+    return;
+  }
+  run();
 }
 
 export default function RootLayout() {
@@ -207,18 +245,10 @@ function RootLayoutContent() {
             setAppReady(true);
             if (justUpdated) setOtaToastVisible(true);
           }
-          // 언마운트됐더라도 스플래시는 전역 상태이므로 반드시 내린다
+          // 첫 화면 레이아웃 → 스플래시 내림 순서로 작은 배경 깜빡임 완화
+          await waitForNextFrame();
           await SplashScreen.hideAsync().catch(() => {});
-          void preloadAll();
-          void ensureGameAudioSession();
-          warmupDuelSpeech();
-          void bootMenuBgm();
-          void preloadSceneImages();
-          void initAds().then(() => {
-            preloadInterstitial();
-            preloadRewardedAd();
-          });
-          void initPurchasesOnBoot();
+          scheduleBootSideEffects();
         }
       }
     }
@@ -248,10 +278,22 @@ function RootLayoutContent() {
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="menu" options={{ headerShown: false }} />
-        <Stack.Screen name="npc-select" options={{ title: t('nav.npcSelect') }} />
-        <Stack.Screen name="local-setup" options={{ title: t('nav.localSetup') }} />
-        <Stack.Screen name="stats" options={{ title: t('nav.stats') }} />
-        <Stack.Screen name="character-select" options={{ title: t('nav.character') }} />
+        <Stack.Screen
+          name="npc-select"
+          options={{ title: t('nav.npcSelect'), headerTitleAlign: 'center' }}
+        />
+        <Stack.Screen
+          name="local-setup"
+          options={{ title: t('nav.localSetup'), headerTitleAlign: 'center' }}
+        />
+        <Stack.Screen
+          name="stats"
+          options={{ title: t('nav.stats'), headerTitleAlign: 'center' }}
+        />
+        <Stack.Screen
+          name="character-select"
+          options={{ title: t('nav.character'), headerTitleAlign: 'center' }}
+        />
         <Stack.Screen name="game" options={{ headerShown: false }} />
         <Stack.Screen name="capture" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ headerShown: false }} />

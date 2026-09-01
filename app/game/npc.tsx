@@ -63,6 +63,7 @@ import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
 import { AdReviveModal } from '@/components/game/AdReviveModal';
 import { preloadInterstitial, preloadRewardedAd, showRewardedAd, showStageCompleteAd } from '@/utils/adService';
 import { play, playGunshot } from '@/utils/audioService';
+import { rememberNpcMatchResult } from '@/utils/npcMatchResult';
 import { speakDuelCue, stopDuelSignalSpeech, warmupDuelSpeech } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
 
@@ -273,6 +274,7 @@ export default function NpcGameScreen() {
   } | null>(null);
   const headshotApplyPendingRef = useRef(false);
   const npcRoundSimRef = useRef<NpcReactionSimulation | null>(null);
+  const leavingForResultRef = useRef(false);
 
   const blueStyle = useAnimatedStyle(() => ({
     opacity: blueRing.value,
@@ -404,6 +406,9 @@ export default function NpcGameScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (leavingForResultRef.current) {
+        return undefined;
+      }
       warmupDuelSpeech();
       // 매치가 진행되는 동안 광고를 미리 받아둔다. (이미 로드돼 있으면 no-op)
       // 결과 화면은 "이미 준비된" 전면만 띄우므로, 로드가 늦으면 광고 없이 바로 결과가 나온다.
@@ -426,6 +431,7 @@ export default function NpcGameScreen() {
       }
       let cancelled = false;
       void (async () => {
+        if (leavingForResultRef.current) return;
         const characterId = useSettingsStore.getState().selectedCharacterId;
         await Promise.all([
           preloadSceneImages(),
@@ -786,6 +792,18 @@ export default function NpcGameScreen() {
       lossReason: string;
     }) => {
       const completionStamp = String(Date.now());
+      leavingForResultRef.current = true;
+      rememberNpcMatchResult({
+        npcId: String(npc!.id),
+        won: params.won,
+        playerWins: params.playerWins,
+        npcWins: params.npcWins,
+        playerMs: params.playerMs,
+        npcMs: params.npcMs,
+        lossReason: params.lossReason,
+        dayNight: battleDayNight,
+        completionStamp,
+      });
       await showStageCompleteAd(completionStamp);
       router.replace({
         pathname: '/result/npc',

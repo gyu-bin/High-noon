@@ -1,10 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   ListRenderItem,
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -18,6 +16,7 @@ import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { MaskedLegendCard } from '@/components/npc/MaskedLegendCard';
 import { NpcSelectCard } from '@/components/npc/NpcSelectCard';
 import { colors } from '@/constants/theme';
+import { FONT_RYE } from '@/constants/fonts';
 import { DEV_UNLOCK_ALL_NPCS } from '@/constants/devFlags';
 import { getNpcById, NPCS } from '@/constants/npcs';
 import {
@@ -26,7 +25,6 @@ import {
 } from '@/store/progressStore';
 import type { NpcDefinition } from '@/types/npc';
 import { formatReactionMs } from '@/utils/formatReactionMs';
-import { preloadInterstitial } from '@/utils/adService';
 
 /** 레전드 공개: #18 레드 아이 오라클 클리어 후 */
 const MASTER_LEGEND_GATE_ID = 18;
@@ -116,13 +114,9 @@ function NpcSelectStatsHeader({ paleUnlocked }: { paleUnlocked: boolean }) {
 }
 
 export default function NpcSelectScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   useScreenBgm('menu');
-  useFocusEffect(
-    useCallback(() => {
-      preloadInterstitial();
-    }, []),
-  );
   const insets = useSafeAreaInsets();
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
   const npcById = useProgressStore((s) => s.npcById);
@@ -178,7 +172,7 @@ export default function NpcSelectScreen() {
           cleared={row.cleared}
           bestMs={row.bestReactionMs}
           revealDelayMs={item.revealDelayMs}
-          onPress={locked ? undefined : () => onSelect(npc)}
+          onPress={locked ? undefined : onSelect}
         />
       );
     },
@@ -191,12 +185,27 @@ export default function NpcSelectScreen() {
     <>
       <Stack.Screen
         options={{
+          title: t('nav.npcSelect'),
           headerTransparent: false,
           headerBackVisible: false,
+          headerTitleAlign: 'center',
+          headerTitle: () => (
+            <Text
+              style={{
+                fontFamily: FONT_RYE,
+                fontSize: 17,
+                color: colors.cream,
+                letterSpacing: 1,
+                textAlign: 'center',
+              }}
+            >
+              {t('nav.npcSelect')}
+            </Text>
+          ),
           headerLeft: () => <MenuBackButton onPress={() => router.back()} />,
         }}
       />
-      <MetaScreenShell>
+      <MetaScreenShell showDust={false}>
         <View style={[styles.root, { paddingBottom: insets.bottom + 16 }]}>
           <NpcSelectStatsHeader paleUnlocked={paleUnlocked} />
           <FlatList
@@ -207,7 +216,11 @@ export default function NpcSelectScreen() {
             style={styles.listFlex}
             contentContainerStyle={styles.list}
             columnWrapperStyle={styles.row}
-            extraData={{ highestUnlocked, npcById, legendRevealBurst, paleUnlocked }}
+            extraData={`${highestUnlocked}:${legendRevealBurst}:${paleUnlocked}`}
+            initialNumToRender={9}
+            maxToRenderPerBatch={6}
+            windowSize={5}
+            removeClippedSubviews
           />
         </View>
       </MetaScreenShell>

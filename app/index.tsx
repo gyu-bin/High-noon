@@ -22,10 +22,6 @@ export default function TitleScreen() {
   useScreenBgm('menu');
 
   useEffect(() => {
-    void bootMenuBgm();
-  }, []);
-
-  useEffect(() => {
     if (!DEV_AUTO_SCREENSHOTS) return;
     router.replace('/menu');
   }, [router]);
