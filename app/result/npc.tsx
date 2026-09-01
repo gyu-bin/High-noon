@@ -173,7 +173,6 @@ export default function NpcResultScreen() {
   const lossReason = (lossReasonParam ?? '') as LossReason;
   const faster = whoFaster(playerMs, npcMs);
 
-  // 승패 무관 광고 플로우를 거친 뒤 연출 시작
   const [adFlowComplete, setAdFlowComplete] = useState(false);
   const adHandledKeyRef = useRef<string | null>(null);
   const resultSessionKey = `${npcId ?? ''}-${won ?? ''}-${playerWins ?? ''}-${npcWins ?? ''}-${completionStamp ?? ''}`;
@@ -183,7 +182,6 @@ export default function NpcResultScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      // 승패 무관 — 전면 노출 여부·주기 판단은 showStageCompleteAd가 담당(스킵 시 즉시 resolve)
       if (adHandledKeyRef.current === resultSessionKey) {
         setAdFlowComplete(true);
         return;
@@ -191,8 +189,6 @@ export default function NpcResultScreen() {
       adHandledKeyRef.current = resultSessionKey;
       setAdFlowComplete(false);
       let cancelled = false;
-      // 여기서 preloadInterstitial()을 부르면 showStageCompleteAd가 쓰는 인스턴스를
-      // 교체해 버려 로딩이 길어진다. 로드·다음 광고 준비는 showStageCompleteAd가 맡는다.
       void showStageCompleteAd().then(() => {
         if (!cancelled) setAdFlowComplete(true);
       });
@@ -201,7 +197,6 @@ export default function NpcResultScreen() {
       };
     }, [resultSessionKey]),
   );
-
   useEffect(() => {
     if (!adFlowComplete || !victory) return;
     titleScale.value = 0.85;

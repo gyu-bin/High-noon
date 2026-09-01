@@ -70,6 +70,8 @@ let matchesSinceLastAd = 0;
  * 사라져 결과 화면이 로딩 상태로 멈춘다.
  */
 let interstitialBusy = false;
+/** createForAdRequest 이후 LOADED/ERROR 전. 이 동안 인스턴스를 갈아끼우면 로드가 영원히 끝나지 않는다. */
+let interstitialLoading = false;
 
 /** 보상형 광고 인스턴스 */
 let rewarded: ReturnType<AdsLib['RewardedAd']['createForAdRequest']> | null = null;
@@ -106,10 +108,15 @@ export async function initAds(): Promise<void> {
   initialized = true;
 }
 
+function isInterstitialReady(): boolean {
+  return interstitial != null && interstitial.loaded === true;
+}
+
 /**
  * 전면 광고 미리 로드. 앱 부팅 시 또는 전면 종료 직후 호출.
  * - 노출 플로우가 인스턴스를 쓰는 중이면 아무것도 하지 않는다.
- * - 이미 로드된 광고가 있으면 재생성하지 않는다(재생성 = 처음부터 다시 로드 = 대기 시간).
+ * - 이미 로드됐거나 **로드 중**이면 재생성하지 않는다.
+ *   (한 판이 수 초라 매 포커스마다 다시 load() 하면 AdMob 응답보다 항상 먼저 끝나 광고가 영영 안 뜬다.)
  */
 export function preloadInterstitial(): void {
   if (!ADS_ENABLED) return;
@@ -117,15 +124,47 @@ export function preloadInterstitial(): void {
     const lib = await getAdsLib();
     if (!lib) return;
     if (interstitialBusy) return;
-    if (interstitial?.loaded) return;
+    if (isInterstitialReady() || interstitialLoading) return;
     try {
       interstitial?.removeAllListeners();
-      interstitial = lib.InterstitialAd.createForAdRequest(getInterstitialUnitId(lib));
-      interstitial.load();
+      const ad = lib.InterstitialAd.createForAdRequest(getInterstitialUnitId(lib));
+      interstitial = ad;
+      interstitialLoading = true;
+      ad.addAdEventListener(lib.AdEventType.LOADED, () => {
+        if (interstitial === ad) interstitialLoading = false;
+      });
+      ad.addAdEventListener(lib.AdEventType.ERROR, () => {
+        if (interstitial !== ad) return;
+        interstitialLoading = false;
+        interstitial = null;
+      });
+      ad.load();
     } catch {
+      interstitialLoading = false;
       interstitial = null;
     }
   });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+/** 전면이 뜰 차례일 때 로드를 기다린다. 실패하면 대기 중에 재요청한다. */
+async function waitForInterstitialReady(timeoutMs: number): Promise<boolean> {
+  if (isInterstitialReady()) return true;
+  preloadInterstitial();
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (isInterstitialReady()) return true;
+    if (!interstitialBusy && !interstitialLoading && !isInterstitialReady()) {
+      preloadInterstitial();
+    }
+    await sleep(120);
+  }
+  return isInterstitialReady();
 }
 
 /**
@@ -148,15 +187,12 @@ const REWARDED_OPEN_TIMEOUT_MS = 4000;
 const AD_FOREGROUND_GRACE_MS = 250;
 /** 보상형 로드 대기 최대 시간 (ms) — 유저가 직접 "광고 보기"를 누른 경우에만 적용 */
 const REWARDED_LOAD_TIMEOUT_MS = 6000;
+/** 2판마다 전면을 띄울 때, 아직 안 왔으면 이 시간까지 로드를 기다린다 */
+const INTERSTITIAL_LOAD_WAIT_MS = 12000;
 
 /**
- * 매치 완료(승·패 무관) 후 호출. `MATCHES_PER_INTERSTITIAL`판마다,
- * 직전 전면이 닫힌 지 `STAGE_AD_COOLDOWN_MS` 이상 지났을 때만 노출.
- *
- * **유저를 광고 때문에 기다리게 하지 않는 것이 최우선.**
- * - 노출 조건 판단은 전부 동기 — await로 결과 화면을 붙잡지 않는다.
- * - 이미 로드된 광고가 없으면 그냥 건너뛰고 다음 기회를 위해 로드만 걸어둔다.
- * - 표시 실패·CLOSED 미발생 시에도 타임아웃/AppState fallback으로 반드시 resolve.
+ * 매치 완료(승·패 무관) 후 호출. `MATCHES_PER_INTERSTITIAL`매치마다 전면 1회.
+ * 아직 로드되지 않았으면 기다렸다가 띄운다.
  */
 export function showStageCompleteAd(): Promise<void> {
   if (!ADS_ENABLED || useProgressStore.getState().isAdFree) {
@@ -165,6 +201,7 @@ export function showStageCompleteAd(): Promise<void> {
 
   matchesSinceLastAd += 1;
   if (matchesSinceLastAd < MATCHES_PER_INTERSTITIAL) {
+    preloadInterstitial();
     return Promise.resolve();
   }
 
@@ -175,20 +212,28 @@ export function showStageCompleteAd(): Promise<void> {
     }
   }
 
-  const lib = adsLib;
-  const ad = interstitial;
+  return presentStageInterstitial();
+}
 
-  // 준비된 광고가 없으면 절대 기다리지 않는다 — 이번 판은 건너뛰고 다음 판을 위해 로드만 시작.
-  // (matchesSinceLastAd는 유지되므로 다음 매치에서 다시 시도한다)
-  if (!lib || !ad?.loaded) {
+async function presentStageInterstitial(): Promise<void> {
+  await initAds();
+  const lib = (await getAdsLib()) ?? adsLib;
+  if (!lib) {
     preloadInterstitial();
-    return Promise.resolve();
+    return;
   }
 
-  // preload가 인스턴스를 갈아치우지 못하도록 동기적으로 점유를 선언한다.
-  interstitialBusy = true;
+  const ready = await waitForInterstitialReady(INTERSTITIAL_LOAD_WAIT_MS);
+  const ad = interstitial;
+  if (!ready || !ad?.loaded) {
+    preloadInterstitial();
+    return;
+  }
 
-  return new Promise((resolve) => {
+  interstitialBusy = true;
+  interstitialLoading = false;
+
+  await new Promise<void>((resolve) => {
     let resolved = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let appStateSubscription: ReturnType<typeof AppState.addEventListener> | null = null;
