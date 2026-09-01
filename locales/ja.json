@@ -31,6 +31,7 @@
     "backup": "進行状況のバックアップ",
     "iapTitle": "広告削除",
     "iapActiveTitle": "広告削除が有効です",
+    "iapActiveDismissA11y": "広告削除のお知らせを閉じる",
     "iapDesc": "マッチ間のインタースティシャル広告を削除します。買い切り・永久。",
     "iapThanks": "ご購入ありがとうございます。",
     "iapWarn": "ストア商品を読み込めないか、まだ販売準備ができていません。ネットワークとApp Storeログインを確認してから再試行してください。",
@@ -209,7 +210,7 @@
   },
   "storeUpdate": {
     "title": "アップデートが必要です",
-    "body": "新しいバージョン(v{{required}})が公開されました。\n現在 v{{current}} — App Store / Google Play から更新してください。",
+    "body": "High Noon v{{required}} が公開されました。\n現在 v{{current}} です。ストアから 1.4 に更新してください。",
     "openStore": "ストアで更新",
     "openStoreA11y": "アプリストアで更新する",
     "later": "あとで",

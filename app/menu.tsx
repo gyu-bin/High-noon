@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -54,6 +55,10 @@ export default function MenuScreen() {
   const setHapticEnabled = useSettingsStore((s) => s.setHapticEnabled);
   const setLanguage = useSettingsStore((s) => s.setLanguage);
   const setLandscapeHintSeen = useSettingsStore((s) => s.setLandscapeHintSeen);
+  const iapActiveCardDismissed = useSettingsStore((s) => s.iapActiveCardDismissed);
+  const setIapActiveCardDismissed = useSettingsStore(
+    (s) => s.setIapActiveCardDismissed,
+  );
   const [showLandscapeHint, setShowLandscapeHint] = useState(false);
 
   const isAdFree = useProgressStore((s) => s.isAdFree);
@@ -62,6 +67,7 @@ export default function MenuScreen() {
   const [productReady, setProductReady] = useState(false);
   const [productLoadTried, setProductLoadTried] = useState(false);
   const iapAvailable = purchasesRuntimeEnabled();
+  const showIapCard = iapAvailable && !(isAdFree && iapActiveCardDismissed);
 
   useFocusEffect(
     useCallback(() => {
@@ -273,11 +279,24 @@ export default function MenuScreen() {
             </Text>
           </View>
 
-          {iapAvailable ? (
+          {showIapCard ? (
             <View style={styles.iapCard}>
               {isAdFree ? (
                 <>
-                  <Text style={styles.iapTitle}>{t('menu.iapActiveTitle')}</Text>
+                  <View style={styles.iapActiveHeader}>
+                    <Text style={[styles.iapTitle, styles.iapTitleFlex]}>
+                      {t('menu.iapActiveTitle')}
+                    </Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={t('menu.iapActiveDismissA11y')}
+                      hitSlop={10}
+                      onPress={() => setIapActiveCardDismissed(true)}
+                      style={styles.iapDismissBtn}
+                    >
+                      <Ionicons name="close" size={20} color={colors.sand} />
+                    </Pressable>
+                  </View>
                   <Text style={styles.iapDesc}>{t('menu.iapThanks')}</Text>
                 </>
               ) : (
@@ -456,6 +475,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: META_PANEL_BORDER,
     gap: 10,
+  },
+  iapActiveHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iapTitleFlex: {
+    flex: 1,
+  },
+  iapDismissBtn: {
+    padding: 2,
   },
   iapTitle: {
     fontSize: 14,

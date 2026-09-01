@@ -31,6 +31,7 @@
     "backup": "진행도 백업",
     "iapTitle": "광고 제거",
     "iapActiveTitle": "광고 제거 활성화됨",
+    "iapActiveDismissA11y": "광고 제거 안내 닫기",
     "iapDesc": "매치 사이 전면 광고를 제거합니다. 1회 결제 · 영구 소유.",
     "iapThanks": "구매해주셔서 감사합니다.",
     "iapWarn": "스토어 상품을 불러오는 중이거나 아직 판매 준비가 안 됐습니다. 네트워크·App Store 로그인 후 다시 시도해 주세요.",
@@ -209,7 +210,7 @@
   },
   "storeUpdate": {
     "title": "업데이트 필요",
-    "body": "새 버전(v{{required}})이 출시되었습니다.\n현재 v{{current}} — App Store / Play에서 업데이트해 주세요.",
+    "body": "High Noon v{{required}}이 출시되었습니다.\n지금 앱은 v{{current}}입니다. 스토어에서 1.4로 업데이트해 주세요.",
     "openStore": "스토어에서 업데이트",
     "openStoreA11y": "앱 스토어에서 업데이트하기",
     "later": "나중에",

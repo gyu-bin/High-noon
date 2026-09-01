@@ -35,6 +35,8 @@ type SettingsStoreState = {
   language: AppLanguage;
   /** 메뉴 — 가로 회전 안내 팝업 1회 */
   landscapeHintSeen: boolean;
+  /** 광고 제거 활성화 안내 카드 닫음 (구매 완료 후) */
+  iapActiveCardDismissed: boolean;
   setSoundEnabled: (value: boolean) => void;
   setMusicEnabled: (value: boolean) => void;
   setHapticEnabled: (value: boolean) => void;
@@ -42,6 +44,7 @@ type SettingsStoreState = {
   setSelectedCharacterId: (id: number) => void;
   setLanguage: (lang: AppLanguage) => void;
   setLandscapeHintSeen: (value: boolean) => void;
+  setIapActiveCardDismissed: (value: boolean) => void;
 };
 
 export const useSettingsStore = create<SettingsStoreState>()(
@@ -54,6 +57,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
       selectedCharacterId: 1,
       language: 'auto',
       landscapeHintSeen: false,
+      iapActiveCardDismissed: false,
 
       setSoundEnabled: (soundEnabled) => set({ soundEnabled }),
 
@@ -68,6 +72,9 @@ export const useSettingsStore = create<SettingsStoreState>()(
       setLanguage: (language) => set({ language }),
 
       setLandscapeHintSeen: (landscapeHintSeen) => set({ landscapeHintSeen }),
+
+      setIapActiveCardDismissed: (iapActiveCardDismissed) =>
+        set({ iapActiveCardDismissed }),
     }),
     {
       name: 'high-noon-settings',
@@ -80,6 +87,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
         selectedCharacterId: s.selectedCharacterId,
         language: s.language,
         landscapeHintSeen: s.landscapeHintSeen,
+        iapActiveCardDismissed: s.iapActiveCardDismissed,
       }),
       merge: (persisted, current) => {
         const p = persisted as Partial<SettingsStoreState> & {
@@ -93,6 +101,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
           language: p?.language ?? 'auto',
           landscapeHintSeen:
             p?.landscapeHintSeen ?? p?.localLandscapeHintSeen ?? false,
+          iapActiveCardDismissed: p?.iapActiveCardDismissed ?? false,
         };
       },
     },

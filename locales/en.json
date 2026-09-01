@@ -31,6 +31,7 @@
     "backup": "Progress backup",
     "iapTitle": "Remove Ads",
     "iapActiveTitle": "Ads Removed",
+    "iapActiveDismissA11y": "Dismiss ads removed notice",
     "iapDesc": "Removes interstitial ads between matches. One-time purchase · forever.",
     "iapThanks": "Thanks for your purchase.",
     "iapWarn": "Couldn't load the store product yet, or it isn't ready for sale. Check your network and App Store login, then try again.",
@@ -209,7 +210,7 @@
   },
   "storeUpdate": {
     "title": "Update required",
-    "body": "A new version (v{{required}}) is available.\nYou're on v{{current}} — please update from the App Store or Google Play.",
+    "body": "High Noon v{{required}} is out.\nYou're on v{{current}} — please update to 1.4 from the store.",
     "openStore": "Update in store",
     "openStoreA11y": "Open app store to update",
     "later": "Not now",
