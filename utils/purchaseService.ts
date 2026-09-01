@@ -1,5 +1,5 @@
 /**
- * 인앱 결제 (react-native-iap) — 광고 제거 Non-consumable 1종.
+ * 인앱 결제 (expo-iap) — 광고 제거 Non-consumable 1종.
  *
  * App Store Connect / Play Console 상품 ID는 아래 상수와 반드시 일치해야 한다.
  * 미등록·판매불가면 fetchProducts가 비고, 구매 시트가 뜨지 않는다.
@@ -7,8 +7,7 @@
  * IAP_ENABLED=false 이면 UI·init·구매 전부 비활성.
  *
  * Android는 부팅 직후 BillingClient init을 피하고(메뉴에서 lazy),
- * Nitro 모듈이 있을 때만 로드한다. BILLING 권한만 단독으로 넣지 말 것 —
- * Play가 AIDL로 오인한다. billingclient는 react-native-iap이 가져온다.
+ * ExpoIap 모듈이 있을 때만 로드한다.
  */
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { requireOptionalNativeModule } from 'expo-modules-core';
@@ -43,16 +42,15 @@ const USE_NATIVE_IAP =
   Platform.OS !== 'web' &&
   Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
 
-/** react-native-iap 15는 NitroModules 런타임이 있어야 HybridObject를 만든다 */
-function hasNitroRuntime(): boolean {
+function hasIapNative(): boolean {
   try {
-    return requireOptionalNativeModule('NitroModules') != null;
+    return requireOptionalNativeModule('ExpoIap') != null;
   } catch {
     return false;
   }
 }
 
-type IapLib = typeof import('react-native-iap');
+type IapLib = typeof import('expo-iap');
 
 let iapLibPromise: Promise<IapLib | null> | null = null;
 let initialized = false;
@@ -76,9 +74,9 @@ function settlePendingPurchase(result: PurchaseOutcome) {
 
 async function getIapLib(): Promise<IapLib | null> {
   if (!IAP_ENABLED || !USE_NATIVE_IAP) return null;
-  if (!hasNitroRuntime()) return null;
+  if (!hasIapNative()) return null;
   if (!iapLibPromise) {
-    iapLibPromise = import('react-native-iap')
+    iapLibPromise = import('expo-iap')
       .then((mod) => mod)
       .catch(() => null);
   }
@@ -86,7 +84,7 @@ async function getIapLib(): Promise<IapLib | null> {
 }
 
 export function purchasesRuntimeEnabled(): boolean {
-  return IAP_ENABLED && USE_NATIVE_IAP && hasNitroRuntime();
+  return IAP_ENABLED && USE_NATIVE_IAP && hasIapNative();
 }
 
 export function isPurchasesInitialized(): boolean {
@@ -186,7 +184,7 @@ async function initPurchasesInternal(): Promise<boolean> {
  */
 export async function initPurchases(): Promise<void> {
   if (!IAP_ENABLED || !USE_NATIVE_IAP) return;
-  if (!hasNitroRuntime()) return;
+  if (!hasIapNative()) return;
   if (!initPromise) {
     initPromise = initPurchasesInternal().finally(() => {
       if (!initialized) initPromise = null;
@@ -223,17 +221,12 @@ export async function fetchAdRemovalProduct(): Promise<{
       type: 'in-app',
     });
     const list = Array.isArray(products) ? products : [];
-    const p = list.find(
-      (x): x is Extract<typeof x, { id: string }> =>
-        x != null && 'id' in x && x.id === AD_REMOVAL_PRODUCT_ID,
-    );
+    const p = list.find((x) => x?.id === AD_REMOVAL_PRODUCT_ID);
     if (!p) return null;
     return {
       productId: p.id,
       localizedPrice:
-        'displayPrice' in p && typeof p.displayPrice === 'string'
-          ? p.displayPrice
-          : '',
+        typeof p.displayPrice === 'string' ? p.displayPrice : '',
     };
   } catch {
     return null;
@@ -243,7 +236,6 @@ export async function fetchAdRemovalProduct(): Promise<{
 /**
  * 광고 제거 결제 요청.
  * 실제 완료/실패는 StoreKit 이벤트까지 기다린 뒤 반환한다.
- * (requestPurchase만 resolve되면 성공으로 처리하던 버그를 고침)
  */
 export async function purchaseAdRemoval(): Promise<PurchaseOutcome> {
   const ready = await ensurePurchasesReady();
@@ -295,11 +287,10 @@ export async function purchaseAdRemoval(): Promise<PurchaseOutcome> {
         await lib.requestPurchase({
           type: 'in-app',
           request: {
-            ios: { sku: AD_REMOVAL_PRODUCT_ID },
-            android: { skus: [AD_REMOVAL_PRODUCT_ID] },
+            apple: { sku: AD_REMOVAL_PRODUCT_ID },
+            google: { skus: [AD_REMOVAL_PRODUCT_ID] },
           },
         });
-        // 성공/실패는 purchaseUpdated / purchaseError 리스너가 settle
       } catch (error) {
         settlePendingPurchase(mapPurchaseError(error));
       }
@@ -307,23 +298,12 @@ export async function purchaseAdRemoval(): Promise<PurchaseOutcome> {
   });
 }
 
-/**
- * 구매 복원 — Apple 심사 필수.
- */
+/** 구매 복원 — Apple 심사 필수. */
 export async function restorePurchases(): Promise<boolean> {
   const ready = await ensurePurchasesReady();
   const lib = await getIapLib();
   if (!lib || !ready) return false;
   try {
-    // iOS: App Store와 영수증 동기화 후 가용 구매 조회
-    const sync = (lib as { syncIOS?: () => Promise<boolean> }).syncIOS;
-    if (Platform.OS === 'ios' && typeof sync === 'function') {
-      try {
-        await sync();
-      } catch {
-        // sync 실패해도 getAvailablePurchases는 시도
-      }
-    }
     const purchases = await lib.getAvailablePurchases();
     const owns = purchases.some((p) => p.productId === AD_REMOVAL_PRODUCT_ID);
     if (owns) {
