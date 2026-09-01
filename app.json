@@ -35,7 +35,8 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.highnoon.game",
       "permissions": [
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "com.android.vending.BILLING"
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",

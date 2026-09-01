@@ -34,7 +34,7 @@ import { applyOtaUpdateIfAvailable } from '@/utils/otaApply';
 import { consumeOtaJustApplied } from '@/utils/otaUpdateFlag';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
 import { isStoreUpdateRequired } from '@/utils/storeUpdate';
-import { initPurchases } from '@/utils/purchaseService';
+import { initPurchasesOnBoot } from '@/utils/purchaseService';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -218,7 +218,7 @@ function RootLayoutContent() {
             preloadInterstitial();
             preloadRewardedAd();
           });
-          void initPurchases();
+          void initPurchasesOnBoot();
         }
       }
     }

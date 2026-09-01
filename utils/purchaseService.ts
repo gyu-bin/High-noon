@@ -5,8 +5,13 @@
  * ASC에 미등록·판매불가면 fetchProducts가 비고, 구매 시트가 뜨지 않는다.
  *
  * IAP_ENABLED=false 이면 UI·init·구매 전부 비활성.
+ *
+ * Android: react-native-iap 15는 Nitro 기반이라, 모듈이 없거나 Play Billing이
+ * 준비되지 않은 기기에서 부팅 직후 init하면 프로세스가 죽을 수 있다.
+ * → Nitro 가용성 확인 + 부팅 시에는 Android init을 건너뛴다(메뉴에서 lazy).
  */
 import Constants, { ExecutionEnvironment } from 'expo-constants';
+import { requireOptionalNativeModule } from 'expo-modules-core';
 import { Platform } from 'react-native';
 
 import { useProgressStore } from '@/store/progressStore';
@@ -35,8 +40,22 @@ export type PurchaseOutcome =
     };
 
 const USE_NATIVE_IAP =
-  Platform.OS !== 'web' &&
+  Platform.OS === 'ios' &&
   Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
+
+/**
+ * Android는 1.4 내부테스트에서 켜자마자 크래시가 재현됨.
+ * react-native-iap(Nitro) 네이티브 로드/부팅 init이 유력 원인이라
+ * 당분간 Android IAP는 끈다. (광고·게임 플레이는 유지, iOS IAP만 활성)
+ * → 재빌드 시 `react-native.config.js`에서 Android autolink도 제외.
+ */
+function hasNitroRuntime(): boolean {
+  try {
+    return requireOptionalNativeModule('NitroModules') != null;
+  } catch {
+    return false;
+  }
+}
 
 type IapLib = typeof import('react-native-iap');
 
@@ -62,14 +81,17 @@ function settlePendingPurchase(result: PurchaseOutcome) {
 
 async function getIapLib(): Promise<IapLib | null> {
   if (!IAP_ENABLED || !USE_NATIVE_IAP) return null;
+  if (!hasNitroRuntime()) return null;
   if (!iapLibPromise) {
-    iapLibPromise = import('react-native-iap').catch(() => null);
+    iapLibPromise = import('react-native-iap')
+      .then((mod) => mod)
+      .catch(() => null);
   }
   return iapLibPromise;
 }
 
 export function purchasesRuntimeEnabled(): boolean {
-  return IAP_ENABLED && USE_NATIVE_IAP;
+  return IAP_ENABLED && USE_NATIVE_IAP && hasNitroRuntime();
 }
 
 export function isPurchasesInitialized(): boolean {
@@ -162,15 +184,26 @@ async function initPurchasesInternal(): Promise<boolean> {
   }
 }
 
-/** 앱 부팅 시 1회 — 스토어 연결 + 리스너 + 잔존 구매 확인 */
+/**
+ * 스토어 연결 + 리스너 + 잔존 구매 확인.
+ * Android는 부팅 직후 BillingClient/Activity 미준비로 네이티브 크래시가 날 수 있어
+ * `_layout`에서는 건너뛰고, 메뉴·구매 시에만 호출한다.
+ */
 export async function initPurchases(): Promise<void> {
-  if (!IAP_ENABLED) return;
+  if (!IAP_ENABLED || !USE_NATIVE_IAP) return;
+  if (!hasNitroRuntime()) return;
   if (!initPromise) {
     initPromise = initPurchasesInternal().finally(() => {
       if (!initialized) initPromise = null;
     });
   }
   await initPromise;
+}
+
+/** 부팅용 — Android는 lazy (메뉴에서 init). iOS만 미리 연결한다. */
+export async function initPurchasesOnBoot(): Promise<void> {
+  if (Platform.OS === 'android') return;
+  await initPurchases();
 }
 
 /** init이 끝날 때까지 대기. 실패하면 false */
