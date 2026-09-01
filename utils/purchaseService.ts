@@ -93,6 +93,8 @@ type IapLib = typeof import('react-native-iap');
 let iapLibPromise: Promise<IapLib | null> | null = null;
 let initialized = false;
 let initPromise: Promise<boolean> | null = null;
+/** initConnection 실패 원인 — UI·디버그용 */
+let lastInitError: string | null = null;
 let purchaseListener: { remove: () => void } | null = null;
 let errorListener: { remove: () => void } | null = null;
 
@@ -128,8 +130,46 @@ export function purchasesRuntimeEnabled(): boolean {
   return true;
 }
 
+/** Android: Nitro + IAP 모듈 로드까지 확인 (구매 UI 표시 전) */
+export async function purchasesUsable(): Promise<boolean> {
+  if (!purchasesRuntimeEnabled()) return false;
+  return (await getIapLib()) != null;
+}
+
 export function isPurchasesInitialized(): boolean {
   return initialized;
+}
+
+export function getLastPurchaseInitError(): string | null {
+  return lastInitError;
+}
+
+function formatInitError(error: unknown): string {
+  const err = error as { code?: string | number; message?: string };
+  const code = String(err?.code ?? '').toLowerCase();
+  const message = String(err?.message ?? '').trim();
+  return [code, message].filter(Boolean).join(' ').trim() || 'unknown';
+}
+
+function notReadyMessage(): string {
+  const detail = lastInitError?.toLowerCase() ?? '';
+  if (Platform.OS === 'android') {
+    if (
+      detail.includes('init-connection') ||
+      detail.includes('billing') ||
+      detail.includes('play store') ||
+      detail.includes('jni')
+    ) {
+      return (
+        'Google Play 결제 연결에 실패했습니다. Play Store 테스트 링크로 설치했는지, ' +
+        '테스터·라이선스 테스트 계정인지 확인해 주세요. (EAS AAB 직접 설치는 Billing 불가)'
+      );
+    }
+    return (
+      '스토어 연결을 준비하는 중입니다. Play Store에서 설치한 뒤 메뉴에서 5초 정도 기다려 다시 시도해 주세요.'
+    );
+  }
+  return '스토어 연결을 준비하는 중입니다. 잠시 후 다시 시도해 주세요.';
 }
 
 function mapPurchaseError(error: unknown): PurchaseOutcome {
@@ -323,7 +363,10 @@ async function applyAdRemovalOwnership(lib: IapLib): Promise<boolean> {
 async function initPurchasesInternal(): Promise<boolean> {
   if (initialized) return true;
   const lib = await getIapLib();
-  if (!lib) return false;
+  if (!lib) {
+    lastInitError = 'react-native-iap module unavailable';
+    return false;
+  }
 
   try {
     try {
@@ -336,9 +379,11 @@ async function initPurchasesInternal(): Promise<boolean> {
 
     attachPurchaseListeners(lib);
     initialized = true;
+    lastInitError = null;
     void refreshAdFreeFromReceipts();
     return true;
-  } catch {
+  } catch (error) {
+    lastInitError = formatInitError(error);
     initialized = false;
     return false;
   }
@@ -370,11 +415,13 @@ export async function initPurchasesOnBoot(): Promise<void> {
 export async function ensurePurchasesReady(): Promise<boolean> {
   if (!IAP_ENABLED) return false;
   if (initialized) return true;
-  for (let attempt = 0; attempt < 5; attempt += 1) {
+  const attempts = Platform.OS === 'android' ? 8 : 5;
+  const delayMs = Platform.OS === 'android' ? 800 : 500;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
     await initPurchases();
     if (initialized) return true;
-    if (attempt < 4) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+    if (attempt < attempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
   return initialized;
@@ -452,7 +499,7 @@ export async function purchaseAdRemoval(): Promise<PurchaseOutcome> {
     return {
       ok: false,
       reason: 'not_ready',
-      message: '스토어 연결을 준비하는 중입니다. 잠시 후 다시 시도해 주세요.',
+      message: notReadyMessage(),
     };
   }
 
