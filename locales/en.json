@@ -8,7 +8,8 @@
   },
   "title": {
     "tapToStart": "Tap to Start",
-    "tagline": "Reaction Duel"
+    "tagline": "Reaction Duel",
+    "appName": "High Noon"
   },
   "menu": {
     "play": "Play",
@@ -170,6 +171,25 @@
     "npcCleared": "NPCs Cleared",
     "footnote": "Average updates whenever a reaction is recorded in vs NPC or 2P duel."
   },
+  "admin": {
+    "open": "Ops dashboard",
+    "title": "Ops dashboard",
+    "desc": "Anonymous stats across all players. Set the PIN in Supabase before loading.",
+    "pinPlaceholder": "Ops PIN",
+    "pinRequired": "Enter the PIN.",
+    "invalidPin": "Invalid PIN.",
+    "supabaseMissing": "Supabase is not configured.",
+    "loadFailed": "Could not load stats.",
+    "load": "Load",
+    "totalMatches": "Total matches",
+    "uniqueDevices": "Estimated devices",
+    "medianReaction": "Median reaction",
+    "avgProgress": "Avg progress NPC",
+    "npcProgress": "NPC {{value}}",
+    "last7d": "Matches (7 days)",
+    "funnelTitle": "Wins / matches by NPC",
+    "funnelLine": "W {{wins}} · M {{matches}}"
+  },
   "npcSelect": {
     "title": "Select Opponent",
     "locked": "Locked opponent {{name}}",
@@ -189,7 +209,10 @@
     "retry": "One more round",
     "retryA11y": "Play one more round",
     "declineA11y": "Give up and see results",
-    "giveUp": "Give Up"
+    "giveUp": "Give Up",
+    "descAdFree": "You can try one more round.\nThis chance only comes once.",
+    "retry": "One more round",
+    "retryA11y": "Play one more round"
   },
   "error": {
     "title": "Something went wrong",

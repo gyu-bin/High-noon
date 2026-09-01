@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
@@ -26,6 +26,7 @@ import {
 } from '@/store/progressStore';
 import type { NpcDefinition } from '@/types/npc';
 import { formatReactionMs } from '@/utils/formatReactionMs';
+import { preloadInterstitial } from '@/utils/adService';
 
 /** 레전드 공개: #18 레드 아이 오라클 클리어 후 */
 const MASTER_LEGEND_GATE_ID = 18;
@@ -117,6 +118,11 @@ function NpcSelectStatsHeader({ paleUnlocked }: { paleUnlocked: boolean }) {
 export default function NpcSelectScreen() {
   const router = useRouter();
   useScreenBgm('menu');
+  useFocusEffect(
+    useCallback(() => {
+      preloadInterstitial();
+    }, []),
+  );
   const insets = useSafeAreaInsets();
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
   const npcById = useProgressStore((s) => s.npcById);

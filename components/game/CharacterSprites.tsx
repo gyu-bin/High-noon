@@ -132,8 +132,7 @@ function DuelSpriteStack({
   const layers = resolveDuelSpriteLayers(mode, id);
   const displayPose = spriteDisplayPose(pose);
   const op = usePoseOpacity(displayPose, layers.down != null);
-  const showAimLayer = displayPose === 'aim' && layers.aim !== layers.idle;
-  const showShootLayer = displayPose === 'shoot' || displayPose === 'defeat';
+  const showAimLayer = layers.aim != null && layers.aim !== layers.idle;
 
   return (
     <View style={{ width, height, backgroundColor: 'transparent' }}>
@@ -149,7 +148,7 @@ function DuelSpriteStack({
       {layers.down ? (
         <SpriteLayer source={layers.down} width={width} height={height} opacity={op.down} />
       ) : null}
-      {showShootLayer && layers.useDualShootFrames && layers.shootFrame0 && layers.shootFrame1 ? (
+      {layers.useDualShootFrames && layers.shootFrame0 && layers.shootFrame1 ? (
         <>
           <Animated.View pointerEvents="none" style={[layerStyles.absolute, op.shootFrame0Style]}>
             <Image
@@ -174,7 +173,7 @@ function DuelSpriteStack({
             />
           </Animated.View>
         </>
-      ) : showShootLayer && layers.shootFrame0 ? (
+      ) : layers.shootFrame0 ? (
         <Animated.View pointerEvents="none" style={[layerStyles.absolute, op.singleShootStyle]}>
           <Image
             source={layers.shootFrame0}
@@ -245,18 +244,18 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
         ) : (
           <View style={{ width, height }} />
         )}
-        {pose === 'shoot' && !victoryActive ? (
-          <MuzzleFlashOverlay width={width} height={height} active />
-        ) : null}
-        {victoryActive ? (
-          <VictoryEffectsOverlay
-            mode="npc"
-            id={npcId}
-            width={width}
-            height={height}
-            active
-          />
-        ) : null}
+        <MuzzleFlashOverlay
+          width={width}
+          height={height}
+          active={pose === 'shoot' && !victoryActive}
+        />
+        <VictoryEffectsOverlay
+          mode="npc"
+          id={npcId}
+          width={width}
+          height={height}
+          active={victoryActive}
+        />
       </Animated.View>
       <DefeatDustOverlay
         width={width}
@@ -325,18 +324,18 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
             <PlayerSvg width={width} height={height} />
           </View>
         )}
-        {pose === 'shoot' && !victoryActive ? (
-          <MuzzleFlashOverlay width={width} height={height} active />
-        ) : null}
-        {victoryActive ? (
-          <VictoryEffectsOverlay
-            mode="player"
-            id={characterId}
-            width={width}
-            height={height}
-            active
-          />
-        ) : null}
+        <MuzzleFlashOverlay
+          width={width}
+          height={height}
+          active={pose === 'shoot' && !victoryActive}
+        />
+        <VictoryEffectsOverlay
+          mode="player"
+          id={characterId}
+          width={width}
+          height={height}
+          active={victoryActive}
+        />
       </Animated.View>
       <DefeatDustOverlay
         width={width}

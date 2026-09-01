@@ -292,7 +292,7 @@ export const VictoryEffectsOverlay = memo(function VictoryEffectsOverlay({
   active,
 }: Props) {
   const spec = getVictoryEffectSpec(mode, id);
-  if (!spec || !active) return null;
+  if (!spec) return null;
 
   const mouth = spec.mouth ? anchorPx(spec.mouth, width, height) : null;
 

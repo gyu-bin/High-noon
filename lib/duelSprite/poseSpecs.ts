@@ -28,7 +28,7 @@ export const DUEL_SPRITE_TIMING = {
   aimPulseMs: 900,
   shootKickInMs: 70,
   shootKickHoldMs: 180,
-  defeatCrossfadeMs: 400,
+  defeatCrossfadeMs: 280,
   /** topple — defeat(휘청) 아트로 기울다 down(누움) 아트로 착지 */
   defeatToppleMs: 1100,
   defeatToppleLandFrac: 0.72,

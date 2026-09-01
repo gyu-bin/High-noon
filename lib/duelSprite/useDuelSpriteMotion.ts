@@ -1,6 +1,8 @@
 import { useLayoutEffect } from 'react';
 import {
+  cancelAnimation,
   Easing,
+  runOnUI,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -29,11 +31,17 @@ export function useDuelSpriteMotion(
   defeatDropPx?: number,
 ) {
   const phase = useSharedValue(0);
+  const defeatPhase = useSharedValue(0);
+  const lastKick = useSharedValue(0.35);
   const T = DUEL_SPRITE_TIMING;
   const knock = duelDefeatKnockback(corner);
   const defeatMs = defeatMotion === 'topple' ? T.defeatToppleMs : T.defeatCollapseMs;
 
   useLayoutEffect(() => {
+    if (pose !== 'defeat') {
+      defeatPhase.value = 0;
+    }
+
     if (victoryActive && pose === 'idle') {
       phase.value = 1;
       phase.value = withSequence(
@@ -103,7 +111,10 @@ export function useDuelSpriteMotion(
       return;
     }
     if (pose === 'shoot') {
+      cancelAnimation(phase);
+      // UI 스레드에서 0으로 맞춘 뒤 킥 — idle bob/이전 포즈 잔여값에서 이어지면 뱅 순간 끊김
       phase.value = withSequence(
+        withTiming(0, { duration: 0, reduceMotion: RM_GAME }),
         withTiming(1, {
           duration: T.shootKickInMs,
           easing: Easing.out(Easing.cubic),
@@ -118,13 +129,19 @@ export function useDuelSpriteMotion(
       return;
     }
     if (pose === 'defeat') {
-      // useLayoutEffect에서 0으로 맞춘 뒤 피격 타임라인 — 첫 프레임 연속성은 스타일 쪽 shoot 잔여로 처리
-      phase.value = 0;
-      phase.value = withTiming(1, {
-        duration: defeatMs,
-        easing: Easing.linear,
-        reduceMotion: RM_GAME,
-      });
+      runOnUI(() => {
+        lastKick.value = phase.value;
+      })();
+      cancelAnimation(defeatPhase);
+      // 슛 phase(≈0.35)와 분리 — 같은 값에서 낙하를 시작하면 피격 구간을 건너뛰고 한 프레임 점프한다
+      defeatPhase.value = withSequence(
+        withTiming(0, { duration: 0, reduceMotion: RM_GAME }),
+        withTiming(1, {
+          duration: defeatMs,
+          easing: Easing.linear,
+          reduceMotion: RM_GAME,
+        }),
+      );
       return;
     }
     phase.value = withTiming(0, {
@@ -134,10 +151,12 @@ export function useDuelSpriteMotion(
     });
   }, [
     phase,
+    defeatPhase,
     pose,
     victoryActive,
     corner,
     defeatMs,
+    lastKick,
     T.aimPulseMs,
     T.idleBobMs,
     T.poseFadeMs,
@@ -186,18 +205,19 @@ export function useDuelSpriteMotion(
       };
     }
     if (pose === 'defeat') {
-      const p = phase.value;
+      const p = defeatPhase.value;
       const dir = knock.rotate >= 0 ? 1 : -1;
 
-      // shoot kick 잔여 → 피격으로 이어 붙이기 (첫 프레임 팝 방지)
-      const entryT = Math.min(1, p / 0.1);
+      // 뱅 킥 자세에서 피격으로 이어 붙임 (리셋 후 다시 쓰러지면 끊겨 보임)
+      const kick0 = lastKick.value;
+      const entryT = Math.min(1, p / 0.12);
       const entryE = entryT * entryT * (3 - 2 * entryT);
-      const shootCarryY = -4.2 * (1 - entryE);
-      const shootCarryScale = 0.03 * (1 - entryE);
+      const shootCarryY = (-3 - 4 * kick0) * (1 - entryE);
+      const shootCarryScale = (0.025 + 0.025 * kick0) * (1 - entryE);
 
       // ── 공통 구간 ──
       // 1) 피격 휘청 (0 → hitEnd)
-      const hitEnd = 0.17;
+      const hitEnd = 0.2;
       const hitT = Math.min(1, p / hitEnd);
       const hitE = 1 - (1 - hitT) * (1 - hitT);
 

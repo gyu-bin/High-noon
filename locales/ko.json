@@ -8,7 +8,8 @@
   },
   "title": {
     "tapToStart": "탭하여 시작",
-    "tagline": "반응속도 결투"
+    "tagline": "반응속도 결투",
+    "appName": "High Noon"
   },
   "menu": {
     "play": "플레이",
@@ -170,6 +171,25 @@
     "npcCleared": "NPC 클리어",
     "footnote": "vs NPC·2인 대결에서 반응이 기록될 때마다 평균이 갱신됩니다."
   },
+  "admin": {
+    "open": "운영 대시보드",
+    "title": "운영 대시보드",
+    "desc": "전체 유저의 익명 통계입니다. Supabase에 PIN을 등록한 뒤 조회하세요.",
+    "pinPlaceholder": "운영 PIN",
+    "pinRequired": "PIN을 입력하세요.",
+    "invalidPin": "PIN이 올바르지 않습니다.",
+    "supabaseMissing": "Supabase 설정이 없습니다.",
+    "loadFailed": "통계를 불러오지 못했습니다.",
+    "load": "조회",
+    "totalMatches": "누적 매치",
+    "uniqueDevices": "추정 기기 수",
+    "medianReaction": "중앙 반응속도",
+    "avgProgress": "평균 진행 NPC",
+    "npcProgress": "NPC {{value}}",
+    "last7d": "최근 7일 매치",
+    "funnelTitle": "NPC별 승리 / 매치",
+    "funnelLine": "승 {{wins}} · 매치 {{matches}}"
+  },
   "npcSelect": {
     "title": "대결상대 선택",
     "locked": "잠긴 대결상대 {{name}}",
@@ -189,7 +209,10 @@
     "retry": "한 판 더",
     "retryA11y": "한 판 더 도전",
     "declineA11y": "포기하고 결과 보기",
-    "giveUp": "포기"
+    "giveUp": "포기",
+    "descAdFree": "한 판 더 도전할 수 있습니다.\n이번 기회는 한 번뿐입니다.",
+    "retry": "한 판 더",
+    "retryA11y": "한 판 더 도전"
   },
   "error": {
     "title": "이런, 문제가 생겼습니다",

@@ -1,5 +1,5 @@
-import { useRouter, type Href } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect, useRouter, type Href } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Pressable,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 
 import { LandscapeHintModal } from '@/components/game/LandscapeHintModal';
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
@@ -35,6 +36,7 @@ import {
   purchasesRuntimeEnabled,
   restorePurchases,
 } from '@/utils/purchaseService';
+import { preloadInterstitial } from '@/utils/adService';
 
 export default function MenuScreen() {
   const { t } = useTranslation();
@@ -54,6 +56,9 @@ export default function MenuScreen() {
   const setLanguage = useSettingsStore((s) => s.setLanguage);
   const setLandscapeHintSeen = useSettingsStore((s) => s.setLandscapeHintSeen);
   const [showLandscapeHint, setShowLandscapeHint] = useState(false);
+  const [adminGearVisible, setAdminGearVisible] = useState(false);
+  const titleTapCountRef = useRef(0);
+  const titleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isAdFree = useProgressStore((s) => s.isAdFree);
   const [purchaseBusy, setPurchaseBusy] = useState(false);
@@ -61,6 +66,12 @@ export default function MenuScreen() {
   const [productReady, setProductReady] = useState(false);
   const [productLoadTried, setProductLoadTried] = useState(false);
   const iapAvailable = purchasesRuntimeEnabled();
+
+  useFocusEffect(
+    useCallback(() => {
+      preloadInterstitial();
+    }, []),
+  );
 
   useEffect(() => {
     const maybeShow = () => {
@@ -154,6 +165,26 @@ export default function MenuScreen() {
 
   useScreenBgm('menu');
 
+  const onTitlePress = useCallback(() => {
+    if (titleTapTimerRef.current) clearTimeout(titleTapTimerRef.current);
+    titleTapCountRef.current += 1;
+    if (titleTapCountRef.current >= 5) {
+      titleTapCountRef.current = 0;
+      setAdminGearVisible(true);
+      return;
+    }
+    titleTapTimerRef.current = setTimeout(() => {
+      titleTapCountRef.current = 0;
+    }, 2000);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (titleTapTimerRef.current) clearTimeout(titleTapTimerRef.current);
+    },
+    [],
+  );
+
   const onMusicToggle = useCallback(
     (value: boolean) => {
       setMusicEnabled(value);
@@ -175,8 +206,29 @@ export default function MenuScreen() {
         ]}
       >
         <View style={styles.header}>
-          <Text style={[styles.brand, { fontFamily: FONT_RYE }]}>HIGH NOON</Text>
-          <Text style={styles.tagline}>{t('title.tagline')}</Text>
+          <View style={styles.headerSide} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('title.appName')}
+            onPress={onTitlePress}
+            style={styles.headerCenter}
+          >
+            <Text style={[styles.brand, { fontFamily: FONT_RYE }]}>HIGH NOON</Text>
+            <Text style={styles.tagline}>{t('title.tagline')}</Text>
+          </Pressable>
+          <View style={styles.headerSide}>
+            {adminGearVisible ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('admin.open')}
+                onPress={() => router.push('/admin' as Href)}
+                hitSlop={10}
+                style={({ pressed }) => [pressed && styles.adminGearPressed]}
+              >
+                <Ionicons name="settings-outline" size={24} color={colors.gold} />
+              </Pressable>
+            ) : null}
+          </View>
         </View>
 
         <ScrollView
@@ -329,9 +381,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
   },
   header: {
-    alignItems: 'center',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     marginBottom: 18,
     zIndex: 1,
+  },
+  headerSide: {
+    width: 40,
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 2,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  adminGearPressed: {
+    opacity: 0.75,
   },
   brand: {
     fontSize: 28,

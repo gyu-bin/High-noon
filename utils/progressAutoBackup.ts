@@ -14,6 +14,8 @@
  * 않는다. 이 코드가 먼저 OTA로 나가고 유저 기기의 바이너리에는 아직 모듈이 없을 수
  * 있으므로, 없으면 조용히 아무것도 하지 않는다. 다음 스토어 빌드부터 동작한다.
  */
+import { requireOptionalNativeModule } from 'expo-modules-core';
+
 import { useProgressStore } from '@/store/progressStore';
 import { exportProgressCode, importProgressCode } from '@/utils/progressBackup';
 
@@ -27,7 +29,16 @@ let libPromise: Promise<SecureStore | null> | null = null;
 let writeTimer: ReturnType<typeof setTimeout> | null = null;
 let unsubscribe: (() => void) | null = null;
 
+function hasSecureStoreNative(): boolean {
+  try {
+    return requireOptionalNativeModule('ExpoSecureStore') != null;
+  } catch {
+    return false;
+  }
+}
+
 async function getSecureStore(): Promise<SecureStore | null> {
+  if (!hasSecureStoreNative()) return null;
   if (!libPromise) {
     libPromise = import('expo-secure-store').catch(() => null);
   }

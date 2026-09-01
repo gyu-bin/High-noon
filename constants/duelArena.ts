@@ -31,9 +31,6 @@ export function duelDefeatKnockback(corner: DuelCorner): { x: number; y: number;
   return { x: -22, y: 6, rotate: 16 };
 }
 
-/** 세로 패배 — 하단 결과 바에 쓰러진 플레이어가 가려지지 않도록 존을 올림 */
-export const DUEL_PLAYER_DEFEAT_LIFT_PX = 108;
-
 export const DUEL_FIGURE_SIZE = {
   widthRatio: 0.54,
   maxWidth: 228,

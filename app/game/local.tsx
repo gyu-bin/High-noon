@@ -416,11 +416,13 @@ export default function LocalGameScreen() {
     } else {
       defeatRevealTimerRef.current = setTimeout(() => {
         setRoundDefeated(nextRoundDefeated);
-        setTimeout(() => void play('defeat_thud'), 170);
-        void trigger('medium');
-        if (heartLost) {
-          setTimeout(() => void play('heart_break'), 130);
-        }
+        requestAnimationFrame(() => {
+          setTimeout(() => void play('defeat_thud'), 170);
+          void trigger('medium');
+          if (heartLost) {
+            setTimeout(() => void play('heart_break'), 130);
+          }
+        });
         defeatRevealTimerRef.current = null;
       }, DUEL_DEFEAT_REVEAL_DELAY_MS);
       roundModalTimerRef.current = setTimeout(() => {

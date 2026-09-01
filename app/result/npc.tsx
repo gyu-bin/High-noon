@@ -1,7 +1,6 @@
-import { useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   StyleSheet,
   Text,
   View,
@@ -36,7 +35,6 @@ import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { useDailyMissionStore, whenDailyMissionsReady } from '@/store/dailyMissionStore';
 import { useProgressStore } from '@/store/progressStore';
 import { bgmPlay } from '@/utils/audioService';
-import { showStageCompleteAd } from '@/utils/adService';
 import { trigger } from '@/utils/hapticService';
 
 type LossReason = 'early' | 'timeout' | 'slower' | '';
@@ -191,34 +189,10 @@ export default function NpcResultScreen() {
     });
   }, [victory, id]);
 
-  // 승패 무관 광고 플로우를 거친 뒤 연출 시작
-  const [adFlowComplete, setAdFlowComplete] = useState(false);
-  const adHandledKeyRef = useRef<string | null>(null);
-  const resultSessionKey = `${npcId ?? ''}-${won ?? ''}-${playerWins ?? ''}-${npcWins ?? ''}-${completionStamp ?? ''}`;
+  const [adFlowComplete] = useState(true);
 
   const titleScale = useSharedValue(victory ? 0.85 : 1);
   const fxStartedRef = useRef(false);
-
-  useFocusEffect(
-    useCallback(() => {
-      // 승패 무관 — 전면 노출 여부·주기 판단은 showStageCompleteAd가 담당(스킵 시 즉시 resolve)
-      if (adHandledKeyRef.current === resultSessionKey) {
-        setAdFlowComplete(true);
-        return;
-      }
-      adHandledKeyRef.current = resultSessionKey;
-      setAdFlowComplete(false);
-      let cancelled = false;
-      // 여기서 preloadInterstitial()을 부르면 showStageCompleteAd가 쓰는 인스턴스를
-      // 교체해 버려 로딩이 길어진다. 로드·다음 광고 준비는 showStageCompleteAd가 맡는다.
-      void showStageCompleteAd().then(() => {
-        if (!cancelled) setAdFlowComplete(true);
-      });
-      return () => {
-        cancelled = true;
-      };
-    }, [resultSessionKey]),
-  );
 
   useEffect(() => {
     if (!adFlowComplete || !victory) return;
@@ -274,13 +248,6 @@ export default function NpcResultScreen() {
   return (
     <PhoneStageShell edgeToEdge>
       <OutcomeBackdrop variant={dayNight} width={winW} height={winH}>
-        {!adFlowComplete ? (
-          <View style={styles.adLoading} pointerEvents="auto">
-            <ActivityIndicator size="large" color={colors.cream} />
-            <Text style={styles.adLoadingText}>{t('common.loading')}</Text>
-          </View>
-        ) : null}
-
         {showContent && victory ? (
           <VictorySparkles width={winW} seed={completionStamp ?? 'win'} />
         ) : null}

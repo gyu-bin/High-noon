@@ -8,7 +8,8 @@
   },
   "title": {
     "tapToStart": "タップしてスタート",
-    "tagline": "反応速度デュエル"
+    "tagline": "反応速度デュエル",
+    "appName": "High Noon"
   },
   "menu": {
     "play": "プレイ",
@@ -170,6 +171,25 @@
     "npcCleared": "NPCクリア",
     "footnote": "vs NPC・2人対戦で反応が記録されるたびに平均が更新されます。"
   },
+  "admin": {
+    "open": "運営ダッシュボード",
+    "title": "運営ダッシュボード",
+    "desc": "全ユーザーの匿名統計です。SupabaseにPINを登録してから読み込んでください。",
+    "pinPlaceholder": "運営PIN",
+    "pinRequired": "PINを入力してください。",
+    "invalidPin": "PINが正しくありません。",
+    "supabaseMissing": "Supabase設定がありません。",
+    "loadFailed": "統計を読み込めませんでした。",
+    "load": "読み込み",
+    "totalMatches": "累計マッチ",
+    "uniqueDevices": "推定端末数",
+    "medianReaction": "中央反応速度",
+    "avgProgress": "平均進行NPC",
+    "npcProgress": "NPC {{value}}",
+    "last7d": "直近7日マッチ",
+    "funnelTitle": "NPC別 勝利 / マッチ",
+    "funnelLine": "勝 {{wins}} · マッチ {{matches}}"
+  },
   "npcSelect": {
     "title": "対戦相手選択",
     "locked": "ロック中の対戦相手 {{name}}",
@@ -189,7 +209,10 @@
     "retry": "もう1ラウンド",
     "retryA11y": "もう1ラウンド挑戦",
     "declineA11y": "諦めて結果を見る",
-    "giveUp": "諦める"
+    "giveUp": "諦める",
+    "descAdFree": "もう1ラウンド挑戦できます。\nこのチャンスは一度だけです。",
+    "retry": "もう1ラウンド",
+    "retryA11y": "もう1ラウンド挑戦"
   },
   "error": {
     "title": "問題が発生しました",
