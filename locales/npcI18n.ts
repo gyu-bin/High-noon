@@ -1,10 +1,14 @@
-import type { NpcTier } from '@/types/npc';
+import type { NpcTier, NpcSpecialAbility } from '@/types/npc';
 
 type NpcEntry = { title: string; name: string };
+
+type SpecialAbilityEntry = { name: string; desc: string };
 
 type NpcI18nBundle = {
   tier: Record<NpcTier, string>;
   list: Record<string, NpcEntry>;
+  abilityIntro: { title: string; confirm: string };
+  specialAbility: Record<Exclude<NpcSpecialAbility, 'none'>, SpecialAbilityEntry>;
 };
 
 export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
@@ -43,6 +47,52 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
       '21': { title: 'The', name: 'Undertaker' },
       '22': { title: 'The Pale', name: 'Rider' },
     },
+    abilityIntro: {
+      title: '상대 특수 능력',
+      confirm: '알겠어요',
+    },
+    specialAbility: {
+      mirror: {
+        name: '미러',
+        desc: '직전 라운드 당신의 반응 속도를 따라 옵니다.',
+      },
+      thunderbolt: {
+        name: '썬더볼트',
+        desc: '집중 직후 0.05~0.11초 안에 뱅이 터집니다.',
+      },
+      blindBang: {
+        name: '블라인드 뱅',
+        desc: '뱅 신호 글자가 배경에 묻혀 거의 보이지 않습니다.',
+      },
+      fakeSingles: {
+        name: '페이크 뱅',
+        desc: '집중 중 가짜 뱅 신호가 1번 나옵니다. 속지 마세요.',
+      },
+      fakeMultis: {
+        name: '연속 페이크',
+        desc: '집중 중 가짜 뱅 신호가 2~4번 나옵니다.',
+      },
+      comboFakeBlind: {
+        name: '페이크 + 블라인드',
+        desc: '가짜 뱅과 보이지 않는 뱅 신호가 함께 나옵니다.',
+      },
+      invertedSignals: {
+        name: '반전 신호',
+        desc: '준비·뱅 신호의 색이 뒤바뀝니다.',
+      },
+      echoReady: {
+        name: '에코 READY',
+        desc: '준비 신호에 잔상이 겹쳐 보입니다.',
+      },
+      chaosRandom: {
+        name: '카오스',
+        desc: '매 라운드 반전·블라인드·페이크·없음 중 하나가 랜덤으로 적용됩니다.',
+      },
+      paleSilence: {
+        name: '침묵',
+        desc: '집중 후 오래 기다린 뒤 뱅이 터지며, 집중 중 화면이 어두워집니다.',
+      },
+    },
   },
   en: {
     tier: {
@@ -79,6 +129,52 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
       '21': { title: 'The', name: 'Undertaker' },
       '22': { title: 'The Pale', name: 'Rider' },
     },
+    abilityIntro: {
+      title: 'Opponent Ability',
+      confirm: 'Got it',
+    },
+    specialAbility: {
+      mirror: {
+        name: 'Mirror',
+        desc: 'Matches your reaction time from the previous round.',
+      },
+      thunderbolt: {
+        name: 'Thunderbolt',
+        desc: 'BANG fires 0.05–0.11s after STEADY.',
+      },
+      blindBang: {
+        name: 'Blind Bang',
+        desc: 'The BANG text blends into the background and is hard to see.',
+      },
+      fakeSingles: {
+        name: 'Fake Bang',
+        desc: 'One fake BANG appears during STEADY. Do not tap early.',
+      },
+      fakeMultis: {
+        name: 'Multi Fake',
+        desc: '2–4 fake BANGs appear during STEADY.',
+      },
+      comboFakeBlind: {
+        name: 'Fake + Blind',
+        desc: 'Fake BANGs and a nearly invisible BANG appear together.',
+      },
+      invertedSignals: {
+        name: 'Inverted Signals',
+        desc: 'READY and BANG colors are swapped.',
+      },
+      echoReady: {
+        name: 'Echo READY',
+        desc: 'A ghost image overlaps the READY cue.',
+      },
+      chaosRandom: {
+        name: 'Chaos',
+        desc: 'Each round randomly applies invert, blind, fake, or none.',
+      },
+      paleSilence: {
+        name: 'Silence',
+        desc: 'A long wait after STEADY, then BANG. The screen dims during STEADY.',
+      },
+    },
   },
   ja: {
     tier: {
@@ -114,6 +210,52 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
       '20': { title: 'エコー', name: 'ファントム' },
       '21': { title: 'The', name: 'Undertaker' },
       '22': { title: 'The Pale', name: 'Rider' },
+    },
+    abilityIntro: {
+      title: '相手の特殊能力',
+      confirm: '了解',
+    },
+    specialAbility: {
+      mirror: {
+        name: 'ミラー',
+        desc: '前ラウンドのあなたの反応速度に合わせてきます。',
+      },
+      thunderbolt: {
+        name: 'サンダーボルト',
+        desc: 'STEADY直後0.05〜0.11秒でBANGが発生します。',
+      },
+      blindBang: {
+        name: 'ブラインドBANG',
+        desc: 'BANGの文字が背景に溶けてほとんど見えません。',
+      },
+      fakeSingles: {
+        name: 'フェイクBANG',
+        desc: 'STEADY中に偽のBANGが1回出ます。早押ししないでください。',
+      },
+      fakeMultis: {
+        name: '連続フェイク',
+        desc: 'STEADY中に偽のBANGが2〜4回出ます。',
+      },
+      comboFakeBlind: {
+        name: 'フェイク+ブラインド',
+        desc: '偽BANGと見えにくいBANGが同時に出ます。',
+      },
+      invertedSignals: {
+        name: '反転シグナル',
+        desc: 'READYとBANGの色が入れ替わります。',
+      },
+      echoReady: {
+        name: 'エコーREADY',
+        desc: 'READYに残像が重なって見えます。',
+      },
+      chaosRandom: {
+        name: 'カオス',
+        desc: '毎ラウンド反転・ブラインド・フェイク・なしのいずれかがランダムです。',
+      },
+      paleSilence: {
+        name: '沈黙',
+        desc: 'STEADY後に長く待ってからBANG。STEADY中は画面が暗くなります。',
+      },
     },
   },
 };

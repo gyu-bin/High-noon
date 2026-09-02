@@ -32,6 +32,10 @@ export const SOUND_NAMES = [
   'lose_sad',
   'defeat_thud',
   'heart_break',
+  'ghost_revive_death',
+  'ghost_revive_rise',
+  'ability_shield',
+  'ability_headshot',
   'level_clear',
 ] as const;
 
@@ -65,6 +69,10 @@ const SOURCES: Record<SoundName, number> = {
   lose_sad: require('@/assets/sounds/lose_sad.wav'),
   defeat_thud: require('@/assets/sounds/defeat_thud.wav'),
   heart_break: require('@/assets/sounds/heart_break.wav'),
+  ghost_revive_death: require('@/assets/sounds/ghost_revive_death.wav'),
+  ghost_revive_rise: require('@/assets/sounds/ghost_revive_rise.wav'),
+  ability_shield: require('@/assets/sounds/ability_shield.wav'),
+  ability_headshot: require('@/assets/sounds/ability_headshot.wav'),
   level_clear: require('@/assets/sounds/level_clear.wav'),
 };
 

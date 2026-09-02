@@ -21,6 +21,7 @@ import {
   type AbilityOverlayType,
 } from '@/components/game/AbilityOverlay';
 import { DuelArenaLayout } from '@/components/game/DuelArenaLayout';
+import { NpcAbilityIntroModal } from '@/components/game/NpcAbilityIntroModal';
 import {
   NpcRoundModal,
   type NpcRoundModalData,
@@ -41,6 +42,7 @@ import {
   DUEL_DEFEAT_MODAL_DELAY_MS,
   DUEL_DEFEAT_REVEAL_DELAY_MS,
   DUEL_EARLY_MODAL_DELAY_MS,
+  DUEL_HEADSHOT_REVEAL_DELAY_MS,
 } from '@/constants/duelPresentation';
 import { buildDuelStartParams } from '@/utils/npcDuelParams';
 import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
@@ -64,6 +66,7 @@ import { AdReviveModal } from '@/components/game/AdReviveModal';
 import { preloadInterstitial, preloadRewardedAd, showRewardedAd, showStageCompleteAd } from '@/utils/adService';
 import { play, playGunshot } from '@/utils/audioService';
 import { rememberNpcMatchResult } from '@/utils/npcMatchResult';
+import { hasNpcSpecialAbility } from '@/utils/npcAbilityLabels';
 import { speakDuelCue, stopDuelSignalSpeech, warmupDuelSpeech } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
 
@@ -231,6 +234,7 @@ export default function NpcGameScreen() {
     startDuelEngine(timing, { fakeBangCount });
   }, [npc, startDuelEngine]);
 
+  const [abilityIntroVisible, setAbilityIntroVisible] = useState(false);
   const [modal, setModal] = useState<NpcRoundModalData | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const modalDataRef = useRef<NpcRoundModalData | null>(null);
@@ -240,7 +244,6 @@ export default function NpcGameScreen() {
   const adReviveUsedRef = useRef(false);
   const isAdFree = useProgressStore((s) => s.isAdFree);
   const [abilityOverlay, setAbilityOverlay] = useState<AbilityOverlayType>(null);
-  const [headshotOffered, setHeadshotOffered] = useState(false);
   const [earlyOverlay, setEarlyOverlay] = useState(false);
   const [defeatedSide, setDefeatedSide] = useState<'player' | 'npc' | null>(null);
   const [paused, setPaused] = useState(false);
@@ -268,10 +271,7 @@ export default function NpcGameScreen() {
   const prevPlayerBangMsRef = useRef<number | null>(null);
   /** #21 Undertaker — 라운드마다 랜덤 교란(반전 / 블라인드 / 복합 / 없음) */
   const chaosModeRef = useRef<'none' | 'inverted' | 'blindBang' | 'combo'>('none');
-  const deferredModalRef = useRef<{
-    data: NpcRoundModalData;
-    headshotOffered: boolean;
-  } | null>(null);
+  const deferredModalRef = useRef<NpcRoundModalData | null>(null);
   const headshotApplyPendingRef = useRef(false);
   const npcRoundSimRef = useRef<NpcReactionSimulation | null>(null);
   const leavingForResultRef = useRef(false);
@@ -306,6 +306,21 @@ export default function NpcGameScreen() {
     },
     [playerTapAck],
   );
+
+  const revealNpcDefeat = useCallback((withHeartBreak: boolean) => {
+    if (outcomeRevealTimersRef.current.defeat != null) {
+      clearTimeout(outcomeRevealTimersRef.current.defeat);
+      outcomeRevealTimersRef.current.defeat = null;
+    }
+    setDefeatedSide('npc');
+    requestAnimationFrame(() => {
+      setTimeout(() => void play('defeat_thud'), 170);
+      void trigger('medium');
+      if (withHeartBreak) {
+        setTimeout(() => void play('heart_break'), 130);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     modalDataRef.current = modal;
@@ -404,6 +419,11 @@ export default function NpcGameScreen() {
     }
   }, [paused, pauseTimers, resumeTimers]);
 
+  const handleAbilityIntroConfirm = useCallback(() => {
+    setAbilityIntroVisible(false);
+    startRoundDuel();
+  }, [startRoundDuel]);
+
   useFocusEffect(
     useCallback(() => {
       if (leavingForResultRef.current) {
@@ -448,10 +468,16 @@ export default function NpcGameScreen() {
         processedOutcomeKey.current = '';
         adReviveUsedRef.current = false;
         resetDuel();
-        startRoundDuel();
+        if (hasNpcSpecialAbility(npc.specialAbility)) {
+          setAbilityIntroVisible(true);
+        } else {
+          setAbilityIntroVisible(false);
+          startRoundDuel();
+        }
       })();
       return () => {
         cancelled = true;
+        setAbilityIntroVisible(false);
         resetDuel();
       };
     }, [
@@ -565,6 +591,8 @@ export default function NpcGameScreen() {
         playerHeartsBefore: ph,
         playerHeartsAfter: phAfter,
         opponentHeartsAfter: oh,
+        opponentScoreBefore: ns,
+        winsToEnd: WINS_TO_END,
       });
       if (ls.lastStandFlipToPlayerWin) {
         lastStandFlip = true;
@@ -582,8 +610,10 @@ export default function NpcGameScreen() {
         playerHeartsBefore: ph,
         playerHeartsAfter: phAfterLoss,
         opponentHeartsAfter: oh,
+        opponentScoreBefore: ns,
+        winsToEnd: WINS_TO_END,
       });
-      if (rv.revivePlayerToOneHeart) {
+      if (rv.ghostReviveNullifyLoss) {
         reviveFlip = true;
       }
     }
@@ -610,8 +640,8 @@ export default function NpcGameScreen() {
         setAbilityUsed(true);
       }
     } else if (reviveFlip) {
-      setScores(ps, ns + 1);
-      setHearts(1, oh);
+      setScores(ps, ns);
+      setHearts(Math.max(1, ph), oh);
       playerStreakRef.current = 0;
       setAbilityUsed(true);
     } else {
@@ -641,7 +671,9 @@ export default function NpcGameScreen() {
       !effectiveWin && !reviveFlip && data.kind === 'loss' && ph > 0;
     const npcLostHeart = effectiveWin && oh > 0;
 
-    if (nextDefeatedSide == null) {
+    if (reviveFlip) {
+      setDefeatedSide('player');
+    } else if (nextDefeatedSide == null) {
       setDefeatedSide(null);
     } else {
       outcomeRevealTimersRef.current.defeat = setTimeout(() => {
@@ -662,6 +694,7 @@ export default function NpcGameScreen() {
 
     let offerHeadshot = false;
     if (effectiveWin && characterId === 3 && !abilityUsed && !lastStandFlip) {
+      const winData = modalData.kind === 'win' ? modalData : null;
       const hs = applyAbility(3, {
         outcome: o,
         provisionalWinner: 'player',
@@ -669,6 +702,10 @@ export default function NpcGameScreen() {
         playerHeartsBefore: ph,
         playerHeartsAfter: phAfterWin,
         opponentHeartsAfter: ohAfterWin,
+        opponentScoreBefore: ns,
+        winsToEnd: WINS_TO_END,
+        playerReactionMs: winData?.playerMs ?? null,
+        npcReactionMs: winData?.npcMisfire ? null : (winData?.npcMs ?? null),
       });
       offerHeadshot = hs.headshotRemoveTwoOpponentHearts === true;
     }
@@ -700,10 +737,10 @@ export default function NpcGameScreen() {
     }
 
     if (lastStandFlip) {
-      deferredModalRef.current = { data: modalData, headshotOffered: false };
-      setHeadshotOffered(false);
+      deferredModalRef.current = modalData;
       setModalVisible(false);
       setModal(null);
+      revealNpcDefeat(npcLostHeart);
       setAbilityOverlay('last_stand');
       return () => {
         if (outcomeRevealTimersRef.current.defeat != null) {
@@ -715,12 +752,43 @@ export default function NpcGameScreen() {
 
     if (reviveFlip && data.kind === 'loss') {
       const reviveModalData: NpcRoundModalData = { ...data, revive: true };
-      deferredModalRef.current = { data: reviveModalData, headshotOffered: false };
-      setHeadshotOffered(false);
+      deferredModalRef.current = reviveModalData;
       setModalVisible(false);
       setModal(null);
-      setAbilityOverlay('revive');
+      const reviveOverlayTimer = setTimeout(() => {
+        setAbilityOverlay('revive');
+      }, 380);
       return () => {
+        clearTimeout(reviveOverlayTimer);
+        if (outcomeRevealTimersRef.current.defeat != null) {
+          clearTimeout(outcomeRevealTimersRef.current.defeat);
+          outcomeRevealTimersRef.current.defeat = null;
+        }
+      };
+    }
+
+    if (offerHeadshot) {
+      const headshotModalData: NpcRoundModalData =
+        modalData.kind === 'win' ? { ...modalData, headshot: true } : modalData;
+      headshotApplyPendingRef.current = true;
+
+      const revealHeadshot = () => {
+        revealNpcDefeat(npcLostHeart);
+        setModal(headshotModalData);
+        setModalVisible(true);
+        setAbilityOverlay('headshot');
+      };
+
+      outcomeRevealTimersRef.current.modal = setTimeout(() => {
+        revealHeadshot();
+        outcomeRevealTimersRef.current.modal = null;
+      }, DUEL_HEADSHOT_REVEAL_DELAY_MS);
+
+      return () => {
+        if (outcomeRevealTimersRef.current.modal != null) {
+          clearTimeout(outcomeRevealTimersRef.current.modal);
+          outcomeRevealTimersRef.current.modal = null;
+        }
         if (outcomeRevealTimersRef.current.defeat != null) {
           clearTimeout(outcomeRevealTimersRef.current.defeat);
           outcomeRevealTimersRef.current.defeat = null;
@@ -732,13 +800,11 @@ export default function NpcGameScreen() {
       outcomeRevealTimersRef.current.modal = setTimeout(() => {
         setModal(modalData);
         setModalVisible(true);
-        setHeadshotOffered(offerHeadshot);
         outcomeRevealTimersRef.current.modal = null;
       }, modalDelay);
     } else {
       setModal(modalData);
       setModalVisible(true);
-      setHeadshotOffered(offerHeadshot);
     }
 
     return () => {
@@ -757,6 +823,7 @@ export default function NpcGameScreen() {
     setScores,
     setHearts,
     setAbilityUsed,
+    revealNpcDefeat,
   ]);
 
   const handleAbilityOverlayComplete = useCallback(() => {
@@ -766,21 +833,20 @@ export default function NpcGameScreen() {
       const { playerHearts, opponentHearts } = useGameStore.getState();
       setHearts(playerHearts, Math.max(0, opponentHearts - 1));
       setAbilityUsed(true);
-      setHeadshotOffered(false);
+      setDefeatedSide('npc');
       return;
     }
-    const p = deferredModalRef.current;
+    setDefeatedSide(null);
+    const deferred = deferredModalRef.current;
     deferredModalRef.current = null;
-    if (p) {
-      setModal(p.data);
+    if (deferred) {
+      if (deferred.kind === 'win') {
+        setDefeatedSide('npc');
+      }
+      setModal(deferred);
       setModalVisible(true);
     }
   }, [setHearts, setAbilityUsed]);
-
-  const onHeadshotPress = useCallback(() => {
-    headshotApplyPendingRef.current = true;
-    setAbilityOverlay('headshot');
-  }, []);
 
   const goToMatchResult = useCallback(
     async (params: {
@@ -850,54 +916,73 @@ export default function NpcGameScreen() {
       clearTimeout(outcomeRevealTimersRef.current.modal);
       outcomeRevealTimersRef.current.modal = null;
     }
-    if (headshotOffered) {
-      setAbilityUsed(true);
-    }
-    setHeadshotOffered(false);
     setDefeatedSide(null);
     setModalVisible(false);
     setModal(null);
 
     const ps = useGameStore.getState().playerScore;
     const ns = useGameStore.getState().opponentScore;
+    const phNow = useGameStore.getState().playerHearts;
+    const ohNow = useGameStore.getState().opponentHearts;
+    const abilityUsedNow = useGameStore.getState().abilityUsed;
+    const characterIdNow = useSettingsStore.getState().selectedCharacterId;
 
-    if (ps >= WINS_TO_END || ns >= WINS_TO_END) {
-      // 접전 패배(2:3) — 광고 부활 제안 (매치당 1회, 보스전 22번 제외)
-      const closeLoss =
-        ns >= WINS_TO_END &&
-        ps === WINS_TO_END - 1 &&
-        !adReviveUsedRef.current &&
-        npc?.id !== 22;
-      if (closeLoss) {
-        // 소진 처리는 실제로 부활에 성공했을 때만 (제안 시점에 세우면
-        // 광고 로드 실패 등으로 부활을 못 받아도 기회가 날아간다)
-        setAdRevivePending({ ps, ns });
-        return;
-      }
-      if (ps >= WINS_TO_END) {
+    const m = modalDataRef.current;
+    const lr = useGameStore.getState().lastReaction;
+    let playerMsStr = lr.playerMs != null ? String(lr.playerMs) : '';
+    let npcMsStr = lr.npcMs != null ? String(lr.npcMs) : '';
+    let lossReason = '';
+    if (m?.kind === 'win') {
+      playerMsStr = String(m.playerMs);
+      npcMsStr = m.npcMs != null ? String(m.npcMs) : '';
+    } else if (m?.kind === 'loss') {
+      lossReason = m.reason;
+      if (m.playerMs != null) playerMsStr = String(m.playerMs);
+      if (m.npcMs != null) npcMsStr = String(m.npcMs);
+    }
+
+    const goResult = (won: boolean) => {
+      if (won) {
         useProgressStore.getState().markNpcCleared(npc!.id);
       }
-      const m = modalDataRef.current;
-      const lr = useGameStore.getState().lastReaction;
-      let playerMsStr = lr.playerMs != null ? String(lr.playerMs) : '';
-      let npcMsStr = lr.npcMs != null ? String(lr.npcMs) : '';
-      let lossReason = '';
-      if (m?.kind === 'win') {
-        playerMsStr = String(m.playerMs);
-        npcMsStr = m.npcMs != null ? String(m.npcMs) : '';
-      } else if (m?.kind === 'loss') {
-        lossReason = m.reason;
-        if (m.playerMs != null) playerMsStr = String(m.playerMs);
-        if (m.npcMs != null) npcMsStr = String(m.npcMs);
-      }
       void goToMatchResult({
-        won: ps >= WINS_TO_END,
+        won,
         playerWins: ps,
         npcWins: ns,
         playerMs: playerMsStr,
         npcMs: npcMsStr,
         lossReason,
       });
+    };
+
+    // 하트 0 = 탈락 / 선 3승 = 승패 — 둘 중 하나라도 충족 시 매치 종료
+    if (phNow <= 0) {
+      goResult(false);
+      return;
+    }
+
+    if (ohNow <= 0) {
+      goResult(true);
+      return;
+    }
+
+    if (ps >= WINS_TO_END) {
+      goResult(true);
+      return;
+    }
+
+    if (ns >= WINS_TO_END) {
+      // 접전 패배(2:3) — 망령 사수 스킬 소진 후에만 광고 부활 (매치당 1회, 보스전 22번 제외)
+      const closeLoss =
+        ps === WINS_TO_END - 1 &&
+        !adReviveUsedRef.current &&
+        npc?.id !== 22 &&
+        (characterIdNow !== 4 || abilityUsedNow);
+      if (closeLoss) {
+        setAdRevivePending({ ps, ns });
+        return;
+      }
+      goResult(false);
       return;
     }
 
@@ -905,13 +990,14 @@ export default function NpcGameScreen() {
     nextRound();
     resetDuel();
     startRoundDuel();
-  }, [npc, nextRound, resetDuel, startRoundDuel, headshotOffered, setAbilityUsed, goToMatchResult]);
+  }, [npc, nextRound, resetDuel, startRoundDuel, goToMatchResult]);
 
   /** 뱅 이전에도 탭을 엔진으로 넘겨 얼리 즉시 패배(누르고 있다가 뱅 때 손 떼면 이기는 버그 방지) */
   const shootCapturesEarly =
     phase !== '대기' &&
     phase !== '결과' &&
     !modalVisible &&
+    !abilityIntroVisible &&
     !paused &&
     abilityOverlay == null;
 
@@ -1074,8 +1160,14 @@ export default function NpcGameScreen() {
             onPause={() => setPaused(true)}
             pauseDisabled={phase === '페이크'}
             playerTapAckStyle={playerTapAckStyle}
-            hideBottomHud={modalVisible}
+            hideBottomHud={modalVisible || abilityIntroVisible}
             orientation={isLandscape ? 'landscape' : 'portrait'}
+          />
+
+          <NpcAbilityIntroModal
+            visible={abilityIntroVisible}
+            npc={npc}
+            onConfirm={handleAbilityIntroConfirm}
           />
 
           <NpcRoundModal
@@ -1083,8 +1175,6 @@ export default function NpcGameScreen() {
             data={modal}
             onContinue={onContinue}
             winBurstId={npcRoundWinBurstId}
-            headshotOffered={headshotOffered}
-            onHeadshotPress={onHeadshotPress}
             paddingBottom={insets.bottom}
           />
 

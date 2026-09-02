@@ -1,8 +1,9 @@
 /** 테스트용 — 배포 전 false 로 되돌리기 */
 export const DEV_AUTO_SCREENSHOTS =
   process.env.EXPO_PUBLIC_AUTO_SCREENSHOTS === '1';
-export const DEV_UNLOCK_ALL_NPCS = false;
-export const DEV_UNLOCK_ALL_CHARACTERS = false;
+/** Expo 개발 서버·dev 빌드에서만 전체 해금. 프로덕션 빌드에서는 자동으로 false */
+export const DEV_UNLOCK_ALL_NPCS = __DEV__;
+export const DEV_UNLOCK_ALL_CHARACTERS = __DEV__;
 
 /**
  * preview 변형 빌드 여부 (`app.config.js`에서 번들 ID를 분리한 빌드).

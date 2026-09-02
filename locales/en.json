@@ -126,8 +126,12 @@
   "character": {
     "title": "Gunslingers",
     "subtitle": "Choose your character for the duel",
+    "holdForAbility": "Press and hold a character to view their ability",
     "noAbility": "No ability",
     "selected": "Selected",
+    "abilityIntro": {
+      "title": "Character Ability"
+    },
     "unlocked": "??? Unlocked",
     "hiddenRevealBody": "A hidden gunslinger steps into the light.",
     "unlock": {
@@ -154,12 +158,12 @@
       "3": {
         "name": "Crimson Rosa",
         "ability": "Headshot",
-        "abilityDesc": "After a won round, optionally remove 2 NPC hearts at once. (Once per match)"
+        "abilityDesc": "Only after winning a round {{ms}}ms+ faster than the opponent. Removes 2 extra NPC hearts. (Once per match)"
       },
       "4": {
         "name": "Phantom Sharpshooter",
         "ability": "One More",
-        "abilityDesc": "Once per match, when your hearts hit 0, revive with 1 instead."
+        "abilityDesc": "Once per match, nullifies one fatal loss (last heart or 2:3 clinch) and rises again. Triggers before ad revive."
       }
     }
   },

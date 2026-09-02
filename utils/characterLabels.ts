@@ -6,6 +6,7 @@ import {
   CHARACTER_UNLOCK,
   type PlayerCharacterId,
 } from '@/constants/characters';
+import { HEADSHOT_MIN_REACTION_GAP_MS } from '@/utils/characterAbility';
 
 export type CharacterLabels = {
   name: string;
@@ -30,7 +31,10 @@ function unlockCondition(t: TFunction, id: PlayerCharacterId): string {
 export function getCharacterLabels(t: TFunction, id: PlayerCharacterId): CharacterLabels {
   const base = `character.list.${id}`;
   const abilityName = t(`${base}.ability`, { defaultValue: '' });
-  const abilityDescription = t(`${base}.abilityDesc`, { defaultValue: '' });
+  const abilityDescription = t(`${base}.abilityDesc`, {
+    defaultValue: '',
+    ms: HEADSHOT_MIN_REACTION_GAP_MS,
+  });
 
   return {
     name: t(`${base}.name`),

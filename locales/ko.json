@@ -126,8 +126,12 @@
   "character": {
     "title": "총잡이",
     "subtitle": "대결에 사용할 캐릭터를 고릅니다",
+    "holdForAbility": "캐릭터를 길게 눌러 능력을 확인하세요",
     "noAbility": "능력 없음",
     "selected": "선택됨",
+    "abilityIntro": {
+      "title": "캐릭터 능력"
+    },
     "unlocked": "??? 해금됨",
     "hiddenRevealBody": "숨겨진 총잡이가 모습을 드러냅니다.",
     "unlock": {
@@ -154,12 +158,12 @@
       "3": {
         "name": "붉은 로사",
         "ability": "헤드샷",
-        "abilityDesc": "승리한 라운드 직후 선택 시 NPC 하트를 2칸 동시에 제거합니다. (매치당 1회)"
+        "abilityDesc": "상대보다 {{ms}}ms 이상 빠르게 이긴 라운드에서만 발동합니다. NPC 하트 2칸 추가 제거. (매치당 1회)"
       },
       "4": {
         "name": "망령 사수",
         "ability": "한 번 더",
-        "abilityDesc": "매치당 1회, 플레이어 하트가 0이 되는 대신 1로 부활합니다."
+        "abilityDesc": "매치당 1회, 치명적인 패배(마지막 하트·2:3 직전)를 무효화하고 다시 일어납니다. 광고 부활보다 먼저 발동합니다."
       }
     }
   },

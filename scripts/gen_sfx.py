@@ -191,6 +191,49 @@ def heart_crack() -> list[float]:
     return crack + tail
 
 
+def ghost_revive_death() -> list[float]:
+    """망령 사수 — 쓰러짐: 저음 낙하 + 짧은 정적."""
+    fall = tone(95, 0.32, decay=9, harmonics=(1.0, 0.35, 0.12))
+    hush = [0.0] * int(0.06 * SR)
+    return fall + hush
+
+
+def ghost_revive_rise() -> list[float]:
+    """망령 사수 — 부활: 상승하는 맑은 화음."""
+    return seq([(196, 0.12), (294, 0.12), (392, 0.16), (523, 0.28)], decay=3.2)
+
+
+def ability_shield() -> list[float]:
+    """철의 보안관 — 방패 튕김: 맑은 금속 '팅' 한 방."""
+    n = int(0.22 * SR)
+    out: list[float] = []
+    for i in range(n):
+        t = i / SR
+        env = math.exp(-20.0 * t)
+        v = (
+            math.sin(2 * math.pi * 2380 * t)
+            + 0.52 * math.sin(2 * math.pi * 3610 * t)
+            + 0.28 * math.sin(2 * math.pi * 4980 * t)
+        ) * env
+        if t < 0.004:
+            v += random.uniform(-1, 1) * 0.35 * (1.0 - t / 0.004)
+        out.append(v * min(1.0, t / 0.0008))
+    return out
+
+
+def ability_headshot() -> list[float]:
+    """붉은 로사 — 헤드샷: 외침 + 짧은 총성."""
+    vocal = shout_burst(440, 0.34, 0.7)
+    shot = gunshot(0.26)
+    n = max(len(vocal), len(shot))
+    out: list[float] = []
+    for i in range(n):
+        v = (vocal[i] if i < len(vocal) else 0.0) * 0.9
+        s = (shot[i] if i < len(shot) else 0.0) * 0.5
+        out.append(v + s)
+    return out
+
+
 def build() -> None:
     random.seed(7)
     os.makedirs(os.path.abspath(OUT_DIR), exist_ok=True)
@@ -212,6 +255,10 @@ def build() -> None:
     _write("lose_sad.wav", seq([(330, 0.22), (262, 0.28)], decay=4.2))        # 매치 패배용 — 짧게
     _write("defeat_thud.wav", defeat_thud())
     _write("heart_break.wav", heart_crack())
+    _write("ghost_revive_death.wav", ghost_revive_death())
+    _write("ghost_revive_rise.wav", ghost_revive_rise())
+    _write("ability_shield.wav", ability_shield())
+    _write("ability_headshot.wav", ability_headshot())
     _write("level_clear.wav", seq([(523, 0.11), (659, 0.11), (784, 0.11), (1047, 0.24)], decay=3.5))
 
     print("done ->", os.path.abspath(OUT_DIR))
