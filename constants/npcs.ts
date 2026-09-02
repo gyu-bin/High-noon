@@ -76,69 +76,69 @@ export const NPCS: readonly NpcDefinition[] = [
       'female bounty hunter, ice-blue eyes, sleek leather duster, dual holsters, calm expression',
   }),
 
-  npc(7, 400, 'gold', false, false, DT(B1_7.minMs, B1_7.maxMs), 'none', 0, {
+  npc(7, 385, 'gold', false, false, DT(B1_7.minMs, B1_7.maxMs), 'none', 0, {
     designKeywords:
       'cactus spine motif on hat, green-tinted coat, spiked gloves, desert punk aesthetic',
   }),
-  npc(8, 375, 'gold', false, false, DT(B1_7.minMs, B1_7.maxMs), 'none', 0, {
+  npc(8, 368, 'gold', false, false, DT(B1_7.minMs, B1_7.maxMs), 'none', 0, {
     designKeywords:
       'ornate twin revolvers, flamboyant red vest, gold trim, theatrical villain energy',
   }),
-  npc(9, 350, 'gold', true, false, DT(B1_7.minMs, B1_7.maxMs), 'none', 0, {
+  npc(9, 348, 'gold', true, false, DT(B1_7.minMs, B1_7.maxMs), 'none', 0, {
     designKeywords:
       'gold skull face paint, gilded armor, glowing yellow eyes, opulent western villain',
   }),
 
-  npc(10, 335, 'platinum', false, false, DT(B1_7.minMs, B1_7.maxMs), 'none', 0, {
+  npc(10, 332, 'platinum', false, false, DT(B1_7.minMs, B1_7.maxMs), 'none', 0, {
     designKeywords:
       'mechanical eye implant, steel shoulder armor, eagle emblem, precision gunslinger',
   }),
-  npc(11, 360, 'platinum', false, false, DT(B1_7.minMs, B1_7.maxMs), 'none', 0, {
+  npc(11, 345, 'platinum', false, false, DT(B1_7.minMs, B1_7.maxMs), 'none', 0, {
     designKeywords:
       'massive build, steam engineer coat, goggles on forehead, silent menacing stare',
   }),
-  npc(12, 345, 'platinum', true, false, DT(B1_7.minMs, B1_7.maxMs), 'none', 0, {
+  npc(12, 318, 'platinum', true, false, DT(B1_7.minMs, B1_7.maxMs), 'none', 0, {
     designKeywords:
       'full black iron armor, no face visible, obsidian revolver, imposing silhouette',
   }),
 
-  npc(13, 300, 'diamond', false, false, DT(B1_7.minMs, B1_7.maxMs), 'mirror', 0, {
+  npc(13, 278, 'diamond', false, false, DT(B1_7.minMs, B1_7.maxMs), 'mirror', 0, {
     designKeywords: 'cracked mirror mask, split-color outfit, unsettling symmetry',
   }),
-  npc(14, 328, 'diamond', false, false, DT(B1_7.minMs, B1_7.maxMs), 'thunderbolt', 0, {
+  npc(14, 292, 'diamond', false, false, DT(B1_7.minMs, B1_7.maxMs), 'thunderbolt', 0, {
     designKeywords:
       'lightning scar across face, electric blue coat, crackling energy around hands',
   }),
-  npc(15, 315, 'diamond', true, false, DT(B1_7.minMs, B1_7.maxMs), 'blindBang', 0, {
+  npc(15, 275, 'diamond', true, false, DT(B1_7.minMs, B1_7.maxMs), 'blindBang', 0, {
     designKeywords:
       'half-dissolved into shadow, smoke trails, dark void cloak, glowing white eyes only',
   }),
 
-  npc(16, 302, 'master', false, false, DT(B1_7.minMs, B1_7.maxMs), 'fakeSingles', 1, {
+  npc(16, 262, 'master', false, false, DT(B1_7.minMs, B1_7.maxMs), 'fakeSingles', 1, {
     designKeywords: 'purple venom drip motif, spiked collar, reptile scale texture',
   }),
-  npc(17, 288, 'master', true, false, DT(B1_7.minMs, B1_7.maxMs), 'fakeMultis', 0, {
+  npc(17, 248, 'master', true, false, DT(B1_7.minMs, B1_7.maxMs), 'fakeMultis', 0, {
     designKeywords:
       'pale skin, red-rimmed eyes, black longcoat, moonlit backlight, eerie calm',
   }),
-  npc(18, 278, 'master', true, false, DT(B1_7.minMs, B1_7.maxMs), 'comboFakeBlind', 0, {
+  npc(18, 235, 'master', true, false, DT(B1_7.minMs, B1_7.maxMs), 'comboFakeBlind', 0, {
     designKeywords:
       'multiple glowing red eyes, prophet robes with bullet holes, ominous aura',
   }),
 
-  npc(19, 268, 'legend', false, false, DT(B1_7.minMs, B1_7.maxMs), 'invertedSignals', 0, {
+  npc(19, 225, 'legend', false, false, DT(B1_7.minMs, B1_7.maxMs), 'invertedSignals', 0, {
     designKeywords:
       'body partially inverted, cosmic void texture, stars visible through coat',
   }),
-  npc(20, 258, 'legend', false, false, DT(B1_7.minMs, B1_7.maxMs), 'echoReady', 0, {
+  npc(20, 215, 'legend', false, false, DT(B1_7.minMs, B1_7.maxMs), 'echoReady', 0, {
     designKeywords: 'ghostly double image, translucent body, two overlapping silhouettes',
   }),
-  npc(21, 248, 'legend', true, false, DT(B1_7.minMs, B1_7.maxMs), 'chaosRandom', 0, {
+  npc(21, 205, 'legend', true, false, DT(B1_7.minMs, B1_7.maxMs), 'chaosRandom', 0, {
     designKeywords:
       'funeral black suit, coffin motif, skull-topped cane, final judgment energy',
   }),
 
-  npc(22, 218, 'hidden', true, false, DT(4000, 12000), 'paleSilence', 0, {
+  npc(22, 198, 'hidden', true, false, DT(4000, 12000), 'paleSilence', 0, {
     secret: true,
     designKeywords:
       'white horse skull motif, bleached bone armor, no face, absolute silence, death incarnate',
