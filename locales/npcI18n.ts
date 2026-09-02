@@ -64,17 +64,17 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
         name: '블라인드 뱅',
         desc: '뱅 신호 글자가 배경에 묻혀 거의 보이지 않습니다.',
       },
-      fakeSingles: {
-        name: '페이크 뱅',
-        desc: '집중 중 가짜 뱅 신호가 1번 나옵니다. 속지 마세요.',
+      screenShakeLight: {
+        name: '떨림',
+        desc: '집중 중 화면이 살짝 흔들립니다.',
       },
-      fakeMultis: {
-        name: '연속 페이크',
-        desc: '집중 중 가짜 뱅 신호가 2~4번 나옵니다.',
+      screenShakeMedium: {
+        name: '흔들림',
+        desc: '집중 중 화면이 흔들려 집중하기 어렵습니다.',
       },
-      comboFakeBlind: {
-        name: '페이크 + 블라인드',
-        desc: '가짜 뱅과 보이지 않는 뱅 신호가 함께 나옵니다.',
+      screenShakeHeavy: {
+        name: '격진',
+        desc: '집중 중 화면이 격렬하게 흔들립니다.',
       },
       invertedSignals: {
         name: '반전 신호',
@@ -86,7 +86,7 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
       },
       chaosRandom: {
         name: '카오스',
-        desc: '매 라운드 반전·블라인드·페이크·없음 중 하나가 랜덤으로 적용됩니다.',
+        desc: '매 라운드 반전·블라인드·흔들림·없음 중 하나가 랜덤으로 적용됩니다.',
       },
       paleSilence: {
         name: '침묵',
@@ -146,17 +146,17 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
         name: 'Blind Bang',
         desc: 'The BANG text blends into the background and is hard to see.',
       },
-      fakeSingles: {
-        name: 'Fake Bang',
-        desc: 'One fake BANG appears during STEADY. Do not tap early.',
+      screenShakeLight: {
+        name: 'Tremor',
+        desc: 'The screen shakes slightly during STEADY.',
       },
-      fakeMultis: {
-        name: 'Multi Fake',
-        desc: '2–4 fake BANGs appear during STEADY.',
+      screenShakeMedium: {
+        name: 'Quake',
+        desc: 'The screen shakes during STEADY, making it hard to focus.',
       },
-      comboFakeBlind: {
-        name: 'Fake + Blind',
-        desc: 'Fake BANGs and a nearly invisible BANG appear together.',
+      screenShakeHeavy: {
+        name: 'Earthquake',
+        desc: 'The screen shakes violently during STEADY.',
       },
       invertedSignals: {
         name: 'Inverted Signals',
@@ -168,7 +168,7 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
       },
       chaosRandom: {
         name: 'Chaos',
-        desc: 'Each round randomly applies invert, blind, fake, or none.',
+        desc: 'Each round randomly applies invert, blind, shake, or none.',
       },
       paleSilence: {
         name: 'Silence',
@@ -228,17 +228,17 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
         name: 'ブラインドBANG',
         desc: 'BANGの文字が背景に溶けてほとんど見えません。',
       },
-      fakeSingles: {
-        name: 'フェイクBANG',
-        desc: 'STEADY中に偽のBANGが1回出ます。早押ししないでください。',
+      screenShakeLight: {
+        name: '震え',
+        desc: 'STEADY中に画面が少し揺れます。',
       },
-      fakeMultis: {
-        name: '連続フェイク',
-        desc: 'STEADY中に偽のBANGが2〜4回出ます。',
+      screenShakeMedium: {
+        name: '揺れ',
+        desc: 'STEADY中に画面が揺れて集中しにくくなります。',
       },
-      comboFakeBlind: {
-        name: 'フェイク+ブラインド',
-        desc: '偽BANGと見えにくいBANGが同時に出ます。',
+      screenShakeHeavy: {
+        name: '激震',
+        desc: 'STEADY中に画面が激しく揺れます。',
       },
       invertedSignals: {
         name: '反転シグナル',
@@ -250,7 +250,7 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
       },
       chaosRandom: {
         name: 'カオス',
-        desc: '毎ラウンド反転・ブラインド・フェイク・なしのいずれかがランダムです。',
+        desc: '毎ラウンド反転・ブラインド・揺れ・なしのいずれかがランダムです。',
       },
       paleSilence: {
         name: '沈黙',

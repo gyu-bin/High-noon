@@ -114,14 +114,14 @@ export const NPCS: readonly NpcDefinition[] = [
       'half-dissolved into shadow, smoke trails, dark void cloak, glowing white eyes only',
   }),
 
-  npc(16, 262, 'master', false, false, DT(B1_7.minMs, B1_7.maxMs), 'fakeSingles', 1, {
+  npc(16, 262, 'master', false, false, DT(B1_7.minMs, B1_7.maxMs), 'screenShakeLight', 0, {
     designKeywords: 'purple venom drip motif, spiked collar, reptile scale texture',
   }),
-  npc(17, 248, 'master', true, false, DT(B1_7.minMs, B1_7.maxMs), 'fakeMultis', 0, {
+  npc(17, 248, 'master', true, false, DT(B1_7.minMs, B1_7.maxMs), 'screenShakeMedium', 0, {
     designKeywords:
       'pale skin, red-rimmed eyes, black longcoat, moonlit backlight, eerie calm',
   }),
-  npc(18, 235, 'master', true, false, DT(B1_7.minMs, B1_7.maxMs), 'comboFakeBlind', 0, {
+  npc(18, 235, 'master', true, false, DT(B1_7.minMs, B1_7.maxMs), 'screenShakeHeavy', 0, {
     designKeywords:
       'multiple glowing red eyes, prophet robes with bullet holes, ominous aura',
   }),

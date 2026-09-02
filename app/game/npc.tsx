@@ -10,6 +10,7 @@ import Animated, {
   useSharedValue,
   withSequence,
   withTiming,
+  withRepeat,
 } from 'react-native-reanimated';
 
 import {
@@ -255,6 +256,8 @@ export default function NpcGameScreen() {
 
   const blueRing = useSharedValue(0);
   const playerTapAck = useSharedValue(0);
+  const shakeX = useSharedValue(0);
+  const shakeY = useSharedValue(0);
 
   const playerStreakRef = useRef(0);
   const prevBangDelayRef = useRef<number | null>(null);
@@ -1090,9 +1093,65 @@ export default function NpcGameScreen() {
     !!npc &&
     phase === '뱅' &&
     (npc.specialAbility === 'blindBang' ||
-      npc.id === 18 ||
       (npc.id === 21 &&
         (chaosModeRef.current === 'blindBang' || chaosModeRef.current === 'combo')));
+
+  const screenShakeIntensity = useMemo(() => {
+    if (!npc) return 0;
+    if (npc.specialAbility === 'screenShakeLight') return 6;
+    if (npc.specialAbility === 'screenShakeMedium') return 12;
+    if (npc.specialAbility === 'screenShakeHeavy') return 20;
+    return 0;
+  }, [npc?.specialAbility]);
+
+  useEffect(() => {
+    if (screenShakeIntensity === 0) {
+      cancelAnimation(shakeX);
+      cancelAnimation(shakeY);
+      shakeX.value = 0;
+      shakeY.value = 0;
+      return;
+    }
+
+    if (phase === '집중' || phase === '페이크') {
+      const intensity = screenShakeIntensity;
+      const duration = screenShakeIntensity >= 15 ? 50 : screenShakeIntensity >= 10 ? 70 : 90;
+
+      shakeX.value = withRepeat(
+        withSequence(
+          withTiming(intensity, { duration, easing: Easing.inOut(Easing.quad), reduceMotion: RM_GAME }),
+          withTiming(-intensity, { duration, easing: Easing.inOut(Easing.quad), reduceMotion: RM_GAME }),
+          withTiming(intensity * 0.7, { duration, easing: Easing.inOut(Easing.quad), reduceMotion: RM_GAME }),
+          withTiming(-intensity * 0.7, { duration, easing: Easing.inOut(Easing.quad), reduceMotion: RM_GAME }),
+        ),
+        -1,
+        false,
+        undefined,
+        RM_GAME,
+      );
+      shakeY.value = withRepeat(
+        withSequence(
+          withTiming(-intensity * 0.6, { duration, easing: Easing.inOut(Easing.quad), reduceMotion: RM_GAME }),
+          withTiming(intensity * 0.6, { duration, easing: Easing.inOut(Easing.quad), reduceMotion: RM_GAME }),
+          withTiming(-intensity * 0.4, { duration, easing: Easing.inOut(Easing.quad), reduceMotion: RM_GAME }),
+          withTiming(intensity * 0.4, { duration, easing: Easing.inOut(Easing.quad), reduceMotion: RM_GAME }),
+        ),
+        -1,
+        false,
+        undefined,
+        RM_GAME,
+      );
+    } else {
+      cancelAnimation(shakeX);
+      cancelAnimation(shakeY);
+      shakeX.value = withTiming(0, { duration: 100, reduceMotion: RM_GAME });
+      shakeY.value = withTiming(0, { duration: 100, reduceMotion: RM_GAME });
+    }
+  }, [phase, screenShakeIntensity, shakeX, shakeY]);
+
+  const screenShakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeX.value }, { translateY: shakeY.value }],
+  }));
 
   const invertSignalColors =
     !!npc &&
@@ -1106,7 +1165,7 @@ export default function NpcGameScreen() {
     contentHeight: winH,
   };
 
-  const arenaBody = (
+  const arenaBodyContent = (
     <>
       <Animated.View pointerEvents="none" style={[styles.blueRing, blueStyle]} />
 
@@ -1203,6 +1262,14 @@ export default function NpcGameScreen() {
         </>
       ) : null}
     </>
+  );
+
+  const arenaBody = screenShakeIntensity > 0 ? (
+    <Animated.View style={[{ flex: 1 }, screenShakeStyle]}>
+      {arenaBodyContent}
+    </Animated.View>
+  ) : (
+    arenaBodyContent
   );
 
   return (

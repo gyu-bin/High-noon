@@ -36,12 +36,12 @@ export type NpcSpecialAbility =
   | 'thunderbolt'
   /** #15 그림자 사냥꾼 — BANG 텍스트 블라인드 */
   | 'blindBang'
-  /** #16 베놈 — 페이크 BANG ×1 */
-  | 'fakeSingles'
-  /** #17 Dryden — 페이크 2~4, 야간 배경 고정 */
-  | 'fakeMultis'
-  /** #18 레드 아이 — 페이크 + 블라인드 복합 */
-  | 'comboFakeBlind'
+  /** #16 베놈 — 집중 중 화면 흔들림 (약함) */
+  | 'screenShakeLight'
+  /** #17 Dryden — 집중 중 화면 흔들림 (중간) */
+  | 'screenShakeMedium'
+  /** #18 레드 아이 — 집중 중 화면 흔들림 (강함) */
+  | 'screenShakeHeavy'
   /** #19 보이드 — 신호 색상 반전(READY↔BANG 혼동) */
   | 'invertedSignals'
   /** #20 에코 — READY 음성 이중(청각 페이크) */
