@@ -69,8 +69,12 @@ type Props = {
   playerPose: SpritePose;
   signalPhase: DuelSignalBoardPhase;
   blindBangText: boolean;
+  hideBangText?: boolean;
+  voidShroud?: boolean;
+  swapSignalLabels: boolean;
   invertSignalColors: boolean;
-  echoReadySignal?: boolean;
+  /** #20 — BANG 3연속, 2번째만 진짜 */
+  echoBangMiddleSignal?: boolean;
   opponentHearts: number;
   playerHearts: number;
   playerScore: number;
@@ -102,8 +106,11 @@ export function DuelArenaLayout({
   playerPose,
   signalPhase,
   blindBangText,
+  hideBangText = false,
+  voidShroud = false,
+  swapSignalLabels,
   invertSignalColors,
-  echoReadySignal = false,
+  echoBangMiddleSignal = false,
   opponentHearts,
   playerHearts,
   playerScore,
@@ -261,8 +268,11 @@ export function DuelArenaLayout({
           variant="minimal"
           phase={signalPhase}
           blindBangText={blindBangText}
+          hideBangText={hideBangText}
+          voidShroud={voidShroud}
+          swapSignalLabels={swapSignalLabels}
           invertSignalColors={invertSignalColors}
-          echoReady={echoReadySignal}
+          echoBangMiddle={echoBangMiddleSignal}
         />
       </View>
 

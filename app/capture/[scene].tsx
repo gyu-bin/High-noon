@@ -194,6 +194,7 @@ function FrozenNpcDuel({ frame }: { frame: DuelFrame }) {
           playerPose={frame.playerPose}
           signalPhase={frame.signalPhase}
           blindBangText={false}
+          swapSignalLabels={false}
           invertSignalColors={false}
           opponentHearts={2}
           playerHearts={3}

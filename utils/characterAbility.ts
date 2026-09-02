@@ -140,6 +140,7 @@ export function applyAbility(
   switch (id) {
     case 2: {
       if (provisionalWinner !== 'opponent') return {};
+      if (input.outcome?.earlyTap) return {};
       return { lastStandFlipToPlayerWin: true };
     }
     case 3: {

@@ -45,7 +45,7 @@ import {
   DUEL_EARLY_MODAL_DELAY_MS,
   DUEL_HEADSHOT_REVEAL_DELAY_MS,
 } from '@/constants/duelPresentation';
-import { buildDuelStartParams } from '@/utils/npcDuelParams';
+import { buildDuelStartParams, CHAOS_MODES, type ChaosMode } from '@/utils/npcDuelParams';
 import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
 import { useDuelEngine, type DuelOutcome, type DuelPhase } from '@/hooks/useDuelEngine';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
@@ -221,18 +221,25 @@ export default function NpcGameScreen() {
 
   const startRoundDuel = useCallback(() => {
     if (!npc) return;
+    let chaosMode: ChaosMode | null = null;
     if (npc.id === 21) {
-      const r = Math.random();
-      if (r < 0.25) chaosModeRef.current = 'inverted';
-      else if (r < 0.5) chaosModeRef.current = 'blindBang';
-      else if (r < 0.75) chaosModeRef.current = 'combo';
-      else chaosModeRef.current = 'none';
+      chaosMode = CHAOS_MODES[Math.floor(Math.random() * CHAOS_MODES.length)]!;
+      chaosModeRef.current = chaosMode;
+      setChaosBanner(chaosMode);
       setChaosRenderTick((n) => n + 1);
     } else {
-      chaosModeRef.current = 'none';
+      chaosModeRef.current = null;
+      setChaosBanner(null);
     }
-    const { timing, fakeBangCount } = buildDuelStartParams(npc);
-    startDuelEngine(timing, { fakeBangCount });
+    const { timing, fakeBangCount, echoBangMiddle } = buildDuelStartParams(npc, chaosMode);
+    if (npc.id === 22 && timing.bangDelayMinMs != null) {
+      // BANG 대기보다 빨리 완전 암전 도달 후 유지 (약 40%, 최소 1.2s)
+      paleFadeDurationMsRef.current = Math.max(
+        1200,
+        Math.round(timing.bangDelayMinMs * 0.4),
+      );
+    }
+    startDuelEngine(timing, { fakeBangCount, echoBangMiddle });
   }, [npc, startDuelEngine]);
 
   const [abilityIntroVisible, setAbilityIntroVisible] = useState(false);
@@ -258,6 +265,10 @@ export default function NpcGameScreen() {
   const playerTapAck = useSharedValue(0);
   const shakeX = useSharedValue(0);
   const shakeY = useSharedValue(0);
+  /** #22 페일 — STEADY~BANG 구간과 맞춘 암전 페이드(ms) */
+  const paleFadeDurationMsRef = useRef(6000);
+  const paleDimOpacity = useSharedValue(0);
+  const paleDimPhaseRef = useRef<DuelPhase>(phase);
 
   const playerStreakRef = useRef(0);
   const prevBangDelayRef = useRef<number | null>(null);
@@ -270,10 +281,11 @@ export default function NpcGameScreen() {
     modal: ReturnType<typeof setTimeout> | null;
   }>({ defeat: null, modal: null });
   const [signalBoardPhase, setSignalBoardPhase] = useState<DuelSignalBoardPhase>('idle');
-  /** #13 미러 잭 — 직전 라운드 플레이어 유효 반응(ms) */
-  const prevPlayerBangMsRef = useRef<number | null>(null);
-  /** #21 Undertaker — 라운드마다 랜덤 교란(반전 / 블라인드 / 복합 / 없음) */
-  const chaosModeRef = useRef<'none' | 'inverted' | 'blindBang' | 'combo'>('none');
+  /** #13 미러 잭 — 라운드 결과에 따라 조정되는 NPC 목표 반응(ms) */
+  const mirrorAdaptiveMsRef = useRef<number | null>(null);
+  /** #21 Undertaker — 라운드마다 훔친 스킬 */
+  const chaosModeRef = useRef<ChaosMode | null>(null);
+  const [chaosBanner, setChaosBanner] = useState<ChaosMode | null>(null);
   const deferredModalRef = useRef<NpcRoundModalData | null>(null);
   const headshotApplyPendingRef = useRef(false);
   const npcRoundSimRef = useRef<NpcReactionSimulation | null>(null);
@@ -285,6 +297,10 @@ export default function NpcGameScreen() {
 
   const playerTapAckStyle = useAnimatedStyle(() => ({
     opacity: playerTapAck.value,
+  }));
+
+  const paleDimStyle = useAnimatedStyle(() => ({
+    opacity: paleDimOpacity.value,
   }));
 
   const pulsePlayerTapAck = useCallback(
@@ -355,7 +371,7 @@ export default function NpcGameScreen() {
     const sim = simulateNpcReaction({
       npc,
       previousSteadyToBangDelayMs: prevBangDelayRef.current,
-      mirrorPlayerMs: npc.id === 13 ? prevPlayerBangMsRef.current : null,
+      mirrorAdaptiveMs: npc.id === 13 ? mirrorAdaptiveMsRef.current : null,
     });
     npcRoundSimRef.current = sim;
 
@@ -462,12 +478,13 @@ export default function NpcGameScreen() {
         ]);
         if (cancelled || !npc) return;
         if (npc?.id !== 21) {
-          chaosModeRef.current = 'none';
+          chaosModeRef.current = null;
+          setChaosBanner(null);
         }
         startMatch({ mode: 'npc', playerHearts: HEARTS, opponentHearts: HEARTS });
         playerStreakRef.current = 0;
         prevBangDelayRef.current = null;
-        prevPlayerBangMsRef.current = null;
+        mirrorAdaptiveMsRef.current = npc.reactionMs;
         processedOutcomeKey.current = '';
         adReviveUsedRef.current = false;
         resetDuel();
@@ -509,7 +526,7 @@ export default function NpcGameScreen() {
       simulateNpcReaction({
         npc,
         previousSteadyToBangDelayMs: prevBangDelayRef.current,
-        mirrorPlayerMs: npc.id === 13 ? prevPlayerBangMsRef.current : null,
+        mirrorAdaptiveMs: npc.id === 13 ? mirrorAdaptiveMsRef.current : null,
       });
 
     let data: NpcRoundModalData;
@@ -585,7 +602,7 @@ export default function NpcGameScreen() {
     let modalData: NpcRoundModalData = data;
     let lastStandFlip = false;
 
-    if (data.kind === 'loss' && characterId === 2 && !abilityUsed) {
+    if (data.kind === 'loss' && characterId === 2 && !abilityUsed && !o.earlyTap) {
       const phAfter = ph > 0 ? ph - 1 : ph;
       const ls = applyAbility(2, {
         outcome: o,
@@ -717,8 +734,18 @@ export default function NpcGameScreen() {
       prevBangDelayRef.current = lastSteadyToBangDelayMs;
     }
 
+    if (npc.id === 13) {
+      const base = mirrorAdaptiveMsRef.current ?? npc.reactionMs;
+      const floor = Math.max(165, npc.reactionMs - 110);
+      const ceiling = npc.reactionMs + 70;
+      if (effectiveWin) {
+        mirrorAdaptiveMsRef.current = Math.max(floor, base - 15);
+      } else if (!reviveFlip && !lastStandFlip) {
+        mirrorAdaptiveMsRef.current = Math.min(ceiling, base + 12);
+      }
+    }
+
     if (o.reactionMs != null) {
-      prevPlayerBangMsRef.current = o.reactionMs;
       const ms = o.reactionMs;
       queueMicrotask(() => {
         const { recordGlobalReactionSample, recordNpcBestReaction } =
@@ -1084,25 +1111,44 @@ export default function NpcGameScreen() {
   }, [defeatedSide, phase, playerShootFlash, holdResultShoot]);
 
   useEffect(() => {
+    if (!chaosBanner) return;
+    const t = setTimeout(() => setChaosBanner(null), 1400);
+    return () => clearTimeout(t);
+  }, [chaosBanner]);
+
+  useEffect(() => {
     if (phase !== '뱅' && phase !== '결과') {
       setPlayerShootFlash(false);
     }
   }, [phase]);
 
+  const chaosMode = chaosModeRef.current;
+  const isChaos = !!npc && npc.id === 21 && chaosMode != null;
+
   const blindBangText =
     !!npc &&
-    phase === '뱅' &&
-    (npc.specialAbility === 'blindBang' ||
-      (npc.id === 21 &&
-        (chaosModeRef.current === 'blindBang' || chaosModeRef.current === 'combo')));
+    (npc.specialAbility === 'blindBang' || (isChaos && chaosMode === 'quake'));
+
+  const hideBangText =
+    !!npc &&
+    (npc.specialAbility === 'thunderbolt' || (isChaos && chaosMode === 'thunder'));
+
+  const voidShroud =
+    !!npc &&
+    (npc.specialAbility === 'invertedSignals' || (isChaos && chaosMode === 'void'));
+
+  const echoBangMiddleSignal =
+    !!npc &&
+    (npc.specialAbility === 'echoReady' || (isChaos && chaosMode === 'echo'));
 
   const screenShakeIntensity = useMemo(() => {
     if (!npc) return 0;
+    if (isChaos && chaosMode === 'quake') return 18;
     if (npc.specialAbility === 'screenShakeLight') return 6;
     if (npc.specialAbility === 'screenShakeMedium') return 12;
     if (npc.specialAbility === 'screenShakeHeavy') return 20;
     return 0;
-  }, [npc?.specialAbility]);
+  }, [npc?.specialAbility, isChaos, chaosMode]);
 
   useEffect(() => {
     if (screenShakeIntensity === 0) {
@@ -1149,15 +1195,37 @@ export default function NpcGameScreen() {
     }
   }, [phase, screenShakeIntensity, shakeX, shakeY]);
 
+  useEffect(() => {
+    if (npc?.id !== 22) {
+      cancelAnimation(paleDimOpacity);
+      paleDimOpacity.value = 0;
+      paleDimPhaseRef.current = phase;
+      return;
+    }
+
+    const prev = paleDimPhaseRef.current;
+    paleDimPhaseRef.current = phase;
+
+    if (phase === '집중' && prev === '준비') {
+      cancelAnimation(paleDimOpacity);
+      paleDimOpacity.value = 0;
+      paleDimOpacity.value = withTiming(1, {
+        duration: paleFadeDurationMsRef.current,
+        easing: Easing.out(Easing.cubic),
+        reduceMotion: RM_GAME,
+      });
+    } else if (phase === '뱅') {
+      cancelAnimation(paleDimOpacity);
+      paleDimOpacity.value = 1;
+    } else if (phase !== '집중' && phase !== '페이크') {
+      cancelAnimation(paleDimOpacity);
+      paleDimOpacity.value = withTiming(0, { duration: 400, reduceMotion: RM_GAME });
+    }
+  }, [phase, npc?.id, paleDimOpacity]);
+
   const screenShakeStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: shakeX.value }, { translateY: shakeY.value }],
   }));
-
-  const invertSignalColors =
-    !!npc &&
-    (npc.specialAbility === 'invertedSignals' ||
-      (npc.id === 21 &&
-        (chaosModeRef.current === 'inverted' || chaosModeRef.current === 'combo')));
 
   const arenaShellProps = {
     style: { width: winW, height: winH } as const,
@@ -1169,11 +1237,23 @@ export default function NpcGameScreen() {
     <>
       <Animated.View pointerEvents="none" style={[styles.blueRing, blueStyle]} />
 
-      {npc?.id === 22 && (phase === '집중' || phase === '페이크') ? (
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFillObject, styles.paleDim]}
-        />
+      {voidShroud && (phase === '집중' || phase === '페이크') ? (
+        <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, styles.voidArenaDim]} />
+      ) : null}
+
+      {chaosBanner ? (
+        <View pointerEvents="none" style={styles.chaosBannerWrap}>
+          <Text style={styles.chaosBannerTitle}>CHAOS</Text>
+          <Text style={styles.chaosBannerMode}>
+            {chaosBanner === 'void'
+              ? '공허'
+              : chaosBanner === 'thunder'
+                ? '썬더'
+                : chaosBanner === 'echo'
+                  ? '에코'
+                : '격진'}
+          </Text>
+        </View>
       ) : null}
 
       {earlyOverlay ? (
@@ -1207,8 +1287,11 @@ export default function NpcGameScreen() {
             playerPose={playerPose}
             signalPhase={signalBoardPhase}
             blindBangText={blindBangText}
-            invertSignalColors={invertSignalColors}
-            echoReadySignal={npc.specialAbility === 'echoReady'}
+            hideBangText={hideBangText}
+            voidShroud={voidShroud}
+            swapSignalLabels={false}
+            invertSignalColors={false}
+            echoBangMiddleSignal={echoBangMiddleSignal}
             opponentHearts={opponentHearts}
             playerHearts={playerHearts}
             playerScore={playerScore}
@@ -1222,6 +1305,14 @@ export default function NpcGameScreen() {
             hideBottomHud={modalVisible || abilityIntroVisible}
             orientation={isLandscape ? 'landscape' : 'portrait'}
           />
+
+          {/* 아레나 위에 올려야 암전이 보임 — STEADY 진입 시 라운드 대기 시간만큼 서서히 */}
+          {npc.id === 22 ? (
+            <Animated.View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFillObject, styles.paleDim, paleDimStyle]}
+            />
+          ) : null}
 
           <NpcAbilityIntroModal
             visible={abilityIntroVisible}
@@ -1315,8 +1406,37 @@ export default function NpcGameScreen() {
 const styles = StyleSheet.create({
   paleDim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(22, 18, 42, 0.1)',
+    backgroundColor: '#000000',
+    zIndex: 20,
+  },
+  voidArenaDim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(8, 2, 22, 0.38)',
     zIndex: 4,
+  },
+  chaosBannerWrap: {
+    position: 'absolute',
+    top: '18%',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 28,
+  },
+  chaosBannerTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 6,
+    color: 'rgba(200, 160, 255, 0.85)',
+  },
+  chaosBannerMode: {
+    marginTop: 4,
+    fontSize: 28,
+    fontWeight: '900',
+    letterSpacing: 4,
+    color: '#E8D4FF',
+    textShadowColor: 'rgba(80, 20, 140, 0.9)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   blueRing: {
     ...StyleSheet.absoluteFillObject,

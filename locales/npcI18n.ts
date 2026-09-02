@@ -54,15 +54,15 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
     specialAbility: {
       mirror: {
         name: '미러',
-        desc: '직전 라운드 당신의 반응 속도를 따라 옵니다.',
+        desc: '이길수록 더 빨라지고, 질수록 느려집니다. 연승하면 점점 버티기 어려워집니다.',
       },
       thunderbolt: {
         name: '썬더볼트',
-        desc: '집중 직후 0.05~0.11초 안에 뱅이 터집니다.',
+        desc: 'BANG 글자 없음. 집중 후 0.9~4.8초 사이 번개(페이크 2회) → 총성이 진짜. 소리로 반응.',
       },
       blindBang: {
         name: '블라인드 뱅',
-        desc: '뱅 신호 글자가 배경에 묻혀 거의 보이지 않습니다.',
+        desc: '뱅 글자가 거의 보이지 않습니다. 소리·감각으로만 반응해야 합니다.',
       },
       screenShakeLight: {
         name: '떨림',
@@ -77,16 +77,16 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
         desc: '집중 중 화면이 격렬하게 흔들립니다.',
       },
       invertedSignals: {
-        name: '반전 신호',
-        desc: '준비·뱅 신호의 색이 뒤바뀝니다.',
+        name: '공허',
+        desc: '집중 중 화면이 보라 공허에 잠깁니다. STEADY가 사라지고 ···만 보입니다. 뱅 때 균열.',
       },
       echoReady: {
-        name: '에코 READY',
-        desc: '준비 신호에 잔상이 겹쳐 보입니다.',
+        name: '에코',
+        desc: 'BANG이 연속 3번. 1번째·3번째는 가짜, 2번째 총성만 진짜입니다.',
       },
       chaosRandom: {
         name: '카오스',
-        desc: '매 라운드 반전·블라인드·흔들림·없음 중 하나가 랜덤으로 적용됩니다.',
+        desc: '매 라운드 공허·썬더·에코·격진 중 하나를 훔칩니다.',
       },
       paleSilence: {
         name: '침묵',
@@ -136,15 +136,15 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
     specialAbility: {
       mirror: {
         name: 'Mirror',
-        desc: 'Matches your reaction time from the previous round.',
+        desc: 'Gets faster when you win, slower when you lose. Win streaks make them harder to beat.',
       },
       thunderbolt: {
         name: 'Thunderbolt',
-        desc: 'BANG fires 0.05–0.11s after STEADY.',
+        desc: 'No BANG text. 0.9–4.8s after STEADY: 2 fake lightning flashes, then gunshot = real. React to sound.',
       },
       blindBang: {
         name: 'Blind Bang',
-        desc: 'The BANG text blends into the background and is hard to see.',
+        desc: 'The BANG text is nearly invisible. React by sound and feel only.',
       },
       screenShakeLight: {
         name: 'Tremor',
@@ -159,16 +159,16 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
         desc: 'The screen shakes violently during STEADY.',
       },
       invertedSignals: {
-        name: 'Inverted Signals',
-        desc: 'READY and BANG colors are swapped.',
+        name: 'Void',
+        desc: 'During STEADY the screen sinks into a purple void — STEADY vanishes, only ··· remains. BANG shatters it.',
       },
       echoReady: {
-        name: 'Echo READY',
-        desc: 'A ghost image overlaps the READY cue.',
+        name: 'Echo',
+        desc: 'Three BANGs in a row. The 1st and 3rd are fakes — only the 2nd gunshot is real.',
       },
       chaosRandom: {
         name: 'Chaos',
-        desc: 'Each round randomly applies invert, blind, shake, or none.',
+        desc: 'Each round steals Void, Thunder, Echo, or Quake.',
       },
       paleSilence: {
         name: 'Silence',
@@ -218,15 +218,15 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
     specialAbility: {
       mirror: {
         name: 'ミラー',
-        desc: '前ラウンドのあなたの反応速度に合わせてきます。',
+        desc: '勝つほど速く、負けるほど遅くなります。連勝するとどんどん厳しくなります。',
       },
       thunderbolt: {
         name: 'サンダーボルト',
-        desc: 'STEADY直後0.05〜0.11秒でBANGが発生します。',
+        desc: 'BANG文字なし。STEADY後0.9~4.8秒、稲妻フェイク2回→銃声が本物。音で反応。',
       },
       blindBang: {
         name: 'ブラインドBANG',
-        desc: 'BANGの文字が背景に溶けてほとんど見えません。',
+        desc: 'BANG文字がほとんど見えません。音と感覚だけで反応。',
       },
       screenShakeLight: {
         name: '震え',
@@ -241,16 +241,16 @@ export const NPC_I18N: Record<'ko' | 'en' | 'ja', NpcI18nBundle> = {
         desc: 'STEADY中に画面が激しく揺れます。',
       },
       invertedSignals: {
-        name: '反転シグナル',
-        desc: 'READYとBANGの色が入れ替わります。',
+        name: 'ヴォイド',
+        desc: 'STEADY中、画面が紫の虚空に包まれSTEADYが消える。···だけ。BANGで亀裂。',
       },
       echoReady: {
-        name: 'エコーREADY',
-        desc: 'READYに残像が重なって見えます。',
+        name: 'エコー',
+        desc: 'BANGが3連続。1・3番目はフェイク、2番目の銃声だけ本物。',
       },
       chaosRandom: {
         name: 'カオス',
-        desc: '毎ラウンド反転・ブラインド・揺れ・なしのいずれかがランダムです。',
+        desc: '毎ラウンドヴォイド・サンダー・エコー・激震のどれかを盗む。',
       },
       paleSilence: {
         name: '沈黙',

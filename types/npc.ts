@@ -30,11 +30,11 @@ export type NpcDuelTiming = {
 
 export type NpcSpecialAbility =
   | 'none'
-  /** #13 미러 잭 — 직전 플레이어 유효 반응(ms) 모방 */
+  /** #13 미러 잭 — 이길수록 빨라지고, 질수록 느려지는 적응형 */
   | 'mirror'
-  /** #14 썬더볼트 — STEADY 직후 극초단 BANG(50~110ms) */
+  /** #14 썬더볼트 — BANG 글자 없음, 페이크 번개 + 진짜는 총성·번개만 */
   | 'thunderbolt'
-  /** #15 그림자 사냥꾼 — BANG 텍스트 블라인드 */
+  /** #15 그림자 사냥꾼 — BANG 텍스트 거의 invisible */
   | 'blindBang'
   /** #16 베놈 — 집중 중 화면 흔들림 (약함) */
   | 'screenShakeLight'
@@ -42,11 +42,11 @@ export type NpcSpecialAbility =
   | 'screenShakeMedium'
   /** #18 레드 아이 — 집중 중 화면 흔들림 (강함) */
   | 'screenShakeHeavy'
-  /** #19 보이드 — 신호 색상 반전(READY↔BANG 혼동) */
+  /** #19 보이드 — 집중 중 공허(신호 삼킴), 뱅 때 보라 균열 */
   | 'invertedSignals'
-  /** #20 에코 — READY 음성 이중(청각 페이크) */
+  /** #20 에코 — BANG 3연속, 2번째(총성)만 진짜 */
   | 'echoReady'
-  /** #21 Undertaker — 라운드마다 반전/블라인드/복합/없음 + 뱅·페이크 랜덤 */
+  /** #21 Undertaker — 매 라운드 공허/썬더/에코/격진/반전 중 하나를 훔침 */
   | 'chaosRandom'
   /** #22 Pale Rider — 무음 뱅·암전·집중~뱅 긴 랜덤(매 라운드 샘플) */
   | 'paleSilence';
