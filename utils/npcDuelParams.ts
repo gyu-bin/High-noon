@@ -30,11 +30,7 @@ export function buildDuelStartParams(npc: NpcDefinition): {
   }
 
   let fakeBangCount = npc.fakeBangCount;
-  if (npc.specialAbility === 'fakeMultis') {
-    fakeBangCount = 2 + Math.floor(Math.random() * 3);
-  } else if (npc.specialAbility === 'comboFakeBlind') {
-    fakeBangCount = 1 + Math.floor(Math.random() * 2);
-  } else if (npc.specialAbility === 'chaosRandom') {
+  if (npc.specialAbility === 'chaosRandom') {
     fakeBangCount = Math.floor(Math.random() * 4);
   }
 
