@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 
 import { colors } from '@/constants/theme';
+import { play } from '@/utils/audioService';
+import { trigger } from '@/utils/hapticService';
 
 type Props = {
   title: string;
@@ -27,6 +29,13 @@ export function WoodButton({
   textStyle,
   accessibilityHint,
 }: Props) {
+  const handlePress = () => {
+    if (disabled) return;
+    void play('ready_click');
+    void trigger('selection');
+    onPress();
+  };
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -34,7 +43,7 @@ export function WoodButton({
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: Boolean(disabled) }}
       disabled={disabled}
-      onPress={onPress}
+      onPress={handlePress}
       style={({ pressed }) => [
         styles.outer,
         disabled && styles.outerDisabled,

@@ -181,7 +181,7 @@ async function playFromPlayer(player: AudioPlayer | undefined): Promise<void> {
   if (!player) return;
   try {
     player.pause();
-    void player.seekTo(0);
+    await player.seekTo(0);
     player.play();
   } catch {
     /* ignore */
@@ -203,10 +203,10 @@ export function playGunshot(): void {
   });
 }
 
-/** 짧은 효과음 재생 (설정 off 시 무시) */
-export function play(name: SoundName): void {
-  if (!useSettingsStore.getState().soundEnabled) return;
-  void playInternal(name);
+/** 짧은 효과음 재생 (설정 off 시 무시). 재생 시작까지 await 가능. */
+export function play(name: SoundName): Promise<void> {
+  if (!useSettingsStore.getState().soundEnabled) return Promise.resolve();
+  return playInternal(name);
 }
 
 function pickVoicePack(): number {
@@ -261,7 +261,7 @@ async function playInternal(name: SoundName): Promise<void> {
       player = cache.get(name);
     }
     if (!player) return;
-    void playFromPlayer(player);
+    await playFromPlayer(player);
   } catch {
     /* 시뮬레이터·에셋 누락 등 */
   }

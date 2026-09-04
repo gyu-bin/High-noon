@@ -27,6 +27,7 @@ export default function TitleScreen() {
   }, [router]);
 
   const goMenu = async () => {
+    // 소리 시작을 기다린 뒤 이동 — play()가 void면 네비게이션이 총성을 가로챔
     await Promise.all([trigger('medium'), play('bang_shot')]);
     router.push('/menu');
   };
