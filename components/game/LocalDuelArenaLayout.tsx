@@ -57,6 +57,8 @@ type Props = {
   onHalfPressIn: (player: LocalPlayerId) => void;
   onBack: () => void;
   onPause: () => void;
+  /** BANG 중 등 일시정지를 막아야 하는 구간 */
+  pauseDisabled?: boolean;
   /** landscape — 좌(P1)·우(P2) 정면 대치 (기본 portrait 상하 분할) */
   orientation?: 'portrait' | 'landscape';
 };
@@ -87,6 +89,7 @@ export function LocalDuelArenaLayout({
   onHalfPressIn,
   onBack,
   onPause,
+  pauseDisabled = false,
   orientation = 'portrait',
 }: Props) {
   const { t } = useTranslation();
@@ -342,6 +345,7 @@ export function LocalDuelArenaLayout({
 
       <Pressable
         accessibilityLabel={t('game.pauseA11y')}
+        disabled={pauseDisabled}
         onPress={onPause}
         style={[
           styles.pauseBtn,

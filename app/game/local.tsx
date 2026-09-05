@@ -550,7 +550,12 @@ export default function LocalGameScreen() {
             hideBottomHud={false}
             onHalfPressIn={onHalfPressIn}
             onBack={leaveLocalDuel}
-            onPause={() => setPaused(true)}
+            onPause={() => {
+              // BANG 중 pause→resume은 반응 시계만 밀려 "보고 준비했다 탭" 악용이 가능
+              if (phase === '뱅') return;
+              setPaused(true);
+            }}
+            pauseDisabled={phase === '뱅'}
             orientation={isLandscape ? 'landscape' : 'portrait'}
           />
         </>

@@ -640,6 +640,12 @@ export default function NpcGameScreen() {
 
     const effectiveWin = modalData.kind === 'win';
 
+    // 광고 부활 등 모달이 사라진 뒤에도 결과 화면에서 반응 ms를 쓸 수 있게 기록
+    useGameStore.getState().setLastReaction({
+      playerMs: modalData.playerMs,
+      npcMs: modalData.npcMs,
+    });
+
     const nextDefeatedSide: 'player' | 'npc' | null = effectiveWin
       ? oh > 0
         ? 'npc'
@@ -1299,8 +1305,12 @@ export default function NpcGameScreen() {
             shootCapturesEarly={shootCapturesEarly}
             shootActive={shootActive}
             onShootPress={onShootPress}
-            onPause={() => setPaused(true)}
-            pauseDisabled={phase === '페이크'}
+            onPause={() => {
+              // BANG 중 pause→resume은 반응 시계만 밀려 "보고 준비했다 탭" 악용이 가능
+              if (phase === '뱅' || phase === '페이크') return;
+              setPaused(true);
+            }}
+            pauseDisabled={phase === '페이크' || phase === '뱅'}
             playerTapAckStyle={playerTapAckStyle}
             hideBottomHud={modalVisible || abilityIntroVisible}
             orientation={isLandscape ? 'landscape' : 'portrait'}
