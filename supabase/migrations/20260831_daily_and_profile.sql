@@ -1,5 +1,5 @@
 -- Daily challenge + profile cosmetic update
--- Apply via Supabase MCP apply_migration or SQL editor
+-- Applied to High-noon (nyevnntgcyvlileeugal) via apply_migration
 
 create or replace function public.pvp_update_profile(
   p_device_key text,
@@ -76,6 +76,7 @@ declare
   ch public.daily_challenges;
   done public.daily_completions;
   s1 int; s2 int; s3 int;
+  has_done boolean := false;
 begin
   me := public.pvp_login_device(p_device_key);
   pid := (me->>'id')::uuid;
@@ -97,6 +98,7 @@ begin
 
   select * into done from public.daily_completions
   where profile_id = pid and challenge_date = d;
+  has_done := found;
 
   return jsonb_build_object(
     'challenge_date', ch.challenge_date,
@@ -104,8 +106,8 @@ begin
     'sample_ms', to_jsonb(ch.sample_ms),
     'character_id', ch.character_id,
     'cosmetic_npc_id', ch.cosmetic_npc_id,
-    'completed', done is not null,
-    'completion', case when done is null then null else jsonb_build_object(
+    'completed', has_done,
+    'completion', case when not has_done then null else jsonb_build_object(
       'score_player', done.score_player,
       'score_opponent', done.score_opponent,
       'result', done.result,
@@ -219,13 +221,15 @@ declare
   me jsonb;
   pid uuid;
   d date := (timezone('utc', now()))::date;
+  updated int;
 begin
   me := public.pvp_login_device(p_device_key);
   pid := (me->>'id')::uuid;
   update public.daily_completions
   set shared = true
   where profile_id = pid and challenge_date = d;
-  if not found then
+  get diagnostics updated = row_count;
+  if updated = 0 then
     raise exception 'daily not completed';
   end if;
   return jsonb_build_object('ok', true, 'badge', 'daily_duelist');

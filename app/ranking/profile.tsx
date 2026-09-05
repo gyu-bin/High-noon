@@ -1,5 +1,5 @@
-import { Stack, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { Stack, useRouter, type Href } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
+import { RankingPortrait } from '@/components/ranking/RankingPortrait';
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import { FONT_RYE } from '@/constants/fonts';
@@ -22,11 +23,14 @@ import {
 import { colors } from '@/constants/theme';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
-import { pvpLogin, pvpUpdateProfile } from '@/lib/supabase/pvpApi';
-import { useProgressStore } from '@/store/progressStore';
+import { pvpLogin, pvpSetCosmeticNpc } from '@/lib/supabase/pvpApi';
+import { selectPaleRiderUnlocked, useProgressStore } from '@/store/progressStore';
 import { usePvpStore } from '@/store/pvpStore';
+import { useRankingRewardStore } from '@/store/rankingRewardStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { getNpcDisplayName } from '@/utils/npcLabels';
+import { unlockedCosmeticNpcIds } from '@/utils/pvpRewards';
+import { trigger } from '@/utils/hapticService';
 
 export default function RankingProfileScreen() {
   const { t } = useTranslation();
@@ -34,41 +38,62 @@ export default function RankingProfileScreen() {
   const insets = useSafeAreaInsets();
   useScreenBgm('menu');
 
-  const unlocked = useProgressStore((s) => s.unlockedCosmeticNpcIds);
-  const selectedCosmetic = useSettingsStore((s) => s.pvpCosmeticNpcId);
+  const npcById = useProgressStore((s) => s.npcById);
+  const paleFlag = useProgressStore((s) => s.paleRiderUnlocked);
+  const selectedCosmetic = useRankingRewardStore((s) => s.selectedCosmeticNpcId);
+  const setCosmeticNpcId = useRankingRewardStore((s) => s.setCosmeticNpcId);
   const setPvpCosmeticNpcId = useSettingsStore((s) => s.setPvpCosmeticNpcId);
+  const characterId = useSettingsStore((s) => s.selectedCharacterId);
   const setProfile = usePvpStore((s) => s.setProfile);
   const profile = usePvpStore((s) => s.profile);
 
   const [saving, setSaving] = useState<number | 'clear' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const unlocked = useMemo(
+    () =>
+      unlockedCosmeticNpcIds({
+        npcById,
+        paleRiderUnlocked: paleFlag || selectPaleRiderUnlocked(),
+      }),
+    [npcById, paleFlag],
+  );
+
   const onBack = useCallback(() => {
     if (router.canGoBack()) router.back();
-    else router.replace('/ranking');
+    else router.replace('/ranking' as Href);
   }, [router]);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     void pvpLogin()
-      .then(setProfile)
+      .then((me) => {
+        setProfile(me);
+        if (
+          useRankingRewardStore.getState().selectedCosmeticNpcId == null &&
+          me.cosmetic_npc_id != null
+        ) {
+          setCosmeticNpcId(me.cosmetic_npc_id);
+          setPvpCosmeticNpcId(me.cosmetic_npc_id);
+        }
+      })
       .catch(() => {});
-  }, [setProfile]);
+  }, [setCosmeticNpcId, setProfile, setPvpCosmeticNpcId]);
 
   const applyCosmetic = useCallback(
     async (npcId: number | null) => {
       setSaving(npcId ?? 'clear');
       setError(null);
+      setCosmeticNpcId(npcId);
       setPvpCosmeticNpcId(npcId);
+      void trigger('selection');
+      if (profile) {
+        setProfile({ ...profile, cosmetic_npc_id: npcId });
+      }
       try {
         if (isSupabaseConfigured) {
-          const next = await pvpUpdateProfile({
-            cosmeticNpcId: npcId,
-            clearCosmetic: npcId == null,
-          });
+          const next = await pvpSetCosmeticNpc(npcId);
           setProfile(next);
-        } else if (profile) {
-          setProfile({ ...profile, cosmetic_npc_id: npcId });
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
@@ -77,18 +102,20 @@ export default function RankingProfileScreen() {
         setSaving(null);
       }
     },
-    [profile, setProfile, setPvpCosmeticNpcId],
+    [profile, setCosmeticNpcId, setProfile, setPvpCosmeticNpcId],
   );
 
   return (
     <>
       <Stack.Screen
         options={{
-          headerBackVisible: false,
-          headerLeft: () => <MenuBackButton onPress={onBack} />,
+          headerShown: false,
         }}
       />
       <MetaScreenShell>
+        <View style={[styles.topBar, { paddingTop: insets.top + 6 }]}>
+          <MenuBackButton onPress={onBack} />
+        </View>
         <ScrollView
           style={styles.root}
           contentContainerStyle={[
@@ -101,7 +128,56 @@ export default function RankingProfileScreen() {
           </Text>
           <Text style={styles.sub}>{t('ranking.profileSub')}</Text>
 
+          {profile ? (
+            <View style={styles.meCard}>
+              <RankingPortrait
+                width={72}
+                height={84}
+                characterId={characterId}
+                cosmeticNpcId={selectedCosmetic ?? profile.cosmetic_npc_id}
+              />
+              <View style={styles.meText}>
+                <Text style={styles.meName}>{profile.display_name}</Text>
+                <Text style={styles.meMeta}>
+                  {t('ranking.recordLine', {
+                    wins: profile.wins,
+                    losses: profile.losses,
+                  })}
+                  {` · ${profile.rating}`}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+
           {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <Text style={styles.section}>{t('ranking.cosmeticTitle')}</Text>
+
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void applyCosmetic(null)}
+            style={[
+              styles.row,
+              selectedCosmetic == null && styles.rowActive,
+            ]}
+          >
+            <RankingPortrait width={48} height={56} characterId={characterId} />
+            <View style={styles.rowMid}>
+              <Text style={styles.rowName}>{t('ranking.cosmeticDefault')}</Text>
+            </View>
+            {saving === 'clear' ? (
+              <ActivityIndicator color={colors.gold} />
+            ) : (
+              <Text
+                style={[
+                  styles.check,
+                  selectedCosmetic == null && styles.checkActive,
+                ]}
+              >
+                {selectedCosmetic == null ? '✓' : ''}
+              </Text>
+            )}
+          </Pressable>
 
           {unlocked.length === 0 ? (
             <Text style={styles.empty}>{t('ranking.profileEmpty')}</Text>
@@ -115,8 +191,16 @@ export default function RankingProfileScreen() {
                   onPress={() => void applyCosmetic(id)}
                   style={[styles.row, active && styles.rowActive]}
                 >
+                  <RankingPortrait
+                    width={48}
+                    height={56}
+                    characterId={characterId}
+                    cosmeticNpcId={id}
+                  />
                   <View style={styles.rowMid}>
-                    <Text style={styles.rowName}>{getNpcDisplayName(t, id)}</Text>
+                    <Text style={styles.rowName}>
+                      {getNpcDisplayName(t, id)}
+                    </Text>
                     <Text style={styles.rowMeta}>#{id}</Text>
                   </View>
                   {saving === id ? (
@@ -130,20 +214,6 @@ export default function RankingProfileScreen() {
               );
             })
           )}
-
-          {selectedCosmetic != null ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => void applyCosmetic(null)}
-              style={styles.clearBtn}
-            >
-              {saving === 'clear' ? (
-                <ActivityIndicator color={colors.sand} />
-              ) : (
-                <Text style={styles.clearText}>{t('ranking.profileClear')}</Text>
-              )}
-            </Pressable>
-          ) : null}
         </ScrollView>
       </MetaScreenShell>
     </>
@@ -151,8 +221,12 @@ export default function RankingProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  topBar: {
+    paddingHorizontal: 12,
+    zIndex: 2,
+  },
   root: { flex: 1 },
-  content: { padding: 24, gap: 10 },
+  content: { paddingHorizontal: 24, gap: 10 },
   head: {
     fontSize: 26,
     color: colors.gold,
@@ -165,12 +239,40 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     ...metaTextShadow,
   },
-  empty: { color: colors.sand, fontSize: 14, marginTop: 12 },
+  meCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: META_PANEL_BG,
+    borderWidth: 1,
+    borderColor: META_PANEL_BORDER,
+    marginBottom: 8,
+  },
+  meText: { flex: 1, gap: 4 },
+  meName: {
+    color: colors.cream,
+    fontSize: 17,
+    fontWeight: '800',
+    ...metaTextShadow,
+  },
+  meMeta: { color: colors.sand, fontSize: 12 },
+  section: {
+    marginTop: 8,
+    color: colors.gold,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+  empty: { color: colors.sand, fontSize: 14, marginTop: 4 },
   error: { color: '#E8A0A0', fontSize: 13 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    gap: 10,
+    padding: 12,
     borderRadius: 10,
     backgroundColor: META_PANEL_BG,
     borderWidth: 1,
@@ -190,14 +292,4 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   checkActive: { color: colors.gold },
-  clearBtn: {
-    marginTop: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  clearText: {
-    color: colors.sand,
-    fontSize: 13,
-    fontWeight: '700',
-  },
 });

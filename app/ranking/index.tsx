@@ -14,7 +14,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
-import { CosmeticPicker } from '@/components/ranking/CosmeticPicker';
 import { DailyMissionsCard } from '@/components/ranking/DailyMissionsCard';
 import { RankingPortrait } from '@/components/ranking/RankingPortrait';
 import { SeasonBadgesRow } from '@/components/ranking/SeasonBadgesRow';
@@ -30,6 +29,7 @@ import { colors } from '@/constants/theme';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 import {
+  pvpGetDaily,
   pvpLeaderboard,
   pvpLogin,
   pvpMatchmake,
@@ -41,12 +41,12 @@ import {
   whenRankingRewardsReady,
 } from '@/store/rankingRewardStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import type { PvpLeaderboardEntry } from '@/types/pvp';
+import type { DailyChallenge, PvpLeaderboardEntry } from '@/types/pvp';
 import { trigger } from '@/utils/hapticService';
 
 const REROLL_COOLDOWN_MS = 1200;
 
-type ExtraPanel = 'missions' | 'cosmetic' | 'season' | null;
+type ExtraPanel = 'missions' | 'season' | null;
 
 function podiumAccent(rank: number): string | null {
   if (rank === 1) return '#E8C547';
@@ -63,6 +63,8 @@ export default function RankingHubScreen() {
 
   const setProfile = usePvpStore((s) => s.setProfile);
   const beginMatch = usePvpStore((s) => s.beginMatch);
+  const beginDailyMatch = usePvpStore((s) => s.beginDailyMatch);
+  const setDailyChallenge = usePvpStore((s) => s.setDailyChallenge);
   const profile = usePvpStore((s) => s.profile);
   const recordSeasonPeak = useRankingRewardStore((s) => s.recordSeasonPeak);
   const setCosmeticNpcId = useRankingRewardStore((s) => s.setCosmeticNpcId);
@@ -71,11 +73,13 @@ export default function RankingHubScreen() {
 
   const [loading, setLoading] = useState(true);
   const [matching, setMatching] = useState(false);
+  const [dailyMatching, setDailyMatching] = useState(false);
   const [rerolling, setRerolling] = useState(false);
   const [nameDim, setNameDim] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [board, setBoard] = useState<PvpLeaderboardEntry[]>([]);
   const [meRank, setMeRank] = useState<number | null>(null);
+  const [daily, setDaily] = useState<DailyChallenge | null>(null);
   const [extra, setExtra] = useState<ExtraPanel>(null);
   const lastRerollAt = useRef(0);
   const dimTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -118,13 +122,21 @@ export default function RankingHubScreen() {
           losses: lb.me.losses,
         });
       }
+      try {
+        const today = await pvpGetDaily();
+        setDaily(today);
+        setDailyChallenge(today);
+      } catch (dailyErr) {
+        console.warn('[pvp] daily fetch failed', dailyErr);
+        setDaily(null);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
     } finally {
       setLoading(false);
     }
-  }, [recordSeasonPeak, setCosmeticNpcId, setProfile, t]);
+  }, [recordSeasonPeak, setCosmeticNpcId, setDailyChallenge, setProfile, t]);
 
   useEffect(() => {
     void refresh();
@@ -137,7 +149,7 @@ export default function RankingHubScreen() {
   }, []);
 
   const startDuel = useCallback(async () => {
-    if (matching) return;
+    if (matching || dailyMatching) return;
     setMatching(true);
     setError(null);
     try {
@@ -154,7 +166,43 @@ export default function RankingHubScreen() {
     } finally {
       setMatching(false);
     }
-  }, [beginMatch, matching, router]);
+  }, [beginMatch, dailyMatching, matching, router]);
+
+  const startDailyDuel = useCallback(async () => {
+    if (matching || dailyMatching) return;
+    if (daily?.completed) {
+      setError(t('ranking.dailyDuelAlreadyDone'));
+      return;
+    }
+    setDailyMatching(true);
+    setError(null);
+    try {
+      const today = daily ?? (await pvpGetDaily());
+      if (today.completed) {
+        setDaily(today);
+        setDailyChallenge(today);
+        setError(t('ranking.dailyDuelAlreadyDone'));
+        return;
+      }
+      beginDailyMatch(today);
+      setDaily(today);
+      setDailyChallenge(today);
+      router.push('/ranking/duel' as Href);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+    } finally {
+      setDailyMatching(false);
+    }
+  }, [
+    beginDailyMatch,
+    daily,
+    dailyMatching,
+    matching,
+    router,
+    setDailyChallenge,
+    t,
+  ]);
 
   const rerollName = useCallback(async () => {
     if (rerolling) return;
@@ -180,11 +228,9 @@ export default function RankingHubScreen() {
   const extraTitle =
     extra === 'missions'
       ? t('ranking.dailyTitle')
-      : extra === 'cosmetic'
-        ? t('ranking.cosmeticTitle')
-        : extra === 'season'
-          ? t('ranking.seasonTitle')
-          : '';
+      : extra === 'season'
+        ? t('ranking.seasonTitle')
+        : '';
 
   return (
     <MetaScreenShell>
@@ -237,8 +283,8 @@ export default function RankingHubScreen() {
                 <View style={styles.meRow}>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={t('ranking.cosmeticTitle')}
-                    onPress={() => setExtra('cosmetic')}
+                    accessibilityLabel={t('ranking.profileTitle')}
+                    onPress={() => router.push('/ranking/profile' as Href)}
                     style={({ pressed }) => [
                       styles.avatarBtn,
                       pressed && styles.pressed,
@@ -302,9 +348,32 @@ export default function RankingHubScreen() {
             <WoodButton
               title={matching ? t('ranking.matching') : t('ranking.duel')}
               onPress={() => void startDuel()}
-              disabled={matching || !isSupabaseConfigured}
+              disabled={matching || dailyMatching || !isSupabaseConfigured}
               style={styles.primary}
             />
+
+            <WoodButton
+              title={
+                dailyMatching
+                  ? t('ranking.dailyDuelLoading')
+                  : daily?.completed
+                    ? t('ranking.dailyDuelDone')
+                    : t('ranking.dailyDuel', {
+                        name: daily?.opponent_name ?? '…',
+                      })
+              }
+              onPress={() => void startDailyDuel()}
+              disabled={
+                matching ||
+                dailyMatching ||
+                !isSupabaseConfigured ||
+                daily?.completed === true
+              }
+              style={styles.dailyBtn}
+            />
+            {daily && !daily.completed ? (
+              <Text style={styles.dailyHint}>{t('ranking.dailyDuelHint')}</Text>
+            ) : null}
 
             <View style={styles.moreRow}>
               <Pressable
@@ -315,18 +384,18 @@ export default function RankingHubScreen() {
                   pressed && styles.pressed,
                 ]}
               >
-                <Text style={styles.moreChipText}>{t('ranking.dailyTitle')}</Text>
+                <Text style={styles.moreChipText}>{t('ranking.missionsChip')}</Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                onPress={() => setExtra('cosmetic')}
+                onPress={() => router.push('/ranking/profile' as Href)}
                 style={({ pressed }) => [
                   styles.moreChip,
                   pressed && styles.pressed,
                 ]}
               >
                 <Text style={styles.moreChipText}>
-                  {t('ranking.cosmeticTitle')}
+                  {t('ranking.profileTitle')}
                 </Text>
               </Pressable>
               <Pressable
@@ -432,7 +501,6 @@ export default function RankingHubScreen() {
               contentContainerStyle={styles.modalBody}
             >
               {extra === 'missions' ? <DailyMissionsCard /> : null}
-              {extra === 'cosmetic' ? <CosmeticPicker compact /> : null}
               {extra === 'season' ? <SeasonBadgesRow compact /> : null}
             </ScrollView>
           </View>
@@ -555,6 +623,14 @@ const styles = StyleSheet.create({
   },
   error: { color: '#E8A0A0', fontSize: 13 },
   primary: { marginTop: 2 },
+  dailyBtn: { marginTop: -4 },
+  dailyHint: {
+    color: colors.sand,
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: -6,
+    ...metaTextShadow,
+  },
   moreRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',

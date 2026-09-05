@@ -324,6 +324,18 @@
     "cosmeticLocked": "Beat campaign NPCs to unlock looks.",
     "ratingReward": "Rating",
     "tierUp": "Promoted to {{tier}}!",
-    "tierStay": "{{tier}}"
+    "tierStay": "{{tier}}",
+    "missionsChip": "Daily missions",
+    "dailyDuel": "Daily duel · {{name}}",
+    "dailyDuelLoading": "Preparing daily foe…",
+    "dailyDuelDone": "Daily duel done today",
+    "dailyDuelAlreadyDone": "You've already finished today's daily duel.",
+    "dailyDuelHint": "A fixed opponent that resets at UTC midnight. Rating does not change.",
+    "dailyAlreadyDone": "You already submitted today's run.",
+    "profileTitle": "Profile",
+    "profileSub": "Pick the look you take into ranking duels. Only campaign NPCs you've beaten unlock.",
+    "profileEmpty": "No looks unlocked yet. Defeat campaign NPCs first.",
+    "profileClear": "Use default look",
+    "cosmeticEquipped": "{{name}} look"
   }
 }

@@ -324,6 +324,18 @@
     "cosmeticLocked": "キャンペーンNPCを倒すと外見が解放されます。",
     "ratingReward": "レーティング",
     "tierUp": "{{tier}} 昇格！",
-    "tierStay": "{{tier}}"
+    "tierStay": "{{tier}}",
+    "missionsChip": "デイリーミッション",
+    "dailyDuel": "デイリーデュエル · {{name}}",
+    "dailyDuelLoading": "デイリー相手を準備中…",
+    "dailyDuelDone": "本日のデイリー完了",
+    "dailyDuelAlreadyDone": "本日のデイリーデュエルはすでに終えています。",
+    "dailyDuelHint": "UTC深夜に入れ替わる固定の相手。レーティングは変わりません。",
+    "dailyAlreadyDone": "本日の記録はすでに提出済みです。",
+    "profileTitle": "プロフィール",
+    "profileSub": "ランキングデュエルの外見を選びます。倒したキャンペーンNPCだけ選べます。",
+    "profileEmpty": "解放された外見がありません。キャンペーンNPCを倒してください。",
+    "profileClear": "基本外見に戻す",
+    "cosmeticEquipped": "{{name}} 外見"
   }
 }

@@ -324,6 +324,18 @@
     "cosmeticLocked": "캠페인 NPC를 처치하면 외형이 해금됩니다.",
     "ratingReward": "레이팅",
     "tierUp": "{{tier}} 승급!",
-    "tierStay": "{{tier}}"
+    "tierStay": "{{tier}}",
+    "missionsChip": "일일 미션",
+    "dailyDuel": "일일 결투 · {{name}}",
+    "dailyDuelLoading": "일일 상대 준비 중…",
+    "dailyDuelDone": "오늘 일일 결투 완료",
+    "dailyDuelAlreadyDone": "오늘은 이미 일일 결투를 마쳤습니다.",
+    "dailyDuelHint": "매일 UTC 자정에 바뀌는 고정 상대. 레이팅은 변하지 않습니다.",
+    "dailyAlreadyDone": "이미 오늘 기록을 제출했습니다.",
+    "profileTitle": "프로필",
+    "profileSub": "결투에 나갈 외형을 고릅니다. 캠페인에서 이긴 NPC만 선택할 수 있습니다.",
+    "profileEmpty": "아직 해금된 외형이 없습니다. 캠페인 NPC를 처치하세요.",
+    "profileClear": "기본 외형으로",
+    "cosmeticEquipped": "{{name}} 외형"
   }
 }
