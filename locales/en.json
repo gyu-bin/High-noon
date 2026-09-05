@@ -34,6 +34,7 @@
     "backup": "Progress backup",
     "iapTitle": "Remove Ads",
     "iapActiveTitle": "Ads Removed",
+    "iapPurchasedBadge": "Purchased · Ads removed",
     "iapDesc": "Removes interstitial ads between matches. One-time purchase · forever.",
     "iapThanks": "Thanks for your purchase.",
     "iapWarn": "Couldn't load the store product yet, or it isn't ready for sale. Check your network and App Store login, then try again.",
@@ -128,8 +129,12 @@
   "character": {
     "title": "Gunslingers",
     "subtitle": "Choose your character for the duel",
+    "holdForAbility": "Press and hold a character to view their ability",
     "noAbility": "No ability",
     "selected": "Selected",
+    "abilityIntro": {
+      "title": "Character Ability"
+    },
     "unlocked": "??? Unlocked",
     "hiddenRevealBody": "A hidden gunslinger steps into the light.",
     "unlock": {
@@ -156,12 +161,12 @@
       "3": {
         "name": "Crimson Rosa",
         "ability": "Headshot",
-        "abilityDesc": "After a won round, optionally remove 2 NPC hearts at once. (Once per match)"
+        "abilityDesc": "Only after winning a round {{ms}}ms+ faster than the opponent. Removes 2 extra NPC hearts. (Once per match)"
       },
       "4": {
         "name": "Phantom Sharpshooter",
         "ability": "One More",
-        "abilityDesc": "Once per match, when your hearts hit 0, revive with 1 instead."
+        "abilityDesc": "Once per match, nullifies one fatal loss (last heart or 2:3 clinch) and rises again. Triggers before ad revive."
       }
     }
   },
@@ -234,7 +239,7 @@
   },
   "storeUpdate": {
     "title": "Update required",
-    "body": "A new version (v{{required}}) is available.\nYou're on v{{current}} — please update from the App Store or Google Play.",
+    "body": "High Noon v{{required}} is out.\nYou're on v{{current}} — please update to 1.4 from the store.",
     "openStore": "Update in store",
     "openStoreA11y": "Open app store to update",
     "later": "Not now",

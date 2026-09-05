@@ -26,6 +26,9 @@ export const DUEL_FIGURE_SHADOW = {
 /** 얼리 탭만 짧은 모달 지연 */
 export const DUEL_EARLY_MODAL_DELAY_MS = 80;
 
+/** 헤드샷 — BANG 직후 반응속도 확정 뒤 바로 연출 (쓰러짐 1.9s 대기 없음) */
+export const DUEL_HEADSHOT_REVEAL_DELAY_MS = DUEL_EARLY_MODAL_DELAY_MS;
+
 /** 결과 직후 shoot 포즈 유지 → defeat 전환 전 피격 순간 */
 export const DUEL_DEFEAT_REVEAL_DELAY_MS = 250;
 

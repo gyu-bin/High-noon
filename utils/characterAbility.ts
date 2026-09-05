@@ -20,16 +20,44 @@ export type AbilityApplyInput = {
   playerHeartsAfter: number;
   /** 라운드 처리 직후 상대 하트 (능력 미적용 기준) */
   opponentHeartsAfter: number;
+  /** 라운드 직전 상대 라운드 승수 */
+  opponentScoreBefore: number;
+  /** 선승 목표 (NPC 결투 기본 3) */
+  winsToEnd?: number;
+  /** #3 헤드샷 — 이번 라운드 플레이어·NPC 유효 반응(ms) */
+  playerReactionMs?: number | null;
+  npcReactionMs?: number | null;
 };
+
+/** 붉은 로사 헤드샷 — 상대보다 이만큼 이상 빨라야 발동 */
+export const HEADSHOT_MIN_REACTION_GAP_MS = 80;
 
 export type CharacterAbilityResult = {
   /** 라스트 스탠드: 패배 라운드를 승리로 뒤집을지 */
   lastStandFlipToPlayerWin?: boolean;
   /** 헤드샷: 발동 시 NPC 하트를 2칸 한 번에 제거 (승리 확정 후 선택 UI에서 확인 시 처리) */
   headshotRemoveTwoOpponentHearts?: boolean;
-  /** 한 번 더: 플레이어 하트 0 → 1 부활 적용 */
-  revivePlayerToOneHeart?: boolean;
+  /** 망령 사수: 치명 패배 1회 무효 (스코어·하트 유지) */
+  ghostReviveNullifyLoss?: boolean;
 };
+
+const DEFAULT_WINS_TO_END = 3;
+
+function qualifiesForHeadshot(
+  playerMs: number | null | undefined,
+  npcMs: number | null | undefined,
+): boolean {
+  if (playerMs == null || npcMs == null) return false;
+  return npcMs - playerMs >= HEADSHOT_MIN_REACTION_GAP_MS;
+}
+
+function isGhostReviveLoss(input: AbilityApplyInput): boolean {
+  const winsToEnd = input.winsToEnd ?? DEFAULT_WINS_TO_END;
+  const fatalHeart =
+    input.playerHeartsBefore >= 1 && input.playerHeartsAfter <= 0;
+  const clinchLoss = input.opponentScoreBefore === winsToEnd - 1;
+  return fatalHeart || clinchLoss;
+}
 
 function countNpcClears(npcById: ReturnType<typeof useProgressStore.getState>['npcById']): number {
   let n = 0;
@@ -112,17 +140,18 @@ export function applyAbility(
   switch (id) {
     case 2: {
       if (provisionalWinner !== 'opponent') return {};
+      if (input.outcome?.earlyTap) return {};
       return { lastStandFlipToPlayerWin: true };
     }
     case 3: {
       if (provisionalWinner !== 'player') return {};
+      if (!qualifiesForHeadshot(input.playerReactionMs, input.npcReactionMs)) return {};
       return { headshotRemoveTwoOpponentHearts: true };
     }
     case 4: {
       if (provisionalWinner !== 'opponent') return {};
-      const wouldBeZero = input.playerHeartsAfter <= 0 && input.playerHeartsBefore >= 1;
-      if (!wouldBeZero) return {};
-      return { revivePlayerToOneHeart: true };
+      if (!isGhostReviveLoss(input)) return {};
+      return { ghostReviveNullifyLoss: true };
     }
     default:
       return {};

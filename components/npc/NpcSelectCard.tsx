@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
-import { NpcCharacterSprite } from '@/components/game/CharacterSprites';
 import { BOSS_CARD_BORDER, TIER_BADGE } from '@/constants/npcVisual';
+import { getNpcSpriteSource } from '@/constants/spriteAssets';
+import { SPRITE_CACHE_REVISION } from '@/constants/sprites';
 import { colors } from '@/constants/theme';
 import type { NpcDefinition } from '@/types/npc';
 import { formatReactionMs } from '@/utils/formatReactionMs';
@@ -15,11 +18,11 @@ type Props = {
   locked: boolean;
   cleared: boolean;
   bestMs: number | null;
-  onPress?: () => void;
+  onPress?: (npc: NpcDefinition) => void;
   revealDelayMs?: number;
 };
 
-export function NpcSelectCard({
+export const NpcSelectCard = memo(function NpcSelectCard({
   npc,
   locked,
   cleared,
@@ -33,6 +36,7 @@ export function NpcSelectCard({
   const badge = TIER_BADGE[npc.tier];
   const tierLabel = getNpcTierLabel(t, npc.tier);
   const spriteOpacity = locked ? 0.35 : cleared ? 1 : 0.8;
+  const idleSource = getNpcSpriteSource(npc.id, 'idle');
 
   const inner = (
     <View
@@ -43,12 +47,16 @@ export function NpcSelectCard({
       ]}
     >
       <View style={[styles.spriteWrap, { opacity: spriteOpacity }]}>
-        <NpcCharacterSprite
-          npcId={npc.id}
-          width={64}
-          height={72}
-          pose="idle"
-        />
+        {idleSource ? (
+          <Image
+            source={idleSource}
+            style={styles.sprite}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+            recyclingKey={`npc-select-${npc.id}-r${SPRITE_CACHE_REVISION}`}
+            transition={0}
+          />
+        ) : null}
         {boss ? (
           <Ionicons
             name="star"
@@ -109,13 +117,13 @@ export function NpcSelectCard({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={t('npcSelect.challenge', { name: displayName })}
-      onPress={onPress}
+      onPress={() => onPress(npc)}
       style={({ pressed }) => [styles.outer, pressed && styles.pressed]}
     >
       {wrapped}
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   outer: {
@@ -154,6 +162,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     marginBottom: 2,
     overflow: 'visible',
+  },
+  sprite: {
+    width: 64,
+    height: 72,
   },
   bossStar: {
     position: 'absolute',

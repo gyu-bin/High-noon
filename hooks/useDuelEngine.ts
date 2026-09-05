@@ -57,6 +57,14 @@ function clearTimeoutRef(ref: MutableRefObject<ReturnType<typeof setTimeout> | n
 
 const BANG_TIMEOUT_MS = 2500;
 const FAKE_BANG_VISUAL_MS = 190;
+/** #20 에코 — 1번째↔2번째(진짜) BANG 사이 간격(ms). STEADY 복귀 없음 */
+const ECHO_MIDDLE_GAP_MS = 260;
+
+export type DuelStartOptions = {
+  fakeBangCount?: number;
+  /** #20 — BANG 3연속, 2번째만 진짜(총성·반응 측정) */
+  echoBangMiddle?: boolean;
+};
 
 function randomPartition(total: number, parts: number, minPart: number): number[] {
   const minSum = parts * minPart;
@@ -305,10 +313,48 @@ export function useDuelEngine(options?: DuelEngineOptions) {
     [enterBang, scheduleSteadyThenBang],
   );
 
+  const scheduleEchoMiddleBang = useCallback(
+    (seq: number, leadInMs: number, bangWaitMs: number) => {
+      lastSteadyDurationRef.current = bangWaitMs;
+      // 1번 페이크를 조금 더 길게 보여 준 뒤 간격 → 2번 진짜
+      const fakeDur = 240;
+      const betweenBangMs = ECHO_MIDDLE_GAP_MS;
+      const preWait = Math.max(40, bangWaitMs - fakeDur - betweenBangMs);
+
+      const runReal = () => {
+        if (duelSeqRef.current !== seq) return;
+        steadyDeadlineRef.current = null;
+        setLastSteadyToBangDelayMs(bangWaitMs);
+        enterBang(seq);
+      };
+
+      const runFake = () => {
+        if (duelSeqRef.current !== seq) return;
+        steadyDeadlineRef.current = Date.now() + fakeDur + betweenBangMs;
+        phaseRef.current = '페이크';
+        setPhase('페이크');
+        setSignalText('Bang!');
+        steadyTimerRef.current = setTimeout(() => {
+          if (duelSeqRef.current !== seq) return;
+          steadyDeadlineRef.current = null;
+          runReal();
+        }, fakeDur + betweenBangMs);
+      };
+
+      const totalMs = leadInMs + preWait;
+      steadyDeadlineRef.current = Date.now() + totalMs;
+      steadyTimerRef.current = setTimeout(() => {
+        steadyDeadlineRef.current = null;
+        runFake();
+      }, totalMs);
+    },
+    [enterBang],
+  );
+
   const start = useCallback(
     (
       partialTiming?: Partial<DuelTimingConfig>,
-      opts?: { fakeBangCount?: number },
+      opts?: DuelStartOptions,
     ) => {
       clearAllTimers();
       bangArmedRef.current = false;
@@ -326,6 +372,7 @@ export function useDuelEngine(options?: DuelEngineOptions) {
       };
       lastTimingRef.current = t;
       const fakeBangCount = Math.max(0, Math.floor(opts?.fakeBangCount ?? 0));
+      const echoBangMiddle = opts?.echoBangMiddle === true;
 
       const seq = ++duelSeqRef.current;
       setOutcome(null);
@@ -349,7 +396,9 @@ export function useDuelEngine(options?: DuelEngineOptions) {
         setPhase('집중');
         setSignalText('Steady');
         const dBangWait = randomDelayInclusiveMs(t.bangDelayMinMs, t.bangDelayMaxMs);
-        if (fakeBangCount > 0) {
+        if (echoBangMiddle) {
+          scheduleEchoMiddleBang(seq, DUEL_STEADY_SCHEDULE_LEAD_MS, dBangWait);
+        } else if (fakeBangCount > 0) {
           scheduleSteadyWithFakes(
             seq,
             DUEL_STEADY_SCHEDULE_LEAD_MS,
@@ -361,7 +410,7 @@ export function useDuelEngine(options?: DuelEngineOptions) {
         }
       }, readyTotalMs);
     },
-    [clearAllTimers, scheduleSteadyThenBang, scheduleSteadyWithFakes],
+    [clearAllTimers, scheduleEchoMiddleBang, scheduleSteadyThenBang, scheduleSteadyWithFakes],
   );
 
   const tap = useCallback(() => {

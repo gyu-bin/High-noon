@@ -22,15 +22,12 @@ export default function TitleScreen() {
   useScreenBgm('menu');
 
   useEffect(() => {
-    void bootMenuBgm();
-  }, []);
-
-  useEffect(() => {
     if (!DEV_AUTO_SCREENSHOTS) return;
     router.replace('/menu');
   }, [router]);
 
   const goMenu = async () => {
+    // 소리 시작을 기다린 뒤 이동 — play()가 void면 네비게이션이 총성을 가로챔
     await Promise.all([trigger('medium'), play('bang_shot')]);
     router.push('/menu');
   };

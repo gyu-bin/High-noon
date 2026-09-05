@@ -22,6 +22,7 @@ export type NpcRoundModalData =
       npcMs: number | null;
       npcMisfire?: boolean;
       lastStand?: boolean;
+      headshot?: boolean;
     }
   | {
       kind: 'loss';
@@ -36,8 +37,6 @@ type Props = {
   data: NpcRoundModalData | null;
   onContinue: () => void;
   winBurstId: number;
-  headshotOffered?: boolean;
-  onHeadshotPress?: () => void;
   paddingBottom?: number;
 };
 
@@ -57,8 +56,6 @@ export function NpcRoundModal({
   data,
   onContinue,
   winBurstId,
-  headshotOffered = false,
-  onHeadshotPress,
   paddingBottom = 0,
 }: Props) {
   const { t } = useTranslation();
@@ -130,6 +127,9 @@ export function NpcRoundModal({
                 {data.kind === 'win' && data.lastStand ? (
                   <Text style={styles.badgeHint}>{t('result.lastStand')}</Text>
                 ) : null}
+                {data.kind === 'win' && data.headshot ? (
+                  <Text style={styles.badgeHint}>{t('result.headshot')}</Text>
+                ) : null}
               </Animated.View>
             ) : (
               <Animated.View
@@ -163,22 +163,6 @@ export function NpcRoundModal({
               </Animated.View>
             )}
           </View>
-
-          {headshotOffered && onHeadshotPress ? (
-            <View pointerEvents="box-none" style={styles.headshotWrap}>
-              <Pressable
-                accessibilityLabel={t('result.headshot')}
-                accessibilityRole="button"
-                onPress={(e) => {
-                  e.stopPropagation?.();
-                  onHeadshotPress();
-                }}
-                style={styles.headshotBtn}
-              >
-                <Text style={styles.headshotText}>{t('result.headshot')}</Text>
-              </Pressable>
-            </View>
-          ) : null}
 
           <View
             pointerEvents="none"
@@ -279,14 +263,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     ...outcomeTextShadow,
   },
-  headshotWrap: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 72,
-    zIndex: 3,
-    alignItems: 'center',
-  },
   bottomPanel: {
     position: 'absolute',
     left: 0,
@@ -344,19 +320,5 @@ const styles = StyleSheet.create({
     color: 'rgba(245, 230, 200, 0.5)',
     letterSpacing: 0.8,
     marginBottom: 2,
-  },
-  headshotBtn: {
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: colors.rustRed,
-    borderWidth: 1,
-    borderColor: 'rgba(245, 230, 200, 0.45)',
-  },
-  headshotText: {
-    color: colors.cream,
-    fontWeight: '900',
-    fontSize: 12,
-    letterSpacing: 1.2,
   },
 });

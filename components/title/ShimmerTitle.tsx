@@ -70,7 +70,8 @@ export function ShimmerTitle({
     },
   ];
 
-  if (Platform.OS === 'web') {
+  // MaskedView + 그라데이션 스윕은 Android(특히 구형)에서 터치·스크롤 버벅임 유발
+  if (Platform.OS === 'web' || Platform.OS === 'android') {
     return (
       <View style={[styles.wrap, { width: titleSlotW }]}>
         <Text

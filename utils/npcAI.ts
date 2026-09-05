@@ -25,8 +25,8 @@ export type SimulateNpcReactionInput = {
   npc: Pick<NpcDefinition, 'id' | 'tier' | 'reactionMs' | 'specialAbility'>;
   /** 직전 판 집중→뱅 딜레이(ms) — #11 기관차 등 */
   previousSteadyToBangDelayMs?: number | null;
-  /** #13 미러 잭: 직전 플레이어 유효 반응(ms) */
-  mirrorPlayerMs?: number | null;
+  /** #13 미러 잭: 라운드마다 적응 조정된 목표 반응(ms) */
+  mirrorAdaptiveMs?: number | null;
 };
 
 export type NpcReactionSimulation = {
@@ -39,7 +39,7 @@ export type NpcReactionSimulation = {
  * 기본: 카드 목표 `reactionMs` ±(약 2.6%, 4~12ms) — 모든 NPC 동일 규칙.
  */
 export function simulateNpcReaction(input: SimulateNpcReactionInput): NpcReactionSimulation {
-  const { npc, previousSteadyToBangDelayMs = null, mirrorPlayerMs = null } = input;
+  const { npc, previousSteadyToBangDelayMs = null, mirrorAdaptiveMs = null } = input;
 
   if (npc.tier === 'bronze' && Math.random() < 0.035) {
     return { reactionMs: null, npcEarlyTap: true };
@@ -49,9 +49,9 @@ export function simulateNpcReaction(input: SimulateNpcReactionInput): NpcReactio
 
   if (npc.id === NPC_ID.shadowHunter) {
     ms = npc.reactionMs;
-  } else if (npc.id === NPC_ID.mirrorJack && mirrorPlayerMs != null && mirrorPlayerMs > 0) {
-    const jitter = Math.random() * 36 - 18;
-    ms = Math.max(npc.reactionMs, mirrorPlayerMs + jitter);
+  } else if (npc.id === NPC_ID.mirrorJack && mirrorAdaptiveMs != null && mirrorAdaptiveMs > 0) {
+    const jitter = Math.random() * 10 - 5;
+    ms = mirrorAdaptiveMs + jitter;
   } else {
     let half = jitterHalfMsFromTarget(npc.reactionMs);
     if (npc.id === NPC_ID.dustWind) {

@@ -370,19 +370,28 @@ export default function LocalGameScreen() {
       void trigger('error');
     }
 
+    let nextP1Hearts = p1Hearts;
+    let nextP2Hearts = p2Hearts;
+
     if (outcome.winner === 'p1') {
       winsRef.current.p1 += 1;
-      setP2Hearts((x) => Math.max(0, x - 1));
+      nextP2Hearts = Math.max(0, p2Hearts - 1);
+      setP2Hearts(nextP2Hearts);
     } else if (outcome.winner === 'p2') {
       winsRef.current.p2 += 1;
-      setP1Hearts((x) => Math.max(0, x - 1));
+      nextP1Hearts = Math.max(0, p1Hearts - 1);
+      setP1Hearts(nextP1Hearts);
     }
 
     setP1Wins(winsRef.current.p1);
     setP2Wins(winsRef.current.p2);
 
+    const p1WinsByScore = winsRef.current.p1 >= winsNeeded;
+    const p2WinsByScore = winsRef.current.p2 >= winsNeeded;
+    const p1WinsByHearts = nextP2Hearts <= 0;
+    const p2WinsByHearts = nextP1Hearts <= 0;
     const matchOver =
-      winsRef.current.p1 >= winsNeeded || winsRef.current.p2 >= winsNeeded;
+      p1WinsByScore || p2WinsByScore || p1WinsByHearts || p2WinsByHearts;
 
     if (
       (outcome.winner === 'p1' || outcome.winner === 'p2') &&
@@ -406,7 +415,15 @@ export default function LocalGameScreen() {
 
     if (matchOver) {
       void trigger('success');
-      setMatchWinner(winsRef.current.p1 >= winsNeeded ? 'p1' : 'p2');
+      const winner: 'p1' | 'p2' =
+        p1WinsByScore || p1WinsByHearts
+          ? 'p1'
+          : p2WinsByScore || p2WinsByHearts
+            ? 'p2'
+            : winsRef.current.p1 >= winsRef.current.p2
+              ? 'p1'
+              : 'p2';
+      setMatchWinner(winner);
     }
 
     // 매치 종료 포함 — 라운드 결과 먼저 → 탭 후 매치 결과(LocalMatchModal)

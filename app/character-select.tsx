@@ -13,11 +13,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
+import { CharacterAbilityModal } from '@/components/character/CharacterAbilityModal';
 import { CharacterSelectCard } from '@/components/character/CharacterSelectCard';
 import { PlayerCharacterSprite } from '@/components/game/CharacterSprites';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
-import { CHARACTERS, getCharacterById } from '@/constants/characters';
+import { CHARACTERS, getCharacterById, type PlayerCharacterId } from '@/constants/characters';
 import { DEV_UNLOCK_ALL_CHARACTERS } from '@/constants/devFlags';
 import { colors } from '@/constants/theme';
 import { FONT_RYE } from '@/constants/fonts';
@@ -38,6 +39,7 @@ export default function CharacterSelectScreen() {
   const setSelectedCharacterId = useSettingsStore((s) => s.setSelectedCharacterId);
 
   const [revealPhase, setRevealPhase] = useState<RevealPhase>('idle');
+  const [abilityModalId, setAbilityModalId] = useState<PlayerCharacterId | null>(null);
 
   const visibleCharacters = CHARACTERS;
 
@@ -83,6 +85,14 @@ export default function CharacterSelectScreen() {
     setRevealPhase('reveal');
   }, []);
 
+  const openAbilityModal = useCallback((id: PlayerCharacterId) => {
+    setAbilityModalId(id);
+  }, []);
+
+  const closeAbilityModal = useCallback(() => {
+    setAbilityModalId(null);
+  }, []);
+
   const selectCharacter = useCallback(
     (id: number) => {
       if (!DEV_UNLOCK_ALL_CHARACTERS && !unlockedIds.includes(id)) return;
@@ -110,7 +120,11 @@ export default function CharacterSelectScreen() {
         ]}
       >
         <Text style={[styles.title, { fontFamily: FONT_RYE }]}>{t('character.title')}</Text>
-        <Text style={styles.sub}>{t('character.subtitle')}</Text>
+        <Text style={styles.sub}>
+          {t('character.subtitle')}
+          {'\n'}
+          {t('character.holdForAbility')}
+        </Text>
 
         <ScrollView
           contentContainerStyle={styles.grid}
@@ -126,6 +140,7 @@ export default function CharacterSelectScreen() {
                 unlocked={unlocked}
                 selected={selected}
                 onPress={() => selectCharacter(c.id)}
+                onLongPress={() => openAbilityModal(c.id)}
               />
             );
           })}
@@ -149,6 +164,16 @@ export default function CharacterSelectScreen() {
           </View>
         </View>
       ) : null}
+
+      <CharacterAbilityModal
+        visible={abilityModalId != null}
+        characterId={abilityModalId}
+        unlocked={
+          abilityModalId != null &&
+          (DEV_UNLOCK_ALL_CHARACTERS || unlockedIds.includes(abilityModalId))
+        }
+        onClose={closeAbilityModal}
+      />
 
       <Modal
         transparent

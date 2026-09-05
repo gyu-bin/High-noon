@@ -15,16 +15,26 @@ type Props = {
   unlocked: boolean;
   selected: boolean;
   onPress: () => void;
+  onLongPress?: () => void;
 };
 
-export function CharacterSelectCard({ character, unlocked, selected, onPress }: Props) {
+export function CharacterSelectCard({
+  character,
+  unlocked,
+  selected,
+  onPress,
+  onLongPress,
+}: Props) {
   const { t } = useTranslation();
   const labels = useCharacterLabels(character.id);
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled: !unlocked, selected }}
+      accessibilityHint={onLongPress ? t('character.holdForAbility') : undefined}
       onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={420}
       style={[
         styles.card,
         !unlocked && styles.cardLocked,

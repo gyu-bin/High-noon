@@ -32,6 +32,10 @@ export const SOUND_NAMES = [
   'lose_sad',
   'defeat_thud',
   'heart_break',
+  'ghost_revive_death',
+  'ghost_revive_rise',
+  'ability_shield',
+  'ability_headshot',
   'level_clear',
 ] as const;
 
@@ -65,6 +69,10 @@ const SOURCES: Record<SoundName, number> = {
   lose_sad: require('@/assets/sounds/lose_sad.wav'),
   defeat_thud: require('@/assets/sounds/defeat_thud.wav'),
   heart_break: require('@/assets/sounds/heart_break.wav'),
+  ghost_revive_death: require('@/assets/sounds/ghost_revive_death.wav'),
+  ghost_revive_rise: require('@/assets/sounds/ghost_revive_rise.wav'),
+  ability_shield: require('@/assets/sounds/ability_shield.wav'),
+  ability_headshot: require('@/assets/sounds/ability_headshot.wav'),
   level_clear: require('@/assets/sounds/level_clear.wav'),
 };
 
@@ -173,7 +181,7 @@ async function playFromPlayer(player: AudioPlayer | undefined): Promise<void> {
   if (!player) return;
   try {
     player.pause();
-    void player.seekTo(0);
+    await player.seekTo(0);
     player.play();
   } catch {
     /* ignore */
@@ -195,10 +203,10 @@ export function playGunshot(): void {
   });
 }
 
-/** 짧은 효과음 재생 (설정 off 시 무시) */
-export function play(name: SoundName): void {
-  if (!useSettingsStore.getState().soundEnabled) return;
-  void playInternal(name);
+/** 짧은 효과음 재생 (설정 off 시 무시). 재생 시작까지 await 가능. */
+export function play(name: SoundName): Promise<void> {
+  if (!useSettingsStore.getState().soundEnabled) return Promise.resolve();
+  return playInternal(name);
 }
 
 function pickVoicePack(): number {
@@ -253,7 +261,7 @@ async function playInternal(name: SoundName): Promise<void> {
       player = cache.get(name);
     }
     if (!player) return;
-    void playFromPlayer(player);
+    await playFromPlayer(player);
   } catch {
     /* 시뮬레이터·에셋 누락 등 */
   }

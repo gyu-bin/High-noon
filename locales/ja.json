@@ -34,6 +34,7 @@
     "backup": "進行状況のバックアップ",
     "iapTitle": "広告削除",
     "iapActiveTitle": "広告削除が有効です",
+    "iapPurchasedBadge": "購入済み · 広告削除",
     "iapDesc": "マッチ間のインタースティシャル広告を削除します。買い切り・永久。",
     "iapThanks": "ご購入ありがとうございます。",
     "iapWarn": "ストア商品を読み込めないか、まだ販売準備ができていません。ネットワークとApp Storeログインを確認してから再試行してください。",
@@ -128,8 +129,12 @@
   "character": {
     "title": "ガンマン",
     "subtitle": "決闘で使用するキャラクターを選びます",
+    "holdForAbility": "キャラクターを長押しして能力を確認",
     "noAbility": "能力なし",
     "selected": "選択中",
+    "abilityIntro": {
+      "title": "キャラクター能力"
+    },
     "unlocked": "??? 解放済み",
     "hiddenRevealBody": "隠されたガンマンが姿を現します。",
     "unlock": {
@@ -156,12 +161,12 @@
       "3": {
         "name": "赤いロサ",
         "ability": "ヘッドショット",
-        "abilityDesc": "勝利ラウンド直後に選択すると、NPCのハートを2つ同時に除去します。（マッチ1回）"
+        "abilityDesc": "相手より{{ms}}ms以上速く勝ったラウンドでのみ発動。NPCハート2つ追加除去。（マッチ1回）"
       },
       "4": {
         "name": "亡霊の狙撃手",
         "ability": "もう一度",
-        "abilityDesc": "マッチ1回、プレイヤーのハートが0になる代わりに1で復活します。"
+        "abilityDesc": "マッチ1回、致命敗(最後のハート・2:3直前)を無効化して復活。広告復活より先に発動。"
       }
     }
   },
@@ -234,7 +239,7 @@
   },
   "storeUpdate": {
     "title": "アップデートが必要です",
-    "body": "新しいバージョン(v{{required}})が公開されました。\n現在 v{{current}} — App Store / Google Play から更新してください。",
+    "body": "High Noon v{{required}} が公開されました。\n現在 v{{current}} です。ストアから 1.4 に更新してください。",
     "openStore": "ストアで更新",
     "openStoreA11y": "アプリストアで更新する",
     "later": "あとで",

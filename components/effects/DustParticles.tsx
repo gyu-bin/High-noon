@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -106,9 +106,10 @@ function DustDot({ spec }: { spec: ParticleSpec }) {
 
 export function DustParticles() {
   const { width, height } = useWindowDimensions();
+  const count = Platform.OS === 'android' ? 14 : 48;
   const specs = useMemo(
-    () => buildParticles(width, height, 48),
-    [width, height],
+    () => buildParticles(width, height, count),
+    [width, height, count],
   );
 
   return (

@@ -32,6 +32,7 @@ import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { playBgm, syncBgmWithSettings } from '@/utils/bgmService';
 import {
   fetchAdRemovalProduct,
+  initPurchases,
   purchaseAdRemoval,
   purchasesRuntimeEnabled,
   restorePurchases,
@@ -61,16 +62,21 @@ export default function MenuScreen() {
   const titleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isAdFree = useProgressStore((s) => s.isAdFree);
+  const [storeOwnsAdRemoval, setStoreOwnsAdRemoval] = useState(false);
   const [purchaseBusy, setPurchaseBusy] = useState(false);
   const [adRemovalPrice, setAdRemovalPrice] = useState<string | null>(null);
-  const [productReady, setProductReady] = useState(false);
-  const [productLoadTried, setProductLoadTried] = useState(false);
   const iapAvailable = purchasesRuntimeEnabled();
+  const showPurchasedBadge = isAdFree || storeOwnsAdRemoval;
 
   useFocusEffect(
     useCallback(() => {
       preloadInterstitial();
-    }, []),
+      if (!iapAvailable) return;
+      void initPurchases();
+      void restorePurchases().then((owned) => {
+        setStoreOwnsAdRemoval(owned || useProgressStore.getState().isAdFree);
+      });
+    }, [iapAvailable]),
   );
 
   useEffect(() => {
@@ -87,25 +93,20 @@ export default function MenuScreen() {
   }, []);
 
   useEffect(() => {
-    if (!iapAvailable || isAdFree) return;
+    if (!iapAvailable || isAdFree || storeOwnsAdRemoval) return;
     let cancelled = false;
-    let attempt = 0;
 
     const load = async () => {
-      const p = await fetchAdRemovalProduct();
-      if (cancelled) return;
-      if (p) {
-        setAdRemovalPrice(p.localizedPrice || null);
-        setProductReady(true);
-        setProductLoadTried(true);
-        return;
-      }
-      attempt += 1;
-      setProductLoadTried(true);
-      if (attempt < 6) {
-        setTimeout(() => {
-          if (!cancelled) void load();
-        }, 1500);
+      for (let attempt = 0; attempt < 6 && !cancelled; attempt += 1) {
+        const p = await fetchAdRemovalProduct();
+        if (cancelled) return;
+        if (p?.localizedPrice) {
+          setAdRemovalPrice(p.localizedPrice);
+          return;
+        }
+        if (attempt < 5) {
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+        }
       }
     };
 
@@ -113,7 +114,7 @@ export default function MenuScreen() {
     return () => {
       cancelled = true;
     };
-  }, [iapAvailable, isAdFree]);
+  }, [iapAvailable, isAdFree, storeOwnsAdRemoval]);
 
   const dismissLandscapeHint = useCallback(() => {
     setShowLandscapeHint(false);
@@ -129,11 +130,12 @@ export default function MenuScreen() {
   );
 
   const onPurchaseAdRemoval = useCallback(async () => {
-    if (isAdFree || purchaseBusy) return;
+    if (showPurchasedBadge || purchaseBusy) return;
     setPurchaseBusy(true);
     try {
       const result = await purchaseAdRemoval();
       if (result.ok) {
+        setStoreOwnsAdRemoval(true);
         if (!useProgressStore.getState().isAdFree) {
           Alert.alert(
             t('menu.iapPurchaseDoneTitle'),
@@ -147,13 +149,14 @@ export default function MenuScreen() {
     } finally {
       setPurchaseBusy(false);
     }
-  }, [isAdFree, purchaseBusy, t]);
+  }, [showPurchasedBadge, purchaseBusy, t]);
 
   const onRestorePurchases = useCallback(async () => {
     if (purchaseBusy) return;
     setPurchaseBusy(true);
     try {
       const restored = await restorePurchases();
+      setStoreOwnsAdRemoval(restored);
       Alert.alert(
         restored ? t('menu.iapRestoreOkTitle') : t('menu.iapRestoreNoneTitle'),
         restored ? t('menu.iapRestoreOkBody') : t('menu.iapRestoreNoneBody'),
@@ -324,39 +327,27 @@ export default function MenuScreen() {
             </Text>
           </View>
 
-          {iapAvailable ? (
+          {iapAvailable && !showPurchasedBadge ? (
             <View style={styles.iapCard}>
-              {isAdFree ? (
-                <>
-                  <Text style={styles.iapTitle}>{t('menu.iapActiveTitle')}</Text>
-                  <Text style={styles.iapDesc}>{t('menu.iapThanks')}</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.iapTitle}>{t('menu.iapTitle')}</Text>
-                  <Text style={styles.iapDesc}>{t('menu.iapDesc')}</Text>
-                  {productLoadTried && !productReady ? (
-                    <Text style={styles.iapWarn}>{t('menu.iapWarn')}</Text>
-                  ) : null}
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={t('menu.iapBuyA11y')}
-                    disabled={purchaseBusy}
-                    onPress={onPurchaseAdRemoval}
-                    style={({ pressed }) => [
-                      styles.iapBuyBtn,
-                      pressed && styles.iapBuyBtnPressed,
-                      purchaseBusy && styles.iapBuyBtnDisabled,
-                    ]}
-                  >
-                    <Text style={styles.iapBuyText}>
-                      {purchaseBusy
-                        ? t('menu.iapBuying')
-                        : `${t('menu.iapBuy')}${adRemovalPrice ? ` · ${adRemovalPrice}` : ''}`}
-                    </Text>
-                  </Pressable>
-                </>
-              )}
+              <Text style={styles.iapTitle}>{t('menu.iapTitle')}</Text>
+              <Text style={styles.iapDesc}>{t('menu.iapDesc')}</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('menu.iapBuyA11y')}
+                disabled={purchaseBusy}
+                onPress={onPurchaseAdRemoval}
+                style={({ pressed }) => [
+                  styles.iapBuyBtn,
+                  pressed && styles.iapBuyBtnPressed,
+                  purchaseBusy && styles.iapBuyBtnDisabled,
+                ]}
+              >
+                <Text style={styles.iapBuyText}>
+                  {purchaseBusy
+                    ? t('menu.iapBuying')
+                    : `${t('menu.iapBuy')}${adRemovalPrice ? ` · ${adRemovalPrice}` : ''}`}
+                </Text>
+              </Pressable>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t('menu.iapRestoreA11y')}
@@ -369,6 +360,16 @@ export default function MenuScreen() {
             </View>
           ) : null}
         </ScrollView>
+
+        {showPurchasedBadge ? (
+          <View
+            accessibilityRole="text"
+            accessibilityLabel={t('menu.iapPurchasedBadge')}
+            style={styles.iapPurchasedBadgeWrap}
+          >
+            <Text style={styles.iapPurchasedBadge}>{t('menu.iapPurchasedBadge')}</Text>
+          </View>
+        ) : null}
       </View>
       <LandscapeHintModal visible={showLandscapeHint} onDismiss={dismissLandscapeHint} />
     </MetaScreenShell>
@@ -523,6 +524,24 @@ const styles = StyleSheet.create({
     borderColor: META_PANEL_BORDER,
     gap: 10,
   },
+  iapPurchasedBadgeWrap: {
+    alignSelf: 'center',
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(20, 12, 8, 0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 165, 116, 0.35)',
+  },
+  iapPurchasedBadge: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    color: colors.gold,
+    textAlign: 'center',
+    ...metaTextShadow,
+  },
   iapTitle: {
     fontSize: 14,
     fontWeight: '900',
@@ -535,14 +554,6 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     color: colors.cream,
     opacity: 0.9,
-    ...metaTextShadow,
-  },
-  iapWarn: {
-    fontSize: 11,
-    lineHeight: 16,
-    color: colors.gold,
-    opacity: 0.95,
-    marginBottom: 4,
     ...metaTextShadow,
   },
   iapBuyBtn: {

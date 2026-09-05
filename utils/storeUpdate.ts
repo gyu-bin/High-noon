@@ -26,12 +26,13 @@ export function compareStoreVersions(a: string, b: string): number {
   return 0;
 }
 
+/**
+ * 스토어 강제 업데이트 판단용 — **네이티브 바이너리 버전**만 본다.
+ * expoConfig.version 을 쓰면 OTA JS에 찍힌 version 때문에
+ * 1.3 기기가 이미 1.4로 오인되어 업데이트 모달이 안 뜬다.
+ */
 export function getInstalledStoreVersion(): string {
-  return (
-    Constants.expoConfig?.version ??
-    Constants.nativeAppVersion ??
-    '0'
-  );
+  return Constants.nativeAppVersion ?? Constants.expoConfig?.version ?? '0';
 }
 
 /** 스토어에서 더 새 버전이 필요한지 (Expo Go / 개발 빌드 제외) */
