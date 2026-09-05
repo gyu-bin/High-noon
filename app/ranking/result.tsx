@@ -1,6 +1,6 @@
 import { Stack, useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo } from 'react';
-import { ScrollView, Share, StyleSheet } from 'react-native';
+import { ScrollView, Share, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
@@ -14,8 +14,9 @@ import {
   isRankTierUpgrade,
   parseRankTier,
 } from '@/constants/pvpRanks';
+import { colors } from '@/constants/theme';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
-import { pvpMatchmake } from '@/lib/supabase/pvpApi';
+import { pvpMarkDailyShared, pvpMatchmake } from '@/lib/supabase/pvpApi';
 import { useDailyMissionStore } from '@/store/dailyMissionStore';
 import { usePvpStore } from '@/store/pvpStore';
 import { useRankingRewardStore } from '@/store/rankingRewardStore';
@@ -36,6 +37,8 @@ export default function RankingResultScreen() {
   const playerWins = usePvpStore((s) => s.playerWins);
   const opponentWins = usePvpStore((s) => s.opponentWins);
   const lastSubmit = usePvpStore((s) => s.lastSubmit);
+  const lastDailySubmit = usePvpStore((s) => s.lastDailySubmit);
+  const matchMode = usePvpStore((s) => s.matchMode);
   const beginMatch = usePvpStore((s) => s.beginMatch);
   const dailyAllDone = useDailyMissionStore(
     (s) => s.rankingPlay && s.rankingWin && s.todayBoss,
@@ -46,7 +49,14 @@ export default function RankingResultScreen() {
 
   const won = playerWins > opponentWins;
   const draw = playerWins === opponentWins;
-  const dailyBadge = dailyAllDone ? t('ranking.dailyBadge') : null;
+  const isDaily = matchMode === 'daily';
+  const dailyBadge = isDaily
+    ? lastDailySubmit
+      ? t('ranking.dailyBadge')
+      : null
+    : dailyAllDone
+      ? t('ranking.dailyBadge')
+      : null;
   const tierUp = lastSubmit
     ? isRankTierUpgrade(lastSubmit.rating_before, lastSubmit.rank_tier)
     : false;
@@ -54,10 +64,12 @@ export default function RankingResultScreen() {
   const seasonTier = parseRankTier(
     seasonPeaks[seasonKey] ?? lastSubmit?.rank_tier ?? 'bronze',
   );
-  const seasonBadge = t('ranking.seasonShareBadge', {
-    season: formatSeasonKey(seasonKey, i18n.language),
-    tier: t(`npcs.tier.${seasonTier}`),
-  });
+  const seasonBadge = isDaily
+    ? null
+    : t('ranking.seasonShareBadge', {
+        season: formatSeasonKey(seasonKey, i18n.language),
+        tier: t(`npcs.tier.${seasonTier}`),
+      });
   const cosmeticLabel =
     cosmeticId != null ? getNpcDisplayName(t, cosmeticId) : null;
 
@@ -119,8 +131,14 @@ export default function RankingResultScreen() {
   );
 
   const onShare = useCallback(() => {
-    void Share.share({ message: shareText }).catch(() => {});
-  }, [shareText]);
+    void Share.share({ message: shareText })
+      .then(() => {
+        if (isDaily) {
+          void pvpMarkDailyShared().catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, [isDaily, shareText]);
 
   const onAgain = useCallback(async () => {
     try {
@@ -158,7 +176,7 @@ export default function RankingResultScreen() {
             avgMs={avgMs}
             won={won}
             draw={draw}
-            title={title}
+            title={isDaily ? t('ranking.dailyTitle') : title}
             avgLabel={t('ranking.avgCaption')}
             dailyBadge={dailyBadge}
             seasonBadge={seasonBadge}
@@ -175,8 +193,17 @@ export default function RankingResultScreen() {
             />
           ) : null}
 
+          {isDaily && lastDailySubmit?.already_completed ? (
+            <Text style={styles.note}>{t('ranking.dailyAlreadyDone')}</Text>
+          ) : null}
+
           <WoodButton title={t('ranking.share')} onPress={onShare} />
-          <WoodButton title={t('ranking.duelAgain')} onPress={() => void onAgain()} />
+          {!isDaily ? (
+            <WoodButton
+              title={t('ranking.duelAgain')}
+              onPress={() => void onAgain()}
+            />
+          ) : null}
           <WoodButton
             title={t('ranking.backHub')}
             onPress={() => router.replace('/ranking' as Href)}
@@ -191,5 +218,10 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     paddingHorizontal: 24,
+  },
+  note: {
+    color: colors.sand,
+    fontSize: 12,
+    textAlign: 'center',
   },
 });

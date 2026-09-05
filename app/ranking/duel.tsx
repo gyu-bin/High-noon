@@ -38,7 +38,7 @@ import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
 import { useGhostDuelEngine } from '@/hooks/useGhostDuelEngine';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
-import { pvpSubmitMatch } from '@/lib/supabase/pvpApi';
+import { pvpSubmitDaily, pvpSubmitMatch } from '@/lib/supabase/pvpApi';
 import { completeDailyAfterReady } from '@/store/dailyMissionStore';
 import { usePvpStore } from '@/store/pvpStore';
 import { useRankingRewardStore } from '@/store/rankingRewardStore';
@@ -70,9 +70,11 @@ export default function RankingDuelScreen() {
 
   const opponent = usePvpStore((s) => s.opponent);
   const profile = usePvpStore((s) => s.profile);
+  const matchMode = usePvpStore((s) => s.matchMode);
   const pushRound = usePvpStore((s) => s.pushRound);
   const setScores = usePvpStore((s) => s.setScores);
   const setLastSubmit = usePvpStore((s) => s.setLastSubmit);
+  const setLastDailySubmit = usePvpStore((s) => s.setLastDailySubmit);
   const setProfile = usePvpStore((s) => s.setProfile);
 
   const [playerWins, setPlayerWins] = useState(0);
@@ -246,45 +248,70 @@ export default function RankingDuelScreen() {
       setScores(finalPlayerWins, finalOppWins);
       usePvpStore.setState({ rounds: records });
 
-      completeDailyAfterReady(
-        result === 'win' ? ['rankingPlay', 'rankingWin'] : ['rankingPlay'],
-      );
+      if (matchMode !== 'daily') {
+        completeDailyAfterReady(
+          result === 'win' ? ['rankingPlay', 'rankingWin'] : ['rankingPlay'],
+        );
+      }
 
       try {
         const characterId = useSettingsStore.getState().selectedCharacterId;
         const cosmeticNpcId =
           useRankingRewardStore.getState().selectedCosmeticNpcId;
-        const submit = await pvpSubmitMatch({
-          opponentId: opponent.id,
-          opponentIsBot: opponent.is_bot,
-          playerRounds,
-          opponentRounds,
-          scorePlayer: finalPlayerWins,
-          scoreOpponent: finalOppWins,
-          result,
-          characterId,
-          cosmeticNpcId,
-        });
-        setLastSubmit(submit);
-        useRankingRewardStore.getState().recordSeasonPeak(submit.rank_tier);
-        if (profile) {
-          setProfile({
-            ...profile,
-            rating: submit.rating_after,
-            rank_tier: submit.rank_tier,
-            wins: submit.wins,
-            losses: submit.losses,
+
+        if (matchMode === 'daily') {
+          const dailySubmit = await pvpSubmitDaily({
+            playerRounds,
+            scorePlayer: finalPlayerWins,
+            scoreOpponent: finalOppWins,
+            result,
           });
+          setLastDailySubmit(dailySubmit);
+          setLastSubmit(null);
+        } else {
+          const submit = await pvpSubmitMatch({
+            opponentId: opponent.id,
+            opponentIsBot: opponent.is_bot,
+            playerRounds,
+            opponentRounds,
+            scorePlayer: finalPlayerWins,
+            scoreOpponent: finalOppWins,
+            result,
+            characterId,
+            cosmeticNpcId,
+          });
+          setLastSubmit(submit);
+          setLastDailySubmit(null);
+          useRankingRewardStore.getState().recordSeasonPeak(submit.rank_tier);
+          if (profile) {
+            setProfile({
+              ...profile,
+              rating: submit.rating_after,
+              rank_tier: submit.rank_tier,
+              wins: submit.wins,
+              losses: submit.losses,
+            });
+          }
         }
       } catch (e) {
         console.warn('[pvp] submit failed', e);
         setLastSubmit(null);
+        setLastDailySubmit(null);
       }
 
       setSubmitting(false);
       router.replace('/ranking/result' as Href);
     },
-    [opponent, profile, router, setLastSubmit, setProfile, setScores],
+    [
+      matchMode,
+      opponent,
+      profile,
+      router,
+      setLastDailySubmit,
+      setLastSubmit,
+      setProfile,
+      setScores,
+    ],
   );
 
   useEffect(() => {

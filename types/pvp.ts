@@ -34,6 +34,35 @@ export type PvpMatchmakeResult = {
 
 export type PvpMatchResult = 'win' | 'loss' | 'draw';
 
+export type PvpMatchMode = 'ranked' | 'daily';
+
+export type DailyChallenge = {
+  challenge_date: string;
+  opponent_name: string;
+  sample_ms: [number, number, number];
+  character_id: number;
+  cosmetic_npc_id: number | null;
+  completed: boolean;
+  completion: {
+    score_player: number;
+    score_opponent: number;
+    result: PvpMatchResult;
+    avg_ms: number | null;
+    shared: boolean;
+  } | null;
+};
+
+export type DailySubmitResult = {
+  already_completed: boolean;
+  challenge_date: string;
+  result: PvpMatchResult;
+  score_player: number;
+  score_opponent: number;
+  avg_ms: number | null;
+  shared: boolean;
+  badge: string;
+};
+
 export type PvpRoundRecord = {
   playerMs: number | null;
   opponentMs: number | null;

@@ -18,6 +18,16 @@ type ReactionAggregate = {
   count: number;
 };
 
+function cosmeticsFromCleared(
+  npcById: Record<number, NpcProgressRow>,
+): number[] {
+  const ids: number[] = [];
+  for (const npc of NPCS) {
+    if (npcById[npc.id]?.cleared) ids.push(npc.id);
+  }
+  return ids;
+}
+
 type ProgressStoreState = {
   /** NPC id(1~)별 진행 */
   npcById: Record<number, NpcProgressRow>;
@@ -26,6 +36,11 @@ type ProgressStoreState = {
   reactionAggregate: ReactionAggregate;
   /** 해금된 플레이어 캐릭터 id (1~4) */
   unlockedCharacterIds: number[];
+  /**
+   * PvP 프로필 코스메틱 — PvE에서 클리어한 NPC id.
+   * 전투 능력과 무관한 표시 전용.
+   */
+  unlockedCosmeticNpcIds: number[];
   /** 망령 사수(4번) 비밀 해금 여부 — UI 공개 연출용 */
   hiddenCharUnlocked: boolean;
   /**
@@ -55,6 +70,7 @@ type ProgressStoreState = {
   setHighestUnlockedNpcId: (id: number) => void;
   /** 캐릭터 해금 목록 덮어쓰기 (저장 동기화 등) */
   setUnlockedCharacterIds: (ids: number[]) => void;
+  setUnlockedCosmeticNpcIds: (ids: number[]) => void;
   setHiddenCharUnlocked: (value: boolean) => void;
   resetProgress: () => void;
 };
@@ -103,6 +119,7 @@ const baseProgress: Pick<
   | 'highestUnlockedNpcId'
   | 'reactionAggregate'
   | 'unlockedCharacterIds'
+  | 'unlockedCosmeticNpcIds'
   | 'hiddenCharUnlocked'
   | 'legacyReactionAggregate'
   | 'paleRiderUnlocked'
@@ -112,6 +129,7 @@ const baseProgress: Pick<
   highestUnlockedNpcId: 1,
   reactionAggregate: { sumMs: 0, count: 0 },
   unlockedCharacterIds: [1],
+  unlockedCosmeticNpcIds: [],
   hiddenCharUnlocked: false,
   legacyReactionAggregate: null,
   paleRiderUnlocked: false,
@@ -143,7 +161,15 @@ export const useProgressStore = create<ProgressStoreState>()(
             s.highestUnlockedNpcId,
             Math.min(id + 1, cap),
           );
-          return { npcById, highestUnlockedNpcId, paleRiderUnlocked: pale };
+          const unlockedCosmeticNpcIds = [
+            ...new Set([...s.unlockedCosmeticNpcIds, id]),
+          ].sort((a, b) => a - b);
+          return {
+            npcById,
+            highestUnlockedNpcId,
+            paleRiderUnlocked: pale,
+            unlockedCosmeticNpcIds,
+          };
         }),
 
       recordNpcBestReaction: (npcId, playerMs) =>
@@ -189,6 +215,13 @@ export const useProgressStore = create<ProgressStoreState>()(
           ),
         }),
 
+      setUnlockedCosmeticNpcIds: (unlockedCosmeticNpcIds) =>
+        set({
+          unlockedCosmeticNpcIds: [...new Set(unlockedCosmeticNpcIds)].sort(
+            (a, b) => a - b,
+          ),
+        }),
+
       setHiddenCharUnlocked: (hiddenCharUnlocked) => set({ hiddenCharUnlocked }),
 
       setAdFree: (isAdFree) => set({ isAdFree }),
@@ -199,6 +232,7 @@ export const useProgressStore = create<ProgressStoreState>()(
           highestUnlockedNpcId: 1,
           reactionAggregate: { sumMs: 0, count: 0 },
           unlockedCharacterIds: [1],
+          unlockedCosmeticNpcIds: [],
           hiddenCharUnlocked: false,
           legacyReactionAggregate: null,
           paleRiderUnlocked: false,
@@ -207,35 +241,42 @@ export const useProgressStore = create<ProgressStoreState>()(
     {
       name: 'high-noon-progress',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 1,
+      version: 2,
       /**
        * v1 — 반응속도 측정 기준 변경(손 뗄 때 → 손 닿을 때).
-       *
-       * NPC별 최고기록은 그대로 둔다(새 기준이 더 빨라 자연히 갱신된다). 다만
-       * `reactionAggregate`는 누적 합계라 옛 기준과 새 기준 표본이 섞이면 평균이
-       * 의미를 잃는다 — 페일 라이더 해금이 이 평균에 걸려 있으므로 초기화한다.
-       * 대신 이전 기준으로 이미 해금한 유저는 플래그로 유지해 잠기지 않게 한다.
+       * v2 — PvP 코스메틱: 이미 클리어한 NPC를 unlockedCosmeticNpcIds로 백필.
        */
       migrate: (persisted, version) => {
-        const p = (persisted ?? {}) as Partial<ProgressStoreState>;
-        if (version >= 1) return p;
-        const alreadyUnlocked = isPaleRiderUnlockedFromSnapshot(
-          p.npcById ?? {},
-          p.reactionAggregate ?? { sumMs: 0, count: 0 },
-        );
-        return {
-          ...p,
-          reactionAggregate: { sumMs: 0, count: 0 },
-          // 지우지 않고 옮겨둔다 — 되돌릴 수 있어야 한다
-          legacyReactionAggregate: p.reactionAggregate ?? null,
-          paleRiderUnlocked: p.paleRiderUnlocked || alreadyUnlocked,
-        };
+        let p = (persisted ?? {}) as Partial<ProgressStoreState>;
+        if (version < 1) {
+          const alreadyUnlocked = isPaleRiderUnlockedFromSnapshot(
+            p.npcById ?? {},
+            p.reactionAggregate ?? { sumMs: 0, count: 0 },
+          );
+          p = {
+            ...p,
+            reactionAggregate: { sumMs: 0, count: 0 },
+            legacyReactionAggregate: p.reactionAggregate ?? null,
+            paleRiderUnlocked: p.paleRiderUnlocked || alreadyUnlocked,
+          };
+        }
+        if (version < 2) {
+          const fromCleared = cosmeticsFromCleared(p.npcById ?? {});
+          p = {
+            ...p,
+            unlockedCosmeticNpcIds: [
+              ...new Set([...(p.unlockedCosmeticNpcIds ?? []), ...fromCleared]),
+            ].sort((a, b) => a - b),
+          };
+        }
+        return p;
       },
       partialize: (s) => ({
         npcById: s.npcById,
         highestUnlockedNpcId: s.highestUnlockedNpcId,
         reactionAggregate: s.reactionAggregate,
         unlockedCharacterIds: s.unlockedCharacterIds,
+        unlockedCosmeticNpcIds: s.unlockedCosmeticNpcIds,
         hiddenCharUnlocked: s.hiddenCharUnlocked,
         legacyReactionAggregate: s.legacyReactionAggregate,
         paleRiderUnlocked: s.paleRiderUnlocked,
@@ -245,11 +286,16 @@ export const useProgressStore = create<ProgressStoreState>()(
         const p = persisted as Partial<ProgressStoreState> | undefined;
         if (!p?.npcById) return { ...current, ...p };
         const mergedNpc = { ...buildDefaultNpcById(), ...p.npcById };
+        const cosmetics =
+          p.unlockedCosmeticNpcIds && p.unlockedCosmeticNpcIds.length > 0
+            ? p.unlockedCosmeticNpcIds
+            : cosmeticsFromCleared(mergedNpc);
         return {
           ...current,
           ...p,
           npcById: mergedNpc,
           unlockedCharacterIds: p.unlockedCharacterIds ?? [1],
+          unlockedCosmeticNpcIds: cosmetics,
           hiddenCharUnlocked: p.hiddenCharUnlocked ?? false,
           legacyReactionAggregate: p.legacyReactionAggregate ?? null,
           paleRiderUnlocked: p.paleRiderUnlocked ?? false,

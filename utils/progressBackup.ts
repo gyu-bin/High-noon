@@ -26,6 +26,8 @@ type BackupPayload = {
   a: [number, number];
   /** unlockedCharacterIds */
   c: number[];
+  /** unlockedCosmeticNpcIds (optional — older codes omit) */
+  m?: number[];
   /** hiddenCharUnlocked */
   x: number;
   /** paleRiderUnlocked */
@@ -137,6 +139,7 @@ export function exportProgressCode(): string {
       .filter(([, cleared, best]) => cleared === 1 || best > 0),
     a: [Math.round(s.reactionAggregate.sumMs), s.reactionAggregate.count],
     c: s.unlockedCharacterIds,
+    m: s.unlockedCosmeticNpcIds,
     x: s.hiddenCharUnlocked ? 1 : 0,
     p: s.paleRiderUnlocked ? 1 : 0,
     l: s.legacyReactionAggregate
@@ -197,11 +200,20 @@ export function importProgressCode(raw: string): ImportResult {
     if (cleared === 1) clearedCount += 1;
   }
 
+  const cosmeticsFromClear = Object.entries(npcById)
+    .filter(([, row]) => row.cleared)
+    .map(([id]) => Number(id));
+  const cosmetics =
+    Array.isArray(payload.m) && payload.m.length > 0
+      ? payload.m.filter((v) => typeof v === 'number')
+      : cosmeticsFromClear;
+
   useProgressStore.setState((s) => ({
     npcById: { ...s.npcById, ...npcById },
     highestUnlockedNpcId: payload.h,
     reactionAggregate: { sumMs: payload.a[0], count: payload.a[1] },
     unlockedCharacterIds: payload.c.filter((v) => typeof v === 'number'),
+    unlockedCosmeticNpcIds: cosmetics,
     hiddenCharUnlocked: payload.x === 1,
     paleRiderUnlocked: payload.p === 1,
     legacyReactionAggregate: isAggregate(payload.l)
