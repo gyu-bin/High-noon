@@ -47,11 +47,14 @@ import {
 import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
-import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
 import { RM_GAME } from '@/constants/reanimatedGame';
+import {
+  parseLocalDuelSkin,
+} from '@/constants/localDuelSkin';
 import { play, playGunshot } from '@/utils/audioService';
 import { speakDuelCue, stopDuelSignalSpeech, warmupDuelSpeech } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
+import { prefetchLocalDuelSprites } from '@/utils/preloadDuelSprites';
 import { localPlayerSpritePoseFromPhase } from '@/utils/spritePose';
 import { useSettingsStore } from '@/store/settingsStore';
 
@@ -82,9 +85,23 @@ export default function LocalGameScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ matchType?: string }>();
+  const params = useLocalSearchParams<{
+    matchType?: string;
+    p1Skin?: string;
+    p2Skin?: string;
+  }>();
   const matchType = parseMatchType(params.matchType);
   const winsNeeded = heartsForMatchType(matchType);
+  const storedP1Skin = useSettingsStore((s) => s.localP1Skin);
+  const storedP2Skin = useSettingsStore((s) => s.localP2Skin);
+  const p1Skin = useMemo(
+    () => parseLocalDuelSkin(params.p1Skin, storedP1Skin),
+    [params.p1Skin, storedP1Skin],
+  );
+  const p2Skin = useMemo(
+    () => parseLocalDuelSkin(params.p2Skin, storedP2Skin),
+    [params.p2Skin, storedP2Skin],
+  );
   const stage = usePhoneStageMetrics();
   const isLandscape = stage.windowWidth > stage.windowHeight;
   // NPC 결투와 동일하게 실제 창 크기 사용 (가로 회전 시 화면 전체 채움)
@@ -132,7 +149,6 @@ export default function LocalGameScreen() {
   const touchFlushScheduledRef = useRef(false);
   const commitRef = useRef<(players: readonly LocalPlayerId[]) => void>(() => {});
   const isBangArmedRef = useRef<() => boolean>(() => false);
-  const selectedCharacterId = useSettingsStore((s) => s.selectedCharacterId);
 
   const winsRef = useRef({ p1: 0, p2: 0 });
   const redFlash = useSharedValue(0);
@@ -318,7 +334,7 @@ export default function LocalGameScreen() {
       void (async () => {
         await Promise.all([
           preloadSceneImages(),
-          prefetchDuelSprites(1, selectedCharacterId),
+          prefetchLocalDuelSprites(p1Skin, p2Skin),
         ]);
         if (cancelled) return;
         const h = heartsForMatchType(matchType);
@@ -346,7 +362,7 @@ export default function LocalGameScreen() {
         }
         reset();
       };
-    }, [matchType, reset, start, selectedCharacterId]),
+    }, [matchType, reset, start, p1Skin, p2Skin]),
   );
 
   useEffect(() => {
@@ -534,8 +550,8 @@ export default function LocalGameScreen() {
             paddingRight={overlayPad.right}
             phase={phase}
             signalPhase={signalBoardPhase}
-            p1CharacterId={selectedCharacterId}
-            p2CharacterId={selectedCharacterId}
+            p1Skin={p1Skin}
+            p2Skin={p2Skin}
             p1Pose={p1Pose}
             p2Pose={p2Pose}
             p1Hearts={p1Hearts}

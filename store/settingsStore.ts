@@ -2,6 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import {
+  DEFAULT_LOCAL_P1_SKIN,
+  DEFAULT_LOCAL_P2_SKIN,
+  normalizeLocalDuelSkin,
+  type LocalDuelSkin,
+} from '@/constants/localDuelSkin';
+
 /** 로컬 2인전 시리즈 (3판2선 / 5판3선 / 7판4선) */
 export type LocalMatchPreset = 'bo3' | 'bo5' | 'bo7';
 
@@ -31,6 +38,9 @@ type SettingsStoreState = {
   localMatchPreset: LocalMatchPreset;
   /** 플레이어 선택 캐릭터 id (1~4) */
   selectedCharacterId: number;
+  /** 로컬 2인전 P1/P2 스킨 (유저·NPC 풀, 전부 열림) */
+  localP1Skin: LocalDuelSkin;
+  localP2Skin: LocalDuelSkin;
   /** 앱 언어 설정 (auto = 기기 설정 따름) */
   language: AppLanguage;
   /** 메뉴 — 가로 회전 안내 팝업 1회 */
@@ -42,6 +52,8 @@ type SettingsStoreState = {
   setHapticEnabled: (value: boolean) => void;
   setLocalMatchPreset: (preset: LocalMatchPreset) => void;
   setSelectedCharacterId: (id: number) => void;
+  setLocalP1Skin: (skin: LocalDuelSkin) => void;
+  setLocalP2Skin: (skin: LocalDuelSkin) => void;
   setLanguage: (lang: AppLanguage) => void;
   setLandscapeHintSeen: (value: boolean) => void;
   setIapActiveCardDismissed: (value: boolean) => void;
@@ -55,6 +67,8 @@ export const useSettingsStore = create<SettingsStoreState>()(
       hapticEnabled: true,
       localMatchPreset: 'bo5',
       selectedCharacterId: 1,
+      localP1Skin: DEFAULT_LOCAL_P1_SKIN,
+      localP2Skin: DEFAULT_LOCAL_P2_SKIN,
       language: 'auto',
       landscapeHintSeen: false,
       iapActiveCardDismissed: false,
@@ -68,6 +82,10 @@ export const useSettingsStore = create<SettingsStoreState>()(
       setLocalMatchPreset: (localMatchPreset) => set({ localMatchPreset }),
 
       setSelectedCharacterId: (selectedCharacterId) => set({ selectedCharacterId }),
+
+      setLocalP1Skin: (localP1Skin) => set({ localP1Skin }),
+
+      setLocalP2Skin: (localP2Skin) => set({ localP2Skin }),
 
       setLanguage: (language) => set({ language }),
 
@@ -85,6 +103,8 @@ export const useSettingsStore = create<SettingsStoreState>()(
         hapticEnabled: s.hapticEnabled,
         localMatchPreset: s.localMatchPreset,
         selectedCharacterId: s.selectedCharacterId,
+        localP1Skin: s.localP1Skin,
+        localP2Skin: s.localP2Skin,
         language: s.language,
         landscapeHintSeen: s.landscapeHintSeen,
         iapActiveCardDismissed: s.iapActiveCardDismissed,
@@ -98,6 +118,8 @@ export const useSettingsStore = create<SettingsStoreState>()(
           ...p,
           musicEnabled: p?.musicEnabled ?? true,
           selectedCharacterId: p?.selectedCharacterId ?? 1,
+          localP1Skin: normalizeLocalDuelSkin(p?.localP1Skin, DEFAULT_LOCAL_P1_SKIN),
+          localP2Skin: normalizeLocalDuelSkin(p?.localP2Skin, DEFAULT_LOCAL_P2_SKIN),
           language: p?.language ?? 'auto',
           landscapeHintSeen:
             p?.landscapeHintSeen ?? p?.localLandscapeHintSeen ?? false,
