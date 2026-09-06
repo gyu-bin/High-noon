@@ -7,7 +7,7 @@ import type { StyleProp, ViewStyle } from 'react-native';
 import type { AnimatedStyle } from 'react-native-reanimated';
 
 import {
-  PlayerCharacterSprite,
+  LocalDuelSkinSprite,
   type SpritePose,
 } from '@/components/game/CharacterSprites';
 import { DuelFigureSlot } from '@/components/game/DuelFigureSlot';
@@ -25,6 +25,7 @@ import {
 } from '@/constants/duelArena';
 import { DUEL_ARENA_SHADE } from '@/constants/duelPresentation';
 import { DUEL_VISUAL_THEME, MINIMAL_DUEL } from '@/constants/duelTheme';
+import type { LocalDuelSkin } from '@/constants/localDuelSkin';
 import { colors } from '@/constants/theme';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
 import type { LocalPlayerId } from '@/hooks/useLocalDuelEngine';
@@ -40,8 +41,8 @@ type Props = {
   paddingRight: number;
   phase: DuelPhase;
   signalPhase?: DuelSignalBoardPhase;
-  p1CharacterId: number;
-  p2CharacterId: number;
+  p1Skin: LocalDuelSkin;
+  p2Skin: LocalDuelSkin;
   p1Pose: SpritePose;
   p2Pose: SpritePose;
   p1Hearts: number;
@@ -57,6 +58,8 @@ type Props = {
   onHalfPressIn: (player: LocalPlayerId) => void;
   onBack: () => void;
   onPause: () => void;
+  /** BANG 중 등 일시정지를 막아야 하는 구간 */
+  pauseDisabled?: boolean;
   /** landscape — 좌(P1)·우(P2) 정면 대치 (기본 portrait 상하 분할) */
   orientation?: 'portrait' | 'landscape';
 };
@@ -70,8 +73,8 @@ export function LocalDuelArenaLayout({
   paddingRight,
   phase,
   signalPhase,
-  p1CharacterId,
-  p2CharacterId,
+  p1Skin,
+  p2Skin,
   p1Pose,
   p2Pose,
   p1Hearts,
@@ -87,6 +90,7 @@ export function LocalDuelArenaLayout({
   onHalfPressIn,
   onBack,
   onPause,
+  pauseDisabled = false,
   orientation = 'portrait',
 }: Props) {
   const { t } = useTranslation();
@@ -146,8 +150,8 @@ export function LocalDuelArenaLayout({
             figW={figW}
             figH={figH}
           >
-            <PlayerCharacterSprite
-              characterId={p2CharacterId}
+            <LocalDuelSkinSprite
+              skin={p2Skin}
               width={figW}
               height={figH}
               flipHorizontal={duelFlipHorizontal(landscape ? 'topRight' : 'bottomLeft')}
@@ -218,8 +222,8 @@ export function LocalDuelArenaLayout({
           }
         >
           <DuelFigureSlot corner="bottomLeft" pose={p1Pose} figW={figW} figH={figH}>
-            <PlayerCharacterSprite
-              characterId={p1CharacterId}
+            <LocalDuelSkinSprite
+              skin={p1Skin}
               width={figW}
               height={figH}
               flipHorizontal={duelFlipHorizontal('bottomLeft')}
@@ -342,6 +346,7 @@ export function LocalDuelArenaLayout({
 
       <Pressable
         accessibilityLabel={t('game.pauseA11y')}
+        disabled={pauseDisabled}
         onPress={onPause}
         style={[
           styles.pauseBtn,

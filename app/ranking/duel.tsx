@@ -438,6 +438,7 @@ export default function RankingDuelScreen() {
         signalPhase={signalBoardPhase}
         blindBangText={false}
         invertSignalColors={false}
+        swapSignalLabels={false}
         opponentHearts={opponentHearts}
         playerHearts={playerHearts}
         playerScore={playerWins}
@@ -445,8 +446,11 @@ export default function RankingDuelScreen() {
         shootCapturesEarly={shootCapturesEarly}
         shootActive={shootActive}
         onShootPress={onShootPress}
-        onPause={() => setPaused(true)}
-        pauseDisabled={submitting}
+        onPause={() => {
+          if (phase === '뱅' || phase === '페이크') return;
+          setPaused(true);
+        }}
+        pauseDisabled={submitting || phase === '뱅' || phase === '페이크'}
         playerTapAckStyle={playerTapAckStyle}
         hideBottomHud={submitting}
         orientation={isLandscape ? 'landscape' : 'portrait'}

@@ -248,8 +248,8 @@ function FrozenLocalDuel() {
           paddingRight={overlayPad.right}
           phase="집중"
           signalPhase="집중"
-          p1CharacterId={1}
-          p2CharacterId={4}
+          p1Skin={{ kind: 'player', id: 1 }}
+          p2Skin={{ kind: 'player', id: 4 }}
           p1Pose="aim"
           p2Pose="aim"
           p1Hearts={2}

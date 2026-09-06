@@ -103,6 +103,12 @@ export function useLocalDuelEngine(options?: {
   const bangTimeoutDeadlineRef = useRef<number | null>(null);
   const lastSteadyDurationRef = useRef<number | null>(null);
   const pausePerfRef = useRef<number | null>(null);
+  /** READY에서 뽑은 bang 대기 — pause/resume 시 재랜덤하지 않음 */
+  const chosenBangWaitRef = useRef<number | null>(null);
+  /** 한 명만 반응한 뒤 상대 창 — pause가 타이머만 지우면 유실됨 */
+  const opponentWindowDeadlineRef = useRef<number | null>(null);
+  /** 일시정지 시작 벽시계 — 재개 시 멈춘 시간만큼 데드라인을 민다 */
+  const pauseWallMsRef = useRef<number | null>(null);
 
   const clearAllTimers = useCallback(() => {
     clearTimeoutRef(readyTimerRef);
@@ -122,6 +128,9 @@ export function useLocalDuelEngine(options?: {
     steadyDeadlineRef.current = null;
     bangTimeoutDeadlineRef.current = null;
     lastSteadyDurationRef.current = null;
+    chosenBangWaitRef.current = null;
+    opponentWindowDeadlineRef.current = null;
+    pauseWallMsRef.current = null;
     pausePerfRef.current = null;
     phaseRef.current = '결과';
     setOutcome(next);
@@ -183,6 +192,7 @@ export function useLocalDuelEngine(options?: {
       bangT0Ref.current = t0;
       bangArmedRef.current = true;
       bangTimeoutDeadlineRef.current = Date.now() + BANG_TIMEOUT_MS;
+      opponentWindowDeadlineRef.current = null;
       onBangEnterRef.current?.();
       phaseRef.current = '뱅';
       setPhase('뱅');
@@ -221,6 +231,12 @@ export function useLocalDuelEngine(options?: {
     steadyDeadlineRef.current = null;
     bangTimeoutDeadlineRef.current = null;
     lastSteadyDurationRef.current = null;
+    chosenBangWaitRef.current = randomDelayInclusiveMs(
+      DUEL_DEFAULT_BANG_DELAY_MS.minMs,
+      DUEL_DEFAULT_BANG_DELAY_MS.maxMs,
+    );
+    opponentWindowDeadlineRef.current = null;
+    pauseWallMsRef.current = null;
     pausePerfRef.current = null;
 
     const seq = ++duelSeqRef.current;
@@ -243,10 +259,12 @@ export function useLocalDuelEngine(options?: {
       phaseRef.current = '집중';
       setPhase('집중');
       setSignalText('Steady');
-      const dBangWait = randomDelayInclusiveMs(
-        DUEL_DEFAULT_BANG_DELAY_MS.minMs,
-        DUEL_DEFAULT_BANG_DELAY_MS.maxMs,
-      );
+      const dBangWait =
+        chosenBangWaitRef.current ??
+        randomDelayInclusiveMs(
+          DUEL_DEFAULT_BANG_DELAY_MS.minMs,
+          DUEL_DEFAULT_BANG_DELAY_MS.maxMs,
+        );
       scheduleSteadyThenBang(seq, DUEL_STEADY_SCHEDULE_LEAD_MS, dBangWait);
     }, readyTotalMs);
   }, [clearAllTimers, scheduleSteadyThenBang]);
@@ -282,10 +300,13 @@ export function useLocalDuelEngine(options?: {
           clearTimeoutRef(bangTimeoutRef);
           clearTimeoutRef(opponentWindowRef);
           bangTimeoutDeadlineRef.current = null;
+          opponentWindowDeadlineRef.current = null;
           tryFinishBang();
         } else if (anyNewTap && opponentWindowRef.current == null) {
+          opponentWindowDeadlineRef.current = Date.now() + BANG_OPPONENT_WINDOW_MS;
           opponentWindowRef.current = setTimeout(() => {
             opponentWindowRef.current = null;
+            opponentWindowDeadlineRef.current = null;
             if (bangFinalizedRef.current) return;
             if (p1MsRef.current == null && p2MsRef.current == null) return;
             clearTimeoutRef(bangTimeoutRef);
@@ -376,6 +397,9 @@ export function useLocalDuelEngine(options?: {
     steadyDeadlineRef.current = null;
     bangTimeoutDeadlineRef.current = null;
     lastSteadyDurationRef.current = null;
+    chosenBangWaitRef.current = null;
+    opponentWindowDeadlineRef.current = null;
+    pauseWallMsRef.current = null;
     pausePerfRef.current = null;
     phaseRef.current = '대기';
     setOutcome(null);
@@ -389,6 +413,9 @@ export function useLocalDuelEngine(options?: {
     } else {
       pausePerfRef.current = null;
     }
+    if (pauseWallMsRef.current == null) {
+      pauseWallMsRef.current = Date.now();
+    }
     clearTimeoutRef(readyTimerRef);
     clearTimeoutRef(steadyTimerRef);
     clearTimeoutRef(bangTimeoutRef);
@@ -398,6 +425,18 @@ export function useLocalDuelEngine(options?: {
   const resumeTimers = useCallback(() => {
     const seq = duelSeqRef.current;
     const ph = phaseRef.current;
+
+    // 멈춘 시간만큼 살아 있는 데드라인을 전부 뒤로 민다
+    const pausedMs =
+      pauseWallMsRef.current != null ? Math.max(0, Date.now() - pauseWallMsRef.current) : 0;
+    pauseWallMsRef.current = null;
+    if (pausedMs > 0) {
+      if (readyDeadlineRef.current != null) readyDeadlineRef.current += pausedMs;
+      if (steadyDeadlineRef.current != null) steadyDeadlineRef.current += pausedMs;
+      if (bangTimeoutDeadlineRef.current != null) bangTimeoutDeadlineRef.current += pausedMs;
+      if (opponentWindowDeadlineRef.current != null) opponentWindowDeadlineRef.current += pausedMs;
+    }
+
     if (ph === '결과' || ph === '대기') return;
 
     if (ph === '준비' && readyDeadlineRef.current != null) {
@@ -408,10 +447,12 @@ export function useLocalDuelEngine(options?: {
         phaseRef.current = '집중';
         setPhase('집중');
         setSignalText('Steady');
-        const dBangWait = randomDelayInclusiveMs(
-          DUEL_DEFAULT_BANG_DELAY_MS.minMs,
-          DUEL_DEFAULT_BANG_DELAY_MS.maxMs,
-        );
+        const dBangWait =
+          chosenBangWaitRef.current ??
+          randomDelayInclusiveMs(
+            DUEL_DEFAULT_BANG_DELAY_MS.minMs,
+            DUEL_DEFAULT_BANG_DELAY_MS.maxMs,
+          );
         scheduleSteadyThenBang(seq, DUEL_STEADY_SCHEDULE_LEAD_MS, dBangWait);
       }, remaining);
       return;
@@ -443,8 +484,31 @@ export function useLocalDuelEngine(options?: {
       bangTimeoutRef.current = setTimeout(() => {
         finalizeBangTimeout(seq);
       }, remaining);
+
+      // 한 명만 반응한 채 pause했다면 상대 창 잔여 복구
+      if (
+        !bangFinalizedRef.current &&
+        opponentWindowDeadlineRef.current != null &&
+        (p1MsRef.current != null || p2MsRef.current != null) &&
+        !(p1MsRef.current != null && p2MsRef.current != null)
+      ) {
+        const oppRemaining = Math.max(
+          0,
+          opponentWindowDeadlineRef.current - Date.now(),
+        );
+        opponentWindowDeadlineRef.current = Date.now() + oppRemaining;
+        opponentWindowRef.current = setTimeout(() => {
+          opponentWindowRef.current = null;
+          opponentWindowDeadlineRef.current = null;
+          if (bangFinalizedRef.current) return;
+          if (p1MsRef.current == null && p2MsRef.current == null) return;
+          clearTimeoutRef(bangTimeoutRef);
+          bangTimeoutDeadlineRef.current = null;
+          completeBangRound(seq);
+        }, oppRemaining);
+      }
     }
-  }, [enterBang, finalizeBangTimeout, scheduleSteadyThenBang]);
+  }, [completeBangRound, enterBang, finalizeBangTimeout, scheduleSteadyThenBang]);
 
   useEffect(() => () => clearAllTimers(), [clearAllTimers]);
 

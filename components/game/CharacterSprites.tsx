@@ -11,6 +11,7 @@ import {
   getPlayerSpriteSource,
 } from '@/constants/spriteAssets';
 import type { DuelCorner } from '@/constants/duelArena';
+import type { LocalDuelSkin } from '@/constants/localDuelSkin';
 import {
   SPRITE_CACHE_REVISION,
   SPRITE_POSE_TRANSFORM,
@@ -347,6 +348,53 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
         }
       />
     </View>
+  );
+});
+
+/** 로컬 2인전 — player/npc 스킨을 같은 슬롯 API로 렌더 */
+export const LocalDuelSkinSprite = memo(function LocalDuelSkinSprite({
+  skin,
+  width,
+  height,
+  flipHorizontal,
+  style,
+  pose = 'idle',
+  victoryActive = false,
+  duelCorner,
+  defeatDropPx,
+}: BaseProps & {
+  skin: LocalDuelSkin;
+  victoryActive?: boolean;
+  duelCorner?: DuelCorner;
+  defeatDropPx?: number;
+}) {
+  if (skin.kind === 'npc') {
+    return (
+      <NpcCharacterSprite
+        npcId={skin.id}
+        width={width}
+        height={height}
+        flipHorizontal={flipHorizontal}
+        style={style}
+        pose={pose}
+        victoryActive={victoryActive}
+        duelCorner={duelCorner ?? 'topRight'}
+        defeatDropPx={defeatDropPx}
+      />
+    );
+  }
+  return (
+    <PlayerCharacterSprite
+      characterId={skin.id}
+      width={width}
+      height={height}
+      flipHorizontal={flipHorizontal}
+      style={style}
+      pose={pose}
+      victoryActive={victoryActive}
+      duelCorner={duelCorner ?? 'bottomLeft'}
+      defeatDropPx={defeatDropPx}
+    />
   );
 });
 
