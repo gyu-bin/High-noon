@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,8 +8,8 @@ import { LocalDuelSkinSprite } from '@/components/game/CharacterSprites';
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import { WoodButton } from '@/components/ui/WoodButton';
-import { FONT_RYE } from '@/constants/fonts';
 import type { PlayerCharacterId } from '@/constants/characters';
+import { FONT_RYE } from '@/constants/fonts';
 import {
   encodeLocalDuelSkin,
   isSameLocalDuelSkin,
@@ -23,31 +23,42 @@ import {
   type LocalMatchPreset,
   useSettingsStore,
 } from '@/store/settingsStore';
+import { play } from '@/utils/audioService';
 import { useCharacterLabels } from '@/utils/characterLabels';
+import { trigger } from '@/utils/hapticService';
 import { getNpcDisplayName } from '@/utils/npcLabels';
 
 type Slot = 'p1' | 'p2';
+type SetupStep = 'characters' | 'rounds';
 
 const SKINS = listLocalDuelSkins();
 const PORTRAIT_W = 72;
 const PORTRAIT_H = 82;
+const SLOT_PORTRAIT_W = 64;
+const SLOT_PORTRAIT_H = 72;
 
-function SkinName({ skin }: { skin: LocalDuelSkin }) {
+function SkinName({ skin, compact }: { skin: LocalDuelSkin; compact?: boolean }) {
   const { t } = useTranslation();
   if (skin.kind === 'npc') {
     return (
-      <Text style={styles.cardName} numberOfLines={2}>
+      <Text
+        style={[styles.cardName, compact && styles.cardNameCompact]}
+        numberOfLines={compact ? 1 : 2}
+      >
         {getNpcDisplayName(t, skin.id)}
       </Text>
     );
   }
-  return <PlayerSkinName id={skin.id as PlayerCharacterId} />;
+  return <PlayerSkinName id={skin.id as PlayerCharacterId} compact={compact} />;
 }
 
-function PlayerSkinName({ id }: { id: PlayerCharacterId }) {
+function PlayerSkinName({ id, compact }: { id: PlayerCharacterId; compact?: boolean }) {
   const labels = useCharacterLabels(id);
   return (
-    <Text style={styles.cardName} numberOfLines={2}>
+    <Text
+      style={[styles.cardName, compact && styles.cardNameCompact]}
+      numberOfLines={compact ? 1 : 2}
+    >
       {labels.name}
     </Text>
   );
@@ -61,21 +72,45 @@ function SlotPreview({
 }: {
   label: string;
   skin: LocalDuelSkin;
-  active: boolean;
-  onPress: () => void;
+  active?: boolean;
+  onPress?: () => void;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ selected: active }}
+      accessibilityState={{ selected: Boolean(active) }}
       onPress={onPress}
+      disabled={!onPress}
       style={[styles.slotCard, active && styles.slotCardActive]}
     >
       <Text style={styles.slotLabel}>{label}</Text>
       <View style={styles.slotPortrait}>
-        <LocalDuelSkinSprite skin={skin} width={PORTRAIT_W} height={PORTRAIT_H} pose="idle" />
+        <LocalDuelSkinSprite
+          skin={skin}
+          width={SLOT_PORTRAIT_W}
+          height={SLOT_PORTRAIT_H}
+          pose="idle"
+        />
       </View>
-      <SkinName skin={skin} />
+      <SkinName skin={skin} compact />
+    </Pressable>
+  );
+}
+
+function HeaderNextButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={10}
+      onPress={() => {
+        void play('ready_click');
+        void trigger('selection');
+        onPress();
+      }}
+      style={styles.headerNext}
+    >
+      <Text style={styles.headerNextText}>{label}</Text>
     </Pressable>
   );
 }
@@ -85,10 +120,6 @@ export default function LocalSetupScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   useScreenBgm('menu');
-  const onBack = useCallback(() => {
-    if (router.canGoBack()) router.back();
-    else router.replace('/menu');
-  }, [router]);
 
   const preset = useSettingsStore((s) => s.localMatchPreset);
   const setPreset = useSettingsStore((s) => s.setLocalMatchPreset);
@@ -97,7 +128,25 @@ export default function LocalSetupScreen() {
   const setLocalP1Skin = useSettingsStore((s) => s.setLocalP1Skin);
   const setLocalP2Skin = useSettingsStore((s) => s.setLocalP2Skin);
 
+  const [step, setStep] = useState<SetupStep>('characters');
   const [activeSlot, setActiveSlot] = useState<Slot>('p1');
+
+  const leaveSetup = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/menu');
+  }, [router]);
+
+  const onBack = useCallback(() => {
+    if (step === 'rounds') {
+      setStep('characters');
+      return;
+    }
+    leaveSetup();
+  }, [leaveSetup, step]);
+
+  const goNext = useCallback(() => {
+    setStep('rounds');
+  }, []);
 
   const goDuel = useCallback(
     (p: LocalMatchPreset) => {
@@ -127,126 +176,131 @@ export default function LocalSetupScreen() {
     [activeSlot, setLocalP1Skin, setLocalP2Skin],
   );
 
-  const activeCfg = LOCAL_MATCH_PRESETS[preset];
-  const listHeader = useMemo(
-    () => (
-      <View style={styles.headerBlock}>
-        <Text style={[styles.title, { fontFamily: FONT_RYE }]}>
-          {t('localDuel.selectRounds')}
-        </Text>
-        <Text style={styles.sub}>{t('localDuel.sub')}</Text>
-
-        <Text style={styles.sectionTitle}>{t('localDuel.selectCharacters')}</Text>
-        <Text style={styles.pickHint}>
-          {activeSlot === 'p1' ? t('localDuel.pickingP1') : t('localDuel.pickingP2')}
-        </Text>
-
-        <View style={styles.slotRow}>
-          <SlotPreview
-            label="P1"
-            skin={p1Skin}
-            active={activeSlot === 'p1'}
-            onPress={() => setActiveSlot('p1')}
-          />
-          <SlotPreview
-            label="P2"
-            skin={p2Skin}
-            active={activeSlot === 'p2'}
-            onPress={() => setActiveSlot('p2')}
-          />
-        </View>
-
-        <Text style={styles.sectionTitle}>{t('localDuel.rosterTitle')}</Text>
-      </View>
-    ),
-    [activeSlot, p1Skin, p2Skin, t],
-  );
-
-  const listFooter = useMemo(
-    () => (
-      <View style={styles.footerBlock}>
-        <Text style={styles.presetHint}>
-          {t('localDuel.defaultPreset', {
-            rounds: activeCfg.maxRounds,
-            wins: activeCfg.winsRequired,
-          })}
-        </Text>
-        <View style={styles.row}>
-          {(['bo3', 'bo5', 'bo7'] as const).map((key) => {
-            const cfg = LOCAL_MATCH_PRESETS[key];
-            const active = preset === key;
-            return (
-              <WoodButton
-                key={key}
-                title={t('localDuel.roundButton', {
-                  rounds: cfg.maxRounds,
-                  wins: cfg.winsRequired,
-                })}
-                onPress={() => goDuel(key)}
-                style={[styles.btn, active && styles.btnActive]}
-              />
-            );
-          })}
-        </View>
-      </View>
-    ),
-    [activeCfg.maxRounds, activeCfg.winsRequired, goDuel, preset, t],
-  );
-
   return (
     <>
       <Stack.Screen
         options={{
           headerBackVisible: false,
           headerLeft: () => <MenuBackButton onPress={onBack} />,
+          headerRight:
+            step === 'characters'
+              ? () => <HeaderNextButton label={t('localDuel.next')} onPress={goNext} />
+              : undefined,
         }}
       />
       <MetaScreenShell>
-        <FlatList
-          style={styles.root}
-          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
-          data={SKINS}
-          keyExtractor={(item) => encodeLocalDuelSkin(item)}
-          numColumns={3}
-          ListHeaderComponent={listHeader}
-          ListFooterComponent={listFooter}
-          showsVerticalScrollIndicator={false}
-          columnWrapperStyle={styles.gridRow}
-          renderItem={({ item }) => {
-            const selected =
-              isSameLocalDuelSkin(item, p1Skin) || isSameLocalDuelSkin(item, p2Skin);
-            const selectedForActive =
-              activeSlot === 'p1'
-                ? isSameLocalDuelSkin(item, p1Skin)
-                : isSameLocalDuelSkin(item, p2Skin);
-            return (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ selected: selectedForActive }}
-                onPress={() => pickSkin(item)}
-                style={[
-                  styles.gridCard,
-                  selected && styles.gridCardUsed,
-                  selectedForActive && styles.gridCardActive,
-                ]}
-              >
-                <Text style={styles.cardId}>
-                  {item.kind === 'player' ? 'P' : 'N'}
-                  {String(item.id).padStart(2, '0')}
-                </Text>
-                <View style={styles.gridPortrait}>
-                  <LocalDuelSkinSprite
-                    skin={item}
-                    width={PORTRAIT_W}
-                    height={PORTRAIT_H}
-                    pose="idle"
+        {step === 'characters' ? (
+          <View style={styles.root}>
+            <View style={styles.topFixed}>
+              <Text style={[styles.title, { fontFamily: FONT_RYE }]}>
+                {t('localDuel.selectCharacters')}
+              </Text>
+              <Text style={styles.sub}>{t('localDuel.sub')}</Text>
+              <Text style={styles.pickHint}>
+                {activeSlot === 'p1' ? t('localDuel.pickingP1') : t('localDuel.pickingP2')}
+              </Text>
+              <View style={styles.slotRow}>
+                <SlotPreview
+                  label="P1"
+                  skin={p1Skin}
+                  active={activeSlot === 'p1'}
+                  onPress={() => setActiveSlot('p1')}
+                />
+                <SlotPreview
+                  label="P2"
+                  skin={p2Skin}
+                  active={activeSlot === 'p2'}
+                  onPress={() => setActiveSlot('p2')}
+                />
+              </View>
+              <Text style={styles.rosterTitle}>{t('localDuel.rosterTitle')}</Text>
+            </View>
+
+            <FlatList
+              style={styles.rosterList}
+              contentContainerStyle={[
+                styles.rosterContent,
+                { paddingBottom: insets.bottom + 16 },
+              ]}
+              data={SKINS}
+              keyExtractor={(item) => encodeLocalDuelSkin(item)}
+              numColumns={3}
+              showsVerticalScrollIndicator={false}
+              columnWrapperStyle={styles.gridRow}
+              renderItem={({ item }) => {
+                const selected =
+                  isSameLocalDuelSkin(item, p1Skin) || isSameLocalDuelSkin(item, p2Skin);
+                const selectedForActive =
+                  activeSlot === 'p1'
+                    ? isSameLocalDuelSkin(item, p1Skin)
+                    : isSameLocalDuelSkin(item, p2Skin);
+                return (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: selectedForActive }}
+                    onPress={() => pickSkin(item)}
+                    style={[
+                      styles.gridCard,
+                      selected && styles.gridCardUsed,
+                      selectedForActive && styles.gridCardActive,
+                    ]}
+                  >
+                    <Text style={styles.cardId}>
+                      {item.kind === 'player' ? 'P' : 'N'}
+                      {String(item.id).padStart(2, '0')}
+                    </Text>
+                    <View style={styles.gridPortrait}>
+                      <LocalDuelSkinSprite
+                        skin={item}
+                        width={PORTRAIT_W}
+                        height={PORTRAIT_H}
+                        pose="idle"
+                      />
+                    </View>
+                    <SkinName skin={item} />
+                  </Pressable>
+                );
+              }}
+            />
+          </View>
+        ) : (
+          <View style={[styles.roundsRoot, { paddingBottom: insets.bottom + 24 }]}>
+            <Text style={[styles.title, { fontFamily: FONT_RYE }]}>
+              {t('localDuel.selectRounds')}
+            </Text>
+            <Text style={styles.sub}>{t('localDuel.roundsSub')}</Text>
+
+            <View style={styles.slotRow}>
+              <SlotPreview label="P1" skin={p1Skin} />
+              <SlotPreview label="P2" skin={p2Skin} />
+            </View>
+
+            <Text style={styles.presetHint}>
+              {t('localDuel.defaultPreset', {
+                rounds: LOCAL_MATCH_PRESETS[preset].maxRounds,
+                wins: LOCAL_MATCH_PRESETS[preset].winsRequired,
+              })}
+            </Text>
+
+            <View style={styles.roundButtons}>
+              {(['bo3', 'bo5', 'bo7'] as const).map((key) => {
+                const cfg = LOCAL_MATCH_PRESETS[key];
+                const active = preset === key;
+                return (
+                  <WoodButton
+                    key={key}
+                    title={t('localDuel.roundButton', {
+                      rounds: cfg.maxRounds,
+                      wins: cfg.winsRequired,
+                    })}
+                    onPress={() => goDuel(key)}
+                    style={[styles.roundBtn, active && styles.roundBtnActive]}
                   />
-                </View>
-                <SkinName skin={item} />
-              </Pressable>
-            );
-          }}
-        />
+                );
+              })}
+            </View>
+          </View>
+        )}
       </MetaScreenShell>
     </>
   );
@@ -256,53 +310,89 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  content: {
+  roundsRoot: {
+    flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  headerBlock: {
-    gap: 10,
-    marginBottom: 12,
-  },
-  footerBlock: {
-    marginTop: 18,
+    paddingTop: 8,
     gap: 12,
   },
-  title: {
-    fontSize: 26,
+  topFixed: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
+    gap: 6,
+  },
+  rosterList: {
+    flex: 1,
+  },
+  rosterContent: {
+    paddingHorizontal: 16,
+  },
+  headerNext: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 4,
+  },
+  headerNextText: {
+    fontSize: 16,
+    fontWeight: '800',
     color: colors.ochre,
-    letterSpacing: 2,
+    letterSpacing: 0.5,
+  },
+  title: {
+    fontSize: 22,
+    color: colors.ochre,
+    letterSpacing: 1.5,
   },
   sub: {
     color: colors.cream,
-    opacity: 0.88,
-    fontSize: 14,
-    lineHeight: 21,
-  },
-  sectionTitle: {
-    marginTop: 8,
-    fontSize: 15,
-    fontWeight: '800',
-    color: colors.cream,
+    opacity: 0.8,
+    fontSize: 13,
+    lineHeight: 18,
   },
   pickHint: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.ochre,
     fontWeight: '700',
   },
+  rosterTitle: {
+    marginTop: 4,
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.cream,
+    opacity: 0.9,
+  },
+  presetHint: {
+    marginTop: 4,
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.ochre,
+  },
+  roundButtons: {
+    marginTop: 4,
+    gap: 12,
+  },
+  roundBtn: {
+    alignSelf: 'stretch',
+  },
+  roundBtnActive: {
+    borderColor: colors.ochre,
+  },
   slotRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
+    marginTop: 2,
   },
   slotCard: {
     flex: 1,
-    padding: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: colors.sand,
     backgroundColor: '#3D2414',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   slotCardActive: {
     borderColor: colors.ochre,
@@ -310,13 +400,13 @@ const styles = StyleSheet.create({
   },
   slotLabel: {
     alignSelf: 'flex-start',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
     color: colors.sand,
     letterSpacing: 1,
   },
   slotPortrait: {
-    height: 90,
+    height: 78,
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
@@ -361,19 +451,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     minHeight: 28,
   },
-  presetHint: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.ochre,
-    letterSpacing: 0.3,
-  },
-  row: {
-    gap: 14,
-  },
-  btn: {
-    alignSelf: 'stretch',
-  },
-  btnActive: {
-    borderColor: colors.ochre,
+  cardNameCompact: {
+    minHeight: 16,
+    fontSize: 11,
   },
 });
