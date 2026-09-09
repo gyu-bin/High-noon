@@ -5,6 +5,20 @@ import { getOrCreateDeviceKey } from '@/lib/supabase/deviceKey';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useProgressStore } from '@/store/progressStore';
 
+export type AnalyticsEventName =
+  | 'app_open'
+  | 'game_start'
+  | 'pve_start'
+  | 'pve_clear'
+  | 'pve_fail'
+  | 'daily_start'
+  | 'daily_complete'
+  | 'share_click'
+  | 'challenge_create'
+  | 'challenge_open'
+  | 'challenge_complete'
+  | (string & {});
+
 export type AdminOverview = {
   total_matches: number;
   unique_devices: number;
@@ -13,7 +27,34 @@ export type AdminOverview = {
   cleared_npc_avg: number | null;
   last_7d_matches: number;
   progress_funnel: { npc_id: number; wins: number; matches: number }[];
+  last_7d_events?: number;
+  event_counts_7d?: { event_name: string; count: number }[];
 };
+
+/** Fire-and-forget funnel event. Never throws. */
+export async function recordAppEvent(
+  eventName: AnalyticsEventName,
+  props: Record<string, unknown> = {},
+): Promise<void> {
+  if (!isSupabaseConfigured) return;
+
+  try {
+    const deviceKey = await getOrCreateDeviceKey();
+    const { error } = await getSupabase().rpc('analytics_record_event', {
+      p_device_key: deviceKey,
+      p_event_name: eventName,
+      p_app_version:
+        Constants.nativeAppVersion ?? Constants.expoConfig?.version ?? '',
+      p_platform: Platform.OS,
+      p_props: props,
+    });
+    if (error) {
+      console.warn('[analytics] event failed:', eventName, error.message);
+    }
+  } catch {
+    // never block gameplay
+  }
+}
 
 export async function recordMatchAnalytics(input: {
   npcId: number;
@@ -45,6 +86,12 @@ export async function recordMatchAnalytics(input: {
     if (error) {
       console.warn('[analytics] record failed:', error.message);
     }
+
+    void recordAppEvent(input.won ? 'pve_clear' : 'pve_fail', {
+      npc_id: input.npcId,
+      player_wins: input.playerWins,
+      npc_wins: input.npcWins,
+    });
   } catch {
     // 통계 실패가 게임 플로우를 막지 않게
   }

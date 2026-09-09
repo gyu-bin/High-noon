@@ -375,6 +375,14 @@ export default function RankingHubScreen() {
               <Text style={styles.dailyHint}>{t('ranking.dailyDuelHint')}</Text>
             ) : null}
 
+            <WoodButton
+              title={t('ranking.challengeEnter')}
+              onPress={() => router.push('/ranking/challenge' as Href)}
+              disabled={!isSupabaseConfigured}
+              style={styles.dailyBtn}
+            />
+            <Text style={styles.dailyHint}>{t('ranking.challengeEnterHint')}</Text>
+
             <View style={styles.moreRow}>
               <Pressable
                 accessibilityRole="button"
@@ -500,7 +508,9 @@ export default function RankingHubScreen() {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.modalBody}
             >
-              {extra === 'missions' ? <DailyMissionsCard /> : null}
+              {extra === 'missions' ? (
+                <DailyMissionsCard onClose={() => setExtra(null)} />
+              ) : null}
               {extra === 'season' ? <SeasonBadgesRow compact /> : null}
             </ScrollView>
           </View>

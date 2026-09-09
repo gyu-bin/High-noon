@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import Animated, {
+import {
   Easing,
   cancelAnimation,
   useAnimatedStyle,
@@ -38,12 +38,16 @@ import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
 import { useGhostDuelEngine } from '@/hooks/useGhostDuelEngine';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
-import { pvpSubmitDaily, pvpSubmitMatch } from '@/lib/supabase/pvpApi';
+import { pvpSubmitDaily, pvpSubmitFriendChallenge, pvpSubmitMatch } from '@/lib/supabase/pvpApi';
+import { recordAppEvent } from '@/lib/supabase/analyticsApi';
 import { completeDailyAfterReady } from '@/store/dailyMissionStore';
 import { usePvpStore } from '@/store/pvpStore';
+import { usePvpStatsStore } from '@/store/pvpStatsStore';
 import { useRankingRewardStore } from '@/store/rankingRewardStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import type { PvpMatchResult, PvpRoundRecord } from '@/types/pvp';
+import { utcDateKey } from '@/utils/dailyChallenge';
+import { bestPlayerMs } from '@/utils/reactionStats';
 import { playGunshot } from '@/utils/audioService';
 import { speakDuelCue } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
@@ -71,10 +75,12 @@ export default function RankingDuelScreen() {
   const opponent = usePvpStore((s) => s.opponent);
   const profile = usePvpStore((s) => s.profile);
   const matchMode = usePvpStore((s) => s.matchMode);
+  const friendChallenge = usePvpStore((s) => s.friendChallenge);
   const pushRound = usePvpStore((s) => s.pushRound);
   const setScores = usePvpStore((s) => s.setScores);
   const setLastSubmit = usePvpStore((s) => s.setLastSubmit);
   const setLastDailySubmit = usePvpStore((s) => s.setLastDailySubmit);
+  const setLastFriendSubmit = usePvpStore((s) => s.setLastFriendSubmit);
   const setProfile = usePvpStore((s) => s.setProfile);
 
   const [playerWins, setPlayerWins] = useState(0);
@@ -151,6 +157,20 @@ export default function RankingDuelScreen() {
       router.replace('/ranking' as Href);
     }
   }, [opponent, router]);
+
+  useEffect(() => {
+    if (!opponent) return;
+    if (matchMode === 'daily') {
+      void recordAppEvent('daily_start', {});
+    } else if (matchMode === 'friend') {
+      void recordAppEvent('challenge_open', {
+        code: friendChallenge?.code ?? null,
+        phase: 'duel',
+      });
+    } else {
+      void recordAppEvent('game_start', { mode: 'ranked' });
+    }
+  }, [friendChallenge?.code, matchMode, opponent]);
 
   useEffect(() => {
     if (!opponent) return;
@@ -248,7 +268,10 @@ export default function RankingDuelScreen() {
       setScores(finalPlayerWins, finalOppWins);
       usePvpStore.setState({ rounds: records });
 
-      if (matchMode !== 'daily') {
+      const sessionBest = bestPlayerMs(records);
+      usePvpStatsStore.getState().recordBestReaction(sessionBest);
+
+      if (matchMode === 'ranked') {
         completeDailyAfterReady(
           result === 'win' ? ['rankingPlay', 'rankingWin'] : ['rankingPlay'],
         );
@@ -268,6 +291,32 @@ export default function RankingDuelScreen() {
           });
           setLastDailySubmit(dailySubmit);
           setLastSubmit(null);
+          setLastFriendSubmit(null);
+          if (!dailySubmit.already_completed) {
+            usePvpStatsStore.getState().recordDailyComplete(utcDateKey());
+            void recordAppEvent('daily_complete', {
+              result,
+              avg_ms: dailySubmit.avg_ms,
+            });
+          }
+        } else if (matchMode === 'friend' && friendChallenge) {
+          const friendSubmit = await pvpSubmitFriendChallenge({
+            code: friendChallenge.code,
+            playerRounds,
+            scorePlayer: finalPlayerWins,
+            scoreCreator: finalOppWins,
+            result,
+          });
+          setLastFriendSubmit(friendSubmit);
+          setLastSubmit(null);
+          setLastDailySubmit(null);
+          if (!friendSubmit.already_completed) {
+            void recordAppEvent('challenge_complete', {
+              code: friendChallenge.code,
+              result,
+              avg_ms: friendSubmit.avg_ms,
+            });
+          }
         } else {
           const submit = await pvpSubmitMatch({
             opponentId: opponent.id,
@@ -282,6 +331,7 @@ export default function RankingDuelScreen() {
           });
           setLastSubmit(submit);
           setLastDailySubmit(null);
+          setLastFriendSubmit(null);
           useRankingRewardStore.getState().recordSeasonPeak(submit.rank_tier);
           if (profile) {
             setProfile({
@@ -297,17 +347,20 @@ export default function RankingDuelScreen() {
         console.warn('[pvp] submit failed', e);
         setLastSubmit(null);
         setLastDailySubmit(null);
+        setLastFriendSubmit(null);
       }
 
       setSubmitting(false);
       router.replace('/ranking/result' as Href);
     },
     [
+      friendChallenge,
       matchMode,
       opponent,
       profile,
       router,
       setLastDailySubmit,
+      setLastFriendSubmit,
       setLastSubmit,
       setProfile,
       setScores,

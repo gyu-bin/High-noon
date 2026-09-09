@@ -3,6 +3,9 @@ import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import type {
   DailyChallenge,
   DailySubmitResult,
+  FriendChallenge,
+  FriendChallengeCreated,
+  FriendChallengeSubmitResult,
   PvpLeaderboardResult,
   PvpMatchmakeResult,
   PvpMatchResult,
@@ -14,6 +17,7 @@ import {
   submitLocalDaily,
   type DailyChallengePayload,
 } from '@/utils/dailyChallenge';
+import { normalizeChallengeCode } from '@/utils/challengeLink';
 
 async function requireDeviceKey(): Promise<string> {
   if (!isSupabaseConfigured) throw new Error('supabase_not_configured');
@@ -30,6 +34,15 @@ function normalizeDaily(data: DailyChallengePayload | DailyChallenge): DailyChal
   return {
     ...data,
     sample_ms: [Number(samples[0]), Number(samples[1]), Number(samples[2])],
+  };
+}
+
+function normalizeFriendChallenge(
+  raw: FriendChallenge & { sample_ms: unknown },
+): FriendChallenge {
+  return {
+    ...raw,
+    sample_ms: parseDailySamples(raw.sample_ms),
   };
 }
 
@@ -218,4 +231,61 @@ export async function pvpMarkDailyShared(): Promise<void> {
   if (error && !error.message?.includes('pvp_mark_daily_shared')) {
     throw error;
   }
+}
+
+export async function pvpCreateFriendChallenge(input: {
+  sampleMs: [number, number, number];
+  scoreCreator: number;
+  creatorAvgMs: number | null;
+  creatorBestMs: number | null;
+  characterId: number;
+  cosmeticNpcId?: number | null;
+}): Promise<FriendChallengeCreated> {
+  const key = await requireDeviceKey();
+  const { data, error } = await getSupabase().rpc('pvp_create_friend_challenge', {
+    p_device_key: key,
+    p_sample_ms: input.sampleMs,
+    p_score_creator: input.scoreCreator,
+    p_creator_avg_ms: input.creatorAvgMs,
+    p_creator_best_ms: input.creatorBestMs,
+    p_character_id: input.characterId,
+    p_cosmetic_npc_id: input.cosmeticNpcId ?? null,
+  });
+  if (error) throw error;
+  const raw = data as FriendChallengeCreated & { sample_ms: unknown };
+  return {
+    ...raw,
+    sample_ms: parseDailySamples(raw.sample_ms),
+  };
+}
+
+export async function pvpGetFriendChallenge(code: string): Promise<FriendChallenge> {
+  const key = await requireDeviceKey();
+  const normalized = normalizeChallengeCode(code);
+  const { data, error } = await getSupabase().rpc('pvp_get_friend_challenge', {
+    p_device_key: key,
+    p_code: normalized,
+  });
+  if (error) throw error;
+  return normalizeFriendChallenge(data as FriendChallenge & { sample_ms: unknown });
+}
+
+export async function pvpSubmitFriendChallenge(input: {
+  code: string;
+  playerRounds: (number | null)[];
+  scorePlayer: number;
+  scoreCreator: number;
+  result: PvpMatchResult;
+}): Promise<FriendChallengeSubmitResult> {
+  const key = await requireDeviceKey();
+  const { data, error } = await getSupabase().rpc('pvp_submit_friend_challenge', {
+    p_device_key: key,
+    p_code: normalizeChallengeCode(input.code),
+    p_player_rounds: input.playerRounds,
+    p_score_player: input.scorePlayer,
+    p_score_creator: input.scoreCreator,
+    p_result: input.result,
+  });
+  if (error) throw error;
+  return data as FriendChallengeSubmitResult;
 }

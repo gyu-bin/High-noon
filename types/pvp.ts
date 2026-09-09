@@ -34,7 +34,7 @@ export type PvpMatchmakeResult = {
 
 export type PvpMatchResult = 'win' | 'loss' | 'draw';
 
-export type PvpMatchMode = 'ranked' | 'daily';
+export type PvpMatchMode = 'ranked' | 'daily' | 'friend';
 
 export type DailyChallenge = {
   challenge_date: string;
@@ -61,6 +61,55 @@ export type DailySubmitResult = {
   avg_ms: number | null;
   shared: boolean;
   badge: string;
+};
+
+export type FriendChallenge = {
+  id: string;
+  code: string;
+  creator_id?: string;
+  creator_name: string;
+  sample_ms: [number, number, number];
+  character_id: number;
+  cosmetic_npc_id: number | null;
+  creator_avg_ms: number | null;
+  creator_best_ms: number | null;
+  score_creator: number;
+  expires_at: string;
+  is_creator?: boolean;
+  completed?: boolean;
+  completion?: {
+    score_player: number;
+    score_creator: number;
+    result: PvpMatchResult;
+    avg_ms: number | null;
+    best_ms: number | null;
+  } | null;
+};
+
+export type FriendChallengeCreated = {
+  id: string;
+  code: string;
+  creator_name: string;
+  sample_ms: [number, number, number];
+  character_id: number;
+  cosmetic_npc_id: number | null;
+  creator_avg_ms: number | null;
+  creator_best_ms: number | null;
+  score_creator: number;
+  expires_at: string;
+};
+
+export type FriendChallengeSubmitResult = {
+  already_completed: boolean;
+  code: string;
+  result: PvpMatchResult;
+  score_player: number;
+  score_creator: number;
+  avg_ms: number | null;
+  best_ms: number | null;
+  creator_name: string;
+  creator_avg_ms: number | null;
+  creator_best_ms: number | null;
 };
 
 export type PvpRoundRecord = {

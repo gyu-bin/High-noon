@@ -52,7 +52,7 @@ import { useScreenBgm } from '@/hooks/useScreenBgm';
 import {
   usePhoneStageMetrics,
 } from '@/hooks/usePhoneStageMetrics';
-import { useDailyMissionStore, whenDailyMissionsReady } from '@/store/dailyMissionStore';
+import { useDailyMissionStore } from '@/store/dailyMissionStore';
 import { useGameStore } from '@/store/gameStore';
 import { selectPaleRiderUnlocked, useProgressStore } from '@/store/progressStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -65,7 +65,7 @@ import {
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
 import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
 import { AdReviveModal } from '@/components/game/AdReviveModal';
-import { recordMatchAnalytics } from '@/lib/supabase/analyticsApi';
+import { recordMatchAnalytics, recordAppEvent } from '@/lib/supabase/analyticsApi';
 import { preloadInterstitial, preloadRewardedAd, showRewardedAd, showStageCompleteAd } from '@/utils/adService';
 import { play, playGunshot } from '@/utils/audioService';
 import { rememberNpcMatchResult } from '@/utils/npcMatchResult';
@@ -181,10 +181,6 @@ export default function NpcGameScreen() {
   const duelBgmTrack = npc?.bossFlag ? ('boss' as const) : ('duel' as const);
   useScreenBgm(npc ? duelBgmTrack : null, true);
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
-  const [dailyReady, setDailyReady] = useState(false);
-  useEffect(() => {
-    return whenDailyMissionsReady(() => setDailyReady(true));
-  }, []);
 
   const currentRound = useGameStore((s) => s.currentRound);
   const playerScore = useGameStore((s) => s.playerScore);
@@ -478,23 +474,21 @@ export default function NpcGameScreen() {
           resetDuel();
         };
       }
-      if (fromDaily && !dailyReady) {
-        return undefined;
-      }
-      const dailyBossOk =
-        fromDaily &&
-        npc != null &&
-        Number.isFinite(npcId) &&
-        npcId !== 22;
-      if (dailyBossOk) {
+      // fromDaily는 미션 카드에서 이미 고른 npcId를 신뢰한다.
+      // dailyReady 대기만 하다 포커스가 끊기면 결투가 "멈춘 것처럼" 보인다.
+      if (fromDaily) {
         useDailyMissionStore.getState().ensureToday(highestUnlocked);
       }
       const isTodayBoss =
-        dailyBossOk &&
+        fromDaily &&
+        npc != null &&
+        Number.isFinite(npcId) &&
+        npcId !== 22 &&
         useDailyMissionStore.getState().todayBossNpcId === npcId;
       const canAccess =
         DEV_UNLOCK_ALL_NPCS ||
         isTodayBoss ||
+        (fromDaily && npc != null && Number.isFinite(npcId) && npcId >= 1) ||
         (npc &&
           Number.isFinite(npcId) &&
           npcId >= 1 &&
@@ -517,6 +511,8 @@ export default function NpcGameScreen() {
           setChaosBanner(null);
         }
         startMatch({ mode: 'npc', playerHearts: HEARTS, opponentHearts: HEARTS });
+        void recordAppEvent('game_start', { mode: 'pve', npc_id: npc.id });
+        void recordAppEvent('pve_start', { npc_id: npc.id, from_daily: fromDaily });
         playerStreakRef.current = 0;
         prevBangDelayRef.current = null;
         mirrorAdaptiveMsRef.current = npc.reactionMs;
@@ -541,7 +537,6 @@ export default function NpcGameScreen() {
       npcId,
       highestUnlocked,
       fromDaily,
-      dailyReady,
       router,
       startMatch,
       resetDuel,

@@ -7,10 +7,6 @@ import { useTranslation } from 'react-i18next';
 import { FONT_RYE } from '@/constants/fonts';
 import { colors } from '@/constants/theme';
 import {
-  META_PANEL_BG,
-  META_PANEL_BORDER,
-} from '@/constants/westernBackground';
-import {
   useDailyMissionStore,
   whenDailyMissionsReady,
 } from '@/store/dailyMissionStore';
@@ -35,7 +31,12 @@ function MissionRow({ done, label }: RowProps) {
   );
 }
 
-export function DailyMissionsCard() {
+type Props = {
+  /** 모달 안에서 쓸 때 — 결투 진입 전 시트를 닫는다 */
+  onClose?: () => void;
+};
+
+export function DailyMissionsCard({ onClose }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const ensureToday = useDailyMissionStore((s) => s.ensureToday);
@@ -53,11 +54,15 @@ export function DailyMissionsCard() {
   }, [ensureToday]);
 
   const onFight = useCallback(() => {
-    router.push({
-      pathname: '/game/npc',
-      params: { npcId: String(todayBossNpcId), fromDaily: '1' },
-    } as Href);
-  }, [router, todayBossNpcId]);
+    // Modal이 열린 채 push하면 네이티브 오버레이가 결투 화면을 가려 "멈춘 것처럼" 보인다
+    onClose?.();
+    requestAnimationFrame(() => {
+      router.push({
+        pathname: '/game/npc',
+        params: { npcId: String(todayBossNpcId), fromDaily: '1' },
+      } as Href);
+    });
+  }, [onClose, router, todayBossNpcId]);
 
   if (!ready) return null;
 
@@ -65,13 +70,10 @@ export function DailyMissionsCard() {
   const allDone = rankingPlay && rankingWin && todayBoss;
 
   return (
-    <View style={styles.card}>
-      <Text style={[styles.head, { fontFamily: FONT_RYE }]}>
-        {t('ranking.dailyTitle')}
-      </Text>
+    <View style={styles.root}>
       <Text style={styles.sub}>{t('ranking.dailySub')}</Text>
 
-      <View style={styles.bossBox}>
+      <View style={styles.bossSection}>
         <View style={styles.bossTop}>
           <Ionicons name="skull" size={18} color={colors.cream} />
           <Text style={styles.bossLabel}>{t('ranking.todayBoss')}</Text>
@@ -92,18 +94,15 @@ export function DailyMissionsCard() {
         </Pressable>
       </View>
 
-      <MissionRow
-        done={rankingPlay}
-        label={t('ranking.missionPlay')}
-      />
-      <MissionRow
-        done={rankingWin}
-        label={t('ranking.missionWin')}
-      />
-      <MissionRow
-        done={todayBoss}
-        label={t('ranking.missionBoss', { name: bossName })}
-      />
+      <View style={styles.list}>
+        <MissionRow done={rankingPlay} label={t('ranking.missionPlay')} />
+        <MissionRow done={rankingWin} label={t('ranking.missionWin')} />
+        <MissionRow
+          done={todayBoss}
+          label={t('ranking.missionBoss', { name: bossName })}
+        />
+      </View>
+
       {allDone ? (
         <Text style={styles.allDone}>{t('ranking.dailyAllDone')}</Text>
       ) : null}
@@ -112,33 +111,17 @@ export function DailyMissionsCard() {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: META_PANEL_BG,
-    borderWidth: 1,
-    borderColor: META_PANEL_BORDER,
-    gap: 8,
-    marginBottom: 4,
-  },
-  head: {
-    color: colors.gold,
-    fontSize: 18,
-    letterSpacing: 1,
+  root: {
+    gap: 12,
   },
   sub: {
     color: colors.sand,
     fontSize: 12,
-    marginBottom: 4,
+    lineHeight: 18,
   },
-  bossBox: {
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(232, 197, 71, 0.35)',
-    backgroundColor: 'rgba(12, 6, 4, 0.28)',
+  bossSection: {
     gap: 6,
-    marginBottom: 4,
+    paddingTop: 2,
   },
   bossTop: {
     flexDirection: 'row',
@@ -153,14 +136,14 @@ const styles = StyleSheet.create({
   },
   bossName: {
     color: colors.cream,
-    fontSize: 20,
+    fontSize: 22,
     letterSpacing: 0.6,
   },
   fightBtn: {
     alignSelf: 'flex-start',
-    marginTop: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    marginTop: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderRadius: 8,
     backgroundColor: '#4A2E18',
     borderWidth: 2,
@@ -171,6 +154,10 @@ const styles = StyleSheet.create({
     color: colors.ochre,
     fontSize: 14,
     fontWeight: '700',
+  },
+  list: {
+    gap: 10,
+    paddingTop: 4,
   },
   row: {
     flexDirection: 'row',
@@ -187,7 +174,6 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
   },
   allDone: {
-    marginTop: 4,
     color: colors.gold,
     fontSize: 12,
     fontWeight: '800',

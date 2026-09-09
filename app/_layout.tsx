@@ -3,7 +3,7 @@ import 'react-native-gesture-handler';
 import i18n, { changeLanguage, i18nInitPromise, languageFromCaptureUrl } from '@/locales';
 
 import { Rye_400Regular, useFonts } from '@expo-google-fonts/rye';
-import { Stack, usePathname, type ErrorBoundaryProps } from 'expo-router';
+import { Stack, usePathname, useRouter, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
@@ -27,6 +27,7 @@ import {
   startProgressAutoBackup,
 } from '@/utils/progressAutoBackup';
 import { useSettingsStore } from '@/store/settingsStore';
+import { usePvpStatsStore } from '@/store/pvpStatsStore';
 import { colors } from '@/constants/theme';
 import { useAutoScreenshotTour } from '@/hooks/useAutoScreenshotTour';
 import { checkUnlockConditions } from '@/utils/characterAbility';
@@ -40,6 +41,8 @@ import { consumeOtaJustApplied } from '@/utils/otaUpdateFlag';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
 import { isStoreUpdateRequired } from '@/utils/storeUpdate';
 import { initPurchasesOnBoot } from '@/utils/purchaseService';
+import { recordAppEvent } from '@/lib/supabase/analyticsApi';
+import { challengeCodeFromUrl } from '@/utils/challengeLink';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -121,6 +124,7 @@ export default function RootLayout() {
 function RootLayoutContent() {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const router = useRouter();
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
 
@@ -150,20 +154,36 @@ function RootLayoutContent() {
     changeLanguage(language);
   }, [language]);
 
-  /** 캡처 딥링크 `?lang=en|ja|ko` — persist 복구 뒤에 앱 번역을 켠다. */
+  /** 캡처 딥링크 `?lang=` + 친구 Challenge `?code=` / path */
   useEffect(() => {
     if (!appReady) return;
 
     const apply = (url: string | null) => {
       const lang = languageFromCaptureUrl(url);
-      if (!lang) return;
-      useSettingsStore.getState().setLanguage(lang);
-      changeLanguage(lang);
+      if (lang) {
+        useSettingsStore.getState().setLanguage(lang);
+        changeLanguage(lang);
+      }
+
+      const code = challengeCodeFromUrl(url);
+      if (!code) return;
+      // 결투 중에는 딥링크로 화면을 빼앗지 않는다
+      if (isInGameRoute(pathnameRef.current)) return;
+      if (pathnameRef.current.includes('/ranking/duel')) return;
+      router.push({
+        pathname: '/ranking/challenge',
+        params: { code },
+      } as never);
     };
 
     void Linking.getInitialURL().then(apply);
     const sub = Linking.addEventListener('url', ({ url }) => apply(url));
     return () => sub.remove();
+  }, [appReady, router]);
+
+  useEffect(() => {
+    if (!appReady) return;
+    void recordAppEvent('app_open', {});
   }, [appReady]);
 
   useEffect(() => {
@@ -220,6 +240,7 @@ function RootLayoutContent() {
         await Promise.all([
           waitPersistHydrated(useProgressStore.persist),
           waitPersistHydrated(useSettingsStore.persist),
+          waitPersistHydrated(usePvpStatsStore.persist),
         ]);
         if (cancelled) return;
 

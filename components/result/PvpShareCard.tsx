@@ -17,10 +17,14 @@ type Props = {
   playerWins: number;
   opponentWins: number;
   avgMs: number | null;
+  bestMs?: number | null;
+  streak?: number | null;
   won: boolean;
   draw: boolean;
   title: string;
   avgLabel: string;
+  bestLabel?: string;
+  streakLabel?: string;
   dailyBadge?: string | null;
   seasonBadge?: string | null;
   cosmeticLabel?: string | null;
@@ -34,10 +38,14 @@ export function PvpShareCard({
   playerWins,
   opponentWins,
   avgMs,
+  bestMs,
+  streak,
   won,
   draw,
   title,
   avgLabel,
+  bestLabel,
+  streakLabel,
   dailyBadge,
   seasonBadge,
   cosmeticLabel,
@@ -62,6 +70,21 @@ export function PvpShareCard({
         <Text style={styles.avgUnit}> ms</Text>
       </Text>
       <Text style={styles.avgCaption}>{avgLabel}</Text>
+
+      {(bestMs != null || (streak != null && streak > 0)) && (
+        <View style={styles.statRow}>
+          {bestMs != null ? (
+            <Text style={styles.statChip}>
+              {bestLabel ?? 'BEST'} {formatReactionMs(bestMs)}ms
+            </Text>
+          ) : null}
+          {streak != null && streak > 0 ? (
+            <Text style={styles.statChip}>
+              {streakLabel ?? 'STREAK'} {streak}
+            </Text>
+          ) : null}
+        </View>
+      )}
 
       <Text style={styles.score}>
         {playerWins} — {opponentWins}
@@ -164,6 +187,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 1,
     marginBottom: 4,
+  },
+  statRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  statChip: {
+    color: colors.gold,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   score: {
     color: colors.gold,
