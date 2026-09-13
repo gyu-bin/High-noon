@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { AppErrorBoundary } from '@/components/ui/AppErrorBoundary';
 import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
 import { StoreUpdateModal } from '@/components/ui/StoreUpdateModal';
+import { AnimatedSplash } from '@/components/splash/AnimatedSplash';
 import { useProgressStore } from '@/store/progressStore';
 import {
   restoreProgressIfEmpty,
@@ -131,6 +132,8 @@ function RootLayoutContent() {
 
   const ready = fontsLoaded || fontError != null;
   const [appReady, setAppReady] = useState(false);
+  // JS 런타임의 첫 cold launch에서만 mount된다. resume 때는 RootLayout이 유지된다.
+  const [animatedSplashVisible, setAnimatedSplashVisible] = useState(true);
   const [otaToastVisible, setOtaToastVisible] = useState(false);
   const [storeUpdateVisible, setStoreUpdateVisible] = useState(false);
 
@@ -138,6 +141,7 @@ function RootLayoutContent() {
 
   const hideOtaToast = useCallback(() => setOtaToastVisible(false), []);
   const dismissStoreUpdate = useCallback(() => setStoreUpdateVisible(false), []);
+  const dismissAnimatedSplash = useCallback(() => setAnimatedSplashVisible(false), []);
 
   useEffect(() => {
     if (!appReady) return;
@@ -300,6 +304,7 @@ function RootLayoutContent() {
       </Stack>
       <OtaUpdatedToast visible={otaToastVisible} onHidden={hideOtaToast} />
       <StoreUpdateModal visible={storeUpdateVisible} onDismiss={dismissStoreUpdate} />
+      {animatedSplashVisible ? <AnimatedSplash onComplete={dismissAnimatedSplash} /> : null}
     </SafeAreaProvider>
   );
 }

@@ -15,7 +15,7 @@
       "fallbackToCacheTimeout": 0
     },
     "splash": {
-      "image": "./assets/images/image/title_hero_menu.png",
+      "image": "./assets/branding/splash-high-noon.png",
       "resizeMode": "cover",
       "backgroundColor": "#1A0C06"
     },
@@ -53,7 +53,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/image/title_hero_menu.png",
+          "image": "./assets/branding/splash-high-noon.png",
           "resizeMode": "cover",
           "backgroundColor": "#1A0C06",
           "android": {
