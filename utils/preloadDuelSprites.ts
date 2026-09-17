@@ -2,6 +2,8 @@ import { Image } from 'expo-image';
 import { Image as RNImage, type ImageSourcePropType } from 'react-native';
 
 import type { LocalDuelSkin } from '@/constants/localDuelSkin';
+import { getV3NpcDuelPreloadSources } from '@/constants/v3DuelAssets';
+import type { NpcTier } from '@/types/npc';
 import {
   getNpcDownSource,
   getNpcShootFrames,
@@ -39,6 +41,31 @@ export async function prefetchDuelSprites(
   await prefetchLocalDuelSprites(
     { kind: 'npc', id: npcId },
     { kind: 'player', id: characterId },
+  );
+}
+
+/**
+ * NPC 1P duel's approved V3 presentation assets. This is deliberately
+ * separate from `prefetchDuelSprites`, which also supports the unchanged
+ * local-duel sprite system.
+ */
+export async function prefetchNpcDuelPresentation(
+  npcId: number,
+  tier: NpcTier,
+  dayNight: 'day' | 'night',
+): Promise<void> {
+  const seen = new Set<string>();
+  const uris = getV3NpcDuelPreloadSources(tier, npcId, dayNight)
+    .map(assetUri)
+    .filter((uri): uri is string => uri != null)
+    .filter((uri) => {
+      if (seen.has(uri)) return false;
+      seen.add(uri);
+      return true;
+    });
+
+  await Promise.all(
+    uris.map((uri) => Image.prefetch(uri, { cachePolicy: 'memory-disk' }).catch(() => false)),
   );
 }
 

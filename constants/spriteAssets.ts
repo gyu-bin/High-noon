@@ -1,268 +1,28 @@
 import type { ImageSourcePropType } from 'react-native';
+import { CLARITY_NPCS, CLARITY_PLAYERS, type ClarityPoseSet } from './clarityCharacterAssets';
+import type { SpritePose } from './sprites';
 
-import type { SpritePose } from '@/constants/sprites';
-
-type PoseMap = Partial<Record<SpritePose, ImageSourcePropType>>;
-type ShootSeq = ImageSourcePropType[];
-
-const NPC_SPRITES: Partial<Record<number, PoseMap>> = {
-  1: {
-    aim: require('@/assets/sprites/npc/npc_01_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_01_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_01_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_01_shoot.png'),
-  },
-  2: {
-    aim: require('@/assets/sprites/npc/npc_02_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_02_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_02_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_02_shoot.png'),
-  },
-  3: {
-    aim: require('@/assets/sprites/npc/npc_03_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_03_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_03_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_03_shoot.png'),
-  },
-  4: {
-    aim: require('@/assets/sprites/npc/npc_04_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_04_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_04_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_04_shoot.png'),
-  },
-  5: {
-    aim: require('@/assets/sprites/npc/npc_05_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_05_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_05_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_05_shoot.png'),
-  },
-  6: {
-    aim: require('@/assets/sprites/npc/npc_06_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_06_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_06_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_06_shoot.png'),
-  },
-  7: {
-    aim: require('@/assets/sprites/npc/npc_07_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_07_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_07_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_07_shoot.png'),
-  },
-  8: {
-    aim: require('@/assets/sprites/npc/npc_08_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_08_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_08_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_08_shoot.png'),
-  },
-  9: {
-    aim: require('@/assets/sprites/npc/npc_09_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_09_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_09_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_09_shoot.png'),
-  },
-  10: {
-    aim: require('@/assets/sprites/npc/npc_10_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_10_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_10_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_10_shoot.png'),
-  },
-  11: {
-    aim: require('@/assets/sprites/npc/npc_11_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_11_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_11_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_11_shoot.png'),
-  },
-  12: {
-    aim: require('@/assets/sprites/npc/npc_12_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_12_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_12_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_12_shoot.png'),
-  },
-  13: {
-    aim: require('@/assets/sprites/npc/npc_13_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_13_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_13_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_13_shoot.png'),
-  },
-  14: {
-    aim: require('@/assets/sprites/npc/npc_14_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_14_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_14_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_14_shoot.png'),
-  },
-  15: {
-    aim: require('@/assets/sprites/npc/npc_15_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_15_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_15_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_15_shoot.png'),
-  },
-  16: {
-    aim: require('@/assets/sprites/npc/npc_16_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_16_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_16_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_16_shoot.png'),
-  },
-  17: {
-    aim: require('@/assets/sprites/npc/npc_17_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_17_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_17_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_17_shoot.png'),
-  },
-  18: {
-    aim: require('@/assets/sprites/npc/npc_18_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_18_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_18_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_18_shoot.png'),
-  },
-  19: {
-    aim: require('@/assets/sprites/npc/npc_19_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_19_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_19_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_19_shoot.png'),
-  },
-  20: {
-    aim: require('@/assets/sprites/npc/npc_20_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_20_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_20_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_20_shoot.png'),
-  },
-  21: {
-    aim: require('@/assets/sprites/npc/npc_21_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_21_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_21_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_21_shoot.png'),
-  },
-  22: {
-    aim: require('@/assets/sprites/npc/npc_22_aim.png'),
-    defeat: require('@/assets/sprites/npc/npc_22_defeat.png'),
-    idle: require('@/assets/sprites/npc/npc_22_idle.png'),
-    shoot: require('@/assets/sprites/npc/npc_22_shoot.png'),
-  },
-};
-
-const PLAYER_SPRITES: Partial<Record<number, PoseMap>> = {
-  1: {
-    aim: require('@/assets/sprites/player/player_01_aim.png'),
-    defeat: require('@/assets/sprites/player/player_01_defeat.png'),
-    idle: require('@/assets/sprites/player/player_01_idle.png'),
-    shoot: require('@/assets/sprites/player/player_01_shoot.png'),
-  },
-  2: {
-    aim: require('@/assets/sprites/player/player_02_aim.png'),
-    defeat: require('@/assets/sprites/player/player_02_defeat.png'),
-    idle: require('@/assets/sprites/player/player_02_idle.png'),
-    shoot: require('@/assets/sprites/player/player_02_shoot.png'),
-  },
-  3: {
-    aim: require('@/assets/sprites/player/player_03_aim.png'),
-    defeat: require('@/assets/sprites/player/player_03_defeat.png'),
-    idle: require('@/assets/sprites/player/player_03_idle.png'),
-    shoot: require('@/assets/sprites/player/player_03_shoot.png'),
-  },
-  4: {
-    aim: require('@/assets/sprites/player/player_04_aim.png'),
-    defeat: require('@/assets/sprites/player/player_04_defeat.png'),
-    idle: require('@/assets/sprites/player/player_04_idle.png'),
-    shoot: require('@/assets/sprites/player/player_04_shoot.png'),
-  },
-};
-
-const NPC_SHOOT_FRAMES: Partial<Record<number, ShootSeq>> = {
-  1: [require('@/assets/sprites/npc/npc_01_shoot_00.png'), require('@/assets/sprites/npc/npc_01_shoot_01.png')],
-  2: [require('@/assets/sprites/npc/npc_02_shoot_00.png'), require('@/assets/sprites/npc/npc_02_shoot_01.png')],
-  3: [require('@/assets/sprites/npc/npc_03_shoot_00.png'), require('@/assets/sprites/npc/npc_03_shoot_01.png')],
-  4: [require('@/assets/sprites/npc/npc_04_shoot_00.png'), require('@/assets/sprites/npc/npc_04_shoot_01.png')],
-  5: [require('@/assets/sprites/npc/npc_05_shoot_00.png'), require('@/assets/sprites/npc/npc_05_shoot_01.png')],
-  6: [require('@/assets/sprites/npc/npc_06_shoot_00.png'), require('@/assets/sprites/npc/npc_06_shoot_01.png')],
-  7: [require('@/assets/sprites/npc/npc_07_shoot_00.png'), require('@/assets/sprites/npc/npc_07_shoot_01.png')],
-  8: [require('@/assets/sprites/npc/npc_08_shoot_00.png'), require('@/assets/sprites/npc/npc_08_shoot_01.png')],
-  9: [require('@/assets/sprites/npc/npc_09_shoot_00.png'), require('@/assets/sprites/npc/npc_09_shoot_01.png')],
-  10: [require('@/assets/sprites/npc/npc_10_shoot_00.png'), require('@/assets/sprites/npc/npc_10_shoot_01.png')],
-  11: [require('@/assets/sprites/npc/npc_11_shoot_00.png'), require('@/assets/sprites/npc/npc_11_shoot_01.png')],
-  12: [require('@/assets/sprites/npc/npc_12_shoot_00.png'), require('@/assets/sprites/npc/npc_12_shoot_01.png')],
-  13: [require('@/assets/sprites/npc/npc_13_shoot_00.png'), require('@/assets/sprites/npc/npc_13_shoot_01.png')],
-  14: [require('@/assets/sprites/npc/npc_14_shoot_00.png'), require('@/assets/sprites/npc/npc_14_shoot_01.png')],
-  15: [require('@/assets/sprites/npc/npc_15_shoot_00.png'), require('@/assets/sprites/npc/npc_15_shoot_01.png')],
-  16: [require('@/assets/sprites/npc/npc_16_shoot_00.png'), require('@/assets/sprites/npc/npc_16_shoot_01.png')],
-  17: [require('@/assets/sprites/npc/npc_17_shoot_00.png'), require('@/assets/sprites/npc/npc_17_shoot_01.png')],
-  18: [require('@/assets/sprites/npc/npc_18_shoot_00.png'), require('@/assets/sprites/npc/npc_18_shoot_01.png')],
-  19: [require('@/assets/sprites/npc/npc_19_shoot_00.png'), require('@/assets/sprites/npc/npc_19_shoot_01.png')],
-  20: [require('@/assets/sprites/npc/npc_20_shoot_00.png'), require('@/assets/sprites/npc/npc_20_shoot_01.png')],
-  21: [require('@/assets/sprites/npc/npc_21_shoot_00.png'), require('@/assets/sprites/npc/npc_21_shoot_01.png')],
-  22: [require('@/assets/sprites/npc/npc_22_shoot_00.png'), require('@/assets/sprites/npc/npc_22_shoot_01.png')],
-};
-
-const PLAYER_SHOOT_FRAMES: Partial<Record<number, ShootSeq>> = {
-  1: [require('@/assets/sprites/player/player_01_shoot_00.png'), require('@/assets/sprites/player/player_01_shoot_01.png')],
-  2: [require('@/assets/sprites/player/player_02_shoot_00.png'), require('@/assets/sprites/player/player_02_shoot_01.png')],
-  3: [require('@/assets/sprites/player/player_03_shoot_00.png'), require('@/assets/sprites/player/player_03_shoot_01.png')],
-  4: [require('@/assets/sprites/player/player_04_shoot_00.png'), require('@/assets/sprites/player/player_04_shoot_01.png')],
-};
-
-/** defeat(휘청) 뒤에 이어지는 바닥에 누운 프레임 — scripts/make_down_sprites.py */
-const NPC_DOWN_SPRITES: Partial<Record<number, ImageSourcePropType>> = {
-  1: require('@/assets/sprites/npc/npc_01_down.png'),
-  2: require('@/assets/sprites/npc/npc_02_down.png'),
-  3: require('@/assets/sprites/npc/npc_03_down.png'),
-  4: require('@/assets/sprites/npc/npc_04_down.png'),
-  5: require('@/assets/sprites/npc/npc_05_down.png'),
-  6: require('@/assets/sprites/npc/npc_06_down.png'),
-  7: require('@/assets/sprites/npc/npc_07_down.png'),
-  8: require('@/assets/sprites/npc/npc_08_down.png'),
-  9: require('@/assets/sprites/npc/npc_09_down.png'),
-  10: require('@/assets/sprites/npc/npc_10_down.png'),
-  11: require('@/assets/sprites/npc/npc_11_down.png'),
-  12: require('@/assets/sprites/npc/npc_12_down.png'),
-  13: require('@/assets/sprites/npc/npc_13_down.png'),
-  14: require('@/assets/sprites/npc/npc_14_down.png'),
-  15: require('@/assets/sprites/npc/npc_15_down.png'),
-  16: require('@/assets/sprites/npc/npc_16_down.png'),
-  17: require('@/assets/sprites/npc/npc_17_down.png'),
-  18: require('@/assets/sprites/npc/npc_18_down.png'),
-  19: require('@/assets/sprites/npc/npc_19_down.png'),
-  20: require('@/assets/sprites/npc/npc_20_down.png'),
-  21: require('@/assets/sprites/npc/npc_21_down.png'),
-  22: require('@/assets/sprites/npc/npc_22_down.png'),
-};
-
-function pickPose(map: Partial<Record<number, PoseMap>>, id: number, pose: SpritePose) {
-  const entry = map[id];
-  if (!entry) return undefined;
-  return entry[pose] ?? entry.idle;
+type ShootSeq = readonly [ImageSourcePropType, ImageSourcePropType];
+function claritySource(set: ClarityPoseSet | undefined, pose: SpritePose): ImageSourcePropType | undefined {
+  if (!set) return undefined;
+  if (pose === 'aim') return set.draw;
+  if (pose === 'shoot') return set.fire;
+  if (pose === 'defeat') return set.hit;
+  return set.idle;
 }
-
-export function getNpcSpriteSource(npcId: number, pose: SpritePose) {
-  return pickPose(NPC_SPRITES, npcId, pose);
+// One production registry for selection, NPC duel and local duel.
+// Legacy files remain on disk, but are no longer bundled as unused fallbacks.
+export function getNpcSpriteSource(id: number, pose: SpritePose) {
+  return claritySource(CLARITY_NPCS[id], pose);
 }
-
-export function getPlayerSpriteSource(characterId: number, pose: SpritePose) {
-  return pickPose(PLAYER_SPRITES, characterId, pose);
+export function getPlayerSpriteSource(id: number, pose: SpritePose) {
+  return claritySource(CLARITY_PLAYERS[id], pose);
 }
-
-/** defeat(휘청) 뒤에 이어지는 바닥에 누운 프레임 — scripts/make_down_sprites.py */
-const PLAYER_DOWN_SPRITES: Partial<Record<number, ImageSourcePropType>> = {
-  1: require('@/assets/sprites/player/player_01_down.png'),
-  2: require('@/assets/sprites/player/player_02_down.png'),
-  3: require('@/assets/sprites/player/player_03_down.png'),
-  4: require('@/assets/sprites/player/player_04_down.png'),
-};
-
-export function getNpcDownSource(npcId: number): ImageSourcePropType | undefined {
-  return NPC_DOWN_SPRITES[npcId];
+export function getNpcDownSource(id: number): ImageSourcePropType | undefined {
+  return CLARITY_NPCS[id]?.down;
 }
-
-export function getPlayerDownSource(
-  characterId: number,
-): ImageSourcePropType | undefined {
-  return PLAYER_DOWN_SPRITES[characterId];
+export function getPlayerDownSource(id: number): ImageSourcePropType | undefined {
+  return CLARITY_PLAYERS[id]?.down;
 }
-
-export function getNpcShootFrames(npcId: number): ShootSeq | undefined {
-  const seq = NPC_SHOOT_FRAMES[npcId];
-  return seq?.length ? seq : undefined;
-}
-
-export function getPlayerShootFrames(characterId: number): ShootSeq | undefined {
-  const seq = PLAYER_SHOOT_FRAMES[characterId];
-  return seq?.length ? seq : undefined;
-}
+export function getNpcShootFrames(_id: number): ShootSeq | undefined { return undefined; }
+export function getPlayerShootFrames(_id: number): ShootSeq | undefined { return undefined; }

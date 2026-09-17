@@ -16,7 +16,7 @@ import {
   type DuelSignalBoardPhase,
 } from '@/components/game/DuelSignalBoard';
 import { DuelFigureSlot } from '@/components/game/DuelFigureSlot';
-import { FONT_RYE } from '@/constants/fonts';
+import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import {
   duelFigureSize,
   duelFigureSizeLandscape,
@@ -283,7 +283,7 @@ export function DuelArenaLayout({
       >
         <View style={styles.nameRow}>
           <Text
-            style={[styles.npcName, INK_THEME && styles.npcNameInk, { fontFamily: FONT_RYE }]}
+            style={[styles.npcName, INK_THEME && styles.npcNameInk, { fontFamily: usesCjkFont(npcLabel) ? FONT_WESTERN_SERIF : FONT_RYE }]}
             numberOfLines={1}
           >
             {npcLabel}

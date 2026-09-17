@@ -1,9 +1,8 @@
 import { Image } from 'expo-image';
-import { memo, type FC } from 'react';
+import { memo } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
-import type { SvgProps } from 'react-native-svg';
 
 import {
   getNpcSpriteSource,
@@ -12,6 +11,7 @@ import {
 } from '@/constants/spriteAssets';
 import type { DuelCorner } from '@/constants/duelArena';
 import type { LocalDuelSkin } from '@/constants/localDuelSkin';
+import { CLARITY_NPCS, CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
 import {
   SPRITE_CACHE_REVISION,
   SPRITE_POSE_TRANSFORM,
@@ -28,54 +28,8 @@ import {
   VictoryEffectsOverlay,
 } from '@/lib/duelSprite';
 
-import Npc01 from '@/assets/images/characters/npc_01_clay.svg';
-import Npc02 from '@/assets/images/characters/npc_02_doug.svg';
-import Npc03 from '@/assets/images/characters/npc_03_betty.svg';
-import Npc04 from '@/assets/images/characters/npc_04_billy.svg';
-import Npc05 from '@/assets/images/characters/npc_05_sam.svg';
-import Npc06 from '@/assets/images/characters/npc_06_rosa.svg';
-import Npc07 from '@/assets/images/characters/npc_07_jack.svg';
-import Npc08 from '@/assets/images/characters/npc_08_colt.svg';
-import Npc09 from '@/assets/images/characters/npc_09_rider_boss.svg';
-import Npc10 from '@/assets/images/characters/npc_10_eagle.svg';
-import Npc11 from '@/assets/images/characters/npc_11_daisy.svg';
-import Npc12 from '@/assets/images/characters/npc_12_sybil_boss.svg';
-import Npc13 from '@/assets/images/characters/npc_13_seth.svg';
-import Npc14 from '@/assets/images/characters/npc_14_doc.svg';
-import Npc15 from '@/assets/images/characters/npc_15_lace_boss.svg';
-import Npc16 from '@/assets/images/characters/npc_16_angel.svg';
-import Npc17 from '@/assets/images/characters/npc_17_dryden_boss.svg';
-import Npc18 from '@/assets/images/characters/npc_18_unknown.svg';
-import Npc19 from '@/assets/images/characters/npc_19_unknown.svg';
-import Npc20 from '@/assets/images/characters/npc_20_whiteman_finalboss.svg';
 import PlayerSvg from '@/assets/images/characters/player.svg';
 
-const NPC_BY_ID: Record<number, FC<SvgProps>> = {
-  1: Npc01,
-  2: Npc02,
-  3: Npc03,
-  4: Npc04,
-  5: Npc05,
-  6: Npc06,
-  7: Npc07,
-  8: Npc08,
-  9: Npc09,
-  10: Npc10,
-  11: Npc11,
-  12: Npc12,
-  13: Npc13,
-  14: Npc14,
-  15: Npc15,
-  16: Npc16,
-  17: Npc17,
-  18: Npc18,
-  19: Npc19,
-  20: Npc20,
-  21: Npc20,
-  22: Npc18,
-};
-
-const DefaultNpc = Npc01;
 
 type BaseProps = {
   width: number;
@@ -216,6 +170,7 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
   defeatDropPx?: number;
 }) {
   const hasPng = !!getNpcSpriteSource(npcId, 'idle');
+  const grounded = Boolean(CLARITY_NPCS[npcId]);
   const motionStyle = useDuelSpriteMotion(
     pose,
     victoryActive,
@@ -223,6 +178,7 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
     'topple',
     height,
     defeatDropPx,
+    grounded,
   );
 
   return (
@@ -248,6 +204,8 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
         <MuzzleFlashOverlay
           width={width}
           height={height}
+          flipHorizontal={grounded}
+          anchorX={grounded ? 0.22 : undefined}
           active={pose === 'shoot' && !victoryActive}
         />
         <VictoryEffectsOverlay
@@ -263,7 +221,7 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
         height={height}
         active={pose === 'defeat'}
         impactDelayMs={defeatImpactDelayMs('topple')}
-        groundOffsetY={defeatDropPx != null ? defeatDropPx * 0.9 : height * 0.3}
+        groundOffsetY={grounded ? 0 : defeatDropPx != null ? defeatDropPx * 0.9 : height * 0.3}
       />
     </View>
   );
@@ -288,6 +246,7 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
 }) {
   const hasPng = !!getPlayerSpriteSource(characterId, 'idle');
   const hasDown = !!getPlayerDownSource(characterId);
+  const grounded = Boolean(CLARITY_PLAYERS[characterId]);
   const motionStyle = useDuelSpriteMotion(
     pose,
     victoryActive,
@@ -295,6 +254,7 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
     hasDown ? 'topple' : 'collapse',
     height,
     defeatDropPx,
+    grounded,
   );
 
   return (
@@ -328,6 +288,8 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
         <MuzzleFlashOverlay
           width={width}
           height={height}
+          flipHorizontal={grounded}
+          anchorX={grounded ? (characterId === 2 ? 0.07 : 0.22) : undefined}
           active={pose === 'shoot' && !victoryActive}
         />
         <VictoryEffectsOverlay
@@ -344,7 +306,7 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
         active={pose === 'defeat'}
         impactDelayMs={defeatImpactDelayMs(hasDown ? 'topple' : 'collapse')}
         groundOffsetY={
-          defeatDropPx != null ? defeatDropPx * 0.9 : height * (hasDown ? 0.3 : 0.38)
+          grounded ? 0 : defeatDropPx != null ? defeatDropPx * 0.9 : height * (hasDown ? 0.3 : 0.38)
         }
       />
     </View>

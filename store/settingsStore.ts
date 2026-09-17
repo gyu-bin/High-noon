@@ -32,6 +32,8 @@ export const LANGUAGE_OPTIONS: { value: AppLanguage; label: string }[] = [
 ];
 
 type SettingsStoreState = {
+  darkMode: boolean;
+  setDarkMode: (value: boolean) => void;
   soundEnabled: boolean;
   musicEnabled: boolean;
   hapticEnabled: boolean;
@@ -62,6 +64,8 @@ type SettingsStoreState = {
 export const useSettingsStore = create<SettingsStoreState>()(
   persist(
     (set) => ({
+      darkMode: true,
+      setDarkMode: (darkMode) => set({ darkMode }),
       soundEnabled: true,
       musicEnabled: true,
       hapticEnabled: true,
@@ -98,6 +102,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
       name: 'high-noon-settings',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({
+        darkMode: s.darkMode,
         soundEnabled: s.soundEnabled,
         musicEnabled: s.musicEnabled,
         hapticEnabled: s.hapticEnabled,

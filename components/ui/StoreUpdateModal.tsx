@@ -28,7 +28,7 @@ export function StoreUpdateModal({ visible, onDismiss }: Props) {
       animationType="fade"
       visible={visible}
       onRequestClose={onDismiss}
-      supportedOrientations={['portrait', 'landscape']}
+      supportedOrientations={['portrait']}
     >
       <View style={styles.backdrop}>
         <View style={styles.card}>

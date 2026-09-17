@@ -49,6 +49,14 @@
     "iapRestoreNoneBody": "このアカウントの購入が見つかりませんでした。"
   },
   "settings": {
+    "appearance": "言語と表示",
+    "darkMode": "ダークモード",
+    "darkModeDesc": "暗いレザーカラーで表示します",
+    "game": "ゲーム",
+    "resetProgress": "記録をリセット",
+    "resetTitle": "進行状況と記録をリセットしますか？",
+    "resetBody": "NPC・キャラクターの解放、反応記録、対戦履歴をリセットします。広告削除の購入は保持されます。",
+    "resetConfirm": "リセット",
     "languageAuto": "自動",
     "languageAutoSub": "端末設定",
     "languageAutoHint": "端末の言語 · {{lang}}",
@@ -60,6 +68,10 @@
     "languageCodeJa": "JA"
   },
   "game": {
+    "gunslinger": "ガンマン",
+    "versus": "対決",
+    "readyToDraw": "抜く準備はできたか？",
+    "start": "スタート",
     "pause": "一時停止",
     "continue": "続ける",
     "mainMenu": "メインメニュー",
@@ -110,6 +122,7 @@
     "slower": "遅かった"
   },
   "localDuel": {
+    "portraitInstructions": "端末を縦向きに置いて向かい合います。上半分がP2、下半分がP1です。BANGの合図で自分の画面の半分をタップしてください。",
     "selectRounds": "ラウンド数選択",
     "sub": "P1・P2を選んでから「次へ」を押してください。",
     "roundsSub": "ラウンド数を選ぶと対戦が始まります。",
@@ -177,7 +190,22 @@
     "title": "記録",
     "avgReaction": "平均反応速度",
     "npcCleared": "NPCクリア",
-    "footnote": "vs NPC・2人対戦で反応が記録されるたびに平均が更新されます。"
+    "footnote": "vs NPC・2人対戦で反応が記録されるたびに平均が更新されます。",
+    "myStats": "自分の記録",
+    "npcWinRate": "NPC勝率",
+    "totalDuels": "総対戦数",
+    "bestReaction": "最速反応",
+    "charactersCollected": "キャラクター収集",
+    "recordingNotice": "勝率と対戦数はこのバージョン以降に完了した対戦が対象です。",
+    "npcRecords": "NPC戦績",
+    "recentDuels": "最近の対戦 · 最大200件",
+    "noMatches": "記録された対戦はまだありません。",
+    "playerVictory": "{{player}} 勝利",
+    "achievements": "実績",
+    "achievementFirst": "最初の決闘 — NPCを1人クリア",
+    "achievementHunter": "賞金稼ぎ — NPCを10人クリア",
+    "achievementLegend": "荒野の伝説 — 全NPCをクリア",
+    "achievementLightning": "稲妻の手 — 200ms以下で反応"
   },
   "npcSelect": {
     "title": "対戦相手選択",
@@ -233,6 +261,13 @@
     "ready": "レディ!",
     "steady": "ステディ!",
     "bang": "バン!"
+  },
+  "meta": {
+    "menu": { "tagline": "決闘が待っている", "solo": "1人決闘", "local": "2人プレイ" },
+    "character": { "title": "ガンマンを選ぶ", "subtitle": "ガンマンが主役です", "select": "選択", "previous": "前のキャラクター", "next": "次のキャラクター" },
+    "npc": { "title": "相手を選ぶ", "subtitle": "指名手配書", "wanted": "手配", "special": "特殊決闘", "duel": "決闘", "locked": "ロック中", "boss": "ボスの相手", "reaction": "反応 · {{ms}} ms", "record": "記録", "cleared": "クリア", "best": "最速反応", "navigator": "相手の選択" },
+    "settings": { "subtitle": "自分だけの開拓地設定", "audio": "サウンドとフィードバック" },
+    "stats": { "title": "自分の記録", "subtitle": "決闘台帳" }
   },
   "backup": {
     "title": "進行状況のバックアップ",

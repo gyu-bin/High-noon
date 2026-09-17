@@ -1,0 +1,917 @@
+{
+  "targetCount": 130,
+  "method": "built-in image_gen",
+  "runtimeQA": "pending: orca CLI unavailable",
+  "assets": [
+    {
+      "kind": "player",
+      "id": 1,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/player/01/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 1,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/player/01/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 1,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/player/01/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 1,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/player/01/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 1,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/player/01/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 2,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/player/02/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 2,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/player/02/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 2,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/player/02/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 2,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/player/02/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 2,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/player/02/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 3,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/player/03/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 3,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/player/03/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 3,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/player/03/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 3,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/player/03/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 3,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/player/03/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 4,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/player/04/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 4,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/player/04/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 4,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/player/04/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 4,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/player/04/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "player",
+      "id": 4,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/player/04/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 1,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/01/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 1,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/01/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 1,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/01/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 1,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/01/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 1,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/01/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 2,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/02/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 2,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/02/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 2,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/02/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 2,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/02/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 2,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/02/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 3,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/03/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 3,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/03/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 3,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/03/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 3,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/03/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 3,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/03/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 4,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/04/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 4,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/04/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 4,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/04/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 4,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/04/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 4,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/04/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 5,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/05/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 5,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/05/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 5,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/05/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 5,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/05/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 5,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/05/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 6,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/06/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 6,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/06/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 6,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/06/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 6,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/06/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 6,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/06/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 7,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/07/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 7,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/07/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 7,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/07/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 7,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/07/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 7,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/07/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 8,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/08/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 8,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/08/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 8,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/08/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 8,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/08/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 8,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/08/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 9,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/09/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 9,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/09/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 9,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/09/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 9,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/09/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 9,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/09/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 10,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/10/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 10,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/10/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 10,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/10/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 10,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/10/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 10,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/10/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 11,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/11/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 11,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/11/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 11,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/11/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 11,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/11/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 11,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/11/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 12,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/12/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 12,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/12/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 12,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/12/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 12,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/12/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 12,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/12/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 13,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/13/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 13,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/13/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 13,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/13/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 13,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/13/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 13,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/13/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 14,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/14/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 14,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/14/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 14,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/14/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 14,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/14/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 14,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/14/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 15,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/15/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 15,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/15/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 15,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/15/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 15,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/15/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 15,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/15/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 16,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/16/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 16,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/16/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 16,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/16/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 16,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/16/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 16,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/16/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 17,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/17/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 17,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/17/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 17,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/17/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 17,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/17/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 17,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/17/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 18,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/18/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 18,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/18/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 18,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/18/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 18,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/18/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 18,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/18/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 19,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/19/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 19,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/19/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 19,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/19/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 19,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/19/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 19,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/19/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 20,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/20/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 20,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/20/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 20,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/20/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 20,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/20/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 20,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/20/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 21,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/21/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 21,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/21/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 21,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/21/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 21,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/21/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 21,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/21/down.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 22,
+      "pose": "idle",
+      "path": "assets/images/characters/clarity/npc/22/idle.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 22,
+      "pose": "draw",
+      "path": "assets/images/characters/clarity/npc/22/draw.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 22,
+      "pose": "fire",
+      "path": "assets/images/characters/clarity/npc/22/fire.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 22,
+      "pose": "hit",
+      "path": "assets/images/characters/clarity/npc/22/hit.png",
+      "status": "visual_qa_passed"
+    },
+    {
+      "kind": "npc",
+      "id": 22,
+      "pose": "down",
+      "path": "assets/images/characters/clarity/npc/22/down.png",
+      "status": "visual_qa_passed"
+    }
+  ]
+}

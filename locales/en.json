@@ -49,6 +49,14 @@
     "iapRestoreNoneBody": "No purchases found for this account."
   },
   "settings": {
+    "appearance": "LANGUAGE & DISPLAY",
+    "darkMode": "Dark Mode",
+    "darkModeDesc": "Use the darker leather color scheme",
+    "game": "GAME",
+    "resetProgress": "Reset Progress",
+    "resetTitle": "Reset progress and records?",
+    "resetBody": "This resets NPC and character unlocks, reaction records, and duel history. Your ad-removal purchase will be kept.",
+    "resetConfirm": "Reset",
     "languageAuto": "Auto",
     "languageAutoSub": "Device",
     "languageAutoHint": "Device language · {{lang}}",
@@ -60,6 +68,10 @@
     "languageCodeJa": "JA"
   },
   "game": {
+    "gunslinger": "THE GUNSLINGER",
+    "versus": "VS",
+    "readyToDraw": "READY TO DRAW?",
+    "start": "START",
     "pause": "Paused",
     "continue": "Continue",
     "mainMenu": "Main Menu",
@@ -110,6 +122,7 @@
     "slower": "Too slow"
   },
   "localDuel": {
+    "portraitInstructions": "Place the phone upright between you. P2 uses the top half; P1 uses the bottom half. Tap only your half when BANG appears.",
     "selectRounds": "Select Rounds",
     "sub": "Pick P1 and P2, then tap Next.",
     "roundsSub": "Choose rounds to start the duel.",
@@ -177,7 +190,22 @@
     "title": "Stats",
     "avgReaction": "Average Reaction",
     "npcCleared": "NPCs Cleared",
-    "footnote": "Average updates whenever a reaction is recorded in vs NPC or 2P duel."
+    "footnote": "Average updates whenever a reaction is recorded in vs NPC or 2P duel.",
+    "myStats": "MY STATS",
+    "npcWinRate": "NPC win rate",
+    "totalDuels": "Total duels",
+    "bestReaction": "Best reaction",
+    "charactersCollected": "Characters collected",
+    "recordingNotice": "Win rate and duel totals include completed matches recorded in this version and later.",
+    "npcRecords": "NPC RECORDS",
+    "recentDuels": "RECENT DUELS · UP TO 200",
+    "noMatches": "No duels have been recorded yet.",
+    "playerVictory": "{{player}} victory",
+    "achievements": "ACHIEVEMENTS",
+    "achievementFirst": "First Duel — Clear 1 NPC",
+    "achievementHunter": "Bounty Hunter — Clear 10 NPCs",
+    "achievementLegend": "Legend of the West — Clear every NPC",
+    "achievementLightning": "Lightning Hand — React in 200ms or less"
   },
   "npcSelect": {
     "title": "Select Opponent",
@@ -233,6 +261,13 @@
     "ready": "READY!",
     "steady": "STEADY!",
     "bang": "BANG!"
+  },
+  "meta": {
+    "menu": { "tagline": "A DUEL AWAITS", "solo": "SOLO DUEL", "local": "2 PLAYERS" },
+    "character": { "title": "CHOOSE YOUR GUNSLINGER", "subtitle": "THE GUNSLINGER IS THE HERO", "select": "SELECT", "previous": "Previous character", "next": "Next character" },
+    "npc": { "title": "CHOOSE YOUR OPPONENT", "subtitle": "WANTED POSTER", "wanted": "WANTED", "special": "SPECIAL DUEL", "duel": "DUEL", "locked": "LOCKED", "boss": "Boss opponent", "reaction": "REACTION · {{ms}} ms", "record": "RECORD", "cleared": "CLEARED", "best": "BEST DRAW", "navigator": "Opponent navigation" },
+    "settings": { "subtitle": "YOUR FRONTIER, YOUR RULES", "audio": "AUDIO & FEEDBACK" },
+    "stats": { "title": "MY STATS", "subtitle": "THE DUEL LEDGER" }
   },
   "backup": {
     "title": "Progress Backup",

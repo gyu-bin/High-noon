@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { PlayerCharacterSprite } from '@/components/game/CharacterSprites';
 import type { PlayerCharacter } from '@/constants/characters';
+import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { colors } from '@/constants/theme';
 import { useCharacterLabels } from '@/utils/characterLabels';
 
@@ -58,7 +59,7 @@ export function CharacterSelectCard({
         />
       </View>
 
-      <Text style={styles.cardName} numberOfLines={2}>
+      <Text style={[styles.cardName, usesCjkFont(labels.name) ? styles.cardNameCjk : styles.cardNameWestern]} numberOfLines={2}>
         {labels.name}
       </Text>
       {labels.abilityName ? (
@@ -129,6 +130,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.cream,
   },
+  cardNameWestern: { fontFamily: FONT_RYE, letterSpacing: 0.3 },
+  cardNameCjk: { fontFamily: FONT_WESTERN_SERIF, fontSize: 15, letterSpacing: 0.5 },
   abilityTag: {
     marginTop: 4,
     fontSize: 12,

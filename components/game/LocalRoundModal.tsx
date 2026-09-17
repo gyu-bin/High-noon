@@ -100,6 +100,24 @@ export function LocalRoundModal({
   const p1Loss = lossReason(outcome.p1, t);
   const p2Loss = lossReason(outcome.p2, t);
 
+  if (landscape) {
+    return (
+      <Pressable accessibilityLabel={t('game.tapToNextRound')} accessibilityRole="button" onPress={onContinue} style={[styles.root, { backgroundColor: 'rgba(10,6,4,0.32)' }]}>
+        <View pointerEvents="none" style={{ position: 'absolute', top: Math.max(paddingTop + 36, height * 0.2), left: '20%', right: '20%', alignItems: 'center' }}>
+          <Text style={{ fontFamily: FONT_RYE, fontSize: 30, color: '#F2D5A2', textAlign: 'center' }}>
+            {draw ? t('result.draw') : `PLAYER ${p1Won ? '1' : '2'} WINS`}
+          </Text>
+          <Text style={{ marginTop: 12, color: '#E1C396', fontSize: 14 }}>
+            P1 · {resultLine(outcome.p1, t)}     P2 · {resultLine(outcome.p2, t)}
+          </Text>
+        </View>
+        <View pointerEvents="none" style={{ position: 'absolute', bottom: paddingBottom + 20, alignSelf: 'center', paddingHorizontal: 28, paddingVertical: 12, backgroundColor: '#21150F', borderWidth: 1, borderColor: '#A17C4F', borderRadius: 3 }}>
+          <Text style={{ color: '#F2D5A2', fontSize: 14 }}>{t('game.tapToNextRound')}</Text>
+        </View>
+      </Pressable>
+    );
+  }
+
   return (
     <Pressable
       accessibilityLabel={t('game.tapToNextRound')}

@@ -61,5 +61,18 @@ target 'HighNoon' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+
+    # Resource bundles in older pods can retain iOS 9–13 targets, which
+    # current Xcode simulator SDKs no longer accept. Match the app minimum,
+    # without lowering a dependency that requires a newer deployment target.
+    app_minimum = Gem::Version.new(podfile_properties['ios.deploymentTarget'] || '15.1')
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |configuration|
+        current = configuration.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+        if current.nil? || Gem::Version.new(current) < app_minimum
+          configuration.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = app_minimum.to_s
+        end
+      end
+    end
   end
 end

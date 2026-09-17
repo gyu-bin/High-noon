@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1840" viewBox="0 0 1560 1840">
+  <defs>
+    <style>
+      .card { fill:#1A0C06; stroke:#C8860A; stroke-width:2; }
+      .cap { fill:#F5E6C8; font:700 20px serif; letter-spacing:2px; }
+      .sub { fill:#FFD700; font:700 12px sans-serif; letter-spacing:1px; }
+      .cue { fill:#F5E6C8; font:700 46px serif; text-anchor:middle; paint-order:stroke; stroke:#1A0C06; stroke-width:7px; }
+      .bang { fill:#EF4444; stroke:#FFD700; stroke-width:2px; }
+      .hud { fill:#F5E6C8; font:700 12px sans-serif; letter-spacing:1px; }
+    </style>
+    <clipPath id="c1"><rect x="20" y="46" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c2"><rect x="540" y="46" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c3"><rect x="1060" y="46" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c4"><rect x="20" y="406" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c5"><rect x="540" y="406" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c6"><rect x="1060" y="406" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c7"><rect x="20" y="766" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c8"><rect x="540" y="766" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c9"><rect x="1060" y="766" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c10"><rect x="20" y="1126" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c11"><rect x="540" y="1126" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c12"><rect x="1060" y="1126" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c13"><rect x="20" y="1486" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c14"><rect x="540" y="1486" width="480" height="280" rx="4"/></clipPath>
+    <clipPath id="c15"><rect x="1060" y="1486" width="480" height="280" rx="4"/></clipPath>
+  </defs>
+  <rect width="1560" height="1840" fill="#0A0A0A"/>
+  <text x="32" y="30" class="cap">HIGH NOON · V3 NPC DUEL PRESENTATION VALIDATION</text>
+
+  <!-- 01–06: core state sequence -->
+  <g clip-path="url(#c1)"><image href="../../backgrounds/bronze_day.png" x="20" y="46" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/01/idle.png" x="168" y="100" width="185" height="185"/><image href="../../../../assets/images/weapons/player_fp/player_fp_revolver_idle.png" x="335" y="174" width="188" height="188"/><text x="36" y="69" class="hud">YOU ♥ ♥ ♥</text><text x="374" y="69" class="hud">DUST WIND ♥ ♥ ♥</text><text x="260" y="204" class="cue">READY</text></g>
+  <rect x="20" y="46" width="480" height="280" class="card"/><text x="20" y="354" class="cap">01 · NPC 01 READY</text><text x="20" y="375" class="sub">IDLE · FIRST-PERSON WEAPON IDLE</text>
+
+  <g clip-path="url(#c2)"><image href="../../backgrounds/bronze_day.png" x="540" y="46" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/01/draw.png" x="688" y="100" width="185" height="185"/><image href="../../../../assets/images/weapons/player_fp/player_fp_revolver_idle.png" x="855" y="174" width="188" height="188"/><text x="556" y="69" class="hud">YOU ♥ ♥ ♥</text><text x="894" y="69" class="hud">DUST WIND ♥ ♥ ♥</text><text x="780" y="204" class="cue" fill="#C8860A">STEADY</text></g>
+  <rect x="540" y="46" width="480" height="280" class="card"/><text x="540" y="354" class="cap">02 · NPC 01 STEADY</text><text x="540" y="375" class="sub">DRAW · TENSION CUE</text>
+
+  <g clip-path="url(#c3)"><image href="../../backgrounds/bronze_day.png" x="1060" y="46" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/01/fire.png" x="1208" y="100" width="185" height="185"/><image href="../../../../assets/images/weapons/player_fp/player_fp_revolver_idle.png" x="1375" y="174" width="188" height="188"/><text x="1076" y="69" class="hud">YOU ♥ ♥ ♥</text><text x="1388" y="69" class="hud">DUST WIND ♥ ♥ ♥</text><text x="1300" y="204" class="cue bang">BANG!</text></g>
+  <rect x="1060" y="46" width="480" height="280" class="card"/><text x="1060" y="354" class="cap">03 · NPC 01 BANG</text><text x="1060" y="375" class="sub">FIRE · ENGINE-ALIGNED CUE</text>
+
+  <g clip-path="url(#c4)"><image href="../../backgrounds/bronze_day.png" x="20" y="406" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/01/fire.png" x="168" y="460" width="185" height="185"/><image href="../../../../assets/images/weapons/player_fp/player_fp_revolver_fire.png" x="335" y="534" width="188" height="188"/><image href="../../../../assets/images/vfx/production/vfx_muzzle_flash.png" x="342" y="548" width="68" height="68"/><image href="../../../../assets/images/vfx/production/vfx_gun_smoke.png" x="326" y="505" width="98" height="98"/><text x="260" y="564" class="cue bang">BANG!</text></g>
+  <rect x="20" y="406" width="480" height="280" class="card"/><text x="20" y="714" class="cap">04 · PLAYER FIRE</text><text x="20" y="735" class="sub">DRAW → FIRE · 40–70ms MUZZLE · SMOKE FADE</text>
+
+  <g clip-path="url(#c5)"><image href="../../backgrounds/bronze_day.png" x="540" y="406" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/01/hit.png" x="688" y="460" width="185" height="185"/><image href="../../../../assets/images/vfx/production/vfx_bullet_impact.png" x="749" y="517" width="76" height="76"/><image href="../../../../assets/images/weapons/player_fp/player_fp_revolver_fire.png" x="855" y="534" width="188" height="188"/></g>
+  <rect x="540" y="406" width="480" height="280" class="card"/><text x="540" y="714" class="cap">05 · NPC HIT</text><text x="540" y="735" class="sub">FAST IMPACT · NO BLOOD / GORE</text>
+
+  <g clip-path="url(#c6)"><image href="../../backgrounds/bronze_day.png" x="1060" y="406" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/01/down.png" x="1208" y="460" width="185" height="185"/><image href="../../../../assets/images/vfx/production/vfx_fall_dust.png" x="1165" y="598" width="270" height="95"/><image href="../../../../assets/images/weapons/player_fp/player_fp_revolver_idle.png" x="1375" y="534" width="188" height="188"/></g>
+  <rect x="1060" y="406" width="480" height="280" class="card"/><text x="1060" y="714" class="cap">06 · NPC DOWN</text><text x="1060" y="735" class="sub">HIT → DOWN · GROUND-ALIGNED DUST</text>
+
+  <!-- 07–13: special NPC presentation -->
+  <g clip-path="url(#c7)"><image href="../../backgrounds/master_night.png" x="20" y="766" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/14/draw.png" x="168" y="820" width="185" height="185"/><image href="../../../../assets/images/vfx/production/vfx_thunderbolt_lightning.png" x="60" y="780" width="400" height="260" opacity=".92"/><text x="260" y="924" class="cue" fill="#C8860A">···</text></g>
+  <rect x="20" y="766" width="480" height="280" class="card"/><text x="20" y="1074" class="cap">07 · THUNDERBOLT</text><text x="20" y="1095" class="sub">HIDDEN BANG · BRIEF LIGHTNING ONLY</text>
+
+  <g clip-path="url(#c8)"><image href="../../backgrounds/master_night.png" x="540" y="766" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/15/draw.png" x="688" y="820" width="185" height="185"/><rect x="540" y="766" width="480" height="280" fill="#0A0A0A" opacity=".48"/><text x="780" y="924" class="cue" opacity=".16">BANG!</text></g>
+  <rect x="540" y="766" width="480" height="280" class="card"/><text x="540" y="1074" class="cap">08 · SHADOW HUNTER</text><text x="540" y="1095" class="sub">BLIND BANG · READABLE SILHOUETTE</text>
+
+  <g clip-path="url(#c9)"><image href="../../backgrounds/master_night.png" x="1060" y="766" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/17/draw.png" x="1208" y="820" width="185" height="185"/><image href="../../../../assets/images/weapons/player_fp/player_fp_revolver_idle.png" x="1375" y="894" width="188" height="188"/><text x="1300" y="924" class="cue" fill="#C8860A">STEADY</text></g>
+  <rect x="1060" y="766" width="480" height="280" class="card"/><text x="1060" y="1074" class="cap">09 · DRYDEN</text><text x="1060" y="1095" class="sub">MASTER NIGHT FIXED · MEDIUM VISUAL SHAKE</text>
+
+  <g clip-path="url(#c10)"><image href="../../backgrounds/legend_night.png" x="20" y="1126" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/18/draw.png" x="168" y="1180" width="185" height="185"/><image href="../../../../assets/images/vfx/production/vfx_red_eye_flash.png" x="168" y="1172" width="185" height="185" opacity=".78"/></g>
+  <rect x="20" y="1126" width="480" height="280" class="card"/><text x="20" y="1434" class="cap">10 · RED EYE</text><text x="20" y="1455" class="sub">HEAVY SHAKE · RESTRAINED OMEN FLASH</text>
+
+  <g clip-path="url(#c11)"><image href="../../backgrounds/legend_night.png" x="540" y="1126" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/19/draw.png" x="688" y="1180" width="185" height="185"/><rect x="540" y="1126" width="480" height="280" fill="#0A0A0A" opacity=".44"/><image href="../../../../assets/images/vfx/production/vfx_void_crack.png" x="646" y="1172" width="270" height="270" opacity=".85"/></g>
+  <rect x="540" y="1126" width="480" height="280" class="card"/><text x="540" y="1434" class="cap">11 · VOID WALKER</text><text x="540" y="1455" class="sub">VOID SHROUD · SHORT CRACK AT BANG</text>
+
+  <g clip-path="url(#c12)"><image href="../../backgrounds/legend_night.png" x="1060" y="1126" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/20/draw.png" x="1190" y="1192" width="170" height="170" opacity=".28"/><image href="../../../../assets/images/characters/enemy/20/draw.png" x="1210" y="1180" width="185" height="185"/><text x="1300" y="1284" class="cue bang" opacity=".5">BANG!</text></g>
+  <rect x="1060" y="1126" width="480" height="280" class="card"/><text x="1060" y="1434" class="cap">12 · ECHO PHANTOM</text><text x="1060" y="1455" class="sub">RUNTIME DUPLICATE · NO BAKED CLONE</text>
+
+  <g clip-path="url(#c13)"><image href="../../backgrounds/hidden_pale_rider.png" x="20" y="1486" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/hidden/pale_rider_idle.png" x="168" y="1540" width="185" height="185" opacity=".72"/><rect x="20" y="1486" width="480" height="280" fill="#0A0A0A" opacity=".42"/></g>
+  <rect x="20" y="1486" width="480" height="280" class="card"/><text x="20" y="1794" class="cap">13 · PALE RIDER</text><text x="20" y="1815" class="sub">UNLOCKED ONLY · HIDDEN BACKGROUND · NEGATIVE SPACE</text>
+
+  <g clip-path="url(#c14)"><image href="../../backgrounds/bronze_day.png" x="690" y="1486" width="180" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/01/idle.png" x="675" y="1574" width="210" height="210"/><image href="../../../../assets/images/weapons/player_fp/player_fp_revolver_idle.png" x="806" y="1660" width="160" height="160"/><text x="780" y="1648" class="cue" font-size="32">READY</text></g>
+  <rect x="540" y="1486" width="480" height="280" class="card"/><text x="540" y="1794" class="cap">14 · PORTRAIT LAYOUT</text><text x="540" y="1815" class="sub">CLEAR CENTER LANE · WEAPON LOWER RIGHT</text>
+
+  <g clip-path="url(#c15)"><image href="../../backgrounds/bronze_day.png" x="1060" y="1486" width="480" height="280" preserveAspectRatio="xMidYMid slice"/><image href="../../../../assets/images/characters/enemy/01/idle.png" x="1208" y="1540" width="185" height="185"/><image href="../../../../assets/images/weapons/player_fp/player_fp_revolver_idle.png" x="1375" y="1614" width="188" height="188"/><text x="1300" y="1644" class="cue">READY</text></g>
+  <rect x="1060" y="1486" width="480" height="280" class="card"/><text x="1060" y="1794" class="cap">15 · LANDSCAPE LAYOUT</text><text x="1060" y="1815" class="sub">WIDER ENVIRONMENT · FIXED TAP SURFACE</text>
+</svg>

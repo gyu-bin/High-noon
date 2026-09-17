@@ -5,6 +5,7 @@ import {
   runOnUI,
   useAnimatedStyle,
   useSharedValue,
+  useReducedMotion,
   withRepeat,
   withSequence,
   withTiming,
@@ -29,13 +30,21 @@ export function useDuelSpriteMotion(
    * landscape처럼 이미 같은 지면선에 서 있으면 작은 값을 넘겨 제자리 착지.
    */
   defeatDropPx?: number,
+  groundedPoses = false,
 ) {
+  const reduceMotion = useReducedMotion();
   const phase = useSharedValue(0);
   const defeatPhase = useSharedValue(0);
   const lastKick = useSharedValue(0.35);
   const T = DUEL_SPRITE_TIMING;
   const knock = duelDefeatKnockback(corner);
   const defeatMs = defeatMotion === 'topple' ? T.defeatToppleMs : T.defeatCollapseMs;
+
+  useLayoutEffect(() => () => {
+    cancelAnimation(phase);
+    cancelAnimation(defeatPhase);
+    cancelAnimation(lastKick);
+  }, [phase, defeatPhase, lastKick]);
 
   useLayoutEffect(() => {
     if (pose !== 'defeat') {
@@ -167,6 +176,14 @@ export function useDuelSpriteMotion(
   ]);
 
   return useAnimatedStyle(() => {
+    if (reduceMotion) return {};
+    // Native full-body poses already contain recoil/knee collapse and share a baseline.
+    // Do not rotate and drop them again using the old paper-sprite choreography.
+    if (groundedPoses) {
+      if (pose === 'defeat') return { transform: [{ translateY: 3 * defeatPhase.value }] };
+      if (pose === 'shoot') return { transform: [{ translateY: -2 * phase.value }] };
+      return { transform: [{ translateY: -0.6 * phase.value }] };
+    }
     if (victoryActive && pose === 'idle') {
       const holster = phase.value;
       return {

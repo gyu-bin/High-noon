@@ -1,12 +1,13 @@
 import type { ImageSourcePropType } from 'react-native';
 
 import type { NpcTier } from '@/types/npc';
+import { V3_DUEL_BACKGROUNDS } from '@/constants/v3DuelAssets';
 
 /** `assets/images/image` Gemini 에셋 — 가로 3분할(1408×768) 스트립 공통 비율 */
 export const STRIP_3_ASPECT = 1408 / 768;
 
 export const gameImages = {
-  titleHero: require('@/assets/images/image/title_hero_menu.png'),
+  titleHero: require('@/assets/branding/cinematic-hero.png'),
   duelBackground: require('@/assets/images/image/Gemini_Generated_Image_mjdc8xmjdc8xmjdc.png'),
   /** NPC 결투 — 단일 전체 화면 */
   duelBgDayFull: require('@/assets/images/image/duel_bg_day_full.png'),
@@ -45,15 +46,11 @@ export const TIER_BACKGROUND_FALLBACK: Record<NpcTier, string> = {
 };
 
 /**
- * 에셋 추가 시: `assets/images/bg/bg_{tier}_{day|night}.png` 를 넣고 아래에 static `require` 한 줄씩 등록.
- * (Metro는 동적 경로 require를 지원하지 않음)
+ * 승인된 V3 프로덕션 배경의 정적 require 맵. Metro는 동적 경로 require를
+ * 지원하지 않으므로 `v3DuelAssets.ts`에서 각 파일을 명시적으로 등록한다.
  */
 const BG_BY_TIER_VARIANT: Partial<Record<string, ImageSourcePropType>> = {
-  // bronze_day: require('@/assets/images/bg/bg_bronze_day.png'),
-  // bronze_night: require('@/assets/images/bg/bg_bronze_night.png'),
-  // silver_day: require('@/assets/images/bg/bg_silver_day.png'),
-  // ...
-  // master_night: require('@/assets/images/bg/bg_master_night.png'),
+  ...V3_DUEL_BACKGROUNDS,
 };
 
 export type BattleBackgroundSource =

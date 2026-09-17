@@ -81,7 +81,7 @@ export function ProgressBackupModal({ visible, onClose }: Props) {
       animationType="fade"
       visible={visible}
       onRequestClose={onClose}
-      supportedOrientations={['portrait', 'landscape']}
+      supportedOrientations={['portrait']}
     >
       <View style={styles.backdrop}>
         <View style={styles.card}>

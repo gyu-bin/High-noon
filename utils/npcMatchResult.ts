@@ -3,6 +3,8 @@
  * 전면 광고 직후 결과 화면이 한 프레임 params 없이 마운트되면
  * `won`이 비어 패배로 보이는 깜빡임을 막기 위해, 광고 전에 결과를 고정한다.
  */
+import { useMatchHistoryStore } from '@/store/matchHistoryStore';
+
 export type NpcMatchResultSnapshot = {
   npcId: string;
   won: boolean;
@@ -18,6 +20,7 @@ export type NpcMatchResultSnapshot = {
 let lastResult: NpcMatchResultSnapshot | null = null;
 
 export function rememberNpcMatchResult(result: NpcMatchResultSnapshot): void {
+  useMatchHistoryStore.getState().record({ id: `npc-${result.completionStamp}`, mode: 'npc', opponentId: Number(result.npcId), winner: result.won ? 'player' : 'npc', at: Date.now() });
   lastResult = result;
 }
 

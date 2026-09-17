@@ -12,6 +12,7 @@ import Animated, {
 
 import { DUEL_VISUAL_THEME, MINIMAL_DUEL } from '@/constants/duelTheme';
 import { DUEL_SIGNAL_SPEC } from '@/constants/npcVisual';
+import { FONT_RYE } from '@/constants/fonts';
 import { RM_GAME } from '@/constants/reanimatedGame';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
 
@@ -33,7 +34,7 @@ export type DuelSignalBoardProps = {
   /** #20 에코 — BANG 3연속, 2번째만 진짜(3번째는 잔상) */
   echoBangMiddle?: boolean;
   /** panel: 나무 박스 / minimal: 배경 위 플로팅 */
-  variant?: 'panel' | 'minimal';
+  variant?: 'panel' | 'minimal' | 'cinematic';
 };
 
 /** useDuelEngine `대기` → 보드 `idle` */
@@ -87,7 +88,7 @@ export function DuelSignalBoard({
   echoBangMiddle = false,
   variant = 'panel',
 }: DuelSignalBoardProps) {
-  const minimal = variant === 'minimal';
+  const minimal = variant !== 'panel';
   const flashOpacity = useSharedValue(0);
   const pulse = useSharedValue(1);
   const bangScale = useSharedValue(1);
@@ -359,10 +360,15 @@ export function DuelSignalBoard({
           textShadowRadius: 10,
         }
       : null;
-  const readySize = minimal ? { fontSize: 34, letterSpacing: 3 } : styles.textReadySize;
-  const steadySize = minimal ? { fontSize: 38, letterSpacing: 3 } : styles.textSteadySize;
+  const cinematicInk = variant === 'cinematic' ? {
+    fontFamily: FONT_RYE,
+    fontWeight: '400' as const,
+    ...(textKind === 'bangBlind' ? {} : { color: '#F2D5A2' }),
+  } : {};
+  const readySize = minimal ? { fontSize: variant === 'cinematic' ? 30 : 34, letterSpacing: 2, ...cinematicInk } : styles.textReadySize;
+  const steadySize = minimal ? { fontSize: variant === 'cinematic' ? 30 : 38, letterSpacing: 2, ...cinematicInk } : styles.textSteadySize;
   const bangSize = minimal
-    ? { fontSize: 52, letterSpacing: 4, ...minimalTextShadow }
+    ? { fontSize: variant === 'cinematic' ? 42 : 52, letterSpacing: 3, ...minimalTextShadow, ...cinematicInk }
     : styles.textBangSize;
 
   const thunderFlash = hideBangText && (phase === '뱅' || phase === '페이크');

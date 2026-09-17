@@ -561,6 +561,7 @@ export function useDuelEngine(options?: DuelEngineOptions) {
   }, [clearAllTimers, clearRoundPlan]);
 
   const pauseTimers = useCallback(() => {
+    if (pauseWallMsRef.current != null) return;
     if (phaseRef.current === '뱅' && bangArmedRef.current) {
       pausePerfRef.current = performance.now();
     } else {

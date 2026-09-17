@@ -1,7 +1,8 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { colors } from '@/constants/theme';
+import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { getNpcDisplayName } from '@/utils/npcLabels';
 import { getNpcSpecialAbilityLabels } from '@/utils/npcAbilityLabels';
@@ -22,6 +23,7 @@ export function NpcAbilityIntroModal({ visible, npc, onConfirm }: Props) {
 
   const ability = getNpcSpecialAbilityLabels(t, npc.specialAbility);
   if (!ability) return null;
+  const opponentName = getNpcDisplayName(t, npc.id);
 
   const cardWidth = landscape
     ? Math.min(480, Math.max(300, m.windowWidth * 0.44))
@@ -40,7 +42,7 @@ export function NpcAbilityIntroModal({ visible, npc, onConfirm }: Props) {
           onPress={(e) => e.stopPropagation()}
         >
           <Text style={styles.eyebrow}>{t('npcs.abilityIntro.title')}</Text>
-          <Text style={styles.opponent}>{getNpcDisplayName(t, npc.id)}</Text>
+          <Text style={[styles.opponent, usesCjkFont(opponentName) ? styles.opponentCjk : styles.opponentWestern]}>{opponentName}</Text>
           <Text style={styles.abilityName}>「{ability.name}」</Text>
           <Text style={styles.description}>{ability.description}</Text>
           <Pressable
@@ -95,6 +97,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.5,
   },
+  opponentWestern: { fontFamily: FONT_RYE },
+  opponentCjk: { fontFamily: FONT_WESTERN_SERIF, fontWeight: '700', letterSpacing: 0.8 },
   abilityName: {
     fontSize: 18,
     fontWeight: '800',

@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   StyleSheet,
@@ -21,14 +22,14 @@ import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
 import { WoodButton } from '@/components/ui/WoodButton';
 import {
   OUTCOME_DEFEAT,
-  OUTCOME_PANEL,
   OUTCOME_VICTORY,
   outcomeTextShadow,
 } from '@/constants/outcomeTheme';
 import { RM_GAME } from '@/constants/reanimatedGame';
 import { colors } from '@/constants/theme';
-import { FONT_RYE } from '@/constants/fonts';
+import { FONT_RYE, FONT_WESTERN_SERIF } from '@/constants/fonts';
 import { getNpcById } from '@/constants/npcs';
+import { getV3NpcPose } from '@/constants/v3DuelAssets';
 import { getNpcDisplayName } from '@/utils/npcLabels';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
@@ -238,7 +239,7 @@ export default function NpcResultScreen() {
   }, [router, id]);
 
   const onNpcSelect = useCallback(() => {
-    router.dismissTo('/npc-select');
+    router.replace('/npc-select');
   }, [router]);
 
   const showContent = adFlowComplete;
@@ -246,6 +247,14 @@ export default function NpcResultScreen() {
   return (
     <PhoneStageShell edgeToEdge>
       <OutcomeBackdrop variant={dayNight} width={winW} height={winH}>
+        {npc ? (
+          <Image
+            source={getV3NpcPose(npc.id, victory ? 'down' : 'idle')}
+            contentFit="contain"
+            transition={0}
+            style={styles.opponentArt}
+          />
+        ) : null}
         {showContent && outcomeKnown && victory ? (
           <VictorySparkles width={winW} seed={completionStampStr ?? 'win'} />
         ) : null}
@@ -266,14 +275,14 @@ export default function NpcResultScreen() {
                   titleAnimatedStyle,
                 ]}
               >
-                {t('result.victory')}
+                YOU WIN
               </Animated.Text>
             ) : (
               <Animated.Text
                 entering={FadeInDown.duration(380)}
                 style={[styles.title, { fontFamily: FONT_RYE, color: theme.title }]}
               >
-                {t('result.defeat')}
+                OUTDRAWN
               </Animated.Text>
             )}
 
@@ -335,9 +344,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     paddingHorizontal: 22,
-    paddingVertical: 28,
+    paddingTop: 28,
+    paddingBottom: 24,
     zIndex: 6,
   },
   contentHidden: {
@@ -352,14 +362,25 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
   },
   panel: {
-    borderRadius: OUTCOME_PANEL.borderRadius,
-    backgroundColor: OUTCOME_PANEL.background,
+    width: '100%',
+    maxWidth: 430,
+    alignSelf: 'center',
+    borderRadius: 3,
+    backgroundColor: 'rgba(13, 7, 4, 0.82)',
     borderWidth: 1,
+    borderColor: 'rgba(212, 165, 116, 0.52)',
     paddingHorizontal: 20,
     paddingTop: 0,
-    paddingBottom: 22,
-    gap: 14,
+    paddingBottom: 18,
+    gap: 10,
     overflow: 'hidden',
+  },
+  opponentArt: {
+    position: 'absolute',
+    left: '18%',
+    right: '18%',
+    top: '22%',
+    height: '36%',
   },
   accentBar: {
     height: 3,
@@ -367,7 +388,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    fontSize: 44,
+    fontSize: 40,
     textAlign: 'center',
     letterSpacing: 3,
     marginTop: 8,
@@ -401,6 +422,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   opponentName: {
+    fontFamily: FONT_WESTERN_SERIF,
     fontSize: 17,
     fontWeight: '700',
     color: colors.cream,

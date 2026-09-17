@@ -1,0 +1,81 @@
+{
+  "project": "High Noon",
+  "version": 2,
+  "artDirection": "High-quality modern 16-bit-inspired Western Pixel Art",
+  "outputRoot": "output_v2_high_quality_pixel",
+  "productionStatus": "validation-only; do not generate beyond Phase 2 until human approval",
+  "logicalCanvases": {
+    "background": "768x432",
+    "character": "256x256",
+    "portrait": "256x256",
+    "firstPersonWeapon": "256x256",
+    "vfx": "128x128",
+    "decorativeUi": "256x256"
+  },
+  "styleLock": {
+    "paletteMaxColors": 48,
+    "antiAliasing": false,
+    "smoothGradients": false,
+    "resampling": "nearest-neighbor only",
+    "transparentKinds": ["character", "firstPersonWeapon", "vfx", "icon"]
+  },
+  "phase2ValidationAssets": [
+    {
+      "path": "output_v2_high_quality_pixel/backgrounds/bronze_day.png",
+      "kind": "background",
+      "size": "768x432",
+      "background": "opaque",
+      "prompt": "High-quality modern 16-bit-inspired Western pixel art. Dusty abandoned frontier town in bronze-tier daylight; flat cream sky, dark brown buildings at left and right, ochre dirt street, clear empty center duel lane. Intentional pixel clusters, crisp hard edges, 24–48 colors, 2–3 step pixel shading, no smooth gradients, no anti-aliasing, no characters, weapons, UI, or text."
+    },
+    {
+      "path": "output_v2_high_quality_pixel/backgrounds/bronze_night.png",
+      "kind": "background",
+      "size": "768x432",
+      "background": "opaque",
+      "prompt": "High-quality modern 16-bit-inspired Western pixel art. The same dusty abandoned frontier town at bronze-tier night; flat void-black sky, small cream moon, warm lantern accents, dark brown buildings at left and right, clear empty center duel lane. Intentional pixel clusters, crisp hard edges, 24–48 colors, 2–3 step pixel shading, no smooth gradients, no anti-aliasing, no characters, weapons, UI, or text."
+    },
+    {
+      "path": "output_v2_high_quality_pixel/characters/player/player_01_idle.png",
+      "kind": "character",
+      "size": "256x256",
+      "background": "transparent",
+      "identity": "player_01",
+      "prompt": "High-quality modern 16-bit-inspired western pixel art full-body unnamed gunslinger. Black hat, dark duster, brown holster, readable neutral idle stance. Intentional pixel clusters, strong dark outline, 24–48 colors, 2–3 step shading, transparent background."
+    },
+    {
+      "path": "output_v2_high_quality_pixel/characters/npc/npc_01_idle.png",
+      "kind": "character",
+      "size": "256x256",
+      "background": "transparent",
+      "identity": "npc_01",
+      "sourceOfTruth": "constants/npcs.ts#1",
+      "prompt": "High-quality modern 16-bit-inspired western pixel art full-body NPC #1 Dust Wind: weathered cowboy, torn poncho, dust-covered clothes, mouth bandana, slouched posture, hand near holster. Intentional pixel clusters, strong dark outline, 24–48 colors, 2–3 step shading, transparent background."
+    }
+  ],
+  "backgroundPlan": {
+    "tiers": ["bronze", "silver", "gold", "platinum", "diamond", "master", "legend"],
+    "variants": ["day", "night"],
+    "special": [{ "path": "output_v2_nes/backgrounds/hidden_pale_rider.png", "tier": "hidden", "note": "Pale Rider exclusive absolute dark western void" }]
+  },
+  "playerPlan": {
+    "sourceOfTruth": "constants/characters.ts",
+    "ids": [1, 2, 3, 4],
+    "states": ["front", "back", "draw", "fire", "hit", "down"],
+    "pathPattern": "output_v2_high_quality_pixel/characters/player/player_{id}_{state}.png"
+  },
+  "npcPlan": {
+    "sourceOfTruth": ["constants/npcs.ts", "types/npc.ts", "locales/npcI18n.ts"],
+    "ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+    "states": ["portrait", "idle", "aim", "fire", "hit", "down"],
+    "pathPattern": "output_v2_high_quality_pixel/characters/npc/npc_{id}_{state}.png",
+    "identityRule": "portrait/idle must be accepted before subsequent states use it as reference"
+  },
+  "weaponPlan": {
+    "states": ["player_hand_revolver_idle", "player_hand_revolver_draw", "player_hand_revolver_fire"],
+    "pathPattern": "output_v2_high_quality_pixel/weapons/{state}.png",
+    "composition": "lower-right foreground quick-draw; never centered FPS weapon"
+  },
+  "vfxPlan": ["muzzle_flash", "gun_smoke", "bullet_impact_dust", "body_fall_dust", "early_tap_warning", "lightning", "red_eye_flash", "void_crack", "echo_wave", "hidden_reveal_elements"],
+  "uiPlan": ["paper_texture", "leather_wood_texture", "decorative_frame", "special_icons"],
+  "excludedFromImages": ["buttons", "health", "READY", "STEADY", "BANG!", "reaction time", "names", "stats", "tier labels", "settings rows", "result text", "blackout overlay"]
+}

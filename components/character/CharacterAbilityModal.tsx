@@ -1,7 +1,8 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { PlayerCharacterId } from '@/constants/characters';
+import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { colors } from '@/constants/theme';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useCharacterLabels } from '@/utils/characterLabels';
@@ -33,7 +34,7 @@ export function CharacterAbilityModal({ visible, characterId, unlocked, onClose 
           onPress={(e) => e.stopPropagation()}
         >
           <Text style={styles.eyebrow}>{t('character.abilityIntro.title')}</Text>
-          <Text style={styles.name}>{labels.name}</Text>
+          <Text style={[styles.name, usesCjkFont(labels.name) ? styles.nameCjk : styles.nameWestern]}>{labels.name}</Text>
           {labels.abilityName ? (
             <>
               <Text style={styles.abilityName}>「{labels.abilityName}」</Text>
@@ -97,6 +98,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.5,
   },
+  nameWestern: { fontFamily: FONT_RYE },
+  nameCjk: { fontFamily: FONT_WESTERN_SERIF, fontWeight: '700', letterSpacing: 0.8 },
   abilityName: {
     fontSize: 18,
     fontWeight: '800',

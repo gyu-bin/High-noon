@@ -17,6 +17,25 @@ export const colors = {
   rustRed: '#DC2626',
 } as const;
 
+/**
+ * V3 UI system tokens.  Existing `colors` values stay intact until the UI
+ * implementation phase so the approved screens keep their current behavior.
+ */
+export const uiV3Colors = {
+  background: '#1A0C06',
+  westernRed: '#8B2500',
+  gold: '#DBB77C',
+  cream: '#F5E6C8',
+  darkBrown: '#24150D',
+  ochre: '#AE8050',
+  dustGray: '#8C7B6B',
+  diamondBlue: '#6DD5FA',
+  masterPurple: '#A855F7',
+  legendOrange: '#F97316',
+  hiddenRed: '#EF4444',
+  voidBlack: '#0A0A0A',
+} as const;
+
 export const theme = {
   colors,
   spacing: {

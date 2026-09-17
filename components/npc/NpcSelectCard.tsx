@@ -9,6 +9,7 @@ import { BOSS_CARD_BORDER, TIER_BADGE } from '@/constants/npcVisual';
 import { getNpcSpriteSource } from '@/constants/spriteAssets';
 import { SPRITE_CACHE_REVISION } from '@/constants/sprites';
 import { colors } from '@/constants/theme';
+import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import type { NpcDefinition } from '@/types/npc';
 import { formatReactionMs } from '@/utils/formatReactionMs';
 import { getNpcDisplayName, getNpcTierLabel } from '@/utils/npcLabels';
@@ -67,7 +68,7 @@ export const NpcSelectCard = memo(function NpcSelectCard({
         ) : null}
       </View>
 
-      <Text style={[styles.name, locked && styles.nameLocked]} numberOfLines={2}>
+      <Text style={[styles.name, usesCjkFont(displayName) ? styles.nameCjk : styles.nameWestern, locked && styles.nameLocked]} numberOfLines={2}>
         {displayName}
       </Text>
 
@@ -178,6 +179,8 @@ const styles = StyleSheet.create({
     color: colors.cream,
     textAlign: 'center',
   },
+  nameWestern: { fontFamily: FONT_RYE, letterSpacing: 0.3 },
+  nameCjk: { fontFamily: FONT_WESTERN_SERIF, fontSize: 12, letterSpacing: 0.35 },
   nameLocked: {
     color: colors.sand,
     opacity: 0.75,

@@ -2,6 +2,7 @@ import { memo, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -62,6 +63,7 @@ const ImpactPuff = memo(function ImpactPuff({
         reduceMotion: RM_GAME,
       }),
     );
+    return () => cancelAnimation(progress);
   }, [active, delayMs, progress, spec.delayMs]);
 
   const style = useAnimatedStyle(() => ({

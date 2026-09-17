@@ -31,19 +31,14 @@ export function DuelSplitBackground({
   return (
     <View style={[styles.root, { width: w, height: h }, style]}>
       <View style={[styles.halfClip, { height: halfH }]}>
-        <DuelCoverImage
-          source={cfg.top}
-          width={w}
-          height={h}
-          bleed={1.24}
-        />
-        <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.topDim }]} />
+        <View style={styles.topArenaRotated}>
+          <DuelCoverImage source={cfg.top} width={w} height={halfH} bleed={1.06} />
+          <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.topDim }]} />
+        </View>
       </View>
 
       <View style={[styles.halfClip, styles.bottomHalf, { height: halfH }]}>
-        <View style={{ position: 'absolute', left: 0, top: -halfH, width: w, height: h }}>
-          <DuelCoverImage source={cfg.bottom} width={w} height={h} bleed={1.24} />
-        </View>
+        <DuelCoverImage source={cfg.bottom} width={w} height={halfH} bleed={1.06} />
         <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.bottomDim }]} />
       </View>
 
@@ -84,6 +79,10 @@ const styles = StyleSheet.create({
   bottomHalf: {
     top: undefined,
     bottom: 0,
+  },
+  topArenaRotated: {
+    ...StyleSheet.absoluteFillObject,
+    transform: [{ rotate: '180deg' }],
   },
   halfDim: {
     ...StyleSheet.absoluteFillObject,

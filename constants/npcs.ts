@@ -1,5 +1,6 @@
 import { DUEL_DEFAULT_BANG_DELAY_MS, DUEL_DEFAULT_STAGE_MS } from '@/constants/duelTiming';
 import type { NpcDefinition, NpcDuelTiming, NpcSpecialAbility } from '@/types/npc';
+import { NPC_ROSTER } from '@/constants/npcRoster';
 
 const B1_7 = DUEL_DEFAULT_BANG_DELAY_MS;
 
@@ -34,7 +35,7 @@ function npc(
 ): NpcDefinition {
   return {
     id,
-    reactionMs,
+    reactionMs: NPC_ROSTER[id - 1]?.[1] ?? reactionMs,
     tier,
     bossFlag,
     unlocked,

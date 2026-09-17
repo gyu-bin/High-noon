@@ -49,6 +49,14 @@
     "iapRestoreNoneBody": "이 계정에서 구매한 항목을 찾지 못했습니다."
   },
   "settings": {
+    "appearance": "언어 및 화면",
+    "darkMode": "다크 모드",
+    "darkModeDesc": "어두운 가죽 톤으로 화면을 표시합니다",
+    "game": "게임",
+    "resetProgress": "기록 초기화",
+    "resetTitle": "진행도와 기록 초기화",
+    "resetBody": "NPC 해금, 캐릭터 해금, 반응 기록과 대결 전적을 초기화합니다. 광고 제거 구매는 유지됩니다.",
+    "resetConfirm": "초기화",
     "languageAuto": "자동",
     "languageAutoSub": "기기 설정",
     "languageAutoHint": "기기 언어 · {{lang}}",
@@ -60,6 +68,10 @@
     "languageCodeJa": "JA"
   },
   "game": {
+    "gunslinger": "총잡이",
+    "versus": "대결",
+    "readyToDraw": "총을 뽑을 준비가 됐나?",
+    "start": "시작",
     "pause": "일시정지",
     "continue": "계속하기",
     "mainMenu": "메인 메뉴",
@@ -110,6 +122,7 @@
     "slower": "더 느림"
   },
   "localDuel": {
+    "portraitInstructions": "휴대폰을 세로로 놓고 마주 앉으세요. 위쪽은 P2, 아래쪽은 P1입니다. BANG 신호가 나오면 각자 자기 화면 절반을 터치하세요.",
     "selectRounds": "판수 선택",
     "sub": "P1·P2를 고른 뒤 다음으로 이동하세요.",
     "roundsSub": "판수를 고르면 바로 대결이 시작됩니다.",
@@ -177,7 +190,22 @@
     "title": "기록",
     "avgReaction": "전체 평균 반응",
     "npcCleared": "NPC 클리어",
-    "footnote": "vs NPC·2인 대결에서 반응이 기록될 때마다 평균이 갱신됩니다."
+    "footnote": "vs NPC·2인 대결에서 반응이 기록될 때마다 평균이 갱신됩니다.",
+    "myStats": "나의 기록",
+    "npcWinRate": "NPC 승률",
+    "totalDuels": "총 대결",
+    "bestReaction": "최고 반응",
+    "charactersCollected": "캐릭터 수집",
+    "recordingNotice": "승률과 대결 수는 이 버전부터 완료한 대결 기준입니다.",
+    "npcRecords": "NPC 전적",
+    "recentDuels": "최근 대결 · 최대 200건",
+    "noMatches": "아직 기록된 대결이 없습니다.",
+    "playerVictory": "{{player}} 승리",
+    "achievements": "업적",
+    "achievementFirst": "첫 결투 — NPC 1명 클리어",
+    "achievementHunter": "현상금 사냥꾼 — NPC 10명 클리어",
+    "achievementLegend": "황야의 전설 — NPC 전원 클리어",
+    "achievementLightning": "번개 같은 손 — 200ms 이하 반응"
   },
   "npcSelect": {
     "title": "대결상대 선택",
@@ -233,6 +261,13 @@
     "ready": "레디!",
     "steady": "스테디!",
     "bang": "뱅!"
+  },
+  "meta": {
+    "menu": { "tagline": "결투가 기다린다", "solo": "1인 결투", "local": "2인 플레이" },
+    "character": { "title": "총잡이를 고르세요", "subtitle": "총잡이가 화면의 주인공입니다", "select": "선택", "previous": "이전 캐릭터", "next": "다음 캐릭터" },
+    "npc": { "title": "상대를 고르세요", "subtitle": "수배 전단", "wanted": "수배", "special": "특수 결투", "duel": "결투", "locked": "잠김", "boss": "보스 상대", "reaction": "반응 · {{ms}} ms", "record": "기록", "cleared": "클리어", "best": "최고 반응", "navigator": "상대 탐색" },
+    "settings": { "subtitle": "나만의 개척지 설정", "audio": "사운드 및 피드백" },
+    "stats": { "title": "나의 기록", "subtitle": "결투 기록장" }
   },
   "backup": {
     "title": "진행도 백업",

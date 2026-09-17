@@ -7,6 +7,7 @@ import Animated, {
   Easing,
   cancelAnimation,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSequence,
   withTiming,
@@ -21,22 +22,17 @@ import {
   AbilityOverlay,
   type AbilityOverlayType,
 } from '@/components/game/AbilityOverlay';
-import { DuelArenaLayout } from '@/components/game/DuelArenaLayout';
+import { NpcFirstPersonDuelArena } from '@/components/game/NpcFirstPersonDuelArena';
 import { NpcAbilityIntroModal } from '@/components/game/NpcAbilityIntroModal';
 import {
   NpcRoundModal,
   type NpcRoundModalData,
 } from '@/components/game/NpcRoundModal';
 import { PauseMenuModal } from '@/components/game/PauseMenuModal';
-import { DuelFullBackground } from '@/components/game/DuelFullBackground';
-import { SceneBackground } from '@/components/game/SceneBackground';
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
-import {
-  getBackgroundImage,
-  pickBattleDayNight,
-} from '@/constants/gameImages';
-import { DUEL_VISUAL_THEME, MINIMAL_DUEL } from '@/constants/duelTheme';
+import { pickBattleDayNight } from '@/constants/gameImages';
 import { RM_GAME } from '@/constants/reanimatedGame';
+import { uiV3Colors } from '@/constants/theme';
 import { DEV_UNLOCK_ALL_NPCS } from '@/constants/devFlags';
 import { getNpcById } from '@/constants/npcs';
 import {
@@ -47,6 +43,7 @@ import {
 } from '@/constants/duelPresentation';
 import { buildDuelStartParams, CHAOS_MODES, type ChaosMode } from '@/utils/npcDuelParams';
 import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
+import { useDuelBackgroundPause } from '@/hooks/useDuelBackgroundPause';
 import { useDuelEngine, type DuelOutcome, type DuelPhase } from '@/hooks/useDuelEngine';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import {
@@ -59,10 +56,9 @@ import { applyAbility } from '@/utils/characterAbility';
 import { simulateNpcReaction, type NpcReactionSimulation } from '@/utils/npcAI';
 import {
   npcSpritePoseFromPhase,
-  playerSpritePoseFromPhase,
 } from '@/utils/spritePose';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
-import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
+import { prefetchNpcDuelPresentation } from '@/utils/preloadDuelSprites';
 import { AdReviveModal } from '@/components/game/AdReviveModal';
 import { preloadInterstitial, preloadRewardedAd, showRewardedAd, showStageCompleteAd } from '@/utils/adService';
 import { play, playGunshot } from '@/utils/audioService';
@@ -114,17 +110,8 @@ export default function NpcGameScreen() {
   const stage = usePhoneStageMetrics();
   const winW = stage.windowWidth;
   const winH = stage.windowHeight;
-  const isLandscape = winW > winH;
-  const selectedCharacterId = useSettingsStore((s) => s.selectedCharacterId);
+  const reduceMotion = useReducedMotion();
 
-  // 전 화면 회전 허용 — 결투 화면도 잠금 없이 유지
-  useFocusEffect(
-    useCallback(() => {
-      const so = ScreenOrientation;
-      if (!so) return;
-      void so.unlockAsync().catch(() => {});
-    }, []),
-  );
   const overlayPad = useMemo(
     () => ({
       top: insets.top + 6,
@@ -151,24 +138,20 @@ export default function NpcGameScreen() {
   );
   const battleDayNight = useMemo(
     () => (npc ? pickBattleDayNight(npc.id) : 'day'),
-    [npc?.id],
+    [npc],
   );
-  const duelBg = useMemo(() => {
-    if (DUEL_VISUAL_THEME === 'minimal') {
-      return { kind: 'solid' as const, color: MINIMAL_DUEL.bg };
-    }
-    if (!npc) {
-      return { kind: 'full' as const, variant: 'day' as const };
-    }
-    return getBackgroundImage(npc.tier, npc.id, battleDayNight);
-  }, [npc, battleDayNight]);
   const duelBgmTrack = npc?.bossFlag ? ('boss' as const) : ('duel' as const);
   useScreenBgm(npc ? duelBgmTrack : null, true);
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
+  const paleRiderUnlocked = useProgressStore((s) => s.paleRiderUnlocked);
+  const canRenderNpcDuel =
+    DEV_UNLOCK_ALL_NPCS ||
+    (npc != null &&
+      Number.isFinite(npcId) &&
+      npcId >= 1 &&
+      (npcId === 22 ? paleRiderUnlocked || selectPaleRiderUnlocked() : npcId <= highestUnlocked));
 
   const currentRound = useGameStore((s) => s.currentRound);
-  const playerScore = useGameStore((s) => s.playerScore);
-  const opponentScore = useGameStore((s) => s.opponentScore);
   const playerHearts = useGameStore((s) => s.playerHearts);
   const opponentHearts = useGameStore((s) => s.opponentHearts);
   const startMatch = useGameStore((s) => s.startMatch);
@@ -176,8 +159,16 @@ export default function NpcGameScreen() {
   const setHearts = useGameStore((s) => s.setHearts);
   const setAbilityUsed = useGameStore((s) => s.setAbilityUsed);
   const nextRound = useGameStore((s) => s.nextRound);
+  /** First-person revolver is presentation only; the engine retains tap timing. */
+  const [playerWeaponShot, setPlayerWeaponShot] = useState(false);
+  const [npcWeaponShot, setNpcWeaponShot] = useState(false);
 
-  const fireGunshot = useCallback(() => {
+  const firePlayerGunshot = useCallback(() => {
+    setPlayerWeaponShot(true);
+    playGunshot();
+  }, []);
+  const fireNpcGunshot = useCallback(() => {
+    setNpcWeaponShot(true);
     playGunshot();
   }, []);
 
@@ -213,11 +204,15 @@ export default function NpcGameScreen() {
     resumeTimers,
   } = useDuelEngine({
     onBangEnter: triggerBangCue,
-    onPlayerShoot: fireGunshot,
-    onOpponentShoot: fireGunshot,
+    onPlayerShoot: firePlayerGunshot,
+    onOpponentShoot: fireNpcGunshot,
   });
 
   useDuelBgmDuck(phase);
+  useDuelBackgroundPause(phase !== '대기' && phase !== '결과', useCallback(() => {
+    pauseTimers();
+    setPaused(true);
+  }, [pauseTimers]));
 
   const startRoundDuel = useCallback(() => {
     if (!npc) return;
@@ -258,11 +253,8 @@ export default function NpcGameScreen() {
   /** #21 chaos 조합 적용 후 신호판 반영용 */
   const [, setChaosRenderTick] = useState(0);
   const [npcRoundWinBurstId, setNpcRoundWinBurstId] = useState(0);
-  const [playerShootFlash, setPlayerShootFlash] = useState(false);
   const wasPausedRef = useRef(false);
 
-  const blueRing = useSharedValue(0);
-  const playerTapAck = useSharedValue(0);
   const shakeX = useSharedValue(0);
   const shakeY = useSharedValue(0);
   /** #22 페일 — STEADY~BANG 구간과 맞춘 암전 페이드(ms) */
@@ -276,6 +268,7 @@ export default function NpcGameScreen() {
   const prevPhaseRef = useRef<DuelPhase>(phase);
   const spokenCuesRef = useRef({ ready: false, steady: false });
   const signalHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const earlyOverlayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const outcomeRevealTimersRef = useRef<{
     defeat: ReturnType<typeof setTimeout> | null;
     modal: ReturnType<typeof setTimeout> | null;
@@ -291,40 +284,9 @@ export default function NpcGameScreen() {
   const npcRoundSimRef = useRef<NpcReactionSimulation | null>(null);
   const leavingForResultRef = useRef(false);
 
-  const blueStyle = useAnimatedStyle(() => ({
-    opacity: blueRing.value,
-  }));
-
-  const playerTapAckStyle = useAnimatedStyle(() => ({
-    opacity: playerTapAck.value,
-  }));
-
   const paleDimStyle = useAnimatedStyle(() => ({
     opacity: paleDimOpacity.value,
   }));
-
-  const pulsePlayerTapAck = useCallback(
-    (kind: 'bang' | 'other') => {
-      cancelAnimation(playerTapAck);
-      playerTapAck.value = 0;
-      const peak = kind === 'bang' ? 0.22 : 0.14;
-      const upMs = kind === 'bang' ? 100 : 70;
-      const downMs = kind === 'bang' ? 380 : 260;
-      playerTapAck.value = withSequence(
-        withTiming(peak, {
-          duration: upMs,
-          easing: Easing.out(Easing.quad),
-          reduceMotion: RM_GAME,
-        }),
-        withTiming(0, {
-          duration: downMs,
-          easing: Easing.inOut(Easing.quad),
-          reduceMotion: RM_GAME,
-        }),
-      );
-    },
-    [playerTapAck],
-  );
 
   const revealNpcDefeat = useCallback((withHeartBreak: boolean) => {
     if (outcomeRevealTimersRef.current.defeat != null) {
@@ -332,13 +294,9 @@ export default function NpcGameScreen() {
       outcomeRevealTimersRef.current.defeat = null;
     }
     setDefeatedSide('npc');
-    requestAnimationFrame(() => {
-      setTimeout(() => void play('defeat_thud'), 170);
-      void trigger('medium');
-      if (withHeartBreak) {
-        setTimeout(() => void play('heart_break'), 130);
-      }
-    });
+    void play('defeat_thud');
+    void trigger('medium');
+    if (withHeartBreak) void play('heart_break');
   }, []);
 
   useEffect(() => {
@@ -382,7 +340,7 @@ export default function NpcGameScreen() {
     }
 
     return clearOpponentShot;
-  }, [phase, npc?.id, scheduleOpponentShot, clearOpponentShot]);
+  }, [phase, npc, scheduleOpponentShot, clearOpponentShot]);
 
   useEffect(() => {
     const prev = prevPhaseRef.current;
@@ -416,6 +374,10 @@ export default function NpcGameScreen() {
 
   useEffect(
     () => () => {
+      if (earlyOverlayTimerRef.current != null) {
+        clearTimeout(earlyOverlayTimerRef.current);
+        earlyOverlayTimerRef.current = null;
+      }
       if (outcomeRevealTimersRef.current.defeat != null) {
         clearTimeout(outcomeRevealTimersRef.current.defeat);
       }
@@ -471,10 +433,10 @@ export default function NpcGameScreen() {
       let cancelled = false;
       void (async () => {
         if (leavingForResultRef.current) return;
-        const characterId = useSettingsStore.getState().selectedCharacterId;
         await Promise.all([
+          ScreenOrientation?.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {}),
           preloadSceneImages(),
-          npc ? prefetchDuelSprites(npc.id, characterId) : Promise.resolve(),
+          npc ? prefetchNpcDuelPresentation(npc.id, npc.tier, battleDayNight) : Promise.resolve(),
         ]);
         if (cancelled || !npc) return;
         if (npc?.id !== 21) {
@@ -488,10 +450,14 @@ export default function NpcGameScreen() {
         processedOutcomeKey.current = '';
         adReviveUsedRef.current = false;
         resetDuel();
+        setDefeatedSide(null);
+        setPlayerWeaponShot(false);
+        setNpcWeaponShot(false);
+        setModalVisible(false);
+        setModal(null);
         if (hasNpcSpecialAbility(npc.specialAbility)) {
           setAbilityIntroVisible(true);
         } else {
-          setAbilityIntroVisible(false);
           startRoundDuel();
         }
       })();
@@ -505,6 +471,7 @@ export default function NpcGameScreen() {
       npc,
       npcId,
       highestUnlocked,
+      battleDayNight,
       router,
       startMatch,
       resetDuel,
@@ -533,12 +500,11 @@ export default function NpcGameScreen() {
 
     if (o.earlyTap) {
       setEarlyOverlay(true);
-      blueRing.value = withSequence(
-        RM_GAME,
-        withTiming(1, { duration: 60, reduceMotion: RM_GAME }),
-        withTiming(0, { duration: 720, reduceMotion: RM_GAME }),
-      );
-      setTimeout(() => setEarlyOverlay(false), 800);
+      if (earlyOverlayTimerRef.current != null) clearTimeout(earlyOverlayTimerRef.current);
+      earlyOverlayTimerRef.current = setTimeout(() => {
+        setEarlyOverlay(false);
+        earlyOverlayTimerRef.current = null;
+      }, 800);
       data = {
         kind: 'loss',
         reason: 'early',
@@ -678,11 +644,9 @@ export default function NpcGameScreen() {
       playerStreakRef.current = 0;
     }
 
-    const modalDelay = o.earlyTap
-      ? DUEL_EARLY_MODAL_DELAY_MS
-      : nextDefeatedSide != null
+    const modalDelay = nextDefeatedSide != null
         ? DUEL_DEFEAT_MODAL_DELAY_MS
-        : 0;
+        : DUEL_EARLY_MODAL_DELAY_MS;
 
     if (outcomeRevealTimersRef.current.defeat != null) {
       clearTimeout(outcomeRevealTimersRef.current.defeat);
@@ -704,13 +668,9 @@ export default function NpcGameScreen() {
     } else {
       outcomeRevealTimersRef.current.defeat = setTimeout(() => {
         setDefeatedSide(nextDefeatedSide);
-        requestAnimationFrame(() => {
-          setTimeout(() => void play('defeat_thud'), 170);
-          void trigger('medium');
-          if (playerLostHeart || npcLostHeart) {
-            setTimeout(() => void play('heart_break'), 130);
-          }
-        });
+        void play('defeat_thud');
+        void trigger('medium');
+        if (playerLostHeart || npcLostHeart) void play('heart_break');
         outcomeRevealTimersRef.current.defeat = null;
       }, DUEL_DEFEAT_REVEAL_DELAY_MS);
     }
@@ -855,7 +815,6 @@ export default function NpcGameScreen() {
     npc,
     currentRound,
     lastSteadyToBangDelayMs,
-    blueRing,
     setScores,
     setHearts,
     setAbilityUsed,
@@ -1042,20 +1001,16 @@ export default function NpcGameScreen() {
   const onShootPress = useCallback(() => {
     if (!shootCapturesEarly) return;
     const armed = isBangReactionArmed();
-    if (armed) {
-      pulsePlayerTapAck('bang');
-    } else {
-      pulsePlayerTapAck('other');
+    if (!armed) {
       void trigger('light');
-      setPlayerShootFlash(true);
     }
     tap();
-  }, [shootCapturesEarly, isBangReactionArmed, pulsePlayerTapAck, tap]);
+  }, [shootCapturesEarly, isBangReactionArmed, tap]);
 
   const leaveToNpcSelect = useCallback(() => {
     setPaused(false);
     resetDuel();
-    router.back();
+    router.replace('/npc-select');
   }, [resetDuel, router]);
 
   const leaveToMainMenu = useCallback(() => {
@@ -1110,12 +1065,6 @@ export default function NpcGameScreen() {
     if (defeatedSide === 'player') return 'idle' as const;
     return npcSpritePoseFromPhase(phase, holdResultShoot);
   }, [defeatedSide, phase, holdResultShoot]);
-  const playerPose = useMemo(() => {
-    if (defeatedSide === 'player') return 'defeat' as const;
-    if (defeatedSide === 'npc') return 'idle' as const;
-    return playerSpritePoseFromPhase(phase, playerShootFlash, holdResultShoot);
-  }, [defeatedSide, phase, playerShootFlash, holdResultShoot]);
-
   useEffect(() => {
     if (!chaosBanner) return;
     const t = setTimeout(() => setChaosBanner(null), 1400);
@@ -1124,7 +1073,8 @@ export default function NpcGameScreen() {
 
   useEffect(() => {
     if (phase !== '뱅' && phase !== '결과') {
-      setPlayerShootFlash(false);
+      setPlayerWeaponShot(false);
+      setNpcWeaponShot(false);
     }
   }, [phase]);
 
@@ -1147,6 +1097,23 @@ export default function NpcGameScreen() {
     !!npc &&
     (npc.specialAbility === 'echoReady' || (isChaos && chaosMode === 'echo'));
 
+  /** #21 intentionally reuses the same asset presentation as the stolen rule. */
+  const specialPresentation = useMemo<
+    'mirror' | 'thunderbolt' | 'redEye' | 'void' | 'echo' | null
+  >(() => {
+    if (!npc) return null;
+    if (npc.id === 13) return 'mirror';
+    if (npc.id === 14) return 'thunderbolt';
+    if (npc.id === 18) return 'redEye';
+    if (npc.id === 19) return 'void';
+    if (npc.id === 20) return 'echo';
+    if (!isChaos) return null;
+    if (chaosMode === 'thunder') return 'thunderbolt';
+    if (chaosMode === 'void') return 'void';
+    if (chaosMode === 'echo') return 'echo';
+    return null;
+  }, [chaosMode, isChaos, npc]);
+
   const screenShakeIntensity = useMemo(() => {
     if (!npc) return 0;
     if (isChaos && chaosMode === 'quake') return 18;
@@ -1154,7 +1121,7 @@ export default function NpcGameScreen() {
     if (npc.specialAbility === 'screenShakeMedium') return 12;
     if (npc.specialAbility === 'screenShakeHeavy') return 20;
     return 0;
-  }, [npc?.specialAbility, isChaos, chaosMode]);
+  }, [npc, isChaos, chaosMode]);
 
   useEffect(() => {
     if (screenShakeIntensity === 0) {
@@ -1166,7 +1133,9 @@ export default function NpcGameScreen() {
     }
 
     if (phase === '집중' || phase === '페이크') {
-      const intensity = screenShakeIntensity;
+      // Shake animates only the presentation tree. It never changes the fixed
+      // full-screen tap surface rendered by NpcFirstPersonDuelArena.
+      const intensity = reduceMotion ? screenShakeIntensity * 0.25 : screenShakeIntensity;
       const duration = screenShakeIntensity >= 15 ? 50 : screenShakeIntensity >= 10 ? 70 : 90;
 
       shakeX.value = withRepeat(
@@ -1199,7 +1168,7 @@ export default function NpcGameScreen() {
       shakeX.value = withTiming(0, { duration: 100, reduceMotion: RM_GAME });
       shakeY.value = withTiming(0, { duration: 100, reduceMotion: RM_GAME });
     }
-  }, [phase, screenShakeIntensity, shakeX, shakeY]);
+  }, [phase, reduceMotion, screenShakeIntensity, shakeX, shakeY]);
 
   useEffect(() => {
     if (npc?.id !== 22) {
@@ -1216,7 +1185,7 @@ export default function NpcGameScreen() {
       cancelAnimation(paleDimOpacity);
       paleDimOpacity.value = 0;
       paleDimOpacity.value = withTiming(1, {
-        duration: paleFadeDurationMsRef.current,
+        duration: reduceMotion ? 220 : paleFadeDurationMsRef.current,
         easing: Easing.out(Easing.cubic),
         reduceMotion: RM_GAME,
       });
@@ -1225,28 +1194,16 @@ export default function NpcGameScreen() {
       paleDimOpacity.value = 1;
     } else if (phase !== '집중' && phase !== '페이크') {
       cancelAnimation(paleDimOpacity);
-      paleDimOpacity.value = withTiming(0, { duration: 400, reduceMotion: RM_GAME });
+      paleDimOpacity.value = withTiming(0, { duration: reduceMotion ? 120 : 400, reduceMotion: RM_GAME });
     }
-  }, [phase, npc?.id, paleDimOpacity]);
+  }, [phase, npc?.id, paleDimOpacity, reduceMotion]);
 
   const screenShakeStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: shakeX.value }, { translateY: shakeY.value }],
   }));
 
-  const arenaShellProps = {
-    style: { width: winW, height: winH } as const,
-    contentWidth: winW,
-    contentHeight: winH,
-  };
-
   const arenaBodyContent = (
     <>
-      <Animated.View pointerEvents="none" style={[styles.blueRing, blueStyle]} />
-
-      {voidShroud && (phase === '집중' || phase === '페이크') ? (
-        <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, styles.voidArenaDim]} />
-      ) : null}
-
       {chaosBanner ? (
         <View pointerEvents="none" style={styles.chaosBannerWrap}>
           <Text style={styles.chaosBannerTitle}>CHAOS</Text>
@@ -1264,46 +1221,40 @@ export default function NpcGameScreen() {
 
       {earlyOverlay ? (
         <View pointerEvents="none" style={styles.earlyLabelWrap}>
-          <Text
-            style={[
-              styles.earlyLabel,
-              DUEL_VISUAL_THEME === 'minimal' && styles.earlyLabelInk,
-            ]}
-          >
-            EARLY!
-          </Text>
+          <Text style={styles.earlyLabel}>EARLY!</Text>
         </View>
       ) : null}
 
-      {npc ? (
+      {npc && canRenderNpcDuel ? (
         <>
-          <DuelArenaLayout
+          <NpcFirstPersonDuelArena
             width={winW}
             height={winH}
             paddingTop={overlayPad.top}
             paddingBottom={insets.bottom}
+            paddingLeft={overlayPad.left}
             paddingRight={overlayPad.right}
             npcId={npc.id}
             tier={npc.tier}
             bossFlag={npc.bossFlag}
+            dayNight={battleDayNight}
             npcPose={npcPose}
             npcVictoryActive={defeatedSide === 'player'}
-            playerVictoryActive={defeatedSide === 'npc'}
-            playerCharacterId={selectedCharacterId}
-            playerPose={playerPose}
+            playerDefeated={defeatedSide === 'player'}
             signalPhase={signalBoardPhase}
             blindBangText={blindBangText}
             hideBangText={hideBangText}
             voidShroud={voidShroud}
-            swapSignalLabels={false}
-            invertSignalColors={false}
             echoBangMiddleSignal={echoBangMiddleSignal}
+            specialPresentation={specialPresentation}
             opponentHearts={opponentHearts}
             playerHearts={playerHearts}
-            playerScore={playerScore}
-            opponentScore={opponentScore}
+            currentRound={currentRound}
             shootCapturesEarly={shootCapturesEarly}
             shootActive={shootActive}
+            playerShotActive={playerWeaponShot}
+            npcShotActive={npcWeaponShot}
+            earlyWarning={earlyOverlay}
             onShootPress={onShootPress}
             onPause={() => {
               // BANG 중 pause→resume은 반응 시계만 밀려 "보고 준비했다 탭" 악용이 가능
@@ -1311,9 +1262,7 @@ export default function NpcGameScreen() {
               setPaused(true);
             }}
             pauseDisabled={phase === '페이크' || phase === '뱅'}
-            playerTapAckStyle={playerTapAckStyle}
-            hideBottomHud={modalVisible || abilityIntroVisible}
-            orientation={isLandscape ? 'landscape' : 'portrait'}
+            contentShakeStyle={screenShakeIntensity > 0 ? screenShakeStyle : undefined}
           />
 
           {/* 아레나 위에 올려야 암전이 보임 — STEADY 진입 시 라운드 대기 시간만큼 서서히 */}
@@ -1334,6 +1283,7 @@ export default function NpcGameScreen() {
             visible={modalVisible}
             data={modal}
             onContinue={onContinue}
+            onMenu={leaveToMainMenu}
             winBurstId={npcRoundWinBurstId}
             paddingBottom={insets.bottom}
           />
@@ -1365,50 +1315,9 @@ export default function NpcGameScreen() {
     </>
   );
 
-  const arenaBody = screenShakeIntensity > 0 ? (
-    <Animated.View style={[{ flex: 1 }, screenShakeStyle]}>
-      {arenaBodyContent}
-    </Animated.View>
-  ) : (
-    arenaBodyContent
-  );
-
   return (
-    <PhoneStageShell
-      edgeToEdge
-      backgroundColor={DUEL_VISUAL_THEME === 'minimal' ? MINIMAL_DUEL.stageEdge : undefined}
-    >
-      {duelBg.kind === 'solid' ? (
-        <SceneBackground
-          {...arenaShellProps}
-          solidColor={duelBg.color}
-          dimColor={
-            DUEL_VISUAL_THEME === 'minimal'
-              ? 'transparent'
-              : battleDayNight === 'night'
-                ? 'rgba(12, 8, 5, 0.1)'
-                : 'rgba(12, 8, 5, 0.16)'
-          }
-        >
-          {arenaBody}
-        </SceneBackground>
-      ) : duelBg.kind === 'full' ? (
-        <DuelFullBackground {...arenaShellProps} variant={duelBg.variant}>
-          {arenaBody}
-        </DuelFullBackground>
-      ) : (
-        <SceneBackground
-          {...arenaShellProps}
-          source={duelBg.source}
-          dimColor={
-            battleDayNight === 'night'
-              ? 'rgba(12, 8, 5, 0.1)'
-              : 'rgba(12, 8, 5, 0.16)'
-          }
-        >
-          {arenaBody}
-        </SceneBackground>
-      )}
+    <PhoneStageShell edgeToEdge backgroundColor={uiV3Colors.background}>
+      <View style={{ width: winW, height: winH }}>{arenaBodyContent}</View>
     </PhoneStageShell>
   );
 }
@@ -1418,11 +1327,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#000000',
     zIndex: 20,
-  },
-  voidArenaDim: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(8, 2, 22, 0.38)',
-    zIndex: 4,
   },
   chaosBannerWrap: {
     position: 'absolute',
@@ -1448,12 +1352,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
   },
-  blueRing: {
-    ...StyleSheet.absoluteFillObject,
-    borderWidth: 10,
-    borderColor: '#4A90D9',
-    zIndex: 25,
-  },
   earlyLabelWrap: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
@@ -1468,10 +1366,5 @@ const styles = StyleSheet.create({
     textShadowColor: '#1A3A6E',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
-  },
-  earlyLabelInk: {
-    color: MINIMAL_DUEL.ink,
-    textShadowColor: 'transparent',
-    textShadowRadius: 0,
   },
 });

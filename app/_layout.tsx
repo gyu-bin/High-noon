@@ -3,6 +3,7 @@ import 'react-native-gesture-handler';
 import i18n, { changeLanguage, i18nInitPromise, languageFromCaptureUrl } from '@/locales';
 
 import { Rye_400Regular, useFonts } from '@expo-google-fonts/rye';
+import { NanumMyeongjo_700Bold } from '@expo-google-fonts/nanum-myeongjo/700Bold';
 import { Stack, usePathname, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -128,6 +129,7 @@ function RootLayoutContent() {
   const language = useSettingsStore((s) => s.language);
   const [fontsLoaded, fontError] = useFonts({
     Rye_400Regular,
+    NanumMyeongjo_700Bold,
   });
 
   const ready = fontsLoaded || fontError != null;
@@ -171,14 +173,15 @@ function RootLayoutContent() {
   }, [appReady]);
 
   useEffect(() => {
+    // Keep menus, previews and duels in the same upright orientation.
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const so: typeof import('expo-screen-orientation') = require('expo-screen-orientation');
-      void so.unlockAsync().catch(() => {});
+      void so.lockAsync(so.OrientationLock.PORTRAIT_UP).catch(() => {});
     } catch {
       // 네이티브 모듈 미포함 빌드
     }
-  }, []);
+  }, [pathname]);
 
   /** 백그라운드 → 포그라운드 복귀 시 OTA 확인·즉시 reload (결투 중 제외) */
   useEffect(() => {
@@ -270,7 +273,7 @@ function RootLayoutContent() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
+      <StatusBar style="light" hidden={isInGameRoute(pathname)} />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: colors.darkBrown },
@@ -293,6 +296,10 @@ function RootLayoutContent() {
         <Stack.Screen
           name="stats"
           options={{ title: t('nav.stats'), headerTitleAlign: 'center' }}
+        />
+        <Stack.Screen
+          name="settings"
+          options={{ title: t('menu.settings'), headerTitleAlign: 'center' }}
         />
         <Stack.Screen
           name="character-select"
