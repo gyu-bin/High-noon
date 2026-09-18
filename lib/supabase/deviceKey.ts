@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
+
 const DEVICE_KEY_STORAGE = 'high-noon-pvp-device-key';
 
 type SecureStoreMod = typeof import('expo-secure-store');
@@ -40,13 +42,18 @@ async function storageSet(key: string, value: string): Promise<void> {
   await AsyncStorage.setItem(key, value);
 }
 
-/** 랭킹 식별자는 bearer secret이므로 암호학적으로 안전한 난수만 허용한다. */
-async function randomHex32(): Promise<string> {
-  const Crypto = await import('expo-crypto');
-  const bytes = await Crypto.getRandomBytesAsync(32);
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+/**
+ * Expo Go와 이전 네이티브 빌드에도 없는 모듈을 요구하지 않도록 설치 키는
+ * pgcrypto가 있는 랭킹 서버에서 발급한다. 클라이언트는 SecureStore에만 보관한다.
+ */
+async function issueDeviceKey(): Promise<string> {
+  if (!isSupabaseConfigured) throw new Error('supabase_not_configured');
+  const { data, error } = await getSupabase().rpc('pvp_issue_device_key');
+  if (error) throw error;
+  if (typeof data !== 'string' || !/^[a-f0-9]{64}$/i.test(data)) {
+    throw new Error('invalid_device_key_response');
+  }
+  return data.toLowerCase();
 }
 
 /**
@@ -57,7 +64,7 @@ export async function getOrCreateDeviceKey(): Promise<string> {
   const existing = await storageGet(DEVICE_KEY_STORAGE);
   if (existing && existing.length >= 32) return existing;
 
-  const hex = await randomHex32();
+  const hex = await issueDeviceKey();
   await storageSet(DEVICE_KEY_STORAGE, hex);
   return hex;
 }

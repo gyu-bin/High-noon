@@ -22,6 +22,7 @@ import { colors } from '@/constants/theme';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { recordAppEvent } from '@/lib/supabase/analyticsApi';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
+import { formatUnknownError } from '@/lib/supabase/errors';
 import { pvpGetFriendChallenge, pvpLogin } from '@/lib/supabase/pvpApi';
 import { usePvpStore } from '@/store/pvpStore';
 import type { FriendChallenge } from '@/types/pvp';
@@ -79,7 +80,7 @@ export default function RankingChallengeScreen() {
         setChallenge(data);
         void recordAppEvent('challenge_open', { code });
       } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = formatUnknownError(e);
         setChallenge(null);
         setError(mapChallengeError(msg, t));
       } finally {
@@ -107,7 +108,7 @@ export default function RankingChallengeScreen() {
       beginFriendMatch(challenge);
       router.replace('/ranking/duel' as Href);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = formatUnknownError(e);
       setError(msg);
       setStarting(false);
     }

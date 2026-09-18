@@ -81,6 +81,14 @@ begin
 end;
 $$;
 
+-- Expo Go와 이미 설치된 네이티브 앱에서도 추가 crypto 모듈 없이 안전한
+-- 설치 비밀키를 받을 수 있도록 서버의 pgcrypto CSPRNG를 사용한다.
+create or replace function public.pvp_issue_device_key()
+returns text language sql volatile
+set search_path = public, extensions as $$
+  select encode(gen_random_bytes(32), 'hex')
+$$;
+
 create or replace function public.pvp_new_alias()
 returns text language plpgsql set search_path = public as $$
 declare
@@ -369,6 +377,7 @@ revoke all on table public.profiles, public.device_identities, public.pvp_matche
   from anon, authenticated;
 revoke execute on function public.rating_to_rank_tier(integer) from public;
 revoke execute on function public.pvp_device_hash(text) from public;
+revoke execute on function public.pvp_issue_device_key() from public;
 revoke execute on function public.pvp_new_alias() from public;
 revoke execute on function public.pvp_login_device(text) from public;
 revoke execute on function public.pvp_reroll_display_name(text) from public;
@@ -378,6 +387,7 @@ revoke execute on function public.pvp_submit_match(text,uuid,boolean,integer[],i
 revoke execute on function public.pvp_leaderboard(text,integer) from public;
 revoke execute on function public.pvp_history(text,integer) from public;
 grant execute on function public.pvp_login_device(text) to anon, authenticated;
+grant execute on function public.pvp_issue_device_key() to anon, authenticated;
 grant execute on function public.pvp_reroll_display_name(text) to anon, authenticated;
 grant execute on function public.pvp_update_profile(text,integer,integer,boolean) to anon, authenticated;
 grant execute on function public.pvp_matchmake(text) to anon, authenticated;

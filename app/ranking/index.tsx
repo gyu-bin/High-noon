@@ -27,6 +27,7 @@ import {
 import { colors } from '@/constants/theme';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
+import { formatUnknownError, isNetworkError } from '@/lib/supabase/errors';
 import {
   pvpGetDaily,
   pvpLeaderboard,
@@ -122,7 +123,9 @@ export default function RankingHubScreen() {
         setDaily(null);
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = isNetworkError(e)
+        ? t('ranking.networkFailed')
+        : formatUnknownError(e);
       setError(msg);
     } finally {
       setLoading(false);
@@ -152,12 +155,14 @@ export default function RankingHubScreen() {
       });
       router.push('/ranking/duel' as Href);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = isNetworkError(e)
+        ? t('ranking.networkFailed')
+        : formatUnknownError(e);
       setError(msg);
     } finally {
       setMatching(false);
     }
-  }, [beginMatch, dailyMatching, matching, router]);
+  }, [beginMatch, dailyMatching, matching, router, t]);
 
   const startDailyDuel = useCallback(async () => {
     if (matching || dailyMatching) return;
@@ -180,7 +185,9 @@ export default function RankingHubScreen() {
       setDailyChallenge(today);
       router.push('/ranking/duel' as Href);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = isNetworkError(e)
+        ? t('ranking.networkFailed')
+        : formatUnknownError(e);
       setError(msg);
     } finally {
       setDailyMatching(false);

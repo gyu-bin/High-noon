@@ -1,5 +1,6 @@
 import { getOrCreateDeviceKey } from '@/lib/supabase/deviceKey';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import { throwSupabaseError } from '@/lib/supabase/errors';
 import type {
   DailyChallenge,
   DailySubmitResult,
@@ -52,7 +53,7 @@ export async function pvpLogin(): Promise<PvpProfile> {
   const { data, error } = await getSupabase().rpc('pvp_login_device', {
     p_device_key: key,
   });
-  if (error) throw error;
+  if (error) throwSupabaseError(error);
   return data as PvpProfile;
 }
 
@@ -71,7 +72,7 @@ export async function pvpUpdateProfile(input: {
     if (error.message?.includes('pvp_update_profile')) {
       return pvpLogin();
     }
-    throw error;
+    throwSupabaseError(error);
   }
   return data as PvpProfile;
 }
@@ -81,7 +82,7 @@ export async function pvpMatchmake(): Promise<PvpMatchmakeResult> {
   const { data, error } = await getSupabase().rpc('pvp_matchmake', {
     p_device_key: key,
   });
-  if (error) throw error;
+  if (error) throwSupabaseError(error);
   const raw = data as PvpMatchmakeResult;
   const samples = raw.opponent.sample_ms;
   const sample_ms: [number, number, number] = [
@@ -120,7 +121,7 @@ export async function pvpSubmitMatch(input: {
     p_character_id: input.characterId,
     p_cosmetic_npc_id: null,
   });
-  if (error) throw error;
+  if (error) throwSupabaseError(error);
   return data as PvpSubmitResult;
 }
 
@@ -129,7 +130,7 @@ export async function pvpRerollDisplayName(): Promise<PvpProfile> {
   const { data, error } = await getSupabase().rpc('pvp_reroll_display_name', {
     p_device_key: key,
   });
-  if (error) throw error;
+  if (error) throwSupabaseError(error);
   return data as PvpProfile;
 }
 
@@ -139,7 +140,7 @@ export async function pvpLeaderboard(limit = 50): Promise<PvpLeaderboardResult> 
     p_device_key: key,
     limit_count: limit,
   });
-  if (error) throw error;
+  if (error) throwSupabaseError(error);
   return data as PvpLeaderboardResult;
 }
 
@@ -149,7 +150,7 @@ export async function pvpHistory(limit = 8): Promise<PvpHistoryEntry[]> {
     p_device_key: key,
     limit_count: limit,
   });
-  if (error) throw error;
+  if (error) throwSupabaseError(error);
   return (Array.isArray(data) ? data : []) as PvpHistoryEntry[];
 }
 
@@ -168,7 +169,7 @@ export async function pvpGetDaily(): Promise<DailyChallenge> {
     ) {
       return normalizeDaily(await getLocalDaily());
     }
-    throw error;
+    throwSupabaseError(error);
   }
   const raw = data as DailyChallenge & { sample_ms: unknown };
   return normalizeDaily({
@@ -203,7 +204,7 @@ export async function pvpSubmitDaily(input: {
     ) {
       return submitLocalDaily(input);
     }
-    throw error;
+    throwSupabaseError(error);
   }
   return data as DailySubmitResult;
 }
@@ -227,7 +228,7 @@ export async function pvpMarkDailyShared(): Promise<void> {
     p_device_key: key,
   });
   if (error && !error.message?.includes('pvp_mark_daily_shared')) {
-    throw error;
+    throwSupabaseError(error);
   }
 }
 
@@ -248,7 +249,7 @@ export async function pvpCreateFriendChallenge(input: {
     p_character_id: input.characterId,
     p_cosmetic_npc_id: null,
   });
-  if (error) throw error;
+  if (error) throwSupabaseError(error);
   const raw = data as FriendChallengeCreated & { sample_ms: unknown };
   return {
     ...raw,
@@ -263,7 +264,7 @@ export async function pvpGetFriendChallenge(code: string): Promise<FriendChallen
     p_device_key: key,
     p_code: normalized,
   });
-  if (error) throw error;
+  if (error) throwSupabaseError(error);
   return normalizeFriendChallenge(data as FriendChallenge & { sample_ms: unknown });
 }
 
@@ -283,6 +284,6 @@ export async function pvpSubmitFriendChallenge(input: {
     p_score_creator: input.scoreCreator,
     p_result: input.result,
   });
-  if (error) throw error;
+  if (error) throwSupabaseError(error);
   return data as FriendChallengeSubmitResult;
 }

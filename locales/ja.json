@@ -338,6 +338,7 @@
     "leaderboard": "TOP GUNSLINGERS",
     "leaderboardEmpty": "まだ順位がありません。最初のガンマンになりましょう。",
     "notConfigured": "サーバー設定がありません。EXPO_PUBLIC_SUPABASE_URL / ANON_KEY を確認してください。",
+    "networkFailed": "サーバーに接続できませんでした。ネットワークを確認して再読み込みしてください。",
     "abort": "ランキングへ戻る",
     "roundDraw": "引き分け — 再戦",
     "share": "結果を共有",

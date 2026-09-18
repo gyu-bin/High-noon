@@ -14,6 +14,7 @@
 		C2DB3CFE7E3687CD4BE69FAE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5511D2291412CF2FC32CA8F7 /* PrivacyInfo.xcprivacy */; };
 		EC35389A41FF2B6FBC9A8D19 /* libPods-HighNoon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 814179ABB7617A54C1F0C78B /* libPods-HighNoon.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		F2A1B3C45D0608E60055D2E1 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A1B3C45D0608E60055D2E0 /* SceneDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = HighNoon/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* HighNoon-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "HighNoon-Bridging-Header.h"; path = "HighNoon/HighNoon-Bridging-Header.h"; sourceTree = "<group>"; };
+		F2A1B3C45D0608E60055D2E0 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = HighNoon/SceneDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,6 +50,7 @@
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
+				F2A1B3C45D0608E60055D2E0 /* SceneDelegate.swift */,
 				F11748442D0722820044C1D9 /* HighNoon-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
@@ -354,6 +357,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
+				F2A1B3C45D0608E60055D2E1 /* SceneDelegate.swift in Sources */,
 				763C90E7353F68B01DE8BD12 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

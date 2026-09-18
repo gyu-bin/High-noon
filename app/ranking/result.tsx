@@ -22,6 +22,7 @@ import {
 import { colors } from '@/constants/theme';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { recordAppEvent } from '@/lib/supabase/analyticsApi';
+import { formatUnknownError } from '@/lib/supabase/errors';
 import {
   pvpCreateFriendChallenge,
   pvpMarkDailyShared,
@@ -213,7 +214,7 @@ export default function RankingResultScreen() {
       }
       void trigger('success');
     } catch (e) {
-      const raw = e instanceof Error ? e.message : String(e);
+      const raw = formatUnknownError(e);
       const friendly =
         raw.includes('ExpoSharing') ||
         raw.includes('RNViewShot') ||
@@ -273,7 +274,7 @@ export default function RankingResultScreen() {
         code,
       });
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = formatUnknownError(e);
       setChallengeError(msg);
     } finally {
       setCreatingChallenge(false);

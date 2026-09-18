@@ -338,6 +338,7 @@
     "leaderboard": "TOP GUNSLINGERS",
     "leaderboardEmpty": "아직 순위가 없습니다. 첫 결투의 주인공이 되세요.",
     "notConfigured": "서버 설정이 없습니다. EXPO_PUBLIC_SUPABASE_URL / ANON_KEY 를 확인하세요.",
+    "networkFailed": "서버에 연결하지 못했습니다. 네트워크를 확인하고 새로고침해 주세요.",
     "abort": "랭킹으로 나가기",
     "roundDraw": "동점 — 재결투",
     "share": "결과 공유",

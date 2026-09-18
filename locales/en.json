@@ -338,6 +338,7 @@
     "leaderboard": "TOP GUNSLINGERS",
     "leaderboardEmpty": "No ranks yet. Be the first gunslinger.",
     "notConfigured": "Server not configured. Check EXPO_PUBLIC_SUPABASE_URL / ANON_KEY.",
+    "networkFailed": "Could not reach the server. Check your network and refresh.",
     "abort": "Leave to ranking",
     "roundDraw": "Draw — rematch",
     "share": "Share result",
