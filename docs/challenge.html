@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>High Noon — Record Duel</title>
+  <meta name="description" content="HIGH NOON 비동기 기록 결투 도전장을 열어보세요." />
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: #f3d7a4;
+      background:
+        radial-gradient(circle at 50% 14%, rgba(215, 92, 27, .42), transparent 38%),
+        linear-gradient(180deg, #1a0c06 0%, #32150b 48%, #0d0805 100%);
+      font-family: Georgia, "Apple SD Gothic Neo", serif;
+    }
+    .wrap { max-width: 520px; margin: 0 auto; padding: 54px 22px 72px; text-align: center; }
+    .eyebrow { color: #c99552; font-size: 12px; font-weight: 700; letter-spacing: 5px; }
+    h1 { margin: 10px 0 0; color: #f0bd73; font-size: clamp(42px, 12vw, 64px); letter-spacing: 3px; text-shadow: 0 4px 0 #5c2412, 0 8px 18px #000; }
+    .rule { width: 150px; height: 1px; margin: 22px auto 28px; border: 0; background: linear-gradient(90deg, transparent, #c58b45, transparent); }
+    .telegram {
+      padding: 28px 20px;
+      color: #32170d;
+      border: 2px solid #8b5529;
+      border-radius: 3px;
+      background: #d8b177;
+      box-shadow: inset 0 0 0 4px rgba(67, 31, 14, .18), 0 14px 40px rgba(0, 0, 0, .55);
+    }
+    .label { font-size: 12px; font-weight: 700; letter-spacing: 3px; }
+    .code { margin: 10px 0 18px; font-size: 42px; font-weight: 800; letter-spacing: 8px; }
+    .hint { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif; font-size: 14px; }
+    .actions { margin-top: 22px; }
+    .button {
+      display: block;
+      padding: 15px 18px;
+      color: #f7dfb5;
+      border: 1px solid #d49a50;
+      border-radius: 3px;
+      background: linear-gradient(#6e3318, #3b1b0e);
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-decoration: none;
+    }
+    .store { display: inline-block; margin-top: 18px; color: #d5ab72; font-size: 13px; }
+    .steps { margin: 30px 0 0; padding: 22px 22px 22px 42px; text-align: left; color: #ddc19a; border: 1px solid rgba(202, 145, 74, .3); background: rgba(8, 4, 2, .38); }
+    footer { margin-top: 34px; color: #8d6b48; font-size: 12px; }
+    footer a { color: #b98a54; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="eyebrow">BOUNTY BOARD</div>
+    <h1>HIGH NOON</h1>
+    <hr class="rule" />
+    <section class="telegram">
+      <div class="label">RECORD DUEL · UNRANKED</div>
+      <div class="code" id="code">——————</div>
+      <p class="hint" id="status">친구의 결투 기록에 도전하세요. 실시간 접속은 필요하지 않습니다.</p>
+    </section>
+    <div class="actions">
+      <a class="button" id="openApp" href="#">OPEN CHALLENGE</a>
+      <a class="store" href="https://apps.apple.com/app/id6762042961">High Noon on the App Store</a>
+    </div>
+    <ol class="steps">
+      <li>High Noon을 열어 Bounty Board로 이동합니다.</li>
+      <li>Friend Challenge에서 6자리 코드를 확인합니다.</li>
+      <li>상대의 기록과 3라운드 결투를 진행합니다.</li>
+    </ol>
+    <footer><a href="./privacy.html">Privacy</a> · <a href="./index.html">Support</a></footer>
+  </main>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var code = String(params.get('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+      var codeEl = document.getElementById('code');
+      var openApp = document.getElementById('openApp');
+      var statusEl = document.getElementById('status');
+      if (code.length === 6) {
+        codeEl.textContent = code;
+        var deepLink = 'high-noon://ranking/challenge?code=' + encodeURIComponent(code);
+        openApp.href = deepLink;
+      } else {
+        codeEl.textContent = '??????';
+        statusEl.textContent = '유효한 도전 코드가 없습니다. 공유받은 링크를 다시 열어주세요.';
+        openApp.style.display = 'none';
+      }
+    })();
+  </script>
+</body>
+</html>

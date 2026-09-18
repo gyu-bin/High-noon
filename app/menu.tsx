@@ -90,6 +90,13 @@ export default function MenuScreen() {
               accessibilityHint={t('menu.localDuelHint')}
               onPress={() => router.push('/local-setup')}
             />
+            <WesternButton
+              title={t('menu.bountyRanking')}
+              subtitle={t('menu.bountyRankingSub')}
+              leadingIcon={<Ionicons name="trophy-outline" size={27} color={uiV3Colors.gold} />}
+              accessibilityHint={t('menu.bountyRankingHint')}
+              onPress={() => router.push('/ranking' as never)}
+            />
           </View>
 
           <View style={styles.shortcutBar}>

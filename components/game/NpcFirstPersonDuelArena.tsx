@@ -14,6 +14,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { PlayerCharacterSprite } from '@/components/game/CharacterSprites';
 import { DuelSignalBoard, type DuelSignalBoardPhase } from '@/components/game/DuelSignalBoard';
 import { DuelCoverImage } from '@/components/game/DuelCoverImage';
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
@@ -56,6 +57,11 @@ type Props = {
   shootActive: boolean;
   playerShotActive: boolean;
   npcShotActive?: boolean;
+  opponentCharacterId?: number;
+  opponentName?: string;
+  opponentTierLabel?: string;
+  recordDuelLabel?: string;
+  heartsMax?: number;
   earlyWarning: boolean;
   onShootPress: () => void;
   onPause: () => void;
@@ -70,10 +76,10 @@ function toV3NpcPose(pose: SpritePose): V3NpcPose {
   return 'idle';
 }
 
-function Hearts({ value }: { value: number }) {
+function Hearts({ value, max = 3 }: { value: number; max?: number }) {
   return (
     <Text accessibilityLabel={`${value} hearts`} style={styles.hearts}>
-      {Array.from({ length: 3 }, (_, index) => (index < value ? '♥' : '♡')).join(' ')}
+      {Array.from({ length: max }, (_, index) => (index < value ? '♥' : '♡')).join(' ')}
     </Text>
   );
 }
@@ -109,6 +115,11 @@ export function NpcFirstPersonDuelArena({
   shootActive,
   playerShotActive,
   npcShotActive = false,
+  opponentCharacterId,
+  opponentName,
+  opponentTierLabel,
+  recordDuelLabel,
+  heartsMax = 3,
   earlyWarning,
   onShootPress,
   onPause,
@@ -249,7 +260,7 @@ export function NpcFirstPersonDuelArena({
   const weaponSize = landscape
     ? Math.min(height * 0.78, width * 0.34)
     : Math.min(width * 0.67, height * 0.36);
-  const npcName = getNpcDisplayName(t, npcId);
+  const npcName = opponentName ?? getNpcDisplayName(t, npcId);
   const weaponSource = CINEMATIC_REVOLVER;
   const abilityEcho = specialPresentation === 'echo' && (signalPhase === '페이크' || signalPhase === '뱅');
   const abilityMirror = specialPresentation === 'mirror' && (signalPhase === '집중' || signalPhase === '페이크');
@@ -295,7 +306,7 @@ export function NpcFirstPersonDuelArena({
           width: npcSize,
           height: npcSize,
         }, collapseStyle]}>
-          {abilityEcho || abilityMirror ? (
+          {(abilityEcho || abilityMirror) && opponentCharacterId == null ? (
             <Image
               source={getV3NpcPose(npcId, npcRenderPose)}
               style={[styles.afterImage, { width: npcSize, height: npcSize }]}
@@ -303,17 +314,31 @@ export function NpcFirstPersonDuelArena({
               transition={0}
             />
           ) : null}
-          <Image
-            source={getV3NpcPose(npcId, npcRenderPose)}
-            style={{ width: npcSize, height: npcSize }}
-            contentFit="contain"
-            cachePolicy="memory-disk"
-            priority="high"
-            transition={0}
-          />
-          <Animated.View style={[styles.npcMuzzle, npcMuzzleStyle]}>
-            <Image source={V3_DUEL_VFX.muzzleFlash} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} />
-          </Animated.View>
+          {opponentCharacterId != null ? (
+            <PlayerCharacterSprite
+              characterId={opponentCharacterId}
+              width={npcSize}
+              height={npcSize}
+              flipHorizontal
+              pose={npcPose}
+              victoryActive={npcVictoryActive}
+              duelCorner="topRight"
+            />
+          ) : (
+            <>
+              <Image
+                source={getV3NpcPose(npcId, npcRenderPose)}
+                style={{ width: npcSize, height: npcSize }}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+                priority="high"
+                transition={0}
+              />
+              <Animated.View style={[styles.npcMuzzle, npcMuzzleStyle]}>
+                <Image source={V3_DUEL_VFX.muzzleFlash} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} />
+              </Animated.View>
+            </>
+          )}
           {npcRenderPose === 'hit' ? (
             <Image source={V3_DUEL_VFX.bulletImpact} style={styles.impact} contentFit="contain" transition={0} />
           ) : null}
@@ -341,15 +366,16 @@ export function NpcFirstPersonDuelArena({
         <View pointerEvents="box-none" style={[styles.hud, { top: paddingTop, left: paddingLeft, right: paddingRight }]}>
           <View style={styles.hudSide}>
             <Text style={styles.hudLabel}>YOU</Text>
-            <Hearts value={playerHearts} />
+            <Hearts value={playerHearts} max={heartsMax} />
           </View>
           <View style={styles.roundBlock}>
             <Text style={styles.roundLabel}>ROUND</Text>
             <Text style={styles.roundValue}>{currentRound}</Text>
           </View>
           <View style={[styles.hudSide, styles.hudRight]}>
+            {opponentTierLabel ? <Text style={styles.tierLabel}>{opponentTierLabel}</Text> : null}
             <Text numberOfLines={1} style={[styles.hudLabel, { fontFamily: usesCjkFont(npcName) ? FONT_WESTERN_SERIF : FONT_RYE }]}>{npcName}</Text>
-            <Hearts value={opponentHearts} />
+            <Hearts value={opponentHearts} max={heartsMax} />
           </View>
           <Pressable
             accessibilityRole="button"
@@ -361,6 +387,12 @@ export function NpcFirstPersonDuelArena({
             <Ionicons color={uiV3Colors.cream} name="pause" size={16} />
           </Pressable>
         </View>
+
+        {recordDuelLabel ? (
+          <View pointerEvents="none" style={[styles.recordTag, { top: paddingTop + 58 }]}>
+            <Text style={styles.recordTagText}>{recordDuelLabel}</Text>
+          </View>
+        ) : null}
 
         <View pointerEvents="none" style={[styles.cue, { top: landscape ? height * 0.17 : height * 0.21 }]}> 
           <DuelSignalBoard
@@ -406,12 +438,15 @@ const styles = StyleSheet.create({
   hudSide: { maxWidth: '37%', minWidth: 82, paddingVertical: 5, paddingHorizontal: 9, borderBottomWidth: 1, borderColor: 'rgba(201, 166, 107, 0.42)', backgroundColor: 'rgba(16, 10, 6, 0.62)' },
   hudRight: { alignItems: 'flex-end' },
   hudLabel: { color: uiV3Colors.cream, fontSize: 10, fontWeight: '800', letterSpacing: 1.4 },
+  tierLabel: { color: uiV3Colors.gold, fontSize: 7, fontWeight: '800', letterSpacing: 1.5, textTransform: 'uppercase' },
   hearts: { marginTop: 2, color: '#D45342', fontSize: 15, letterSpacing: 1 },
   roundBlock: { alignItems: 'center', paddingTop: 3 },
   roundLabel: { color: uiV3Colors.cream, fontSize: 9, fontWeight: '800', letterSpacing: 2 },
   roundValue: { color: uiV3Colors.gold, fontFamily: FONT_RYE, fontSize: 25, lineHeight: 28 },
   pause: { position: 'absolute', right: 0, top: 58, padding: 9, borderWidth: 1, borderColor: 'rgba(255, 215, 0, 0.4)', backgroundColor: 'rgba(26, 12, 6, 0.60)' },
   pauseDisabled: { opacity: 0.35 },
+  recordTag: { position: 'absolute', alignSelf: 'center', paddingHorizontal: 11, paddingVertical: 4, borderWidth: 1, borderColor: 'rgba(201, 166, 107, 0.4)', backgroundColor: 'rgba(16, 10, 6, 0.68)' },
+  recordTagText: { color: uiV3Colors.ochre, fontFamily: FONT_RYE, fontSize: 8, letterSpacing: 1.8 },
   cue: { position: 'absolute', left: '8%', right: '8%', height: 76, alignItems: 'center', justifyContent: 'center' },
   weapon: { position: 'absolute' },
   weaponMuzzle: { position: 'absolute', width: '52%', height: '42%', left: '-7%', top: '-7%' },

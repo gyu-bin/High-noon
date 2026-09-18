@@ -4,7 +4,7 @@ import i18n, { changeLanguage, i18nInitPromise, languageFromCaptureUrl } from '@
 
 import { Rye_400Regular, useFonts } from '@expo-google-fonts/rye';
 import { NanumMyeongjo_700Bold } from '@expo-google-fonts/nanum-myeongjo/700Bold';
-import { Stack, usePathname, type ErrorBoundaryProps } from 'expo-router';
+import { Stack, usePathname, useRouter, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
@@ -42,6 +42,7 @@ import { consumeOtaJustApplied } from '@/utils/otaUpdateFlag';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
 import { isStoreUpdateRequired } from '@/utils/storeUpdate';
 import { initPurchasesOnBoot } from '@/utils/purchaseService';
+import { challengeCodeFromUrl } from '@/utils/challengeLink';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -123,6 +124,7 @@ export default function RootLayout() {
 function RootLayoutContent() {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const router = useRouter();
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
 
@@ -162,15 +164,23 @@ function RootLayoutContent() {
 
     const apply = (url: string | null) => {
       const lang = languageFromCaptureUrl(url);
-      if (!lang) return;
-      useSettingsStore.getState().setLanguage(lang);
-      changeLanguage(lang);
+      if (lang) {
+        useSettingsStore.getState().setLanguage(lang);
+        changeLanguage(lang);
+      }
+
+      const code = challengeCodeFromUrl(url);
+      if (!code || isInGameRoute(pathnameRef.current)) return;
+      router.push({
+        pathname: '/ranking/challenge',
+        params: { code },
+      } as never);
     };
 
     void Linking.getInitialURL().then(apply);
     const sub = Linking.addEventListener('url', ({ url }) => apply(url));
     return () => sub.remove();
-  }, [appReady]);
+  }, [appReady, router]);
 
   useEffect(() => {
     // Keep menus, previews and duels in the same upright orientation.
@@ -308,6 +318,7 @@ function RootLayoutContent() {
         <Stack.Screen name="game" options={{ headerShown: false }} />
         <Stack.Screen name="capture" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ headerShown: false }} />
+        <Stack.Screen name="ranking" options={{ headerShown: false }} />
       </Stack>
       <OtaUpdatedToast visible={otaToastVisible} onHidden={hideOtaToast} />
       <StoreUpdateModal visible={storeUpdateVisible} onDismiss={dismissStoreUpdate} />
