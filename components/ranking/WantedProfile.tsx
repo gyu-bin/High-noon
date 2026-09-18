@@ -5,7 +5,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RankingPortrait } from '@/components/ranking/RankingPortrait';
 import { WesternPanel } from '@/components/ui/western/WesternPrimitives';
 import { FONT_RYE, FONT_WESTERN_SERIF } from '@/constants/fonts';
-import { colors, uiV3Colors } from '@/constants/theme';
 import type { PvpProfile } from '@/types/pvp';
 
 const wantedPaper = require('@/high_noon_terra_asset_pack/output/ui/textures/wanted_paper.png');
@@ -235,4 +234,3 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.78 },
 });
-

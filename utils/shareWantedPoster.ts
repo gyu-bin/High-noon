@@ -1,11 +1,5 @@
 import { Platform, Share } from 'react-native';
 import type { RefObject } from 'react';
-import { captureRef } from 'react-native-view-shot';
-import * as Sharing from 'expo-sharing';
-import {
-  cacheDirectory,
-  copyAsync,
-} from 'expo-file-system/legacy';
 
 type CaptureTarget = RefObject<unknown>;
 
@@ -30,6 +24,14 @@ export async function shareWantedPosterImage(
     throw new Error('poster_not_ready');
   }
 
+  // 공유 기능은 Expo Go나 오래된 개발 빌드에 네이티브 모듈이 없더라도
+  // 앱 시작 자체를 막지 않도록 사용 시점에만 불러온다.
+  const [{ captureRef }, Sharing, FileSystem] = await Promise.all([
+    import('react-native-view-shot'),
+    import('expo-sharing'),
+    import('expo-file-system/legacy'),
+  ]);
+
   const captured = await captureRef(node as never, {
     format: 'png',
     quality: 1,
@@ -43,13 +45,13 @@ export async function shareWantedPosterImage(
   }
 
   const from = toFileUrl(captured);
-  const cacheRoot = cacheDirectory;
+  const cacheRoot = FileSystem.cacheDirectory;
   if (!cacheRoot) {
     throw new Error('cache_unavailable');
   }
 
   const dest = `${cacheRoot}high-noon-wanted-${Date.now()}.png`;
-  await copyAsync({ from, to: dest });
+  await FileSystem.copyAsync({ from, to: dest });
   const fileUrl = toFileUrl(dest);
 
   // Primary: expo-sharing (store / EAS native builds include this)

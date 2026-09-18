@@ -4,6 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { colors, uiV3Colors } from '@/constants/theme';
+import { play } from '@/utils/audioService';
+import { trigger } from '@/utils/hapticService';
 
 const leather = require('@/high_noon_terra_asset_pack/output/ui/textures/leather_panel.png');
 
@@ -32,7 +34,11 @@ export function BountyActionRow({
       accessibilityLabel={`${title}. ${subtitle}`}
       accessibilityState={{ disabled }}
       disabled={disabled}
-      onPress={onPress}
+      onPress={() => {
+        void play('ready_click');
+        void trigger('selection');
+        onPress();
+      }}
       style={({ pressed }) => [
         styles.row,
         disabled && styles.disabled,
@@ -104,4 +110,3 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.45 },
   pressed: { opacity: 0.76, transform: [{ translateY: 1 }] },
 });
-

@@ -47,6 +47,13 @@ async function storageSet(key: string, value: string): Promise<void> {
  * pgcrypto가 있는 랭킹 서버에서 발급한다. 클라이언트는 SecureStore에만 보관한다.
  */
 async function issueDeviceKey(): Promise<string> {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi && typeof cryptoApi.getRandomValues === 'function') {
+    const bytes = new Uint8Array(32);
+    cryptoApi.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+
   if (!isSupabaseConfigured) throw new Error('supabase_not_configured');
   const { data, error } = await getSupabase().rpc('pvp_issue_device_key');
   if (error) throw error;
