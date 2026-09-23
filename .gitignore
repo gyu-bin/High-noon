@@ -37,6 +37,9 @@ yarn-error.*
 .venv/
 .venv-tools/
 output/
+# Metro/앱이 참조하는 UI 에셋은 예외 (루트 output/ 만 무시)
+!high_noon_terra_asset_pack/output/
+!high_noon_terra_asset_pack/output/**
 reference_sprite.png
 __pycache__/
 *.pyc
