@@ -1,0 +1,982 @@
+{
+  "generatedAt": "2026-09-25T08:20:07.588Z",
+  "highResSource": "22/22",
+  "highResPoster": "22/22",
+  "alphaPass": "22/22",
+  "rimPixelAccountingPass": "22/22",
+  "runtimeMappingPass": "22/22",
+  "hashPass": "22/22",
+  "clippingPolicy": "PASS — complete 1254px canvases render with contain; no runtime crop is applied",
+  "duelProtection": "110/110",
+  "playerProtection": "4/4",
+  "requestedDeviceCaptures": "9/9",
+  "comparisonCapture": true,
+  "npcs": [
+    {
+      "id": 1,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 6794,
+      "expectedRimPixelsReplaced": 6794,
+      "alphaBoundsInclusive": [
+        41,
+        17,
+        1223,
+        1229
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 2,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 6895,
+      "expectedRimPixelsReplaced": 6895,
+      "alphaBoundsInclusive": [
+        37,
+        8,
+        1221,
+        1229
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 3,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 2398,
+      "expectedRimPixelsReplaced": 2398,
+      "alphaBoundsInclusive": [
+        0,
+        0,
+        1199,
+        1231
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 4,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 12897,
+      "expectedRimPixelsReplaced": 12897,
+      "alphaBoundsInclusive": [
+        33,
+        0,
+        1229,
+        1229
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 5,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 3046,
+      "expectedRimPixelsReplaced": 3046,
+      "alphaBoundsInclusive": [
+        39,
+        0,
+        1195,
+        1227
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 6,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 4866,
+      "expectedRimPixelsReplaced": 4866,
+      "alphaBoundsInclusive": [
+        33,
+        7,
+        1229,
+        1253
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 7,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 6307,
+      "expectedRimPixelsReplaced": 6307,
+      "alphaBoundsInclusive": [
+        37,
+        3,
+        1229,
+        1229
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 8,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 5693,
+      "expectedRimPixelsReplaced": 5693,
+      "alphaBoundsInclusive": [
+        33,
+        0,
+        1198,
+        1229
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 9,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 5104,
+      "expectedRimPixelsReplaced": 5104,
+      "alphaBoundsInclusive": [
+        49,
+        11,
+        1193,
+        1229
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 10,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 7282,
+      "expectedRimPixelsReplaced": 7282,
+      "alphaBoundsInclusive": [
+        33,
+        0,
+        1233,
+        1231
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 11,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 9398,
+      "expectedRimPixelsReplaced": 9398,
+      "alphaBoundsInclusive": [
+        33,
+        16,
+        1223,
+        1237
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 12,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 995,
+      "expectedRimPixelsReplaced": 995,
+      "alphaBoundsInclusive": [
+        37,
+        5,
+        1233,
+        1221
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 13,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 3610,
+      "expectedRimPixelsReplaced": 3610,
+      "alphaBoundsInclusive": [
+        59,
+        9,
+        1199,
+        1229
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 14,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 4305,
+      "expectedRimPixelsReplaced": 4305,
+      "alphaBoundsInclusive": [
+        49,
+        15,
+        1199,
+        1253
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 15,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 8386,
+      "expectedRimPixelsReplaced": 8386,
+      "alphaBoundsInclusive": [
+        41,
+        6,
+        1199,
+        1229
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 16,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 3100,
+      "expectedRimPixelsReplaced": 3100,
+      "alphaBoundsInclusive": [
+        33,
+        9,
+        1235,
+        1229
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 17,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 1666,
+      "expectedRimPixelsReplaced": 1666,
+      "alphaBoundsInclusive": [
+        33,
+        0,
+        1199,
+        1229
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 18,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 1704,
+      "expectedRimPixelsReplaced": 1704,
+      "alphaBoundsInclusive": [
+        0,
+        0,
+        1235,
+        1227
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 19,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 1060,
+      "expectedRimPixelsReplaced": 1060,
+      "alphaBoundsInclusive": [
+        39,
+        10,
+        1225,
+        1229
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 20,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 236,
+      "expectedRimPixelsReplaced": 236,
+      "alphaBoundsInclusive": [
+        41,
+        0,
+        1193,
+        1221
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 21,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 1842,
+      "expectedRimPixelsReplaced": 1842,
+      "alphaBoundsInclusive": [
+        55,
+        0,
+        1195,
+        1237
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    },
+    {
+      "id": 22,
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "alphaChangedPixels": 0,
+      "visibleRgbChangedPixels": 1885,
+      "expectedRimPixelsReplaced": 1885,
+      "alphaBoundsInclusive": [
+        49,
+        9,
+        1207,
+        1253
+      ],
+      "runtimeMapped": true,
+      "sourceHashMatchesManifest": true,
+      "posterHashMatchesManifest": true
+    }
+  ],
+  "duelFiles": [
+    {
+      "relative": "assets/images/characters/clarity/npc/01/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/01/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/01/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/01/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/01/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/02/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/02/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/02/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/02/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/02/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/03/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/03/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/03/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/03/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/03/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/04/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/04/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/04/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/04/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/04/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/05/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/05/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/05/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/05/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/05/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/06/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/06/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/06/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/06/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/06/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/07/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/07/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/07/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/07/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/07/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/08/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/08/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/08/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/08/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/08/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/09/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/09/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/09/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/09/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/09/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/10/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/10/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/10/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/10/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/10/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/11/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/11/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/11/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/11/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/11/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/12/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/12/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/12/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/12/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/12/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/13/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/13/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/13/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/13/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/13/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/14/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/14/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/14/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/14/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/14/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/15/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/15/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/15/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/15/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/15/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/16/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/16/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/16/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/16/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/16/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/17/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/17/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/17/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/17/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/17/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/18/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/18/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/18/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/18/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/18/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/19/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/19/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/19/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/19/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/19/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/20/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/20/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/20/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/20/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/20/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/21/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/21/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/21/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/21/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/21/down.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/22/idle.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/22/draw.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/22/fire.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/22/hit.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/npc/22/down.png",
+      "unchangedFromBaseline": true
+    }
+  ],
+  "playerFiles": [
+    {
+      "relative": "assets/images/characters/clarity/player/01/identity_poster.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/player/02-v2/identity_poster.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/player/03/identity_poster.png",
+      "unchangedFromBaseline": true
+    },
+    {
+      "relative": "assets/images/characters/clarity/player/04/identity_poster.png",
+      "unchangedFromBaseline": true
+    }
+  ]
+}

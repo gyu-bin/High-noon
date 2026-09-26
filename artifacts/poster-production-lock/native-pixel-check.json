@@ -1,0 +1,11 @@
+{
+  "raster_physical_pixels": 512,
+  "position": [
+    347,
+    942
+  ],
+  "sample_mean_absolute_rgb_error": 0.0,
+  "opaque_source_pixels_exact_match_fraction": 1.0,
+  "source": "assets/images/characters/enemy/07/identity_poster.png",
+  "capture": "A-normal.png"
+}

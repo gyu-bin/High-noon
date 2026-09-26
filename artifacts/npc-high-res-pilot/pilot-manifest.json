@@ -1,0 +1,107 @@
+{
+  "status": "PILOT_3_ONLY_AWAITING_HUMAN_APPROVAL",
+  "ids": [
+    7,
+    12,
+    15
+  ],
+  "batch22Executed": false,
+  "assets": [
+    {
+      "id": 7,
+      "identityMatch": "HIGH — visually reviewed hat, mask, coat, weapon, accessories, silhouette and palette",
+      "currentPoster": "assets/images/characters/enemy/07/identity_poster.png",
+      "currentPosterResolution": [
+        512,
+        512
+      ],
+      "highResSource": "assets/images/characters/clarity/npc/07/idle.png",
+      "highResSourceResolution": [
+        1254,
+        1254
+      ],
+      "pilotPoster": "assets/images/characters/clarity/npc/07/identity_poster_pilot.png",
+      "pilotPosterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "5aa0a5e786977b24bdc1f665be70d9d74a833403bbbbeb2d9523515698456e0a",
+      "pilotSha256": "efb415fdcf2ab9c0c7bf41ab01e695c46a91d73a6d6ebcf260bbc91067ee8ceb",
+      "rimPixelsReplaced": 6307,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 328,
+      "alphaPolicy": "Source alpha preserved exactly; NPC 15 intentional transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling",
+      "status": "PILOT_ONLY"
+    },
+    {
+      "id": 12,
+      "identityMatch": "HIGH — visually reviewed hat, mask, coat, weapon, accessories, silhouette and palette",
+      "currentPoster": "assets/images/characters/enemy/12/identity_poster.png",
+      "currentPosterResolution": [
+        512,
+        512
+      ],
+      "highResSource": "assets/images/characters/clarity/npc/12/idle.png",
+      "highResSourceResolution": [
+        1254,
+        1254
+      ],
+      "pilotPoster": "assets/images/characters/clarity/npc/12/identity_poster_pilot.png",
+      "pilotPosterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "9d8c23c200445e062c12b35ae052e54afdb876ac3cfc9b529c21127bf8f89c6d",
+      "pilotSha256": "ce126c56ac46f10743f287352acb7ec99fb82b808cba5745fd68aff4ac9d9654",
+      "rimPixelsReplaced": 995,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 422,
+      "alphaPolicy": "Source alpha preserved exactly; NPC 15 intentional transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling",
+      "status": "PILOT_ONLY"
+    },
+    {
+      "id": 15,
+      "identityMatch": "HIGH — visually reviewed hat, mask, coat, weapon, accessories, silhouette and palette",
+      "currentPoster": "assets/images/characters/enemy/15/identity_poster.png",
+      "currentPosterResolution": [
+        512,
+        512
+      ],
+      "highResSource": "assets/images/characters/clarity/npc/15/idle.png",
+      "highResSourceResolution": [
+        1254,
+        1254
+      ],
+      "pilotPoster": "assets/images/characters/clarity/npc/15/identity_poster_pilot.png",
+      "pilotPosterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "75b4923a0eac56b05a3f52f1f21cb2c86438d5dd3fc4907fc1d777baccc54e43",
+      "pilotSha256": "4168f6e696571ec45cf5bae2b7e33d5828227376f18fe321a0a8d7cad49d37bb",
+      "rimPixelsReplaced": 8386,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 772,
+      "alphaPolicy": "Source alpha preserved exactly; NPC 15 intentional transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling",
+      "status": "PILOT_ONLY"
+    }
+  ],
+  "deviceQualityGate": "PASS",
+  "qualityCompare": "PASS — similar apparent sharpness to the 1254px Player benchmark",
+  "layout": {
+    "characterScaleVsPrevious": 1.5,
+    "posterWidthScaleVsPrevious": 1.0676,
+    "posterHeightScaleVsPrevious": 1.098,
+    "result": "PASS — full body, weapon and coat visible; no clipping; background remains visible"
+  },
+  "performance": "Only the focused NPC Image is rendered; arrows do not decode previous/next portraits"
+}

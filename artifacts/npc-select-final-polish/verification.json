@@ -1,0 +1,43 @@
+{
+  "baseline_files": 937,
+  "changed": [
+    "app/npc-select.tsx",
+    "components/layout/MetaScreenShell.tsx",
+    "components/npc/NpcWantedCard.tsx"
+  ],
+  "unchanged": 934,
+  "png_files_unchanged": 773,
+  "screenshots": {
+    "before.png": [
+      1206,
+      2622
+    ],
+    "E-pale-dev.png": [
+      1206,
+      2622
+    ],
+    "B-boss.png": [
+      1206,
+      2622
+    ],
+    "A-normal.png": [
+      1206,
+      2622
+    ],
+    "C-special.png": [
+      1206,
+      2622
+    ],
+    "D-pale-locked.png": [
+      1206,
+      2622
+    ]
+  },
+  "device": "iPhone 17 Pro, iOS 27.0",
+  "locked_validation": "Expo Go with Metro --no-dev --minify, __DEV__=false; no unlock override or progress edits",
+  "checks": [
+    "tsc --noEmit passed",
+    "targeted ESLint passed",
+    "git diff --check passed"
+  ]
+}

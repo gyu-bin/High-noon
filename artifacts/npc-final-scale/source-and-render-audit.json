@@ -1,0 +1,594 @@
+{
+  "status": "QUALITY_BLOCKED_NOT_FINAL_LOCKED",
+  "npcScale": 1.5,
+  "posterWidthScale": 1.0675675675675675,
+  "posterHeightScale": 1.0980392156862746,
+  "device": "iPhone 17 Pro simulator, iOS 27.0, 402x874 pt @3x",
+  "posterSizeDp": [
+    317.58000000000004,
+    448
+  ],
+  "npcImageSizeDp": [
+    256,
+    256
+  ],
+  "npcImagePhysicalPixels": [
+    768,
+    768
+  ],
+  "npcVisualHeightDpRange": [
+    243.0,
+    253.0
+  ],
+  "playerSourceSize": [
+    1254,
+    1254
+  ],
+  "playerImageSizeDp": 313.56,
+  "playerVisualHeightDp": 303.5580861244019,
+  "sameNativeResolution": false,
+  "qualityCompare": "FAIL — current NPC effective detail is 256px, Player source is 1254px",
+  "protectedFiles": 1063,
+  "changedFiles": [
+    "app/npc-select.tsx",
+    "components/npc/NpcWantedCard.tsx"
+  ],
+  "assetChanges": 0,
+  "rendering": {
+    "npc": "expo-image, contain, opacity 1, transition 0, allowDownscaling false, no scale transform",
+    "player": "expo-image, contain, opacity 1, transition 0, no scale transform",
+    "carousel": "existing translateX animation unchanged"
+  },
+  "assets": [
+    {
+      "id": 1,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        144,
+        10,
+        390,
+        498
+      ],
+      "visualHeightDp": 244.0
+    },
+    {
+      "id": 2,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        144,
+        12,
+        400,
+        498
+      ],
+      "visualHeightDp": 243.0
+    },
+    {
+      "id": 3,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        142,
+        6,
+        406,
+        504
+      ],
+      "visualHeightDp": 249.0
+    },
+    {
+      "id": 4,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        146,
+        8,
+        392,
+        498
+      ],
+      "visualHeightDp": 245.0
+    },
+    {
+      "id": 5,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        152,
+        6,
+        390,
+        500
+      ],
+      "visualHeightDp": 247.0
+    },
+    {
+      "id": 6,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        132,
+        6,
+        404,
+        506
+      ],
+      "visualHeightDp": 250.0
+    },
+    {
+      "id": 7,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        146,
+        2,
+        402,
+        498
+      ],
+      "visualHeightDp": 248.0
+    },
+    {
+      "id": 8,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        132,
+        6,
+        394,
+        502
+      ],
+      "visualHeightDp": 248.0
+    },
+    {
+      "id": 9,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        144,
+        0,
+        396,
+        506
+      ],
+      "visualHeightDp": 253.0
+    },
+    {
+      "id": 10,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        146,
+        6,
+        394,
+        502
+      ],
+      "visualHeightDp": 248.0
+    },
+    {
+      "id": 11,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        112,
+        10,
+        420,
+        506
+      ],
+      "visualHeightDp": 248.0
+    },
+    {
+      "id": 12,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        140,
+        14,
+        390,
+        500
+      ],
+      "visualHeightDp": 243.0
+    },
+    {
+      "id": 13,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        152,
+        0,
+        370,
+        492
+      ],
+      "visualHeightDp": 246.0
+    },
+    {
+      "id": 14,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        140,
+        8,
+        398,
+        496
+      ],
+      "visualHeightDp": 244.0
+    },
+    {
+      "id": 15,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        144,
+        6,
+        394,
+        492
+      ],
+      "visualHeightDp": 243.0
+    },
+    {
+      "id": 16,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        140,
+        6,
+        394,
+        498
+      ],
+      "visualHeightDp": 246.0
+    },
+    {
+      "id": 17,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        174,
+        0,
+        362,
+        506
+      ],
+      "visualHeightDp": 253.0
+    },
+    {
+      "id": 18,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        140,
+        6,
+        398,
+        500
+      ],
+      "visualHeightDp": 247.0
+    },
+    {
+      "id": 19,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        154,
+        0,
+        374,
+        488
+      ],
+      "visualHeightDp": 244.0
+    },
+    {
+      "id": 20,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        152,
+        0,
+        380,
+        496
+      ],
+      "visualHeightDp": 248.0
+    },
+    {
+      "id": 21,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        132,
+        6,
+        400,
+        506
+      ],
+      "visualHeightDp": 250.0
+    },
+    {
+      "id": 22,
+      "originalIdentityResolution": [
+        256,
+        256
+      ],
+      "posterResolution": [
+        512,
+        512
+      ],
+      "effectiveDetailResolution": [
+        256,
+        256
+      ],
+      "exactPixelReplication": true,
+      "alphaChanged": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "bounds": [
+        140,
+        0,
+        412,
+        504
+      ],
+      "visualHeightDp": 252.0
+    }
+  ]
+}
