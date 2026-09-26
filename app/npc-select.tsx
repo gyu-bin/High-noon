@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { Stack, useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
@@ -18,20 +17,19 @@ import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { NpcWantedCard } from '@/components/npc/NpcWantedCard';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import { DEV_UNLOCK_ALL_NPCS } from '@/constants/devFlags';
-import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
+import { Ionicons } from '@expo/vector-icons';
+import { FONT_RYE } from '@/constants/fonts';
+import { getNpcVisualMeta } from '@/constants/npcVisual';
 import { getNpcById, NPCS } from '@/constants/npcs';
 import { uiV3Colors } from '@/constants/theme';
-import { NpcPortrait } from '@/components/npc/NpcPortrait';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { selectPaleRiderUnlocked, useProgressStore } from '@/store/progressStore';
 import type { NpcDefinition } from '@/types/npc';
-import { formatReactionMs } from '@/utils/formatReactionMs';
-import { getNpcDisplayName, getNpcTierLabel } from '@/utils/npcLabels';
+import { getNpcDisplayName } from '@/utils/npcLabels';
 
 const MASTER_LEGEND_GATE_ID = 18;
-const wantedPaper = require('@/high_noon_terra_asset_pack/output/ui/textures/wanted_paper.png');
 
-function PosterPeek({
+function CarouselArrow({
   npc,
   hidden,
   side,
@@ -51,25 +49,19 @@ function PosterPeek({
       onPress={onPress}
       style={({ pressed }) => [styles.peek, side === 'left' ? styles.peekLeft : styles.peekRight, pressed && styles.peekPressed]}
     >
-      <Image source={wantedPaper} contentFit="cover" style={StyleSheet.absoluteFillObject} />
-      <View style={styles.peekWash} />
-      <Text style={styles.peekWanted}>WANTED</Text>
-      {hidden ? (
-        <View style={styles.peekQuestionWrap}><Text style={styles.peekQuestion}>?</Text></View>
-      ) : (
-        <NpcPortrait id={npc.id} size={110} />
-      )}
-      <Text numberOfLines={2} style={[styles.peekName, !hidden && usesCjkFont(getNpcDisplayName(t, npc.id)) && styles.peekNameCjk]}>{hidden ? '???' : getNpcDisplayName(t, npc.id)}</Text>
+      <Ionicons name={side === 'left' ? 'chevron-back' : 'chevron-forward'} size={19} color={uiV3Colors.gold} />
     </Pressable>
   );
 }
 
 export default function NpcSelectScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const landscape = width > height;
+  const posterHeight = Math.max(448, Math.min(466, height * 0.484));
+  const english = i18n.getFixedT('en');
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
   const npcById = useProgressStore((s) => s.npcById);
   const paleUnlocked = useProgressStore(() => selectPaleRiderUnlocked());
@@ -125,8 +117,8 @@ export default function NpcSelectScreen() {
   const special = npc.specialAbility !== 'none';
   const abilityName = special ? t(`npcs.specialAbility.${npc.specialAbility}.name`) : undefined;
   const abilityHint = special
-    ? t(`npcs.specialAbility.${npc.specialAbility}.desc`)
-    : t('meta.npc.reaction', { ms: formatReactionMs(npc.reactionMs) });
+    ? t(`npcs.specialAbility.${npc.specialAbility}.desc`).split(/[.!?。]/u)[0]
+    : undefined;
 
   useScreenBgm('menu');
   const select = useCallback(() => {
@@ -138,7 +130,7 @@ export default function NpcSelectScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <MetaScreenShell showDust={false}>
+      <MetaScreenShell showDust={false} ambience="poster">
         <ScrollView
           contentContainerStyle={[
             styles.content,
@@ -148,7 +140,7 @@ export default function NpcSelectScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.topbar}>
-            <MenuBackButton onPress={back} variant="overlay" />
+            <MenuBackButton onPress={back} variant="header" style={styles.back} />
             <View style={styles.heading}>
               <Text style={styles.eyebrow}>CHOOSE YOUR</Text>
               <Text style={styles.title}>OPPONENT</Text>
@@ -164,24 +156,25 @@ export default function NpcSelectScreen() {
               { transform: [{ translateX: dragX }] },
             ]}
           >
-            <PosterPeek npc={previous} hidden={isLocked(previous)} side="left" onPress={() => moveNpc(-1)} />
+            <CarouselArrow npc={previous} hidden={isLocked(previous)} side="left" onPress={() => moveNpc(-1)} />
             <NpcWantedCard
               npc={npc}
               locked={locked}
               masked={maskedLegend}
               name={getNpcDisplayName(t, npc.id)}
-              tier={getNpcTierLabel(t, npc.tier)}
+              englishName={getNpcDisplayName(english, npc.id)}
+              tier={english(`npcs.tier.${npc.tier}`)}
+              typeLabel={special ? 'SPECIAL DUEL' : npc.bossFlag ? 'BOSS' : (getNpcVisualMeta(npc.id)?.zone.toUpperCase() ?? '')}
+              posterHeight={posterHeight}
               abilityName={abilityName}
               abilityHint={abilityHint}
               duelLabel={t('meta.npc.duel')}
-              wantedLabel={t('meta.npc.wanted')}
-              specialLabel={t('meta.npc.special')}
               lockedLabel={t('meta.npc.locked')}
               bossLabel={t('meta.npc.boss')}
               onDuel={select}
               style={[styles.featuredCard, landscape && styles.featuredCardLandscape]}
             />
-            <PosterPeek npc={next} hidden={isLocked(next)} side="right" onPress={() => moveNpc(1)} />
+            <CarouselArrow npc={next} hidden={isLocked(next)} side="right" onPress={() => moveNpc(1)} />
           </RNAnimated.View>
 
           <View style={styles.dots}>
@@ -194,28 +187,22 @@ export default function NpcSelectScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingHorizontal: 12, gap: 14 },
+  content: { flexGrow: 1, paddingHorizontal: 16, gap: 12 },
   contentLandscape: { paddingHorizontal: 34 },
-  topbar: { minHeight: 78, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  topbar: { minHeight: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  back: { position: 'absolute', left: 0, zIndex: 1 },
   heading: { flex: 1, alignItems: 'center' },
   eyebrow: { color: uiV3Colors.gold, fontSize: 10, fontWeight: '900', letterSpacing: 3 },
-  title: { color: uiV3Colors.cream, fontFamily: FONT_RYE, fontSize: 25, letterSpacing: 1.2, marginTop: 2 },
-  counter: { minWidth: 58, color: uiV3Colors.cream, fontSize: 10, fontWeight: '800', textAlign: 'right', opacity: 0.75 },
-  posterStage: { flex: 1, minHeight: 530, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, overflow: 'hidden', marginHorizontal: -12 },
-  posterStageLandscape: { minHeight: 410, marginHorizontal: 0, gap: 14 },
-  featuredCard: { width: '68%', minHeight: 500, maxWidth: 330 },
-  featuredCardLandscape: { width: '42%', minHeight: 390, maxWidth: 390 },
-  peek: { width: '22%', minWidth: 72, maxWidth: 180, height: 330, overflow: 'hidden', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 5, borderWidth: 1, borderColor: 'rgba(200, 134, 10, 0.72)', opacity: 0.7, transform: [{ scale: 0.9 }] },
-  peekLeft: { marginLeft: -16 },
-  peekRight: { marginRight: -16 },
-  peekPressed: { opacity: 1, transform: [{ scale: 0.94 }] },
-  peekWash: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(245, 230, 200, 0.08)' },
-  peekWanted: { color: uiV3Colors.westernRed, fontFamily: FONT_RYE, fontSize: 11, letterSpacing: 1 },
-  peekArt: { width: '145%', height: 205 },
-  peekQuestionWrap: { height: 205, justifyContent: 'center' },
-  peekQuestion: { color: uiV3Colors.darkBrown, fontFamily: FONT_RYE, fontSize: 54 },
-  peekName: { color: uiV3Colors.darkBrown, fontFamily: FONT_RYE, fontSize: 10, textAlign: 'center' },
-  peekNameCjk: { fontFamily: FONT_WESTERN_SERIF, fontSize: 9, fontWeight: '700', letterSpacing: 0.2 },
-  dots: { height: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  swipeHint: { color: uiV3Colors.dustGray, fontSize: 9, fontWeight: '800', letterSpacing: 1.6 },
+  title: { color: uiV3Colors.cream, fontFamily: FONT_RYE, fontSize: 22, letterSpacing: 1.2, marginTop: 2 },
+  counter: { position: 'absolute', right: 0, bottom: 0, minWidth: 58, color: uiV3Colors.cream, fontSize: 10, fontWeight: '800', textAlign: 'right', opacity: 0.75 },
+  posterStage: { flex: 1, minHeight: 448, paddingTop: 24, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: -16 },
+  posterStageLandscape: { minHeight: 424, marginHorizontal: 0 },
+  featuredCard: { width: '79%', maxWidth: 360 },
+  featuredCardLandscape: { width: '60%', maxWidth: 360 },
+  peek: { position: 'absolute', top: '50%', marginTop: -16, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', opacity: 0.48 },
+  peekLeft: { left: 3 },
+  peekRight: { right: 3 },
+  peekPressed: { opacity: 1 },
+  dots: { height: 38, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  swipeHint: { color: uiV3Colors.cream, opacity: 0.42, fontSize: 8, fontWeight: '700', letterSpacing: 2 },
 });

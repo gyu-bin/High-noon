@@ -1,0 +1,757 @@
+{
+  "status": "PRODUCTION_LOCKED",
+  "sourceCount": 22,
+  "posterCount": 22,
+  "sourceResolution": [
+    1254,
+    1254
+  ],
+  "posterResolution": [
+    1254,
+    1254
+  ],
+  "treatment": "C — external red/orange cinematic rim fully removed",
+  "batch22Executed": true,
+  "assets": [
+    {
+      "id": 1,
+      "name": "먼지바람",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/01/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/01/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/01/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/01",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "0823917165743afab667d5cf84519ab3745ac3d079f3d976eb35af7cfce31db5",
+      "posterSha256": "2c792f4939564dd166ff31bd70eb4ce6c89f2c101fa40c41c77f40097aaddfec",
+      "rimPixelsReplaced": 6794,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 622,
+      "alphaBounds": [
+        41,
+        17,
+        1224,
+        1230
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 2,
+      "name": "녹슨 총구",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/02/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/02/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/02/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/02",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "398fcaa6b16db8aa3ad2f3822c01624bd937e750e22950f36c6ba4d43dd16203",
+      "posterSha256": "852fbc2558845bd77315576ceb089e31a29653a58dc9c9032f434473b1d2bdf3",
+      "rimPixelsReplaced": 6895,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 716,
+      "alphaBounds": [
+        37,
+        8,
+        1222,
+        1230
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 3,
+      "name": "황야의 까마귀",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/03/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/03/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/03/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/03",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "5b6a4db265914b4e1e4eb4a00f9758f02a73050bd74572e79988f9ddd772c645",
+      "posterSha256": "e0f531e46a9a50eab3be8d2fcb19231b7ad2e837c3520240c4a33d38a9efe0a1",
+      "rimPixelsReplaced": 2398,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 263,
+      "alphaBounds": [
+        0,
+        0,
+        1200,
+        1232
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 4,
+      "name": "사막의 여우",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/04/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/04/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/04/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/04",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "cc8b4cbb5e92994af91e9e8009ac6264cc95657e8c8aa9751959857be2823cf3",
+      "posterSha256": "4c13c438fa6fe331e31d3447c1f7f921f5cdbbbf44777dd8a99cfa637b5db3c0",
+      "rimPixelsReplaced": 12897,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 889,
+      "alphaBounds": [
+        33,
+        0,
+        1230,
+        1230
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 5,
+      "name": "철가면",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/05/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/05/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/05/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/05",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "d1b12be5c66d37eedad126d7b74af261c9531487fa5410b69e07dc681d4e6794",
+      "posterSha256": "9bff3f35d870741d2dc0f55b161b84e6f2ec3738fb34d6c7ed18a07bd9d8b962",
+      "rimPixelsReplaced": 3046,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 398,
+      "alphaBounds": [
+        39,
+        0,
+        1196,
+        1228
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 6,
+      "name": "냉혈한 레이첼",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/06/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/06/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/06/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/06",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "4e4422a4171a343f55a4d3008d6deedb085ccf5f058d420d7c705f5b13fdf6d9",
+      "posterSha256": "ce4253642386a10f53c002d5b43430803a61305267fdd528fa76557dd8d0806a",
+      "rimPixelsReplaced": 4866,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 291,
+      "alphaBounds": [
+        33,
+        7,
+        1230,
+        1254
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 7,
+      "name": "독침 선인장",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/07/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/07/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/07/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/07",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "5aa0a5e786977b24bdc1f665be70d9d74a833403bbbbeb2d9523515698456e0a",
+      "posterSha256": "efb415fdcf2ab9c0c7bf41ab01e695c46a91d73a6d6ebcf260bbc91067ee8ceb",
+      "rimPixelsReplaced": 6307,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 328,
+      "alphaBounds": [
+        37,
+        3,
+        1230,
+        1230
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 8,
+      "name": "쌍권총 로렌조",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/08/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/08/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/08/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/08",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "d2c6f3f3e9d8d0ac28badd43c7c8a598eea390ff21d5a8e6e0ec4550892836ed",
+      "posterSha256": "255a30646c2c7c756bae01a36781d8926d3e4e278e50456d3deccacbc63d14a6",
+      "rimPixelsReplaced": 5693,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 433,
+      "alphaBounds": [
+        33,
+        0,
+        1199,
+        1230
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 9,
+      "name": "황금 해골",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/09/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/09/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/09/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/09",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "339e0ff90169289803ce8e8ca262320ccb49881dd493426ae4be3b54d4c7c8af",
+      "posterSha256": "74c048eb1f9610d057feb5eabaefa52684c4e11a755526315a1ae03ba890694e",
+      "rimPixelsReplaced": 5104,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 357,
+      "alphaBounds": [
+        49,
+        11,
+        1194,
+        1230
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 10,
+      "name": "강철 독수리",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/10/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/10/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/10/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/10",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "a8ab3f77cf3e4ab6b52328513d592d3c8970be0a0f5d92a45bfb7c2b159ed1fc",
+      "posterSha256": "b87bf7b897d5e3ce6fdd93d5a206131c2a5c0e5f6ac9a62c68f41ff0d201ef56",
+      "rimPixelsReplaced": 7282,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 428,
+      "alphaBounds": [
+        33,
+        0,
+        1234,
+        1232
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 11,
+      "name": "침묵의 기관차",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/11/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/11/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/11/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/11",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "04248101ee6bb159ee044f4e710315c7f0415d44199265d5b0a395ecad048887",
+      "posterSha256": "ff11c897e41a877fecd381d1a4a0644c36dfbefbab03fe6ba8440c26eb207cb0",
+      "rimPixelsReplaced": 9398,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 531,
+      "alphaBounds": [
+        33,
+        16,
+        1224,
+        1238
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 12,
+      "name": "블랙 아이언",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/12/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/12/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/12/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/12",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "9d8c23c200445e062c12b35ae052e54afdb876ac3cfc9b529c21127bf8f89c6d",
+      "posterSha256": "ce126c56ac46f10743f287352acb7ec99fb82b808cba5745fd68aff4ac9d9654",
+      "rimPixelsReplaced": 995,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 422,
+      "alphaBounds": [
+        37,
+        5,
+        1234,
+        1222
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 13,
+      "name": "미러 잭",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/13/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/13/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/13/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/13",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "6f675c07723cdf518794e8b90026ca947f279811e6b4e312fd462473b29cd10b",
+      "posterSha256": "41f35749b08aede1cd8326e0767b0c44df7e90602ca199a7fa7e1ae8d432371e",
+      "rimPixelsReplaced": 3610,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 511,
+      "alphaBounds": [
+        59,
+        9,
+        1200,
+        1230
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 14,
+      "name": "썬더 볼트",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/14/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/14/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/14/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/14",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "310d0132a59d024a71f95ec79beb67d1291cfa38cf1f4d28f0c45aaf6a5edab3",
+      "posterSha256": "43a5348e4fe4e566a60a80f9ebe0cedc04011eea8ff761673895cc4bc60c3059",
+      "rimPixelsReplaced": 4305,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 782,
+      "alphaBounds": [
+        49,
+        15,
+        1200,
+        1254
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 15,
+      "name": "그림자 사냥꾼",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/15/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/15/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/15/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/15",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "75b4923a0eac56b05a3f52f1f21cb2c86438d5dd3fc4907fc1d777baccc54e43",
+      "posterSha256": "4168f6e696571ec45cf5bae2b7e33d5828227376f18fe321a0a8d7cad49d37bb",
+      "rimPixelsReplaced": 8386,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 772,
+      "alphaBounds": [
+        41,
+        6,
+        1200,
+        1230
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 16,
+      "name": "베놈 스파이크",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/16/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/16/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/16/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/16",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "f7662d5d4eae7e9965fc6c549db3c59c1207baa25c80ebee688e54fd67b12a6d",
+      "posterSha256": "7fcade99b99afaf75244b9c673f164ee999fd0d16ebd946f45d47e6ce626d9cb",
+      "rimPixelsReplaced": 3100,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 495,
+      "alphaBounds": [
+        33,
+        9,
+        1236,
+        1230
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 17,
+      "name": "사막의 악마 드라이든",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/17/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/17/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/17/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/17",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "4f5e5d9f32f4e02c7d0c7c64a55ad5e527da8e0fa23ce9127cde3b91d77be81a",
+      "posterSha256": "8c5f3ae654ed8b0f15ebb81aad4e706def377d905e7638f7566f055930fe9eb4",
+      "rimPixelsReplaced": 1666,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 381,
+      "alphaBounds": [
+        33,
+        0,
+        1200,
+        1230
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 18,
+      "name": "레드 아이 오라클",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/18/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/18/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/18/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/18",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "6de054d93641b4749445cefea8d08dd78c2a2467ed74592a68fe6628324af19b",
+      "posterSha256": "e51ae5f17c1d89ca2de5dd37dbbf0dbd3c0c91954201680d66621a898f00ed1e",
+      "rimPixelsReplaced": 1704,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 361,
+      "alphaBounds": [
+        0,
+        0,
+        1236,
+        1228
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 19,
+      "name": "보이드 워커",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/19/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/19/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/19/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/19",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "7ded7c11ff9e9ec88268e0d9137914b80ba3429c05f7a74e94d21cfb7e2e0067",
+      "posterSha256": "c8876f7e1c748332d77b217ace61d6cb219bba1d3b6ff9d28ebb918731bd334f",
+      "rimPixelsReplaced": 1060,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 376,
+      "alphaBounds": [
+        39,
+        10,
+        1226,
+        1230
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 20,
+      "name": "에코 팬텀",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/20/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/20/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/20/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/20",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "3d4d6fcfcd867cc0db40f3b1f838c06ef3a8f83629dc09b794939d8030fc7028",
+      "posterSha256": "e04f34a4ca51001c1224ac59bbb0d116ab816d842105cd104bf21b6fd6c66da9",
+      "rimPixelsReplaced": 236,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 340,
+      "alphaBounds": [
+        41,
+        0,
+        1194,
+        1222
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 21,
+      "name": "장의사",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/21/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/21/identity_poster.png",
+      "legacyLowResPoster": "assets/images/characters/enemy/21/identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/21",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "73c2cc7644e41a2b4c733db0877ad7a143362a99968b4e4523164b31362ccf39",
+      "posterSha256": "f20c47a807db12e88a4a1309eb7aac6df5de9a75ebc8700b6b4488f70dbd2619",
+      "rimPixelsReplaced": 1842,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 1052,
+      "alphaBounds": [
+        55,
+        0,
+        1196,
+        1238
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    },
+    {
+      "id": 22,
+      "name": "창백한 기수",
+      "identityMatch": "HIGH — approved full-roster visual audit",
+      "highResIdentitySource": "assets/images/characters/clarity/npc/22/idle.png",
+      "posterIdentity": "assets/images/characters/clarity/npc/22/identity_poster.png",
+      "legacyLowResPoster": "assets/images/hidden/pale_rider_identity_poster.png",
+      "legacyStatus": "deprecated_runtime_preserved_repository_asset",
+      "duelPoseRoot": "assets/images/characters/clarity/npc/22",
+      "sourceResolution": [
+        1254,
+        1254
+      ],
+      "posterResolution": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "87e553bcb019bffedd545f691a3da7a3fb853cc6cc6df8094a670f28df386566",
+      "posterSha256": "b3596ea85ad3f8469aa3fea0331e152329fa206e66e7f09d7807b5fd37ff0be6",
+      "rimPixelsReplaced": 1885,
+      "unresolvedCandidatePixels": 0,
+      "alphaChangedPixels": 0,
+      "unselectedVisiblePixelChanges": 0,
+      "transparentRgbSanitized": 366,
+      "alphaBounds": [
+        49,
+        9,
+        1208,
+        1254
+      ],
+      "alphaPolicy": "source alpha preserved exactly; intentional special transparency retained",
+      "rasterMethod": "native_1254_source_no_resize_no_resampling"
+    }
+  ],
+  "runtimeMappedCount": 22,
+  "legacyRuntimeCount": 0,
+  "lockTitle": "NPC SELECT V3 — HIGH-RES PRODUCTION LOCKED",
+  "qa": {
+    "HIGH_RES_SOURCE": "22/22",
+    "HIGH_RES_POSTER": "22/22",
+    "IDENTITY_MATCH": "22/22",
+    "RIM_LIGHT_REMOVED": "22/22",
+    "ALPHA_PASS": "22/22",
+    "CLIPPING_PASS": "22/22",
+    "DEVICE_QA": "PASS — iPhone 17 Pro simulator, nine requested NPC states",
+    "PERFORMANCE_QA": "PASS — current-only mount, entry and repeated carousel navigation",
+    "PLAYER_NPC_QUALITY_COMPARE": "PASS"
+  }
+}
