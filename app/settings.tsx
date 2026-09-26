@@ -43,8 +43,8 @@ export default function SettingsScreen() {
   useScreenBgm('menu');
   useFocusEffect(useCallback(() => {
     if (!iapAvailable) return;
+    // 연결만 준비. 자동 restore는 Apple ID 로그인 시트를 반복해서 띄운다.
     void initPurchases();
-    void restorePurchases().then((owned) => setStoreOwnsAdRemoval(owned || useProgressStore.getState().isAdFree));
   }, [iapAvailable]));
   useEffect(() => {
     if (!iapAvailable || adFree) return;

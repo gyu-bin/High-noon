@@ -107,6 +107,7 @@
     "opponent": "상대",
     "finalScore": "최종 스코어",
     "retry": "다시 도전",
+    "nextNpc": "다음 · {{name}}",
     "toOpponentSelect": "대결상대 선택으로",
     "thisRound": "이번 라운드  ",
     "finalVictory": "최종 승리!",

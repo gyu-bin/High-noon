@@ -33,6 +33,7 @@ import { getV3NpcPose } from '@/constants/v3DuelAssets';
 import { getNpcDisplayName } from '@/utils/npcLabels';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
+import { useProgressStore } from '@/store/progressStore';
 import { bgmPlay } from '@/utils/audioService';
 import { trigger } from '@/utils/hapticService';
 import {
@@ -186,6 +187,15 @@ export default function NpcResultScreen() {
   const victory = wonStr === '1';
   const dayNight = dayNightStr === 'night' ? 'night' : 'day';
   const theme = victory ? OUTCOME_VICTORY : OUTCOME_DEFEAT;
+  const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
+
+  const nextNpc = useMemo(() => {
+    if (!victory || !Number.isFinite(id)) return null;
+    const nextId = id + 1;
+    const candidate = getNpcById(nextId);
+    if (!candidate || nextId > highestUnlocked) return null;
+    return candidate;
+  }, [highestUnlocked, id, victory]);
 
   const playerMsRaw =
     playerMsStr != null && playerMsStr !== '' ? Number(playerMsStr) : NaN;
@@ -237,6 +247,14 @@ export default function NpcResultScreen() {
       params: { npcId: String(id) },
     } as Href);
   }, [router, id]);
+
+  const onNextNpc = useCallback(() => {
+    if (!nextNpc) return;
+    router.replace({
+      pathname: '/game/npc',
+      params: { npcId: String(nextNpc.id) },
+    } as Href);
+  }, [nextNpc, router]);
 
   const onNpcSelect = useCallback(() => {
     router.replace('/npc-select');
@@ -311,7 +329,21 @@ export default function NpcResultScreen() {
             <ReactionStatsCard playerMs={playerMs} npcMs={npcMs} faster={faster} />
 
             <View style={styles.btnCol}>
-              <WoodButton title={t('result.retry')} onPress={onRetry} style={styles.btn} />
+              {nextNpc ? (
+                <WoodButton
+                  title={t('result.nextNpc', {
+                    name: getNpcDisplayName(t, nextNpc.id),
+                  })}
+                  onPress={onNextNpc}
+                  style={styles.btn}
+                />
+              ) : null}
+              <WoodButton
+                title={t('result.retry')}
+                onPress={onRetry}
+                style={nextNpc ? styles.btnSecondary : styles.btn}
+                textStyle={nextNpc ? styles.btnSecondaryText : undefined}
+              />
               <WoodButton
                 title={t('result.toOpponentSelect')}
                 onPress={onNpcSelect}
