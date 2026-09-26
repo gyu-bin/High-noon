@@ -92,6 +92,7 @@
     "opponent": "相手",
     "finalScore": "最終スコア",
     "retry": "再挑戦",
+    "nextNpc": "次へ · {{name}}",
     "toOpponentSelect": "対戦相手選択へ",
     "thisRound": "このラウンド  ",
     "finalVictory": "最終勝利！",

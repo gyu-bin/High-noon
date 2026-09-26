@@ -92,6 +92,7 @@
     "opponent": "Opponent",
     "finalScore": "Final Score",
     "retry": "Retry",
+    "nextNpc": "Next · {{name}}",
     "toOpponentSelect": "Select Opponent",
     "thisRound": "This Round  ",
     "finalVictory": "Final Victory!",

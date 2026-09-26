@@ -380,7 +380,8 @@ async function initPurchasesInternal(): Promise<boolean> {
     attachPurchaseListeners(lib);
     initialized = true;
     lastInitError = null;
-    void refreshAdFreeFromReceipts();
+    // 부팅/설정 진입마다 영수증·복원을 돌리면 Apple ID 로그인 시트가 반복된다.
+    // 광고 제거 여부는 로컬 isAdFree를 쓰고, 검증은 구매·복원 버튼에서만 한다.
     return true;
   } catch (error) {
     lastInitError = formatInitError(error);
@@ -405,10 +406,13 @@ export async function initPurchases(): Promise<void> {
   await initPromise;
 }
 
-/** 부팅용 — Android는 lazy (메뉴에서 init). iOS만 미리 연결한다. */
+/**
+ * 부팅용 — iOS/Android 모두 lazy.
+ * 앱 시작마다 StoreKit/Billing에 붙으면 Apple ID·스토어 로그인 팝업이 반복된다.
+ * 메뉴·구매 시에만 initPurchases()를 호출한다.
+ */
 export async function initPurchasesOnBoot(): Promise<void> {
-  if (Platform.OS === 'android') return;
-  await initPurchases();
+  return;
 }
 
 /** init이 끝날 때까지 대기. 실패하면 false */
