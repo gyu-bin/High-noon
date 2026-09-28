@@ -11,6 +11,8 @@ type Props = {
   /** NPC 모드: 선택 화면 복귀 등 */
   onSecondaryExit?: () => void;
   secondaryLabel?: string;
+  /** Optional one-line warning under the title (e.g. ranked forfeit). */
+  notice?: string;
   onMainMenu: () => void;
 };
 
@@ -19,6 +21,7 @@ export function PauseMenuModal({
   onResume,
   onSecondaryExit,
   secondaryLabel,
+  notice,
   onMainMenu,
 }: Props) {
   const { t } = useTranslation();
@@ -51,6 +54,7 @@ export function PauseMenuModal({
           ]}
         >
           <Text style={[styles.title, landscape && styles.titleLandscape]}>{t('game.pause')}</Text>
+          {notice ? <Text style={styles.notice}>{notice}</Text> : null}
           <Pressable
             accessibilityLabel={t('game.continue')}
             accessibilityRole="button"
@@ -114,6 +118,14 @@ const styles = StyleSheet.create({
     color: colors.ochre,
     marginBottom: 6,
     textAlign: 'center',
+  },
+  notice: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.sand,
+    textAlign: 'center',
+    marginTop: -4,
+    marginBottom: 2,
   },
   titleLandscape: {
     fontSize: 20,

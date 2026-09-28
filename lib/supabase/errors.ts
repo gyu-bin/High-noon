@@ -31,3 +31,23 @@ export function isNetworkError(error: unknown): boolean {
 export function throwSupabaseError(error: unknown): never {
   throw new Error(formatUnknownError(error));
 }
+
+/**
+ * `pvp_submit_match` only accepts an `assigned`, unexpired match. Seeing this
+ * means the match is already settled (e.g. an earlier attempt succeeded but
+ * the response was lost) or its 30-minute window closed — never retry blindly.
+ */
+export function isRankedMatchClosedError(error: unknown): boolean {
+  return formatUnknownError(error).includes('match_not_found_or_expired');
+}
+
+/** Friend challenge errors that no retry can fix. */
+export function isFriendChallengeClosedError(error: unknown): boolean {
+  const msg = formatUnknownError(error);
+  return (
+    msg.includes('challenge_expired') ||
+    msg.includes('challenge_not_found') ||
+    msg.includes('cannot_challenge_self') ||
+    msg.includes('invalid_code')
+  );
+}

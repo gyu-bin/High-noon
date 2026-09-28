@@ -24,6 +24,7 @@ import { useRankingRewardStore, whenRankingRewardsReady } from '@/store/rankingR
 import { useSettingsStore } from '@/store/settingsStore';
 import type { DailyChallenge, PvpLeaderboardEntry } from '@/types/pvp';
 import { trigger } from '@/utils/hapticService';
+import { flushPendingSubmissions } from '@/utils/rankingSubmission';
 
 const REROLL_COOLDOWN_MS = 1200;
 
@@ -79,6 +80,8 @@ export default function RankingHubScreen() {
     setError(null);
     try {
       await whenRankingRewardsReady();
+      // Settle duels that finished offline before reading rating / leaderboard.
+      await flushPendingSubmissions();
       const me = await pvpLogin();
       setProfile(me);
       recordSeasonPeak(me.rank_tier);

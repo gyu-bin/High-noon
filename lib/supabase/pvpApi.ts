@@ -1,6 +1,11 @@
 import { getOrCreateDeviceKey } from '@/lib/supabase/deviceKey';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
-import { throwSupabaseError } from '@/lib/supabase/errors';
+import { isNetworkError, throwSupabaseError } from '@/lib/supabase/errors';
+import {
+  normalizeReactionMsForServer,
+  normalizeRoundsForServer,
+  normalizeSamplesForServer,
+} from '@/lib/supabase/reactionPayload';
 import type {
   DailyChallenge,
   DailySubmitResult,
@@ -20,6 +25,9 @@ import {
   type DailyChallengePayload,
 } from '@/utils/dailyChallenge';
 import { normalizeChallengeCode } from '@/utils/challengeLink';
+
+/** Same default the server uses for a missing friend-challenge sample. */
+const GHOST_SAMPLE_FALLBACK_MS = 280;
 
 async function requireDeviceKey(): Promise<string> {
   if (!isSupabaseConfigured) throw new Error('supabase_not_configured');
@@ -113,8 +121,8 @@ export async function pvpSubmitMatch(input: {
     // immutable assignment id returned by pvp_matchmake, not a profile id.
     p_opponent_id: input.matchId,
     p_opponent_is_bot: input.opponentIsBot,
-    p_player_rounds: input.playerRounds,
-    p_opponent_rounds: input.opponentRounds,
+    p_player_rounds: normalizeRoundsForServer(input.playerRounds),
+    p_opponent_rounds: normalizeSamplesForServer(input.opponentRounds, GHOST_SAMPLE_FALLBACK_MS),
     p_score_player: input.scorePlayer,
     p_score_opponent: input.scoreOpponent,
     p_result: input.result,
@@ -123,6 +131,27 @@ export async function pvpSubmitMatch(input: {
   });
   if (error) throwSupabaseError(error);
   return data as PvpSubmitResult;
+}
+
+export type PvpServerCapabilities = {
+  contract?: string;
+  ranked_submit_idempotent?: boolean;
+  forfeit_rpc?: boolean;
+};
+
+/**
+ * `pvp_capabilities` exists only on the reconciled V3 baseline
+ * (20260927_reconcile_bounty_ranking_v3.sql). A donor-era database has no such
+ * RPC, which is reported as `null`. Network failures still throw.
+ */
+export async function pvpCapabilities(): Promise<PvpServerCapabilities | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await getSupabase().rpc('pvp_capabilities');
+  if (error) {
+    if (isNetworkError(error)) throwSupabaseError(error);
+    return null;
+  }
+  return (data ?? null) as PvpServerCapabilities | null;
 }
 
 export async function pvpRerollDisplayName(): Promise<PvpProfile> {
@@ -191,7 +220,7 @@ export async function pvpSubmitDaily(input: {
   const key = await requireDeviceKey();
   const { data, error } = await getSupabase().rpc('pvp_submit_daily', {
     p_device_key: key,
-    p_player_rounds: input.playerRounds,
+    p_player_rounds: normalizeRoundsForServer(input.playerRounds),
     p_score_player: input.scorePlayer,
     p_score_opponent: input.scoreOpponent,
     p_result: input.result,
@@ -242,10 +271,10 @@ export async function pvpCreateFriendChallenge(input: {
   const key = await requireDeviceKey();
   const { data, error } = await getSupabase().rpc('pvp_create_friend_challenge', {
     p_device_key: key,
-    p_sample_ms: input.sampleMs,
+    p_sample_ms: normalizeSamplesForServer(input.sampleMs, GHOST_SAMPLE_FALLBACK_MS),
     p_score_creator: input.scoreCreator,
-    p_creator_avg_ms: input.creatorAvgMs,
-    p_creator_best_ms: input.creatorBestMs,
+    p_creator_avg_ms: normalizeReactionMsForServer(input.creatorAvgMs),
+    p_creator_best_ms: normalizeReactionMsForServer(input.creatorBestMs),
     p_character_id: input.characterId,
     p_cosmetic_npc_id: null,
   });
@@ -279,7 +308,7 @@ export async function pvpSubmitFriendChallenge(input: {
   const { data, error } = await getSupabase().rpc('pvp_submit_friend_challenge', {
     p_device_key: key,
     p_code: normalizeChallengeCode(input.code),
-    p_player_rounds: input.playerRounds,
+    p_player_rounds: normalizeRoundsForServer(input.playerRounds),
     p_score_player: input.scorePlayer,
     p_score_creator: input.scoreCreator,
     p_result: input.result,

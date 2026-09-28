@@ -43,6 +43,10 @@ import {
   ghostSampleFromRounds,
 } from '@/utils/reactionStats';
 import { shareWantedPosterImage } from '@/utils/shareWantedPoster';
+import {
+  applyOutcomeToPvpStore,
+  retryPendingSubmission,
+} from '@/utils/rankingSubmission';
 import { trigger } from '@/utils/hapticService';
 
 const PREVIEW_SCALE = 0.72;
@@ -62,6 +66,10 @@ export default function RankingResultScreen() {
   const lastDailySubmit = usePvpStore((s) => s.lastDailySubmit);
   const lastFriendSubmit = usePvpStore((s) => s.lastFriendSubmit);
   const matchMode = usePvpStore((s) => s.matchMode);
+  const submissionStatus = usePvpStore((s) => s.submissionStatus);
+  const submissionFailure = usePvpStore((s) => s.submissionFailure);
+  const submissionId = usePvpStore((s) => s.submissionId);
+  const submissionRetryable = usePvpStore((s) => s.submissionRetryable);
   const friendChallenge = usePvpStore((s) => s.friendChallenge);
   const lastCreatedChallengeCode = usePvpStore((s) => s.lastCreatedChallengeCode);
   const beginMatch = usePvpStore((s) => s.beginMatch);
@@ -78,6 +86,16 @@ export default function RankingResultScreen() {
   const [sharingPoster, setSharingPoster] = useState(false);
   const [posterError, setPosterError] = useState<string | null>(null);
   const posterRef = useRef<View>(null);
+  const [retryingSettlement, setRetryingSettlement] = useState(false);
+
+  const onRetrySettlement = useCallback(async () => {
+    if (!submissionId || retryingSettlement) return;
+    const task = retryPendingSubmission(submissionId);
+    if (!task) return;
+    setRetryingSettlement(true);
+    applyOutcomeToPvpStore(submissionId, await task);
+    setRetryingSettlement(false);
+  }, [retryingSettlement, submissionId]);
 
   const won = playerWins > opponentWins;
   const draw = playerWins === opponentWins;
@@ -393,6 +411,40 @@ export default function RankingResultScreen() {
             />
           ) : null}
 
+          {/* Never show a rating the server has not confirmed. */}
+          {submissionStatus === 'submitting' ? (
+            <Text style={styles.note}>{t('ranking.syncSubmitting')}</Text>
+          ) : null}
+          {submissionStatus === 'pending_retry' ? (
+            <View style={styles.syncBox}>
+              <Text style={styles.syncTitle}>{t('ranking.syncPendingTitle')}</Text>
+              <Text style={styles.note}>{t('ranking.syncPendingBody')}</Text>
+              {submissionRetryable ? (
+                <WesternButton
+                  title={
+                    retryingSettlement
+                      ? t('ranking.syncRetrying')
+                      : t('ranking.syncRetry')
+                  }
+                  onPress={() => void onRetrySettlement()}
+                  disabled={retryingSettlement}
+                />
+              ) : (
+                <Text style={styles.note}>{t('ranking.syncAwaitServer')}</Text>
+              )}
+            </View>
+          ) : null}
+          {submissionStatus === 'failed' ? (
+            <Text style={styles.error}>
+              {submissionFailure === 'expired'
+                ? t('ranking.syncExpired')
+                : t('ranking.syncRejected')}
+            </Text>
+          ) : null}
+          {submissionStatus === 'submitted' && matchMode === 'ranked' && !lastSubmit ? (
+            <Text style={styles.note}>{t('ranking.syncSettled')}</Text>
+          ) : null}
+
           {isDaily && lastDailySubmit?.already_completed ? (
             <Text style={styles.note}>{t('ranking.dailyAlreadyDone')}</Text>
           ) : null}
@@ -472,6 +524,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(232,197,71,0.35)',
+  },
+  syncBox: {
+    gap: 8,
+    padding: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(232,197,71,0.35)',
+    backgroundColor: 'rgba(26,18,8,0.72)',
+  },
+  syncTitle: {
+    color: colors.gold,
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 2,
+    textAlign: 'center',
   },
   note: {
     color: colors.sand,

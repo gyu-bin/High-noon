@@ -13,6 +13,22 @@ import type {
   PvpSubmitResult,
 } from '@/types/pvp';
 
+/**
+ * Server settlement state of the duel just played.
+ * - submitting: request in flight
+ * - submitted: server confirmed (last*Submit holds the settlement)
+ * - pending_retry: kept in rankingSubmissionStore, safe to retry
+ * - failed: server will never accept it (window closed / rejected)
+ */
+export type RankingSubmissionStatus =
+  | 'idle'
+  | 'submitting'
+  | 'submitted'
+  | 'pending_retry'
+  | 'failed';
+
+export type RankingSubmissionFailure = 'expired' | 'rejected';
+
 type PvpStoreState = {
   profile: PvpProfile | null;
   matchId: string | null;
@@ -28,6 +44,12 @@ type PvpStoreState = {
   lastDailySubmit: DailySubmitResult | null;
   lastFriendSubmit: FriendChallengeSubmitResult | null;
   lastCreatedChallengeCode: string | null;
+  submissionStatus: RankingSubmissionStatus;
+  submissionFailure: RankingSubmissionFailure | null;
+  /** pending_retry only: false while the server cannot take a safe re-submit. */
+  submissionRetryable: boolean;
+  /** rankingSubmissionStore id of the duel shown on the result screen. */
+  submissionId: string | null;
   authReady: boolean;
   authError: string | null;
   setAuthReady: (ready: boolean, error?: string | null) => void;
@@ -42,6 +64,12 @@ type PvpStoreState = {
   setLastFriendSubmit: (result: FriendChallengeSubmitResult | null) => void;
   setDailyChallenge: (daily: DailyChallenge | null) => void;
   setLastCreatedChallengeCode: (code: string | null) => void;
+  setSubmission: (
+    status: RankingSubmissionStatus,
+    submissionId?: string | null,
+    failure?: RankingSubmissionFailure | null,
+    retryable?: boolean,
+  ) => void;
   clearMatch: () => void;
 };
 
@@ -59,6 +87,10 @@ export const usePvpStore = create<PvpStoreState>((set) => ({
   lastDailySubmit: null,
   lastFriendSubmit: null,
   lastCreatedChallengeCode: null,
+  submissionStatus: 'idle',
+  submissionFailure: null,
+  submissionRetryable: true,
+  submissionId: null,
   authReady: false,
   authError: null,
 
@@ -82,6 +114,10 @@ export const usePvpStore = create<PvpStoreState>((set) => ({
       lastDailySubmit: null,
       lastFriendSubmit: null,
       lastCreatedChallengeCode: null,
+      submissionStatus: 'idle',
+      submissionFailure: null,
+      submissionRetryable: true,
+      submissionId: null,
     }),
 
   beginDailyMatch: (daily) =>
@@ -106,6 +142,10 @@ export const usePvpStore = create<PvpStoreState>((set) => ({
       lastDailySubmit: null,
       lastFriendSubmit: null,
       lastCreatedChallengeCode: null,
+      submissionStatus: 'idle',
+      submissionFailure: null,
+      submissionRetryable: true,
+      submissionId: null,
     }),
 
   beginFriendMatch: (challenge) =>
@@ -130,6 +170,10 @@ export const usePvpStore = create<PvpStoreState>((set) => ({
       lastDailySubmit: null,
       lastFriendSubmit: null,
       lastCreatedChallengeCode: null,
+      submissionStatus: 'idle',
+      submissionFailure: null,
+      submissionRetryable: true,
+      submissionId: null,
     }),
 
   pushRound: (round) => set((s) => ({ rounds: [...s.rounds, round] })),
@@ -146,6 +190,14 @@ export const usePvpStore = create<PvpStoreState>((set) => ({
 
   setLastCreatedChallengeCode: (lastCreatedChallengeCode) =>
     set({ lastCreatedChallengeCode }),
+
+  setSubmission: (submissionStatus, submissionId, failure = null, retryable = true) =>
+    set((s) => ({
+      submissionStatus,
+      submissionId: submissionId === undefined ? s.submissionId : submissionId,
+      submissionFailure: failure,
+      submissionRetryable: retryable,
+    })),
 
   clearMatch: () =>
     set({

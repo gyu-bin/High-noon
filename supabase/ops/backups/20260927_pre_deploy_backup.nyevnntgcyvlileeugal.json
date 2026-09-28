@@ -1,0 +1,1356 @@
+{
+ "project_ref": "nyevnntgcyvlileeugal",
+ "taken_before": "20260927_reconcile_bounty_ranking_v3",
+ "rows": [
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "_friend_challenge_code()",
+   "detail": "CREATE OR REPLACE FUNCTION public._friend_challenge_code()\n RETURNS text\n LANGUAGE plpgsql\nAS $function$\ndeclare\n  alphabet text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';\n  out text := '';\n  i int;\nbegin\n  for i in 1..6 loop\n    out := out || substr(alphabet, 1 + floor(random() * length(alphabet))::int, 1);\n  end loop;\n  return out;\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "admin_get_overview(p_pin text)",
+   "detail": "CREATE OR REPLACE FUNCTION public.admin_get_overview(p_pin text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  expected_pin text;\nbegin\n  select value into expected_pin\n  from public.app_settings\n  where key = 'admin_pin'\n  limit 1;\n\n  if expected_pin is null or p_pin is distinct from expected_pin then\n    raise exception 'invalid_pin' using errcode = '42501';\n  end if;\n\n  return jsonb_build_object(\n    'total_matches', (select count(*)::int from public.analytics_match_events),\n    'unique_devices', (select count(distinct device_key_hash)::int from public.analytics_match_events),\n    'median_reaction_ms', (\n      select percentile_cont(0.5) within group (order by avg_reaction_ms)\n      from public.analytics_match_events\n      where avg_reaction_ms is not null\n    ),\n    'avg_highest_unlocked', (\n      select round(avg(highest_unlocked)::numeric, 1)\n      from public.analytics_match_events\n    ),\n    'cleared_npc_avg', (\n      select round(avg(cleared)::numeric, 1)\n      from (\n        select count(*) filter (where won) / greatest(count(*), 1)::numeric as cleared\n        from public.analytics_match_events\n        group by npc_id\n      ) sub\n    ),\n    'last_7d_matches', (\n      select count(*)::int\n      from public.analytics_match_events\n      where created_at >= now() - interval '7 days'\n    ),\n    'progress_funnel', coalesce((\n      select jsonb_agg(\n        jsonb_build_object('npc_id', npc_id, 'wins', wins, 'matches', matches)\n        order by npc_id\n      )\n      from (\n        select\n          npc_id,\n          count(*) filter (where won)::int as wins,\n          count(*)::int as matches\n        from public.analytics_match_events\n        group by npc_id\n      ) funnel\n    ), '[]'::jsonb)\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "analytics_record_event(p_device_key text, p_event_name text, p_app_version text, p_platform text, p_props jsonb)",
+   "detail": "CREATE OR REPLACE FUNCTION public.analytics_record_event(p_device_key text, p_event_name text, p_app_version text DEFAULT NULL::text, p_platform text DEFAULT NULL::text, p_props jsonb DEFAULT '{}'::jsonb)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'extensions'\nAS $function$\nbegin\n  if p_device_key is null or length(p_device_key) < 16 then\n    return;\n  end if;\n  if p_event_name is null or length(trim(p_event_name)) < 2 then\n    return;\n  end if;\n\n  insert into public.analytics_app_events (\n    device_key_hash,\n    event_name,\n    app_version,\n    platform,\n    props\n  ) values (\n    encode(digest(p_device_key, 'sha256'), 'hex'),\n    lower(trim(p_event_name)),\n    nullif(trim(coalesce(p_app_version, '')), ''),\n    nullif(trim(coalesce(p_platform, '')), ''),\n    coalesce(p_props, '{}'::jsonb)\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "analytics_record_match(p_device_key text, p_app_version text, p_platform text, p_npc_id integer, p_won boolean, p_player_wins integer, p_npc_wins integer, p_avg_reaction_ms numeric, p_highest_unlocked integer)",
+   "detail": "CREATE OR REPLACE FUNCTION public.analytics_record_match(p_device_key text, p_app_version text, p_platform text, p_npc_id integer, p_won boolean, p_player_wins integer, p_npc_wins integer, p_avg_reaction_ms numeric, p_highest_unlocked integer)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'extensions'\nAS $function$\nbegin\n  if p_device_key is null or length(p_device_key) < 16 then\n    return;\n  end if;\n\n  insert into public.analytics_match_events (\n    device_key_hash,\n    app_version,\n    platform,\n    npc_id,\n    won,\n    player_wins,\n    npc_wins,\n    avg_reaction_ms,\n    highest_unlocked\n  ) values (\n    encode(digest(p_device_key, 'sha256'), 'hex'),\n    nullif(trim(p_app_version), ''),\n    nullif(trim(p_platform), ''),\n    p_npc_id,\n    p_won,\n    p_player_wins,\n    p_npc_wins,\n    p_avg_reaction_ms,\n    greatest(1, p_highest_unlocked)\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "cleanup_profile_on_user_delete()",
+   "detail": "CREATE OR REPLACE FUNCTION public.cleanup_profile_on_user_delete()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  delete from public.profiles where id = old.id and is_bot = false;\n  return old;\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "elo_expected(r_a integer, r_b integer)",
+   "detail": "CREATE OR REPLACE FUNCTION public.elo_expected(r_a integer, r_b integer)\n RETURNS numeric\n LANGUAGE sql\n IMMUTABLE\nAS $function$\n  select 1.0 / (1.0 + power(10.0, (r_b - r_a)::numeric / 400.0));\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "ensure_my_profile()",
+   "detail": "CREATE OR REPLACE FUNCTION public.ensure_my_profile()\n RETURNS profiles\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  uid uuid := auth.uid();\n  p public.profiles;\n  adjectives text[] := array['Dusty','Rusty','Silent','Quick','Lone','Wild','Iron','Pale','Cunning','Scarred'];\n  nouns text[] := array['Coyote','Vulture','Revolver','Outlaw','Sheriff','Bandit','Rider','Hawk','Snake','Drifter'];\n  name text;\nbegin\n  if uid is null then\n    raise exception 'not authenticated';\n  end if;\n\n  select * into p from public.profiles where id = uid;\n  if found then\n    return p;\n  end if;\n\n  name := adjectives[1 + floor(random() * array_length(adjectives, 1))::int]\n    || ' '\n    || nouns[1 + floor(random() * array_length(nouns, 1))::int]\n    || ' #'\n    || lpad((floor(random() * 900) + 100)::text, 3, '0');\n\n  insert into public.profiles (id, display_name, rank_tier)\n  values (uid, name, public.rating_to_rank_tier(1000))\n  returning * into p;\n\n  return p;\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "handle_new_user()",
+   "detail": "CREATE OR REPLACE FUNCTION public.handle_new_user()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  adjectives text[] := array['Dusty','Rusty','Silent','Quick','Lone','Wild','Iron','Pale','Cunning','Scarred'];\n  nouns text[] := array['Coyote','Vulture','Revolver','Outlaw','Sheriff','Bandit','Rider','Hawk','Snake','Drifter'];\n  name text;\nbegin\n  name := adjectives[1 + floor(random() * array_length(adjectives, 1))::int]\n    || ' '\n    || nouns[1 + floor(random() * array_length(nouns, 1))::int]\n    || ' #'\n    || lpad((floor(random() * 900) + 100)::text, 3, '0');\n\n  insert into public.profiles (id, display_name, rank_tier)\n  values (new.id, name, public.rating_to_rank_tier(1000))\n  on conflict (id) do nothing;\n\n  return new;\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_create_friend_challenge(p_device_key text, p_sample_ms integer[], p_score_creator integer, p_creator_avg_ms integer, p_creator_best_ms integer, p_character_id integer, p_cosmetic_npc_id integer)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_create_friend_challenge(p_device_key text, p_sample_ms integer[], p_score_creator integer DEFAULT 0, p_creator_avg_ms integer DEFAULT NULL::integer, p_creator_best_ms integer DEFAULT NULL::integer, p_character_id integer DEFAULT 1, p_cosmetic_npc_id integer DEFAULT NULL::integer)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  me jsonb;\n  pid uuid;\n  code text;\n  tries int := 0;\n  row public.friend_challenges;\n  s1 int; s2 int; s3 int;\nbegin\n  me := public.pvp_login_device(p_device_key);\n  pid := (me->>'id')::uuid;\n\n  if p_sample_ms is null or array_length(p_sample_ms, 1) is distinct from 3 then\n    raise exception 'invalid_sample_ms';\n  end if;\n\n  s1 := greatest(80, least(2500, coalesce(p_sample_ms[1], 280)));\n  s2 := greatest(80, least(2500, coalesce(p_sample_ms[2], 280)));\n  s3 := greatest(80, least(2500, coalesce(p_sample_ms[3], 280)));\n\n  loop\n    tries := tries + 1;\n    code := public._friend_challenge_code();\n    begin\n      insert into public.friend_challenges (\n        code, creator_id, creator_name, sample_ms, character_id, cosmetic_npc_id,\n        creator_avg_ms, creator_best_ms, score_creator\n      ) values (\n        code, pid, coalesce(me->>'display_name', 'Outlaw'),\n        array[s1, s2, s3],\n        greatest(1, least(4, coalesce(p_character_id, 1))),\n        p_cosmetic_npc_id,\n        p_creator_avg_ms,\n        p_creator_best_ms,\n        greatest(0, coalesce(p_score_creator, 0))\n      )\n      returning * into row;\n      exit;\n    exception when unique_violation then\n      if tries >= 8 then\n        raise;\n      end if;\n    end;\n  end loop;\n\n  return jsonb_build_object(\n    'id', row.id,\n    'code', row.code,\n    'creator_name', row.creator_name,\n    'sample_ms', to_jsonb(row.sample_ms),\n    'character_id', row.character_id,\n    'cosmetic_npc_id', row.cosmetic_npc_id,\n    'creator_avg_ms', row.creator_avg_ms,\n    'creator_best_ms', row.creator_best_ms,\n    'score_creator', row.score_creator,\n    'expires_at', row.expires_at\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_get_daily(p_device_key text)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_get_daily(p_device_key text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  me jsonb;\n  pid uuid;\n  d date := (timezone('utc', now()))::date;\n  ch public.daily_challenges;\n  done public.daily_completions;\n  s1 int; s2 int; s3 int;\n  has_done boolean := false;\nbegin\n  me := public.pvp_login_device(p_device_key);\n  pid := (me->>'id')::uuid;\n\n  select * into ch from public.daily_challenges where challenge_date = d;\n  if not found then\n    s1 := 200 + floor(random() * 120)::int;\n    s2 := 200 + floor(random() * 120)::int;\n    s3 := 200 + floor(random() * 120)::int;\n    insert into public.daily_challenges (challenge_date, opponent_name, sample_ms, character_id)\n    values (\n      d,\n      'Daily Outlaw #' || to_char(d, 'MMDD'),\n      array[s1, s2, s3],\n      1 + floor(random() * 4)::int\n    )\n    returning * into ch;\n  end if;\n\n  select * into done from public.daily_completions\n  where profile_id = pid and challenge_date = d;\n  has_done := found;\n\n  return jsonb_build_object(\n    'challenge_date', ch.challenge_date,\n    'opponent_name', ch.opponent_name,\n    'sample_ms', to_jsonb(ch.sample_ms),\n    'character_id', ch.character_id,\n    'cosmetic_npc_id', ch.cosmetic_npc_id,\n    'completed', has_done,\n    'completion', case when not has_done then null else jsonb_build_object(\n      'score_player', done.score_player,\n      'score_opponent', done.score_opponent,\n      'result', done.result,\n      'avg_ms', done.avg_ms,\n      'shared', done.shared\n    ) end\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_get_friend_challenge(p_device_key text, p_code text)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_get_friend_challenge(p_device_key text, p_code text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  me jsonb;\n  pid uuid;\n  row public.friend_challenges;\n  attempt public.friend_challenge_attempts;\n  normalized text;\n  has_attempt boolean := false;\nbegin\n  me := public.pvp_login_device(p_device_key);\n  pid := (me->>'id')::uuid;\n  normalized := upper(regexp_replace(coalesce(p_code, ''), '[^A-Za-z0-9]', '', 'g'));\n\n  if length(normalized) <> 6 then\n    raise exception 'invalid_code';\n  end if;\n\n  select * into row from public.friend_challenges where code = normalized;\n  if not found then\n    raise exception 'challenge_not_found';\n  end if;\n\n  if row.expires_at < now() then\n    raise exception 'challenge_expired';\n  end if;\n\n  select * into attempt\n  from public.friend_challenge_attempts\n  where challenge_id = row.id and challenger_id = pid;\n  has_attempt := found;\n\n  return jsonb_build_object(\n    'id', row.id,\n    'code', row.code,\n    'creator_id', row.creator_id,\n    'creator_name', row.creator_name,\n    'sample_ms', to_jsonb(row.sample_ms),\n    'character_id', row.character_id,\n    'cosmetic_npc_id', row.cosmetic_npc_id,\n    'creator_avg_ms', row.creator_avg_ms,\n    'creator_best_ms', row.creator_best_ms,\n    'score_creator', row.score_creator,\n    'expires_at', row.expires_at,\n    'is_creator', row.creator_id = pid,\n    'completed', has_attempt,\n    'completion', case when not has_attempt then null else jsonb_build_object(\n      'score_player', attempt.score_player,\n      'score_creator', attempt.score_creator,\n      'result', attempt.result,\n      'avg_ms', attempt.avg_ms,\n      'best_ms', attempt.best_ms\n    ) end\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_leaderboard(p_device_key text, limit_count integer)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_leaderboard(p_device_key text, limit_count integer DEFAULT 50)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  me jsonb;\n  me_id uuid;\n  me_rating int;\n  me_wins int;\n  rows jsonb;\n  my_rank int;\nbegin\n  me := public.pvp_login_device(p_device_key);\n  me_id := (me->>'id')::uuid;\n  me_rating := (me->>'rating')::int;\n  me_wins := (me->>'wins')::int;\n\n  select coalesce(jsonb_agg(row_data order by ord), '[]'::jsonb) into rows\n  from (\n    select\n      jsonb_build_object(\n        'id', p.id,\n        'display_name', p.display_name,\n        'character_id', p.character_id,\n        'cosmetic_npc_id', p.cosmetic_npc_id,\n        'rating', p.rating,\n        'rank_tier', p.rank_tier,\n        'wins', p.wins,\n        'losses', p.losses,\n        'rank', row_number() over (order by p.rating desc, p.wins desc, p.id asc)\n      ) as row_data,\n      row_number() over (order by p.rating desc, p.wins desc, p.id asc) as ord\n    from public.profiles p\n    where p.is_bot = false\n    order by p.rating desc, p.wins desc, p.id asc\n    limit greatest(1, least(limit_count, 100))\n  ) s;\n\n  select count(*)::int + 1 into my_rank\n  from public.profiles p\n  where p.is_bot = false\n    and (\n      p.rating > me_rating\n      or (p.rating = me_rating and p.wins > me_wins)\n      or (p.rating = me_rating and p.wins = me_wins and p.id < me_id)\n    );\n\n  return jsonb_build_object(\n    'entries', rows,\n    'me', me || jsonb_build_object('rank', my_rank)\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_login_device(p_device_key text)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_login_device(p_device_key text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  pid uuid;\n  p public.profiles;\n  name text;\nbegin\n  if p_device_key is null or char_length(p_device_key) < 32 then\n    raise exception 'invalid device key';\n  end if;\n\n  select profile_id into pid from public.device_identities where device_key = p_device_key;\n  if pid is null then\n    pid := gen_random_uuid();\n    name := public.pvp_pick_western_alias(pid, null);\n\n    insert into public.profiles (id, display_name, rank_tier, is_bot)\n    values (pid, name, public.rating_to_rank_tier(1000), false);\n\n    insert into public.device_identities (device_key, profile_id)\n    values (p_device_key, pid);\n  end if;\n\n  select * into p from public.profiles where id = pid;\n  return jsonb_build_object(\n    'id', p.id,\n    'display_name', p.display_name,\n    'character_id', p.character_id,\n    'cosmetic_npc_id', p.cosmetic_npc_id,\n    'rating', p.rating,\n    'rank_tier', p.rank_tier,\n    'wins', p.wins,\n    'losses', p.losses\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_mark_daily_shared(p_device_key text)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_mark_daily_shared(p_device_key text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  me jsonb;\n  pid uuid;\n  d date := (timezone('utc', now()))::date;\n  updated int;\nbegin\n  me := public.pvp_login_device(p_device_key);\n  pid := (me->>'id')::uuid;\n  update public.daily_completions\n  set shared = true\n  where profile_id = pid and challenge_date = d;\n  get diagnostics updated = row_count;\n  if updated = 0 then\n    raise exception 'daily not completed';\n  end if;\n  return jsonb_build_object('ok', true, 'badge', 'daily_duelist');\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_matchmake(p_device_key text)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_matchmake(p_device_key text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  me jsonb;\n  me_id uuid;\n  me_rating int;\n  opp public.profiles;\n  ghost public.ghost_loads;\n  rating_window int := 250;\nbegin\n  me := public.pvp_login_device(p_device_key);\n  me_id := (me->>'id')::uuid;\n  me_rating := (me->>'rating')::int;\n\n  select p.* into opp\n  from public.profiles p\n  join public.ghost_loads g on g.user_id = p.id\n  where p.id <> me_id\n    and p.is_bot = false\n    and abs(p.rating - me_rating) <= rating_window\n  order by random()\n  limit 1;\n\n  if opp.id is null then\n    select p.* into opp\n    from public.profiles p\n    join public.ghost_loads g on g.user_id = p.id\n    where p.id <> me_id and p.is_bot = false\n    order by abs(p.rating - me_rating), random()\n    limit 1;\n  end if;\n\n  if opp.id is null then\n    select p.* into opp\n    from public.profiles p\n    join public.ghost_loads g on g.user_id = p.id\n    where p.is_bot = true\n    order by abs(p.rating - me_rating), random()\n    limit 1;\n  end if;\n\n  if opp.id is null then\n    raise exception 'no opponents available';\n  end if;\n\n  select * into ghost from public.ghost_loads where user_id = opp.id;\n\n  return jsonb_build_object(\n    'player', me,\n    'opponent', jsonb_build_object(\n      'id', opp.id,\n      'display_name', opp.display_name,\n      'character_id', coalesce(ghost.character_id, opp.character_id),\n      'cosmetic_npc_id', coalesce(ghost.cosmetic_npc_id, opp.cosmetic_npc_id),\n      'rating', opp.rating,\n      'rank_tier', opp.rank_tier,\n      'is_bot', opp.is_bot,\n      'sample_ms', to_jsonb(ghost.sample_ms)\n    )\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_pick_western_alias(p_exclude_profile_id uuid, p_not_equal text)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_pick_western_alias(p_exclude_profile_id uuid DEFAULT NULL::uuid, p_not_equal text DEFAULT NULL::text)\n RETURNS text\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\ndeclare\n  epithets text[] := array[\n    'Dust', 'Rust', 'Pale', 'Noon', 'Iron', 'Red', 'Dry', 'Cold',\n    'Wild', 'Black', 'Grim', 'Silent', 'Crooked', 'Hollow', 'Burnt',\n    'Lucky', 'Blind', 'Mean', 'Bone', 'Ash', 'Copper', 'Broken',\n    'Lonely', 'Quick', 'Last', 'Ragged', 'Salty', 'Scarred', 'Cinder',\n    'Steel', 'Brass', 'Tin', 'Lead', 'Stone', 'Sand', 'Clay', 'Mud',\n    'Smoke', 'Ember', 'Frost', 'Storm', 'Thunder', 'Dark', 'White',\n    'Grey', 'Gold', 'Silver', 'Bitter', 'Tough', 'Lean', 'Fast',\n    'Dead', 'Lost', 'Worn', 'Faded', 'Blunt', 'Sharp', 'Bent',\n    'Lonesome', 'Restless', 'Reckless', 'Ruthless', 'Fearless',\n    'Lawless', 'Nameless', 'Faceless', 'Trail', 'Wagon', 'River',\n    'Desert', 'Prairie', 'Mesa', 'Ridge', 'Arroyo', 'Sierra',\n    'Amber', 'Ivory', 'Onyx', 'Rusty', 'Dusty', 'Sunny', 'Moonlit',\n    'Gilded', 'Jagged', 'Rugged', 'Weathered', 'Sunburnt', 'Windworn'\n  ];\n  nouns text[] := array[\n    'Crow', 'Fox', 'Kid', 'Spur', 'Ghost', 'Draw', 'Shot', 'Hat',\n    'Gulch', 'Drifter', 'Outlaw', 'Snake', 'Wolf', 'Vulture', 'Widow',\n    'Bullet', 'Canyon', 'Duster', 'Graves', 'Bandit', 'Ranger', 'Hawk',\n    'Coyote', 'Colt', 'Mesa', 'Holster', 'Deputy', 'Skull', 'Cactus',\n    'Hickory', 'Raven', 'Buzzard', 'Jackal', 'Mustang', 'Bronco',\n    'Steer', 'Bull', 'Ram', 'Elk', 'Bear', 'Owl', 'Wren', 'Magpie',\n    'Rook', 'Pony', 'Saddle', 'Lasso', 'Whip', 'Knife', 'Rifle',\n    'Flint', 'Hammer', 'Anvil', 'Barrel', 'Keg', 'Coin', 'Nugget',\n    'Creek', 'Fork', 'Bend', 'Bluff', 'Pass', 'Mine', 'Claim',\n    'Saloon', 'Jail', 'Gallows', 'Noose', 'Rope', 'Badge', 'Star',\n    'Marshal', 'Judge', 'Preacher', 'Smith', 'Tanner', 'Miner',\n    'Wrangler', 'Stirrup', 'Cartridge', 'Powder', 'Dollar', 'Wagon',\n    'Trail', 'Coach', 'Track', 'Ridge', 'Peak', 'Shaft'\n  ];\n  givens text[] := array[\n    'Cal', 'Jed', 'Wes', 'Cole', 'Hank', 'Gus', 'Levi', 'Asa',\n    'Kit', 'Reed', 'Clay', 'Beau', 'Wade', 'Finn', 'Roy', 'Slim',\n    'Buck', 'Tex', 'Cash', 'Holt', 'Jess', 'Sam', 'Ned', 'Ike',\n    'Abe', 'Clem', 'Otis', 'Earl', 'Chet', 'Burt', 'Mack', 'Dale',\n    'Vern', 'Hoyt', 'Quinn', 'Shane', 'Luke', 'Zeke', 'Nate', 'Seth',\n    'Gabe', 'Will', 'Joel', 'Ross', 'Drew', 'Lane', 'Grant', 'Clark'\n  ];\n  surnames text[] := array[\n    'Boone', 'Kane', 'Flint', 'Graves', 'Ryder', 'Colton', 'Nash',\n    'Brooks', 'Hayes', 'McGraw', 'Dalton', 'Cassidy', 'Pike', 'Crowe',\n    'Wolfe', 'Stark', 'Frost', 'Stone', 'Marsh', 'Cross', 'Drake',\n    'Flynn', 'Gage', 'Hart', 'Knox', 'Lane', 'Moss', 'Shaw', 'Tate',\n    'Voss', 'Webb', 'York', 'Blake', 'Cobb', 'Dunn', 'Ford', 'Hale',\n    'Lang', 'Pratt', 'Sloan', 'Vance', 'West', 'Quinn', 'True',\n    'Holt', 'Reed', 'Clay', 'Buck', 'Colt', 'Spur'\n  ];\n  prefixes text[] := array['Old', 'Mad', 'Lil', 'Big', 'Poor', 'Saint'];\n  romans text[] := array[\n    'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',\n    'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'\n  ];\n  reserved text[] := array[\n    'Pale Rider', 'Iron Sheriff', 'The Undertaker',\n    'Nameless Gunslinger', 'Crimson Rosa', 'Phantom Sharpshooter'\n  ];\n  candidate text;\n  base text;\n  i int;\n  roll int;\n  roman text;\nbegin\n  for i in 1..96 loop\n    roll := floor(random() * 4)::int;\n    if roll = 0 then\n      candidate := epithets[1 + floor(random() * array_length(epithets, 1))::int]\n        || ' '\n        || nouns[1 + floor(random() * array_length(nouns, 1))::int];\n    elsif roll = 1 then\n      candidate := givens[1 + floor(random() * array_length(givens, 1))::int]\n        || ' '\n        || surnames[1 + floor(random() * array_length(surnames, 1))::int];\n    elsif roll = 2 then\n      candidate := epithets[1 + floor(random() * array_length(epithets, 1))::int]\n        || ' '\n        || surnames[1 + floor(random() * array_length(surnames, 1))::int];\n    else\n      candidate := prefixes[1 + floor(random() * array_length(prefixes, 1))::int]\n        || ' '\n        || nouns[1 + floor(random() * array_length(nouns, 1))::int];\n    end if;\n\n    if candidate = p_not_equal then\n      continue;\n    end if;\n    if candidate = any (reserved) then\n      continue;\n    end if;\n    if char_length(candidate) > 22 then\n      continue;\n    end if;\n    if not exists (\n      select 1\n      from public.profiles\n      where display_name = candidate\n        and (p_exclude_profile_id is null or id is distinct from p_exclude_profile_id)\n    ) then\n      return candidate;\n    end if;\n  end loop;\n\n  base := epithets[1 + floor(random() * array_length(epithets, 1))::int]\n    || ' '\n    || nouns[1 + floor(random() * array_length(nouns, 1))::int];\n  foreach roman in array romans loop\n    candidate := base || ' ' || roman;\n    if candidate is distinct from p_not_equal\n      and not exists (\n        select 1\n        from public.profiles\n        where display_name = candidate\n          and (p_exclude_profile_id is null or id is distinct from p_exclude_profile_id)\n      )\n    then\n      return candidate;\n    end if;\n  end loop;\n\n  return base || ' ' || lpad((floor(random() * 90) + 10)::int::text, 2, '0');\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_reroll_display_name(p_device_key text)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_reroll_display_name(p_device_key text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  pid uuid;\n  rec public.profiles%rowtype;\n  next_name text;\nbegin\n  if p_device_key is null or char_length(p_device_key) < 32 then\n    raise exception 'invalid_device_key';\n  end if;\n\n  select profile_id into pid\n  from public.device_identities\n  where device_key = p_device_key;\n\n  if pid is null then\n    raise exception 'player_not_found';\n  end if;\n\n  select * into rec\n  from public.profiles\n  where id = pid\n  for update;\n\n  if not found then\n    raise exception 'player_not_found';\n  end if;\n\n  next_name := public.pvp_pick_western_alias(pid, rec.display_name);\n\n  update public.profiles\n     set display_name = next_name\n   where id = rec.id\n   returning * into rec;\n\n  return jsonb_build_object(\n    'id', rec.id,\n    'display_name', rec.display_name,\n    'character_id', rec.character_id,\n    'cosmetic_npc_id', rec.cosmetic_npc_id,\n    'rating', rec.rating,\n    'rank_tier', rec.rank_tier,\n    'wins', rec.wins,\n    'losses', rec.losses\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_set_cosmetic_npc(p_device_key text, p_cosmetic_npc_id integer)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_set_cosmetic_npc(p_device_key text, p_cosmetic_npc_id integer)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  pid uuid;\n  rec public.profiles%rowtype;\nbegin\n  if p_device_key is null or char_length(p_device_key) < 32 then\n    raise exception 'invalid_device_key';\n  end if;\n\n  if p_cosmetic_npc_id is not null\n     and (p_cosmetic_npc_id < 1 or p_cosmetic_npc_id > 22) then\n    raise exception 'invalid_cosmetic';\n  end if;\n\n  select profile_id into pid\n  from public.device_identities\n  where device_key = p_device_key;\n\n  if pid is null then\n    raise exception 'player_not_found';\n  end if;\n\n  update public.profiles\n     set cosmetic_npc_id = p_cosmetic_npc_id\n   where id = pid\n   returning * into rec;\n\n  return jsonb_build_object(\n    'id', rec.id,\n    'display_name', rec.display_name,\n    'character_id', rec.character_id,\n    'cosmetic_npc_id', rec.cosmetic_npc_id,\n    'rating', rec.rating,\n    'rank_tier', rec.rank_tier,\n    'wins', rec.wins,\n    'losses', rec.losses\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_submit_daily(p_device_key text, p_player_rounds integer[], p_score_player integer, p_score_opponent integer, p_result text, p_shared boolean)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_submit_daily(p_device_key text, p_player_rounds integer[], p_score_player integer, p_score_opponent integer, p_result text, p_shared boolean DEFAULT false)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  me jsonb;\n  pid uuid;\n  d date := (timezone('utc', now()))::date;\n  ch public.daily_challenges;\n  existing public.daily_completions;\n  avg_v int;\n  valid int := 0;\n  sum_ms int := 0;\n  i int;\n  ms int;\nbegin\n  me := public.pvp_login_device(p_device_key);\n  pid := (me->>'id')::uuid;\n\n  select * into ch from public.daily_challenges where challenge_date = d;\n  if not found then\n    raise exception 'no daily challenge';\n  end if;\n\n  if p_result not in ('win', 'loss', 'draw') then\n    raise exception 'invalid result';\n  end if;\n\n  select * into existing from public.daily_completions\n  where profile_id = pid and challenge_date = d;\n  if found then\n    if p_shared and not existing.shared then\n      update public.daily_completions set shared = true\n      where profile_id = pid and challenge_date = d;\n      existing.shared := true;\n    end if;\n    return jsonb_build_object(\n      'already_completed', true,\n      'challenge_date', d,\n      'result', existing.result,\n      'score_player', existing.score_player,\n      'score_opponent', existing.score_opponent,\n      'avg_ms', existing.avg_ms,\n      'shared', existing.shared,\n      'badge', 'daily_duelist'\n    );\n  end if;\n\n  if p_player_rounds is not null then\n    for i in 1..least(coalesce(array_length(p_player_rounds, 1), 0), 3) loop\n      ms := p_player_rounds[i];\n      if ms is not null and ms between 80 and 2500 then\n        sum_ms := sum_ms + ms;\n        valid := valid + 1;\n      end if;\n    end loop;\n  end if;\n  avg_v := case when valid > 0 then round(sum_ms::numeric / valid)::int else null end;\n\n  insert into public.daily_completions (\n    profile_id, challenge_date, score_player, score_opponent,\n    result, player_rounds, avg_ms, shared\n  ) values (\n    pid, d, p_score_player, p_score_opponent,\n    p_result, p_player_rounds, avg_v, coalesce(p_shared, false)\n  );\n\n  return jsonb_build_object(\n    'already_completed', false,\n    'challenge_date', d,\n    'result', p_result,\n    'score_player', p_score_player,\n    'score_opponent', p_score_opponent,\n    'avg_ms', avg_v,\n    'shared', coalesce(p_shared, false),\n    'badge', 'daily_duelist'\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_submit_friend_challenge(p_device_key text, p_code text, p_player_rounds integer[], p_score_player integer, p_score_creator integer, p_result text)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_submit_friend_challenge(p_device_key text, p_code text, p_player_rounds integer[], p_score_player integer, p_score_creator integer, p_result text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  me jsonb;\n  pid uuid;\n  row public.friend_challenges;\n  existing public.friend_challenge_attempts;\n  normalized text;\n  avg_v int;\n  best_v int;\n  valid int := 0;\n  sum_ms int := 0;\n  i int;\n  ms int;\nbegin\n  me := public.pvp_login_device(p_device_key);\n  pid := (me->>'id')::uuid;\n  normalized := upper(regexp_replace(coalesce(p_code, ''), '[^A-Za-z0-9]', '', 'g'));\n\n  if length(normalized) <> 6 then\n    raise exception 'invalid_code';\n  end if;\n  if p_result not in ('win', 'loss', 'draw') then\n    raise exception 'invalid_result';\n  end if;\n\n  select * into row from public.friend_challenges where code = normalized;\n  if not found then\n    raise exception 'challenge_not_found';\n  end if;\n  if row.expires_at < now() then\n    raise exception 'challenge_expired';\n  end if;\n  if row.creator_id = pid then\n    raise exception 'cannot_challenge_self';\n  end if;\n\n  select * into existing\n  from public.friend_challenge_attempts\n  where challenge_id = row.id and challenger_id = pid;\n  if found then\n    return jsonb_build_object(\n      'already_completed', true,\n      'code', row.code,\n      'result', existing.result,\n      'score_player', existing.score_player,\n      'score_creator', existing.score_creator,\n      'avg_ms', existing.avg_ms,\n      'best_ms', existing.best_ms,\n      'creator_name', row.creator_name,\n      'creator_avg_ms', row.creator_avg_ms,\n      'creator_best_ms', row.creator_best_ms\n    );\n  end if;\n\n  best_v := null;\n  if p_player_rounds is not null then\n    for i in 1..least(coalesce(array_length(p_player_rounds, 1), 0), 3) loop\n      ms := p_player_rounds[i];\n      if ms is not null and ms between 80 and 2500 then\n        sum_ms := sum_ms + ms;\n        valid := valid + 1;\n        if best_v is null or ms < best_v then\n          best_v := ms;\n        end if;\n      end if;\n    end loop;\n  end if;\n  avg_v := case when valid > 0 then round(sum_ms::numeric / valid)::int else null end;\n\n  insert into public.friend_challenge_attempts (\n    challenge_id, challenger_id, challenger_name, player_rounds,\n    score_player, score_creator, result, avg_ms, best_ms\n  ) values (\n    row.id, pid, coalesce(me->>'display_name', 'Challenger'), p_player_rounds,\n    p_score_player, p_score_creator, p_result, avg_v, best_v\n  );\n\n  return jsonb_build_object(\n    'already_completed', false,\n    'code', row.code,\n    'result', p_result,\n    'score_player', p_score_player,\n    'score_creator', p_score_creator,\n    'avg_ms', avg_v,\n    'best_ms', best_v,\n    'creator_name', row.creator_name,\n    'creator_avg_ms', row.creator_avg_ms,\n    'creator_best_ms', row.creator_best_ms\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_submit_match(p_device_key text, p_opponent_id uuid, p_opponent_is_bot boolean, p_player_rounds integer[], p_opponent_rounds integer[], p_score_player integer, p_score_opponent integer, p_result text, p_character_id integer, p_cosmetic_npc_id integer)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_submit_match(p_device_key text, p_opponent_id uuid, p_opponent_is_bot boolean, p_player_rounds integer[], p_opponent_rounds integer[], p_score_player integer, p_score_opponent integer, p_result text, p_character_id integer DEFAULT 1, p_cosmetic_npc_id integer DEFAULT NULL::integer)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  me jsonb;\n  me_row public.profiles;\n  opp public.profiles;\n  k numeric := 24;\n  expected numeric;\n  score numeric;\n  new_rating int;\n  delta int;\n  match_id uuid;\n  valid_samples int[] := array[]::int[];\n  ms int;\n  i int;\n  rating_before int;\nbegin\n  me := public.pvp_login_device(p_device_key);\n  select * into me_row from public.profiles where id = (me->>'id')::uuid;\n  rating_before := me_row.rating;\n\n  if p_result not in ('win', 'loss', 'draw') then\n    raise exception 'invalid result';\n  end if;\n\n  if array_length(p_opponent_rounds, 1) is distinct from 3 then\n    raise exception 'opponent_rounds must have length 3';\n  end if;\n\n  if p_player_rounds is not null then\n    for i in 1..least(coalesce(array_length(p_player_rounds, 1), 0), 3) loop\n      ms := p_player_rounds[i];\n      if ms is not null and (ms < 80 or ms > 2500) then\n        raise exception 'invalid player reaction ms: %', ms;\n      end if;\n      if ms is not null and ms between 80 and 2500 then\n        valid_samples := array_append(valid_samples, ms);\n      end if;\n    end loop;\n  end if;\n\n  select * into opp from public.profiles where id = p_opponent_id;\n  if not found then\n    raise exception 'opponent not found';\n  end if;\n\n  expected := public.elo_expected(me_row.rating, opp.rating);\n  score := case p_result when 'win' then 1.0 when 'draw' then 0.5 else 0.0 end;\n  delta := round(k * (score - expected))::int;\n  new_rating := greatest(0, me_row.rating + delta);\n\n  insert into public.matches (\n    player_id, opponent_id, opponent_is_bot,\n    player_rounds, opponent_rounds,\n    score_player, score_opponent, result,\n    rating_before, rating_after, rating_delta\n  ) values (\n    me_row.id, p_opponent_id, p_opponent_is_bot,\n    p_player_rounds, p_opponent_rounds,\n    p_score_player, p_score_opponent, p_result,\n    rating_before, new_rating, delta\n  ) returning id into match_id;\n\n  update public.profiles set\n    rating = new_rating,\n    rank_tier = public.rating_to_rank_tier(new_rating),\n    wins = wins + case when p_result = 'win' then 1 else 0 end,\n    losses = losses + case when p_result = 'loss' then 1 else 0 end,\n    character_id = greatest(1, least(4, coalesce(p_character_id, character_id))),\n    cosmetic_npc_id = p_cosmetic_npc_id\n  where id = me_row.id;\n\n  if array_length(valid_samples, 1) is not null and array_length(valid_samples, 1) > 0 then\n    while array_length(valid_samples, 1) < 3 loop\n      valid_samples := array_append(valid_samples, valid_samples[array_length(valid_samples, 1)]);\n    end loop;\n    valid_samples := valid_samples[1:3];\n\n    insert into public.ghost_loads (user_id, sample_ms, character_id, cosmetic_npc_id, rating_at_submit)\n    values (me_row.id, valid_samples, coalesce(p_character_id, me_row.character_id), p_cosmetic_npc_id, new_rating)\n    on conflict (user_id) do update set\n      sample_ms = excluded.sample_ms,\n      character_id = excluded.character_id,\n      cosmetic_npc_id = excluded.cosmetic_npc_id,\n      rating_at_submit = excluded.rating_at_submit,\n      updated_at = now();\n  end if;\n\n  select * into me_row from public.profiles where id = me_row.id;\n\n  return jsonb_build_object(\n    'match_id', match_id,\n    'rating_before', rating_before,\n    'rating_after', me_row.rating,\n    'rating_delta', delta,\n    'rank_tier', me_row.rank_tier,\n    'wins', me_row.wins,\n    'losses', me_row.losses\n  );\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "pvp_update_profile(p_device_key text, p_character_id integer, p_cosmetic_npc_id integer, p_clear_cosmetic boolean)",
+   "detail": "CREATE OR REPLACE FUNCTION public.pvp_update_profile(p_device_key text, p_character_id integer DEFAULT NULL::integer, p_cosmetic_npc_id integer DEFAULT NULL::integer, p_clear_cosmetic boolean DEFAULT false)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  me jsonb;\n  pid uuid;\nbegin\n  me := public.pvp_login_device(p_device_key);\n  pid := (me->>'id')::uuid;\n\n  update public.profiles set\n    character_id = case\n      when p_character_id is not null then greatest(1, least(4, p_character_id))\n      else character_id\n    end,\n    cosmetic_npc_id = case\n      when p_clear_cosmetic then null\n      when p_cosmetic_npc_id is not null then p_cosmetic_npc_id\n      else cosmetic_npc_id\n    end\n  where id = pid;\n\n  return public.pvp_login_device(p_device_key);\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "rating_to_rank_tier(r integer)",
+   "detail": "CREATE OR REPLACE FUNCTION public.rating_to_rank_tier(r integer)\n RETURNS text\n LANGUAGE sql\n IMMUTABLE\nAS $function$\n  select case\n    when r < 1000 then 'bronze'\n    when r < 1200 then 'silver'\n    when r < 1400 then 'gold'\n    when r < 1600 then 'platinum'\n    else 'diamond'\n  end;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "seed_ranking_bots()",
+   "detail": "CREATE OR REPLACE FUNCTION public.seed_ranking_bots()\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  tiers text[] := array['bronze','silver','gold','platinum','diamond'];\n  ranges int[][] := array[\n    array[400,600,900],\n    array[280,400,1100],\n    array[220,280,1300],\n    array[180,220,1500],\n    array[120,180,1700]\n  ];\n  names text[] := array[\n    'Wandering Gun','Dust Phantom','Canyon Echo','Midnight Spur','Iron Whisper',\n    'Saloon Ghost','Broken Spur','Pale Trigger','Crosswind','Last Smoke'\n  ];\n  t int;\n  i int;\n  bot_id uuid;\n  rmin int;\n  rmax int;\n  rating_val int;\n  s1 int;\n  s2 int;\n  s3 int;\n  nm text;\n  name_idx int;\nbegin\n  -- idempotent: clear previous bots\n  delete from public.ghost_loads gl using public.profiles p where gl.user_id = p.id and p.is_bot;\n  delete from public.matches m using public.profiles p where (m.player_id = p.id or m.opponent_id = p.id) and p.is_bot;\n  delete from public.profiles where is_bot = true;\n\n  for t in 1..5 loop\n    rmin := ranges[t][1];\n    rmax := ranges[t][2];\n    rating_val := ranges[t][3];\n    for i in 1..4 loop\n      bot_id := gen_random_uuid();\n      name_idx := ((t - 1) * 2 + ((i - 1) % 2)) + 1;\n      nm := names[name_idx] || ' #' || lpad(((t - 1) * 4 + i)::text, 2, '0');\n\n      insert into public.profiles (id, display_name, character_id, rating, rank_tier, wins, losses, is_bot)\n      values (\n        bot_id,\n        nm,\n        1 + ((i - 1) % 4),\n        rating_val + (i * 7),\n        tiers[t],\n        5 + i,\n        3 + (i % 3),\n        true\n      );\n\n      s1 := rmin + floor(random() * (rmax - rmin + 1))::int;\n      s2 := rmin + floor(random() * (rmax - rmin + 1))::int;\n      s3 := rmin + floor(random() * (rmax - rmin + 1))::int;\n\n      insert into public.ghost_loads (user_id, sample_ms, character_id, rating_at_submit)\n      values (bot_id, array[s1, s2, s3], 1 + ((i - 1) % 4), rating_val + (i * 7));\n    end loop;\n  end loop;\nend;\n$function$\n"
+  },
+  {
+   "ord": 1,
+   "section": "function_def",
+   "object": "touch_updated_at()",
+   "detail": "CREATE OR REPLACE FUNCTION public.touch_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nbegin\n  new.updated_at = now();\n  return new;\nend;\n$function$\n"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "_friend_challenge_code()",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=false | config="
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "admin_get_overview(p_pin text)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "analytics_record_event(p_device_key text, p_event_name text, p_app_version text, p_platform text, p_props jsonb)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public, extensions"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "analytics_record_match(p_device_key text, p_app_version text, p_platform text, p_npc_id integer, p_won boolean, p_player_wins integer, p_npc_wins integer, p_avg_reaction_ms numeric, p_highest_unlocked integer)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public, extensions"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "cleanup_profile_on_user_delete()",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "elo_expected(r_a integer, r_b integer)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=false | config="
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "ensure_my_profile()",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "handle_new_user()",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_create_friend_challenge(p_device_key text, p_sample_ms integer[], p_score_creator integer, p_creator_avg_ms integer, p_creator_best_ms integer, p_character_id integer, p_cosmetic_npc_id integer)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_get_daily(p_device_key text)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_get_friend_challenge(p_device_key text, p_code text)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_leaderboard(p_device_key text, limit_count integer)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_login_device(p_device_key text)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_mark_daily_shared(p_device_key text)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_matchmake(p_device_key text)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_pick_western_alias(p_exclude_profile_id uuid, p_not_equal text)",
+   "detail": "{postgres=X/postgres,service_role=X/postgres} | secdef=false | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_reroll_display_name(p_device_key text)",
+   "detail": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_set_cosmetic_npc(p_device_key text, p_cosmetic_npc_id integer)",
+   "detail": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_submit_daily(p_device_key text, p_player_rounds integer[], p_score_player integer, p_score_opponent integer, p_result text, p_shared boolean)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_submit_friend_challenge(p_device_key text, p_code text, p_player_rounds integer[], p_score_player integer, p_score_creator integer, p_result text)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_submit_match(p_device_key text, p_opponent_id uuid, p_opponent_is_bot boolean, p_player_rounds integer[], p_opponent_rounds integer[], p_score_player integer, p_score_opponent integer, p_result text, p_character_id integer, p_cosmetic_npc_id integer)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "pvp_update_profile(p_device_key text, p_character_id integer, p_cosmetic_npc_id integer, p_clear_cosmetic boolean)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "rating_to_rank_tier(r integer)",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=false | config="
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "seed_ranking_bots()",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=true | config=search_path=public"
+  },
+  {
+   "ord": 2,
+   "section": "function_acl",
+   "object": "touch_updated_at()",
+   "detail": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres} | secdef=false | config="
+  },
+  {
+   "ord": 3,
+   "section": "policy",
+   "object": "ghost_loads.ghost_select",
+   "detail": "permissive=PERMISSIVE cmd=SELECT roles=authenticated using=true check="
+  },
+  {
+   "ord": 3,
+   "section": "policy",
+   "object": "ghost_loads.ghost_update_self",
+   "detail": "permissive=PERMISSIVE cmd=UPDATE roles=authenticated using=(auth.uid() = user_id) check=(auth.uid() = user_id)"
+  },
+  {
+   "ord": 3,
+   "section": "policy",
+   "object": "ghost_loads.ghost_upsert_self",
+   "detail": "permissive=PERMISSIVE cmd=INSERT roles=authenticated using= check=(auth.uid() = user_id)"
+  },
+  {
+   "ord": 3,
+   "section": "policy",
+   "object": "matches.matches_select_own",
+   "detail": "permissive=PERMISSIVE cmd=SELECT roles=authenticated using=(auth.uid() = player_id) check="
+  },
+  {
+   "ord": 3,
+   "section": "policy",
+   "object": "profiles.profiles_insert_self",
+   "detail": "permissive=PERMISSIVE cmd=INSERT roles=authenticated using= check=((auth.uid() = id) AND (is_bot = false))"
+  },
+  {
+   "ord": 3,
+   "section": "policy",
+   "object": "profiles.profiles_select",
+   "detail": "permissive=PERMISSIVE cmd=SELECT roles=authenticated using=true check="
+  },
+  {
+   "ord": 3,
+   "section": "policy",
+   "object": "profiles.profiles_update_self",
+   "detail": "permissive=PERMISSIVE cmd=UPDATE roles=authenticated using=((auth.uid() = id) AND (is_bot = false)) check=((auth.uid() = id) AND (is_bot = false) AND (rating = ( SELECT p.rating\n   FROM profiles p\n  WHERE (p.id = auth.uid()))) AND (wins = ( SELECT p.wins\n   FROM profiles p\n  WHERE (p.id = auth.uid()))) AND (losses = ( SELECT p.losses\n   FROM profiles p\n  WHERE (p.id = auth.uid()))))"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "analytics_app_events",
+   "detail": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} | rls=true forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "analytics_app_events_id_seq",
+   "detail": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres} | rls=false forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "analytics_match_events",
+   "detail": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} | rls=true forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "analytics_match_events_id_seq",
+   "detail": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres} | rls=false forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "app_settings",
+   "detail": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} | rls=true forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "daily_challenges",
+   "detail": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} | rls=true forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "daily_completions",
+   "detail": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} | rls=true forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "device_identities",
+   "detail": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} | rls=true forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "friend_challenge_attempts",
+   "detail": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} | rls=true forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "friend_challenges",
+   "detail": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} | rls=true forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "ghost_loads",
+   "detail": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} | rls=true forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "leaderboard",
+   "detail": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} | rls=false forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "matches",
+   "detail": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} | rls=true forced=false"
+  },
+  {
+   "ord": 4,
+   "section": "table_acl",
+   "object": "profiles",
+   "detail": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} | rls=true forced=false"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_app_events.app_version",
+   "detail": "text NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_app_events.created_at",
+   "detail": "timestamp with time zone NOT NULL DEFAULT now()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_app_events.device_key_hash",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_app_events.event_name",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_app_events.id",
+   "detail": "bigint NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_app_events.platform",
+   "detail": "text NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_app_events.props",
+   "detail": "jsonb NOT NULL DEFAULT '{}'::jsonb"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_match_events.app_version",
+   "detail": "text NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_match_events.avg_reaction_ms",
+   "detail": "numeric NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_match_events.created_at",
+   "detail": "timestamp with time zone NOT NULL DEFAULT now()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_match_events.device_key_hash",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_match_events.highest_unlocked",
+   "detail": "integer NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_match_events.id",
+   "detail": "bigint NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_match_events.npc_id",
+   "detail": "integer NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_match_events.npc_wins",
+   "detail": "integer NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_match_events.platform",
+   "detail": "text NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_match_events.player_wins",
+   "detail": "integer NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "analytics_match_events.won",
+   "detail": "boolean NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "app_settings.key",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "app_settings.value",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_challenges.challenge_date",
+   "detail": "date NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_challenges.character_id",
+   "detail": "integer NOT NULL DEFAULT 1"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_challenges.cosmetic_npc_id",
+   "detail": "integer NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_challenges.created_at",
+   "detail": "timestamp with time zone NOT NULL DEFAULT now()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_challenges.opponent_name",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_challenges.sample_ms",
+   "detail": "integer[] NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_completions.avg_ms",
+   "detail": "integer NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_completions.challenge_date",
+   "detail": "date NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_completions.created_at",
+   "detail": "timestamp with time zone NOT NULL DEFAULT now()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_completions.player_rounds",
+   "detail": "integer[] NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_completions.profile_id",
+   "detail": "uuid NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_completions.result",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_completions.score_opponent",
+   "detail": "integer NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_completions.score_player",
+   "detail": "integer NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "daily_completions.shared",
+   "detail": "boolean NOT NULL DEFAULT false"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "device_identities.created_at",
+   "detail": "timestamp with time zone NOT NULL DEFAULT now()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "device_identities.device_key",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "device_identities.profile_id",
+   "detail": "uuid NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenge_attempts.avg_ms",
+   "detail": "integer NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenge_attempts.best_ms",
+   "detail": "integer NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenge_attempts.challenge_id",
+   "detail": "uuid NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenge_attempts.challenger_id",
+   "detail": "uuid NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenge_attempts.challenger_name",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenge_attempts.created_at",
+   "detail": "timestamp with time zone NOT NULL DEFAULT now()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenge_attempts.id",
+   "detail": "uuid NOT NULL DEFAULT gen_random_uuid()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenge_attempts.player_rounds",
+   "detail": "integer[] NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenge_attempts.result",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenge_attempts.score_creator",
+   "detail": "integer NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenge_attempts.score_player",
+   "detail": "integer NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenges.character_id",
+   "detail": "integer NOT NULL DEFAULT 1"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenges.code",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenges.cosmetic_npc_id",
+   "detail": "integer NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenges.created_at",
+   "detail": "timestamp with time zone NOT NULL DEFAULT now()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenges.creator_avg_ms",
+   "detail": "integer NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenges.creator_best_ms",
+   "detail": "integer NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenges.creator_id",
+   "detail": "uuid NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenges.creator_name",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenges.expires_at",
+   "detail": "timestamp with time zone NOT NULL DEFAULT (now() + '14 days'::interval)"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenges.id",
+   "detail": "uuid NOT NULL DEFAULT gen_random_uuid()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenges.sample_ms",
+   "detail": "integer[] NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "friend_challenges.score_creator",
+   "detail": "integer NOT NULL DEFAULT 0"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "ghost_loads.character_id",
+   "detail": "integer NOT NULL DEFAULT 1"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "ghost_loads.cosmetic_npc_id",
+   "detail": "integer NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "ghost_loads.rating_at_submit",
+   "detail": "integer NOT NULL DEFAULT 1000"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "ghost_loads.sample_ms",
+   "detail": "integer[] NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "ghost_loads.updated_at",
+   "detail": "timestamp with time zone NOT NULL DEFAULT now()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "ghost_loads.user_id",
+   "detail": "uuid NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.created_at",
+   "detail": "timestamp with time zone NOT NULL DEFAULT now()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.id",
+   "detail": "uuid NOT NULL DEFAULT gen_random_uuid()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.opponent_id",
+   "detail": "uuid NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.opponent_is_bot",
+   "detail": "boolean NOT NULL DEFAULT false"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.opponent_rounds",
+   "detail": "integer[] NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.player_id",
+   "detail": "uuid NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.player_rounds",
+   "detail": "integer[] NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.rating_after",
+   "detail": "integer NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.rating_before",
+   "detail": "integer NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.rating_delta",
+   "detail": "integer NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.result",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.score_opponent",
+   "detail": "integer NOT NULL DEFAULT 0"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "matches.score_player",
+   "detail": "integer NOT NULL DEFAULT 0"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "profiles.character_id",
+   "detail": "integer NOT NULL DEFAULT 1"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "profiles.cosmetic_npc_id",
+   "detail": "integer NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "profiles.created_at",
+   "detail": "timestamp with time zone NOT NULL DEFAULT now()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "profiles.display_name",
+   "detail": "text NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "profiles.id",
+   "detail": "uuid NOT NULL"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "profiles.is_bot",
+   "detail": "boolean NOT NULL DEFAULT false"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "profiles.losses",
+   "detail": "integer NOT NULL DEFAULT 0"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "profiles.rank_tier",
+   "detail": "text NOT NULL DEFAULT 'silver'::text"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "profiles.rating",
+   "detail": "integer NOT NULL DEFAULT 1000"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "profiles.updated_at",
+   "detail": "timestamp with time zone NOT NULL DEFAULT now()"
+  },
+  {
+   "ord": 5,
+   "section": "column",
+   "object": "profiles.wins",
+   "detail": "integer NOT NULL DEFAULT 0"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "analytics_app_events.analytics_app_events_pkey",
+   "detail": "PRIMARY KEY (id)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "analytics_match_events.analytics_match_events_pkey",
+   "detail": "PRIMARY KEY (id)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "app_settings.app_settings_pkey",
+   "detail": "PRIMARY KEY (key)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "daily_challenges.daily_challenges_pkey",
+   "detail": "PRIMARY KEY (challenge_date)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "daily_challenges.daily_sample_len",
+   "detail": "CHECK ((array_length(sample_ms, 1) = 3))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "daily_completions.daily_completions_challenge_date_fkey",
+   "detail": "FOREIGN KEY (challenge_date) REFERENCES daily_challenges(challenge_date) ON DELETE CASCADE"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "daily_completions.daily_completions_pkey",
+   "detail": "PRIMARY KEY (profile_id, challenge_date)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "daily_completions.daily_completions_profile_id_fkey",
+   "detail": "FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "daily_completions.daily_completions_result_check",
+   "detail": "CHECK ((result = ANY (ARRAY['win'::text, 'loss'::text, 'draw'::text])))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "device_identities.device_identities_device_key_check",
+   "detail": "CHECK ((char_length(device_key) >= 32))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "device_identities.device_identities_pkey",
+   "detail": "PRIMARY KEY (device_key)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "device_identities.device_identities_profile_id_fkey",
+   "detail": "FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "friend_challenge_attempts.friend_challenge_attempts_challenge_id_challenger_id_key",
+   "detail": "UNIQUE (challenge_id, challenger_id)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "friend_challenge_attempts.friend_challenge_attempts_challenge_id_fkey",
+   "detail": "FOREIGN KEY (challenge_id) REFERENCES friend_challenges(id) ON DELETE CASCADE"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "friend_challenge_attempts.friend_challenge_attempts_challenger_id_fkey",
+   "detail": "FOREIGN KEY (challenger_id) REFERENCES profiles(id) ON DELETE CASCADE"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "friend_challenge_attempts.friend_challenge_attempts_pkey",
+   "detail": "PRIMARY KEY (id)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "friend_challenge_attempts.friend_challenge_attempts_result_check",
+   "detail": "CHECK ((result = ANY (ARRAY['win'::text, 'loss'::text, 'draw'::text])))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "friend_challenges.friend_challenges_code_key",
+   "detail": "UNIQUE (code)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "friend_challenges.friend_challenges_creator_id_fkey",
+   "detail": "FOREIGN KEY (creator_id) REFERENCES profiles(id) ON DELETE CASCADE"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "friend_challenges.friend_challenges_pkey",
+   "detail": "PRIMARY KEY (id)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "friend_challenges.friend_code_format",
+   "detail": "CHECK ((code ~ '^[A-Z0-9]{6}$'::text))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "friend_challenges.friend_sample_len",
+   "detail": "CHECK ((array_length(sample_ms, 1) = 3))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "ghost_loads.ghost_loads_character_id_check",
+   "detail": "CHECK (((character_id >= 1) AND (character_id <= 4)))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "ghost_loads.ghost_loads_pkey",
+   "detail": "PRIMARY KEY (user_id)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "ghost_loads.ghost_loads_sample_len",
+   "detail": "CHECK ((array_length(sample_ms, 1) = 3))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "ghost_loads.ghost_loads_sample_range",
+   "detail": "CHECK ((((sample_ms[1] >= 80) AND (sample_ms[1] <= 2500)) AND ((sample_ms[2] >= 80) AND (sample_ms[2] <= 2500)) AND ((sample_ms[3] >= 80) AND (sample_ms[3] <= 2500))))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "ghost_loads.ghost_loads_user_id_fkey",
+   "detail": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "matches.matches_opponent_id_fkey",
+   "detail": "FOREIGN KEY (opponent_id) REFERENCES profiles(id) ON DELETE CASCADE"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "matches.matches_pkey",
+   "detail": "PRIMARY KEY (id)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "matches.matches_player_id_fkey",
+   "detail": "FOREIGN KEY (player_id) REFERENCES profiles(id) ON DELETE CASCADE"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "matches.matches_result_check",
+   "detail": "CHECK ((result = ANY (ARRAY['win'::text, 'loss'::text, 'draw'::text])))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "profiles.profiles_character_id_check",
+   "detail": "CHECK (((character_id >= 1) AND (character_id <= 4)))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "profiles.profiles_losses_check",
+   "detail": "CHECK ((losses >= 0))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "profiles.profiles_pkey",
+   "detail": "PRIMARY KEY (id)"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "profiles.profiles_rating_check",
+   "detail": "CHECK ((rating >= 0))"
+  },
+  {
+   "ord": 6,
+   "section": "constraint",
+   "object": "profiles.profiles_wins_check",
+   "detail": "CHECK ((wins >= 0))"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "analytics_app_events.analytics_app_events_created_at_idx",
+   "detail": "CREATE INDEX analytics_app_events_created_at_idx ON public.analytics_app_events USING btree (created_at DESC)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "analytics_app_events.analytics_app_events_name_idx",
+   "detail": "CREATE INDEX analytics_app_events_name_idx ON public.analytics_app_events USING btree (event_name, created_at DESC)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "analytics_app_events.analytics_app_events_pkey",
+   "detail": "CREATE UNIQUE INDEX analytics_app_events_pkey ON public.analytics_app_events USING btree (id)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "analytics_match_events.analytics_match_events_created_at_idx",
+   "detail": "CREATE INDEX analytics_match_events_created_at_idx ON public.analytics_match_events USING btree (created_at DESC)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "analytics_match_events.analytics_match_events_npc_id_idx",
+   "detail": "CREATE INDEX analytics_match_events_npc_id_idx ON public.analytics_match_events USING btree (npc_id)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "analytics_match_events.analytics_match_events_pkey",
+   "detail": "CREATE UNIQUE INDEX analytics_match_events_pkey ON public.analytics_match_events USING btree (id)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "app_settings.app_settings_pkey",
+   "detail": "CREATE UNIQUE INDEX app_settings_pkey ON public.app_settings USING btree (key)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "daily_challenges.daily_challenges_pkey",
+   "detail": "CREATE UNIQUE INDEX daily_challenges_pkey ON public.daily_challenges USING btree (challenge_date)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "daily_completions.daily_completions_pkey",
+   "detail": "CREATE UNIQUE INDEX daily_completions_pkey ON public.daily_completions USING btree (profile_id, challenge_date)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "device_identities.device_identities_pkey",
+   "detail": "CREATE UNIQUE INDEX device_identities_pkey ON public.device_identities USING btree (device_key)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "device_identities.device_identities_profile_idx",
+   "detail": "CREATE UNIQUE INDEX device_identities_profile_idx ON public.device_identities USING btree (profile_id)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "friend_challenge_attempts.friend_challenge_attempts_challenge_id_challenger_id_key",
+   "detail": "CREATE UNIQUE INDEX friend_challenge_attempts_challenge_id_challenger_id_key ON public.friend_challenge_attempts USING btree (challenge_id, challenger_id)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "friend_challenge_attempts.friend_challenge_attempts_pkey",
+   "detail": "CREATE UNIQUE INDEX friend_challenge_attempts_pkey ON public.friend_challenge_attempts USING btree (id)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "friend_challenges.friend_challenges_code_idx",
+   "detail": "CREATE INDEX friend_challenges_code_idx ON public.friend_challenges USING btree (code)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "friend_challenges.friend_challenges_code_key",
+   "detail": "CREATE UNIQUE INDEX friend_challenges_code_key ON public.friend_challenges USING btree (code)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "friend_challenges.friend_challenges_creator_idx",
+   "detail": "CREATE INDEX friend_challenges_creator_idx ON public.friend_challenges USING btree (creator_id)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "friend_challenges.friend_challenges_pkey",
+   "detail": "CREATE UNIQUE INDEX friend_challenges_pkey ON public.friend_challenges USING btree (id)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "ghost_loads.ghost_loads_pkey",
+   "detail": "CREATE UNIQUE INDEX ghost_loads_pkey ON public.ghost_loads USING btree (user_id)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "ghost_loads.ghost_loads_rating_idx",
+   "detail": "CREATE INDEX ghost_loads_rating_idx ON public.ghost_loads USING btree (rating_at_submit)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "matches.matches_pkey",
+   "detail": "CREATE UNIQUE INDEX matches_pkey ON public.matches USING btree (id)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "matches.matches_player_created_idx",
+   "detail": "CREATE INDEX matches_player_created_idx ON public.matches USING btree (player_id, created_at DESC)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "profiles.profiles_bots_rating_idx",
+   "detail": "CREATE INDEX profiles_bots_rating_idx ON public.profiles USING btree (rating) WHERE (is_bot = true)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "profiles.profiles_display_name_uidx",
+   "detail": "CREATE UNIQUE INDEX profiles_display_name_uidx ON public.profiles USING btree (display_name)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "profiles.profiles_pkey",
+   "detail": "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id)"
+  },
+  {
+   "ord": 7,
+   "section": "index",
+   "object": "profiles.profiles_rating_idx",
+   "detail": "CREATE INDEX profiles_rating_idx ON public.profiles USING btree (rating DESC) WHERE (is_bot = false)"
+  },
+  {
+   "ord": 8,
+   "section": "fingerprint",
+   "object": "device_identities",
+   "detail": "rows=8"
+  },
+  {
+   "ord": 8,
+   "section": "fingerprint",
+   "object": "profiles",
+   "detail": "rows=29 md5=27d0b928fe722235fb6c109a308033b9"
+  }
+ ]
+}
