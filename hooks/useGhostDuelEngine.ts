@@ -7,15 +7,43 @@ import {
   DUEL_STEADY_SCHEDULE_LEAD_MS,
 } from '@/constants/duelTiming';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
+import type { GhostRound } from '@/types/pvp';
+import { playerRoundWire, scoreSampleRound } from '@/lib/reactionContract';
+import { ghostReplayWire, scoreGhostRound } from '@/lib/supabase/ghostRounds';
 import { stopDuelSignalSpeech } from '@/utils/duelSignalSpeech';
 
 export type GhostRoundOutcome = {
+  /** Raw performance.now() reaction; never rounded here. */
   playerMs: number | null;
   opponentMs: number | null;
+  /** Input before BANG. */
   playerEarly: boolean;
   playerTimeout: boolean;
+  /** Input after BANG but normalized outside 80..2499: lost round, never a speed. */
+  playerInvalid?: boolean;
+  /** Ghost V2: the recorded round was a foul (EARLY / INVALID); the ghost never fires. */
+  opponentFoul?: boolean;
   winner: 'player' | 'opponent' | 'draw';
 };
+
+/**
+ * Round verdict with the shared server contract (lib/reactionContract):
+ *  - 'ghost'  (Ranked): GHOST_ROUND_RULES vs the replayed ghost round
+ *  - 'sample' (Daily / Friend): the stored sample is compared as an integer
+ * The raw reaction stays in `playerMs`; only the normalized value decides.
+ */
+function resolveRound(
+  o: Omit<GhostRoundOutcome, 'winner' | 'playerInvalid'>,
+  ghost: number | GhostRound,
+  scoring: 'ghost' | 'sample',
+): Pick<GhostRoundOutcome, 'winner' | 'playerInvalid'> {
+  const player = playerRoundWire({ early: o.playerEarly, timeout: o.playerTimeout, rawMs: o.playerMs });
+  const winner =
+    scoring === 'sample' && typeof ghost === 'number'
+      ? scoreSampleRound(player, ghost)
+      : scoreGhostRound(player, ghostReplayWire(ghost));
+  return { winner, playerInvalid: player.outcome === 'invalid' };
+}
 
 function randomDelayInclusiveMs(minMs: number, maxMs: number): number {
   return minMs + Math.floor(Math.random() * (maxMs - minMs + 1));
@@ -28,20 +56,6 @@ function clearTimeoutRef(ref: MutableRefObject<ReturnType<typeof setTimeout> | n
   }
 }
 
-function resolveGhostWinner(o: Omit<GhostRoundOutcome, 'winner'>): GhostRoundOutcome['winner'] {
-  if (o.playerEarly) return 'opponent';
-  if (o.playerTimeout && o.opponentMs != null) return 'opponent';
-  if (o.playerTimeout && o.opponentMs == null) return 'draw';
-  if (o.playerMs != null && o.opponentMs != null) {
-    if (o.playerMs < o.opponentMs) return 'player';
-    if (o.opponentMs < o.playerMs) return 'opponent';
-    return 'draw';
-  }
-  if (o.playerMs != null) return 'player';
-  if (o.opponentMs != null) return 'opponent';
-  return 'draw';
-}
-
 const BANG_TIMEOUT_MS = 2500;
 
 /**
@@ -52,7 +66,16 @@ export function useGhostDuelEngine(options?: {
   onBangEnter?: () => void;
   onBangTap?: (ms: number) => void;
   onGhostFire?: (ms: number) => void;
+  /**
+   * Both follow the server contract (integer ms, valid 80..2499), so the round
+   * shown on screen is the round the server settles.
+   * 'ghost': Ranked (Ghost V2 rule table). 'sample' (default): Daily / Friend.
+   */
+  scoring?: 'ghost' | 'sample';
 }) {
+  const scoringRef = useRef(options?.scoring ?? 'sample');
+  scoringRef.current = options?.scoring ?? 'sample';
+  const ghostReplayRef = useRef<number | GhostRound>(0);
   const onBangEnterRef = useRef(options?.onBangEnter);
   const onBangTapRef = useRef(options?.onBangTap);
   const onGhostFireRef = useRef(options?.onGhostFire);
@@ -77,6 +100,8 @@ export function useGhostDuelEngine(options?: {
   const ghostFiredMsRef = useRef<number | null>(null);
   const bangFinalizedRef = useRef(false);
   const playerEarlyRef = useRef(false);
+  /** Ghost V2 EARLY / INVALID round: no ghost shot is scheduled; the ghost fouled. */
+  const ghostFoulRef = useRef(false);
 
   const phaseRef = useRef(phase);
   useEffect(() => {
@@ -97,14 +122,14 @@ export function useGhostDuelEngine(options?: {
   }, []);
 
   const finishRound = useCallback(
-    (partial: Omit<GhostRoundOutcome, 'winner'>) => {
+    (partial: Omit<GhostRoundOutcome, 'winner' | 'playerInvalid'>) => {
       clearAllTimers();
       bangArmedRef.current = false;
       bangT0Ref.current = null;
       phaseRef.current = '결과';
       const next: GhostRoundOutcome = {
         ...partial,
-        winner: resolveGhostWinner(partial),
+        ...resolveRound(partial, ghostReplayRef.current, scoringRef.current),
       };
       setOutcome(next);
       setPhase('결과');
@@ -125,6 +150,7 @@ export function useGhostDuelEngine(options?: {
         opponentMs: ghostFiredMsRef.current,
         playerEarly: false,
         playerTimeout: playerMsRef.current == null,
+        opponentFoul: ghostFoulRef.current,
       });
     },
     [finishRound],
@@ -189,9 +215,17 @@ export function useGhostDuelEngine(options?: {
     [enterBang],
   );
 
-  /** @param ghostReactionMs 이번 라운드 고스트 반응(ms) */
+  /**
+   * @param ghost 이번 라운드 고스트: 반응(ms) 숫자(V1 / Daily / Friend) 또는
+   *   Ghost V2 라운드. SHOT은 기록된 반응 후 발사, EARLY/INVALID/TIMEOUT은 발사하지 않는다.
+   */
   const start = useCallback(
-    (ghostReactionMs: number) => {
+    (ghost: number | GhostRound) => {
+      const ghostReactionMs =
+        typeof ghost === 'number' ? ghost : ghost.outcome === 'shot' ? ghost.reactionMs : null;
+      ghostFoulRef.current =
+        typeof ghost !== 'number' && (ghost.outcome === 'early' || ghost.outcome === 'invalid');
+      ghostReplayRef.current = ghost;
       clearAllTimers();
       bangArmedRef.current = false;
       bangT0Ref.current = null;
@@ -253,6 +287,18 @@ export function useGhostDuelEngine(options?: {
           playerEarly: false,
           playerTimeout: false,
         });
+      } else if (ghostMsRef.current == null) {
+        // Ghost V2 EARLY / INVALID / TIMEOUT round: no ghost shot will come, settle now.
+        bangFinalizedRef.current = true;
+        bangArmedRef.current = false;
+        clearTimeoutRef(bangTimeoutRef);
+        finishRound({
+          playerMs: ms,
+          opponentMs: null,
+          playerEarly: false,
+          playerTimeout: false,
+          opponentFoul: ghostFoulRef.current,
+        });
       }
       return;
     }
@@ -284,6 +330,7 @@ export function useGhostDuelEngine(options?: {
     playerMsRef.current = null;
     ghostFiredMsRef.current = null;
     playerEarlyRef.current = false;
+    ghostFoulRef.current = false;
     bangFinalizedRef.current = false;
     ghostMsRef.current = null;
     readyDeadlineRef.current = null;

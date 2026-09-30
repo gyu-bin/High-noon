@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import type { PvpMatchResult } from '@/types/pvp';
+import type { GhostRoundWire, PvpMatchResult } from '@/types/pvp';
 
 type PendingBase = {
   /** Stable key: one pending entry per match / daily date / challenge code. */
@@ -24,6 +24,11 @@ export type PendingRankedSubmission = PendingBase & {
   characterId: number;
   /** Player left an active ranked duel; every round is submitted as no-shot. */
   forfeit: boolean;
+  /**
+   * Ghost V2 match: the played rounds (1..3) sent to pvp_submit_match_v2.
+   * Absent on V1 matches and on entries stored by older app versions.
+   */
+  roundsV2?: GhostRoundWire[];
 };
 
 export type PendingDailySubmission = PendingBase & {

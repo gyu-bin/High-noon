@@ -52,3 +52,11 @@ export function challengeCodeFromUrl(url: string | null | undefined): string | n
   }
   return null;
 }
+
+/**
+ * Where an incoming challenge link goes once no duel / result is on screen:
+ * the open challenge screen just takes the new code; anywhere else pushes it.
+ */
+export function challengeLinkAction(pathname: string): 'update' | 'push' {
+  return pathname === '/ranking/challenge' ? 'update' : 'push';
+}

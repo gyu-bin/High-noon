@@ -15,6 +15,26 @@ export type PvpProfile = {
   losses: number;
 };
 
+/**
+ * Ghost Snapshot V2: one round of one completed ranked match.
+ * SHOT = valid post-BANG reaction, INVALID = post-BANG but outside 80..2499
+ * (normalized value kept for audit, never a speed), EARLY = before BANG,
+ * TIMEOUT = no input.
+ */
+export type GhostOutcome = 'shot' | 'early' | 'timeout' | 'invalid';
+
+export type GhostRound =
+  | { outcome: 'shot'; reactionMs: number }
+  | { outcome: 'invalid'; reactionMs: number }
+  | { outcome: 'early'; reactionMs: null }
+  | { outcome: 'timeout'; reactionMs: null };
+
+/** Server wire form (snake_case, integer ms). */
+export type GhostRoundWire = {
+  outcome: GhostOutcome;
+  reaction_ms: number | null;
+};
+
 export type PvpOpponent = {
   id: string;
   display_name: string;
@@ -22,13 +42,17 @@ export type PvpOpponent = {
   rating: number;
   rank_tier: PvpRankTier | string;
   is_bot: boolean;
+  /** V1 replay values (SHOT ms). Non-SHOT V2 rounds carry a fallback here. */
   sample_ms: [number, number, number];
+  /** Present only for Ghost V2 assignments; authoritative for replay. */
+  ghost_rounds?: [GhostRound, GhostRound, GhostRound];
 };
 
 export type PvpMatchmakeResult = {
   match_id?: string;
   player: PvpProfile;
   opponent: PvpOpponent;
+  ghost_version?: 1 | 2;
 };
 
 export type PvpMatchResult = 'win' | 'loss' | 'draw';
@@ -114,6 +138,12 @@ export type PvpRoundRecord = {
   winner: 'player' | 'opponent' | 'draw';
   playerEarly: boolean;
   playerTimeout: boolean;
+  /**
+   * Post-BANG tap whose normalized reaction is outside 80..2499: INVALID, a lost
+   * round and never a speed record. Distinct from an early (pre-BANG) tap.
+   * `playerMs` keeps the raw measurement.
+   */
+  playerInvalid?: boolean;
 };
 
 export type PvpSubmitResult = {
@@ -159,4 +189,9 @@ export type PvpHistoryEntry = {
   score_opponent: number;
   rating_delta: number;
   completed_at: string;
+  /** Additive (Ghost V2 servers). Absent / null on older servers and legacy rows. */
+  ghost_version?: number | null;
+  player_rounds?: (number | null)[] | null;
+  player_round_detail?: GhostRoundWire[] | null;
+  opponent_rounds?: GhostRoundWire[] | null;
 };

@@ -23,30 +23,16 @@ import { colors } from '@/constants/theme';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { recordAppEvent } from '@/lib/supabase/analyticsApi';
 import { formatUnknownError } from '@/lib/supabase/errors';
-import {
-  pvpCreateFriendChallenge,
-  pvpMarkDailyShared,
-  pvpMatchmake,
-} from '@/lib/supabase/pvpApi';
+import { pvpMarkDailyShared, pvpMatchmake } from '@/lib/supabase/pvpApi';
 import { usePvpStore } from '@/store/pvpStore';
 import { usePvpStatsStore } from '@/store/pvpStatsStore';
 import { useRankingRewardStore } from '@/store/rankingRewardStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import {
-  buildChallengeDeepLink,
-  buildChallengeWebLink,
-} from '@/utils/challengeLink';
+import { buildChallengeWebLink } from '@/utils/challengeLink';
 import { buildPvpShareText } from '@/utils/pvpShareText';
-import {
-  averagePlayerMs,
-  bestPlayerMs,
-  ghostSampleFromRounds,
-} from '@/utils/reactionStats';
+import { averagePlayerMs, bestPlayerMs } from '@/utils/reactionStats';
 import { shareWantedPosterImage } from '@/utils/shareWantedPoster';
-import {
-  applyOutcomeToPvpStore,
-  retryPendingSubmission,
-} from '@/utils/rankingSubmission';
+import { retryPendingSubmission } from '@/utils/rankingSubmission';
 import { trigger } from '@/utils/hapticService';
 
 const PREVIEW_SCALE = 0.72;
@@ -73,16 +59,11 @@ export default function RankingResultScreen() {
   const friendChallenge = usePvpStore((s) => s.friendChallenge);
   const lastCreatedChallengeCode = usePvpStore((s) => s.lastCreatedChallengeCode);
   const beginMatch = usePvpStore((s) => s.beginMatch);
-  const setLastCreatedChallengeCode = usePvpStore(
-    (s) => s.setLastCreatedChallengeCode,
-  );
   const seasonPeaks = useRankingRewardStore((s) => s.seasonPeaks);
   const recordSeasonPeak = useRankingRewardStore((s) => s.recordSeasonPeak);
   const dailyStreak = usePvpStatsStore((s) => s.dailyStreak);
   const lifetimeBest = usePvpStatsStore((s) => s.bestReactionMs);
 
-  const [creatingChallenge, setCreatingChallenge] = useState(false);
-  const [challengeError, setChallengeError] = useState<string | null>(null);
   const [sharingPoster, setSharingPoster] = useState(false);
   const [posterError, setPosterError] = useState<string | null>(null);
   const posterRef = useRef<View>(null);
@@ -93,14 +74,19 @@ export default function RankingResultScreen() {
     const task = retryPendingSubmission(submissionId);
     if (!task) return;
     setRetryingSettlement(true);
-    applyOutcomeToPvpStore(submissionId, await task);
+    // The service mirrors the outcome into pvpStore for this submission id.
+    await task;
     setRetryingSettlement(false);
   }, [retryingSettlement, submissionId]);
 
-  const won = playerWins > opponentWins;
-  const draw = playerWins === opponentWins;
   const isDaily = matchMode === 'daily';
   const isFriend = matchMode === 'friend';
+  // Friend duels show the server-recalculated score once it is settled.
+  const shownPlayerWins = isFriend && lastFriendSubmit ? lastFriendSubmit.score_player : playerWins;
+  const shownOpponentWins =
+    isFriend && lastFriendSubmit ? lastFriendSubmit.score_creator : opponentWins;
+  const won = shownPlayerWins > shownOpponentWins;
+  const draw = shownPlayerWins === shownOpponentWins;
   const dailyBadge = isDaily
     ? lastDailySubmit
       ? t('ranking.dailyBadge')
@@ -136,16 +122,22 @@ export default function RankingResultScreen() {
 
   const playerName = profile?.display_name ?? t('result.me');
   const opponentName = opponent?.display_name ?? t('result.opponent');
-  const title = won
-    ? t('result.victory')
-    : draw
-      ? t('result.draw')
-      : t('result.defeat');
+  const title = isFriend
+    ? won
+      ? t('ranking.fcYouWin')
+      : draw
+        ? t('ranking.fcDraw')
+        : t('ranking.fcYouLose')
+    : won
+      ? t('result.victory')
+      : draw
+        ? t('result.draw')
+        : t('result.defeat');
 
   const cardTitle = isDaily
     ? t('ranking.dailyTitle')
     : isFriend
-      ? t('ranking.challengeResultTitle')
+      ? `${title} · ${t('ranking.fcFriendDuel')}`
       : title;
 
   const activeCode =
@@ -158,8 +150,8 @@ export default function RankingResultScreen() {
         playerName,
         opponentName,
         rounds,
-        playerWins,
-        opponentWins,
+        playerWins: shownPlayerWins,
+        opponentWins: shownOpponentWins,
         avgMs,
         bestMs,
         streak: isDaily ? dailyStreak : null,
@@ -185,9 +177,9 @@ export default function RankingResultScreen() {
       draw,
       isDaily,
       opponentName,
-      opponentWins,
+      shownOpponentWins,
       playerName,
-      playerWins,
+      shownPlayerWins,
       rounds,
       seasonBadge,
       t,
@@ -249,66 +241,15 @@ export default function RankingResultScreen() {
     }
   }, [activeCode, isDaily, matchMode, shareText, sharingPoster, t]);
 
-  const onCreateChallenge = useCallback(async () => {
-    if (creatingChallenge || isFriend) return;
-    setCreatingChallenge(true);
-    setChallengeError(null);
-    try {
-      let code = lastCreatedChallengeCode;
-      let avgForCopy = avgMs;
+  /** One creation path: the challenge screen builds it from real recent shots. */
+  const onSendChallenge = useCallback(() => {
+    router.replace({ pathname: '/ranking/challenge', params: { send: '1' } } as Href);
+  }, [router]);
 
-      if (!code) {
-        const sampleMs = ghostSampleFromRounds(
-          rounds,
-          opponent?.sample_ms ?? [280, 280, 280],
-        );
-        const created = await pvpCreateFriendChallenge({
-          sampleMs,
-          scoreCreator: playerWins,
-          creatorAvgMs: avgMs != null ? Math.round(avgMs) : null,
-          creatorBestMs: sessionBest != null ? Math.round(sessionBest) : null,
-          characterId: useSettingsStore.getState().selectedCharacterId,
-        });
-        code = created.code;
-        setLastCreatedChallengeCode(created.code);
-        void recordAppEvent('challenge_create', { code: created.code });
-        void trigger('success');
-      }
-
-      const link = buildChallengeWebLink(code);
-      const deep = buildChallengeDeepLink(code);
-      await Share.share({
-        message: [
-          t('ranking.challengeInvite', {
-            code,
-            ms: avgForCopy != null ? `${Math.round(avgForCopy)}` : '???',
-          }),
-          link,
-          deep,
-        ].join('\n'),
-      });
-      void recordAppEvent('share_click', {
-        mode: 'challenge_invite',
-        code,
-      });
-    } catch (e) {
-      const msg = formatUnknownError(e);
-      setChallengeError(msg);
-    } finally {
-      setCreatingChallenge(false);
-    }
-  }, [
-    avgMs,
-    creatingChallenge,
-    isFriend,
-    lastCreatedChallengeCode,
-    opponent?.sample_ms,
-    playerWins,
-    rounds,
-    sessionBest,
-    setLastCreatedChallengeCode,
-    t,
-  ]);
+  /** Back to the Bounty Board already in the stack: no remount, no reload. */
+  const onBackToBoard = useCallback(() => {
+    router.dismissTo('/ranking' as Href);
+  }, [router]);
 
   const onAgain = useCallback(async () => {
     try {
@@ -341,8 +282,8 @@ export default function RankingResultScreen() {
             playerName={playerName}
             opponentName={opponentName}
             rounds={rounds}
-            playerWins={playerWins}
-            opponentWins={opponentWins}
+            playerWins={shownPlayerWins}
+            opponentWins={shownOpponentWins}
             avgMs={avgMs}
             bestMs={bestMs}
             streak={streakForUi}
@@ -388,8 +329,8 @@ export default function RankingResultScreen() {
                 playerName={playerName}
                 opponentName={opponentName}
                 rounds={rounds}
-                playerWins={playerWins}
-                opponentWins={opponentWins}
+                playerWins={shownPlayerWins}
+                opponentWins={shownOpponentWins}
                 avgMs={avgMs}
                 bestMs={bestMs}
                 streak={isDaily ? dailyStreak : streakForUi}
@@ -401,7 +342,15 @@ export default function RankingResultScreen() {
             </View>
           </View>
 
-          {lastSubmit ? (
+          {isFriend ? (
+            <Text style={styles.unranked}>{t('ranking.fcResultNote')}</Text>
+          ) : null}
+          {isFriend && lastFriendSubmit?.already_completed ? (
+            <Text style={styles.note}>{t('ranking.fcResultAlready')}</Text>
+          ) : null}
+
+          {/* Rating exists only for Ranked; a Friend duel never shows a delta. */}
+          {!isFriend && lastSubmit ? (
             <RankingRewardCard
               ratingBefore={lastSubmit.rating_before}
               ratingAfter={lastSubmit.rating_after}
@@ -409,6 +358,14 @@ export default function RankingResultScreen() {
               tierAfter={lastSubmit.rank_tier}
               tierUp={tierUp}
             />
+          ) : null}
+          {!isFriend && lastSubmit ? (
+            <Text style={styles.note}>
+              {t('ranking.recordLine', {
+                wins: lastSubmit.wins,
+                losses: lastSubmit.losses,
+              })}
+            </Text>
           ) : null}
 
           {/* Never show a rating the server has not confirmed. */}
@@ -464,37 +421,29 @@ export default function RankingResultScreen() {
             </Text>
           ) : null}
 
-          {challengeError ? (
-            <Text style={styles.error}>{challengeError}</Text>
-          ) : null}
-
           {posterError ? <Text style={styles.error}>{posterError}</Text> : null}
 
           <WesternButton
             title={
               sharingPoster
                 ? t('ranking.wantedSharing')
-                : t('ranking.wantedShare')
+                : isFriend
+                  ? t('ranking.fcShareResult')
+                  : t('ranking.wantedShare')
             }
             onPress={() => void onShareWanted()}
             disabled={sharingPoster}
             variant="primary"
           />
-          <WesternButton title={t('ranking.share')} onPress={onShare} />
-
-          {!isFriend ? (
-            <WesternButton
-              title={
-                creatingChallenge
-                  ? t('ranking.challengeCreating')
-                  : activeCode
-                    ? t('ranking.challengeShareAgain')
-                    : t('ranking.challengeCreate')
-              }
-              onPress={() => void onCreateChallenge()}
-              disabled={creatingChallenge}
-            />
+          {/* Friend: the text share stays available only when the image share failed. */}
+          {!isFriend || posterError ? (
+            <WesternButton title={t('ranking.share')} onPress={onShare} />
           ) : null}
+
+          <WesternButton
+            title={isFriend ? t('ranking.fcSendChallenge') : t('ranking.challengeCreate')}
+            onPress={onSendChallenge}
+          />
 
           {matchMode === 'ranked' ? (
             <WesternButton
@@ -502,11 +451,19 @@ export default function RankingResultScreen() {
               onPress={() => void onAgain()}
             />
           ) : null}
-          <WesternButton
-            title={t('ranking.backHub')}
-            onPress={() => router.replace('/ranking' as Href)}
-            variant="quiet"
-          />
+          {isFriend ? (
+            <WesternButton
+              title={t('ranking.fcBackBoard')}
+              onPress={onBackToBoard}
+              variant="quiet"
+            />
+          ) : (
+            <WesternButton
+              title={t('ranking.backHub')}
+              onPress={() => router.replace('/ranking' as Href)}
+              variant="quiet"
+            />
+          )}
         </ScrollView>
       </MetaScreenShell>
     </>
@@ -543,6 +500,13 @@ const styles = StyleSheet.create({
   note: {
     color: colors.sand,
     fontSize: 12,
+    textAlign: 'center',
+  },
+  unranked: {
+    color: colors.gold,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.6,
     textAlign: 'center',
   },
   codeLine: {

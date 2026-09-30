@@ -42,7 +42,7 @@ import { consumeOtaJustApplied } from '@/utils/otaUpdateFlag';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
 import { isStoreUpdateRequired } from '@/utils/storeUpdate';
 import { initPurchasesOnBoot } from '@/utils/purchaseService';
-import { challengeCodeFromUrl } from '@/utils/challengeLink';
+import { challengeCodeFromUrl, challengeLinkAction } from '@/utils/challengeLink';
 import { isActiveDuelRoute, isDuelFlowRoute, isInGameRoute } from '@/utils/duelRoutes';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -174,10 +174,7 @@ function RootLayoutContent() {
         pendingChallengeCodeRef.current = code;
         return;
       }
-      router.push({
-        pathname: '/ranking/challenge',
-        params: { code },
-      } as never);
+      openChallengeLink(router, pathnameRef.current, code);
     };
 
     void Linking.getInitialURL().then(apply);
@@ -191,10 +188,7 @@ function RootLayoutContent() {
     const code = pendingChallengeCodeRef.current;
     if (!code || isDuelFlowRoute(pathname)) return;
     pendingChallengeCodeRef.current = null;
-    router.push({
-      pathname: '/ranking/challenge',
-      params: { code },
-    } as never);
+    openChallengeLink(router, pathname, code);
   }, [appReady, pathname, router]);
 
   useEffect(() => {
@@ -340,4 +334,17 @@ function RootLayoutContent() {
       {animatedSplashVisible ? <AnimatedSplash onComplete={dismissAnimatedSplash} /> : null}
     </SafeAreaProvider>
   );
+}
+
+/** A challenge link never stacks a second challenge screen on top of one. */
+function openChallengeLink(
+  router: ReturnType<typeof useRouter>,
+  pathname: string,
+  code: string,
+): void {
+  if (challengeLinkAction(pathname) === 'update') {
+    router.setParams({ code });
+    return;
+  }
+  router.push({ pathname: '/ranking/challenge', params: { code } } as never);
 }

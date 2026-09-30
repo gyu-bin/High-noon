@@ -36,18 +36,19 @@ import { useGhostDuelEngine } from '@/hooks/useGhostDuelEngine';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { recordAppEvent } from '@/lib/supabase/analyticsApi';
+import { playerRoundsForServer } from '@/lib/supabase/ghostRounds';
 import { usePvpStore } from '@/store/pvpStore';
 import { usePvpStatsStore } from '@/store/pvpStatsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import type { PvpMatchResult, PvpRoundRecord } from '@/types/pvp';
 import { utcDateKey } from '@/utils/dailyChallenge';
 import {
-  applyOutcomeToPvpStore,
   buildDailySubmission,
   buildFriendSubmission,
   buildRankedForfeit,
   buildRankedSubmission,
-  submitRankingResult,
+  startRankingSubmission,
+  type RankingSubmitOutcome,
 } from '@/utils/rankingSubmission';
 import { bestPlayerMs } from '@/utils/reactionStats';
 import { playGunshot } from '@/utils/audioService';
@@ -73,12 +74,12 @@ export default function RankingDuelScreen() {
   const dailyChallenge = usePvpStore((s) => s.dailyChallenge);
   const pushRound = usePvpStore((s) => s.pushRound);
   const setScores = usePvpStore((s) => s.setScores);
-  const setSubmission = usePvpStore((s) => s.setSubmission);
 
   const [playerWins, setPlayerWins] = useState(0);
   const [oppWins, setOppWins] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  /** Match decided: input is closed while the result screen takes over. */
+  const [finished, setFinished] = useState(false);
   const [roundBanner, setRoundBanner] = useState<string | null>(null);
   const [defeatedSide, setDefeatedSide] = useState<'player' | 'npc' | null>(null);
   const [playerShootFlash, setPlayerShootFlash] = useState(false);
@@ -137,6 +138,8 @@ export default function RankingDuelScreen() {
       setGhostShotActive(true);
       fireGunshot();
     },
+    // Every mode follows the server reaction contract; Ranked replays Ghost V2 rounds.
+    scoring: matchMode === 'ranked' ? 'ghost' : 'sample',
   });
 
   useDuelBgmDuck(phase);
@@ -178,7 +181,9 @@ export default function RankingDuelScreen() {
     const roundIndex = Math.min(roundsRef.current.length, PVP_MAX_ROUNDS - 1);
     // 비동기 기록 결투는 상대의 저장된 각 라운드를 그대로 재생한다.
     // NPC AI처럼 평균값에 임의 흔들림을 더하지 않는다.
-    start(opponent.sample_ms[roundIndex] ?? opponent.sample_ms[0] ?? 280);
+    // Ghost V2 배정이면 SHOT / EARLY / TIMEOUT 라운드를 그대로 재생한다.
+    const ghostRound = opponent.ghost_rounds?.[roundIndex];
+    start(ghostRound ?? opponent.sample_ms[roundIndex] ?? opponent.sample_ms[0] ?? 280);
   }, [opponent, start]);
 
   useEffect(() => {
@@ -234,10 +239,10 @@ export default function RankingDuelScreen() {
   );
 
   const finishMatch = useCallback(
-    async (finalPlayerWins: number, finalOppWins: number, records: PvpRoundRecord[]) => {
+    (finalPlayerWins: number, finalOppWins: number, records: PvpRoundRecord[]) => {
       if (!opponent || finishingRef.current) return;
       finishingRef.current = true;
-      setSubmitting(true);
+      setFinished(true);
 
       let result: PvpMatchResult = 'draw';
       if (finalPlayerWins > finalOppWins) result = 'win';
@@ -261,6 +266,8 @@ export default function RankingDuelScreen() {
 
       const sessionBest = bestPlayerMs(records);
       usePvpStatsStore.getState().recordBestReaction(sessionBest);
+      // Friend Challenge record: real SHOT reactions only (never padded).
+      usePvpStatsStore.getState().recordRecentShots(records);
 
       const characterId = useSettingsStore.getState().selectedCharacterId;
       const entry =
@@ -289,30 +296,32 @@ export default function RankingDuelScreen() {
                 scoreOpponent: finalOppWins,
                 result,
                 characterId,
+                // Ghost V2 match: the server scores these rounds itself.
+                roundsV2: opponent.ghost_rounds ? playerRoundsForServer(records) : undefined,
               });
 
-      setSubmission('submitting', entry.id);
-      const outcome = await submitRankingResult(entry);
-      applyOutcomeToPvpStore(entry.id, outcome);
+      // Settlement is owned by the rankingSubmission service, not this screen:
+      // it keeps running after this component unmounts and reports into
+      // pvpStore, which the result screen reads. Never await it here.
+      const friendCode = friendChallenge?.code ?? null;
+      void startRankingSubmission(entry, {
+        onSettled: (outcome: RankingSubmitOutcome) => {
+          if (outcome.status !== 'submitted') return;
+          if (outcome.kind === 'daily' && !outcome.settlement.already_completed) {
+            void recordAppEvent('daily_complete', {
+              result,
+              avg_ms: outcome.settlement.avg_ms,
+            });
+          } else if (outcome.kind === 'friend' && !outcome.settlement.already_completed) {
+            void recordAppEvent('challenge_complete', {
+              code: friendCode,
+              result,
+              avg_ms: outcome.settlement.avg_ms,
+            });
+          }
+        },
+      });
 
-      if (outcome.status === 'submitted' && outcome.kind === 'daily' && !outcome.settlement.already_completed) {
-        void recordAppEvent('daily_complete', {
-          result,
-          avg_ms: outcome.settlement.avg_ms,
-        });
-      } else if (
-        outcome.status === 'submitted' &&
-        outcome.kind === 'friend' &&
-        !outcome.settlement.already_completed
-      ) {
-        void recordAppEvent('challenge_complete', {
-          code: friendChallenge?.code ?? null,
-          result,
-          avg_ms: outcome.settlement.avg_ms,
-        });
-      }
-
-      setSubmitting(false);
       router.replace('/ranking/result' as Href);
     },
     [
@@ -323,7 +332,6 @@ export default function RankingDuelScreen() {
       opponent,
       router,
       setScores,
-      setSubmission,
     ],
   );
 
@@ -335,17 +343,18 @@ export default function RankingDuelScreen() {
   const forfeitIfActive = useCallback(() => {
     if (matchMode !== 'ranked' || !opponent || finishingRef.current) return;
     finishingRef.current = true;
-    void submitRankingResult(
+    void startRankingSubmission(
       buildRankedForfeit({
         matchId: matchId ?? opponent.id,
         opponentIsBot: opponent.is_bot,
         opponentRounds: [...opponent.sample_ms],
         characterId: useSettingsStore.getState().selectedCharacterId,
       }),
+      { track: false },
     );
   }, [matchId, matchMode, opponent]);
 
-  const pauseBlocked = submitting || phase === '뱅' || phase === '페이크';
+  const pauseBlocked = finished || phase === '뱅' || phase === '페이크';
 
   // Android back opens the pause menu instead of silently leaving the duel.
   // (While paused, PauseMenuModal's own handler runs first and resumes.)
@@ -368,6 +377,7 @@ export default function RankingDuelScreen() {
       winner: outcome.winner,
       playerEarly: outcome.playerEarly,
       playerTimeout: outcome.playerTimeout,
+      playerInvalid: outcome.playerInvalid ?? false,
     };
     roundsRef.current = [...roundsRef.current, record];
     pushRound(record);
@@ -406,7 +416,7 @@ export default function RankingDuelScreen() {
 
     const nextT = setTimeout(() => {
       if (matchOver) {
-        void finishMatch(pw, ow, roundsRef.current);
+        finishMatch(pw, ow, roundsRef.current);
         return;
       }
       startRound();
@@ -426,7 +436,7 @@ export default function RankingDuelScreen() {
     return npcSpritePoseFromPhase(phase, holdResultShoot);
   }, [defeatedSide, ghostShotActive, phase, holdResultShoot]);
   const shootCapturesEarly =
-    phase !== '대기' && phase !== '결과' && !paused && !submitting;
+    phase !== '대기' && phase !== '결과' && !paused && !finished;
   const shootActive = shootCapturesEarly && isBangReactionArmed();
 
   const onShootPress = useCallback(() => {
@@ -505,12 +515,6 @@ export default function RankingDuelScreen() {
         </View>
       ) : null}
 
-      {submitting ? (
-        <View style={styles.submitting} pointerEvents="auto">
-          <ActivityIndicator color={colors.gold} />
-        </View>
-      ) : null}
-
       <PauseMenuModal
         visible={paused}
         onResume={() => setPaused(false)}
@@ -563,13 +567,6 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.85)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
-  },
-  submitting: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(8, 4, 2, 0.45)',
-    zIndex: 20,
   },
   tapAck: {
     backgroundColor: '#FFD08A',

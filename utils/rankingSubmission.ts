@@ -10,6 +10,7 @@ import {
   pvpSubmitDaily,
   pvpSubmitFriendChallenge,
   pvpSubmitMatch,
+  pvpSubmitMatchV2,
 } from '@/lib/supabase/pvpApi';
 import { normalizeRoundsForServer } from '@/lib/supabase/reactionPayload';
 import { usePvpStatsStore } from '@/store/pvpStatsStore';
@@ -25,6 +26,7 @@ import {
 } from '@/store/rankingSubmissionStore';
 import type {
   DailySubmitResult,
+  GhostRoundWire,
   FriendChallengeSubmitResult,
   PvpMatchResult,
   PvpSubmitResult,
@@ -76,11 +78,18 @@ type RankedEvidence = {
   characterId: number;
 };
 
-export function buildRankedSubmission(input: RankedEvidence): PendingSubmission {
+export function buildRankedSubmission(
+  input: RankedEvidence & {
+    /** Ghost V2 match: the played rounds in server wire form. */
+    roundsV2?: GhostRoundWire[];
+  },
+): PendingSubmission {
+  const { roundsV2, ...evidence } = input;
   return {
     kind: 'ranked',
     id: rankedSubmissionId(input.matchId),
-    ...input,
+    ...evidence,
+    ...(roundsV2 ? { roundsV2: roundsV2.map((r) => ({ ...r })) } : {}),
     playerRounds: normalizeRoundsForServer(input.playerRounds),
     forfeit: false,
     completedAt: Date.now(),
@@ -182,6 +191,14 @@ async function recoverRankedSettlement(
 async function attemptSubmission(entry: PendingSubmission): Promise<RankingSubmitOutcome> {
   if (entry.kind === 'ranked') {
     try {
+      if (entry.roundsV2 && !entry.forfeit) {
+        const settlement = await pvpSubmitMatchV2({
+          matchId: entry.matchId,
+          rounds: entry.roundsV2,
+          characterId: entry.characterId,
+        });
+        return { status: 'submitted', kind: 'ranked', settlement, recovered: false };
+      }
       const settlement = await pvpSubmitMatch({
         matchId: entry.matchId,
         opponentIsBot: entry.opponentIsBot,
@@ -280,6 +297,28 @@ async function retryableFor(entry: PendingSubmission): Promise<boolean> {
 
 const inFlight = new Map<string, Promise<RankingSubmitOutcome>>();
 
+/** Latest outcome per submission id this session; bounded, newest kept. */
+const lastOutcome = new Map<string, RankingSubmitOutcome>();
+const LAST_OUTCOME_LIMIT = 50;
+
+function rememberOutcome(id: string, outcome: RankingSubmitOutcome): void {
+  lastOutcome.delete(id);
+  lastOutcome.set(id, outcome);
+  while (lastOutcome.size > LAST_OUTCOME_LIMIT) {
+    const oldest = lastOutcome.keys().next().value;
+    if (oldest === undefined) break;
+    lastOutcome.delete(oldest);
+  }
+}
+
+/**
+ * Only the result screen that is showing this submission gets the outcome.
+ * A late answer for an older match must not overwrite a newer duel's state.
+ */
+function mirrorIfCurrent(id: string, outcome: RankingSubmitOutcome): void {
+  if (usePvpStore.getState().submissionId === id) applyOutcomeToPvpStore(id, outcome);
+}
+
 /**
  * Persist first, then submit. Anything short of a server answer leaves the
  * entry in rankingSubmissionStore so it can be retried later without the
@@ -294,7 +333,7 @@ export function submitRankingResult(entry: PendingSubmission): Promise<RankingSu
   if (!existing) store.upsertPending(entry);
   const current = existing ?? entry;
 
-  const task = (async (): Promise<RankingSubmitOutcome> => {
+  const run = (async (): Promise<RankingSubmitOutcome> => {
     // A stored ranked entry may already have been settled by a lost request.
     if (existing && !(await retryableFor(current))) {
       return { status: 'pending_retry', retryable: false };
@@ -317,8 +356,77 @@ export function submitRankingResult(entry: PendingSubmission): Promise<RankingSu
     return outcome;
   })();
 
+  // Settlement is owned here, not by any screen: the outcome reaches the
+  // result state even if the duel / result component has unmounted.
+  const task = run.then(
+    (outcome) => {
+      rememberOutcome(entry.id, outcome);
+      mirrorIfCurrent(entry.id, outcome);
+      return outcome;
+    },
+    (error: unknown): RankingSubmitOutcome => {
+      // Unexpected failure: the entry stays stored; never retry ranked blindly.
+      console.warn('[ranking] submission error kept pending', entry.id, error);
+      const outcome: RankingSubmitOutcome = {
+        status: 'pending_retry',
+        retryable: entry.kind !== 'ranked',
+      };
+      mirrorIfCurrent(entry.id, outcome);
+      return outcome;
+    },
+  );
+
   inFlight.set(entry.id, task);
   void task.finally(() => inFlight.delete(entry.id));
+  return task;
+}
+
+type StartSubmissionOptions = {
+  /**
+   * true (default): this is the duel shown on the result screen, so its
+   * settlement state is tracked in pvpStore. false: fire-and-keep (forfeit).
+   */
+  track?: boolean;
+  /** Runs once when this start sends a new request and it resolves. */
+  onSettled?: (outcome: RankingSubmitOutcome) => void;
+};
+
+/**
+ * Duel-end entry point. Returns immediately (no await needed) so the caller
+ * can navigate to the result screen right away; settlement continues here.
+ *
+ * One submission per id: a repeated start for the same match (re-entered
+ * duel route, double finish) never sends again — it re-attaches the result
+ * screen to the in-flight request or to the last known outcome.
+ * Later retries go through retryPendingSubmission / flushPendingSubmissions,
+ * which keep the pvp_capabilities() gate for ranked entries.
+ */
+export function startRankingSubmission(
+  entry: PendingSubmission,
+  options: StartSubmissionOptions = {},
+): Promise<RankingSubmitOutcome> {
+  const { track = true, onSettled } = options;
+  if (track) usePvpStore.getState().setSubmission('submitting', entry.id);
+
+  const running = inFlight.get(entry.id);
+  if (running) return running;
+
+  const known = lastOutcome.get(entry.id);
+  if (known) {
+    if (track) applyOutcomeToPvpStore(entry.id, known);
+    return Promise.resolve(known);
+  }
+
+  const task = submitRankingResult(entry);
+  if (onSettled) {
+    void task.then((outcome) => {
+      try {
+        onSettled(outcome);
+      } catch (error) {
+        console.warn('[ranking] onSettled failed', error);
+      }
+    });
+  }
   return task;
 }
 
@@ -327,15 +435,45 @@ export function retryPendingSubmission(id: string): Promise<RankingSubmitOutcome
   return entry ? submitRankingResult(entry) : null;
 }
 
-/** Retry every stored submission once, oldest first. Safe to call repeatedly. */
-export async function flushPendingSubmissions(): Promise<void> {
-  await whenRankingSubmissionsReady();
-  const queue = [...useRankingSubmissionStore.getState().pending].sort(
-    (a, b) => a.completedAt - b.completedAt,
+export type FlushSummary = {
+  /** Entries the server confirmed during this flush. */
+  settled: number;
+  /** Entries still stored on the device afterwards. */
+  remaining: number;
+};
+
+let flushing: Promise<FlushSummary> | null = null;
+
+/**
+ * Retry every stored submission once, oldest first. Concurrent callers share
+ * one pass. Meant to run in the background — nothing should await it before
+ * showing UI. Ranked entries stay gated by pvp_capabilities() inside
+ * submitRankingResult.
+ */
+export function flushPendingSubmissions(): Promise<FlushSummary> {
+  if (flushing) return flushing;
+  const pass = (async (): Promise<FlushSummary> => {
+    await whenRankingSubmissionsReady();
+    const queue = [...useRankingSubmissionStore.getState().pending].sort(
+      (a, b) => a.completedAt - b.completedAt,
+    );
+    let settled = 0;
+    for (const entry of queue) {
+      const outcome = await submitRankingResult(entry);
+      if (outcome.status === 'submitted') settled += 1;
+    }
+    return { settled, remaining: useRankingSubmissionStore.getState().pending.length };
+  })();
+  flushing = pass;
+  void pass.then(
+    () => {
+      if (flushing === pass) flushing = null;
+    },
+    () => {
+      if (flushing === pass) flushing = null;
+    },
   );
-  for (const entry of queue) {
-    await submitRankingResult(entry);
-  }
+  return pass;
 }
 
 /** Mirror an outcome into the result-screen state. */

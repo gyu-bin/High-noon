@@ -1,0 +1,19 @@
+{
+  "project_ref": "nyevnntgcyvlileeugal",
+  "migration_file": "supabase/migrations/20260927_reconcile_bounty_ranking_v3.sql",
+  "migration_file_md5": "2947afecf99f7bf74520c687479d2efb",
+  "sent_sql_md5_server_computed": "8e9c73d60c14ee59f0323a20a4a3eba1 (file without trailing newline; identical to local)",
+  "access_method": "Supabase MCP connector: apply_migration (exactly once); read-only checks via execute_sql",
+  "remote_migration_version": "20260928092450_reconcile_bounty_ranking_v3",
+  "pre_deploy_backup": "20260927_pre_deploy_backup.nyevnntgcyvlileeugal.json (re-verified identical to live remote, 225 rows, md5 7b9ee37819a756efa39ce3f3ff56346e)",
+  "transaction_result": "COMMITTED (in-file contract assertion passed)",
+  "post_deploy_verify": { "pass": 104, "warn": 0, "fail": 0, "info": 2 },
+  "profiles_fingerprint": { "before": "rows=29 md5=27d0b928fe722235fb6c109a308033b9", "after": "rows=29 md5=27d0b928fe722235fb6c109a308033b9" },
+  "profiles_fingerprint_with_character_id": { "before": "rows=29 md5=d86d68a475d1eccca5f115698b755d28", "after": "rows=29 md5=d86d68a475d1eccca5f115698b755d28" },
+  "device_identities": { "before": 8, "after": 8, "hashed": 8 },
+  "pvp_capabilities": { "contract": "v3-baseline-20260927", "ranked_submit_idempotent": true, "forfeit_rpc": true, "device_key_hash": true },
+  "client_executable_functions": 17,
+  "legacy_rpcs_client_execute": "revoked (10/10 listed, 9 present, all anon=false authenticated=false)",
+  "human_ghosts_imported_from_ghost_loads": 3,
+  "bot_profiles_with_ghost_samples": 0
+}

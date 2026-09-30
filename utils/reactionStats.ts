@@ -1,22 +1,26 @@
+import { classifyReaction } from '@/lib/reactionContract';
 import type { PvpRoundRecord } from '@/types/pvp';
 
-export function averagePlayerMs(rounds: PvpRoundRecord[]): number | null {
-  const vals = rounds
+/**
+ * Valid reactions only (shared contract: normalized 80..2499). EARLY, TIMEOUT
+ * and INVALID rounds never count as a speed. Values stay raw for display.
+ */
+function validRaw(rounds: PvpRoundRecord[]): number[] {
+  return rounds
+    .filter((r) => !r.playerEarly && !r.playerTimeout && !r.playerInvalid)
     .map((r) => r.playerMs)
-    .filter((v): v is number => v != null && Number.isFinite(v));
+    .filter((v): v is number => v != null && classifyReaction(v)?.kind === 'shot');
+}
+
+export function averagePlayerMs(rounds: PvpRoundRecord[]): number | null {
+  const vals = validRaw(rounds);
   if (vals.length === 0) return null;
   return vals.reduce((a, b) => a + b, 0) / vals.length;
 }
 
 export function bestPlayerMs(rounds: PvpRoundRecord[]): number | null {
-  let best: number | null = null;
-  for (const r of rounds) {
-    const ms = r.playerMs;
-    if (ms == null || !Number.isFinite(ms)) continue;
-    if (ms < 80 || ms > 2500) continue;
-    if (best == null || ms < best) best = ms;
-  }
-  return best;
+  const vals = validRaw(rounds);
+  return vals.length === 0 ? null : Math.min(...vals);
 }
 
 export function ghostSampleFromRounds(
@@ -25,10 +29,10 @@ export function ghostSampleFromRounds(
 ): [number, number, number] {
   const out: [number, number, number] = [...fallback];
   for (let i = 0; i < 3; i++) {
-    const ms = rounds[i]?.playerMs;
-    if (ms != null && Number.isFinite(ms) && ms >= 80 && ms <= 2500) {
-      out[i] = Math.round(ms);
-    }
+    const r = rounds[i];
+    if (!r || r.playerEarly || r.playerTimeout || r.playerInvalid) continue;
+    const c = classifyReaction(r.playerMs);
+    if (c?.kind === 'shot') out[i] = c.ms;
   }
   return out;
 }

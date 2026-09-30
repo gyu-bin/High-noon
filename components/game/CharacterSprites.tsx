@@ -77,16 +77,19 @@ function DuelSpriteStack({
   width,
   height,
   pose,
+  defeatSettlesDown = true,
 }: {
   mode: 'npc' | 'player';
   id: number;
   width: number;
   height: number;
   pose: SpritePose;
+  /** false: a non-final hit — stay on the hit frame, never swap to the down frame. */
+  defeatSettlesDown?: boolean;
 }) {
   const layers = resolveDuelSpriteLayers(mode, id);
   const displayPose = spriteDisplayPose(pose);
-  const op = usePoseOpacity(displayPose, layers.down != null);
+  const op = usePoseOpacity(displayPose, layers.down != null && defeatSettlesDown);
   const showAimLayer = layers.aim != null && layers.aim !== layers.idle;
 
   return (
@@ -237,12 +240,19 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
   victoryActive = false,
   duelCorner = 'bottomLeft',
   defeatDropPx,
+  defeatSettlesDown = true,
 }: BaseProps & {
   characterId?: number;
   victoryActive?: boolean;
   duelCorner?: DuelCorner;
   /** 낙하 거리 px — landscape 등 같은 지면선 구도에서 제자리 착지용 */
   defeatDropPx?: number;
+  /**
+   * Combat reaction: true (default) = final defeat, the hit frame settles into
+   * the down frame. false = non-final hit, the hit frame is held and the caller
+   * returns the pose to idle (RECOVER). The duel result is decided elsewhere.
+   */
+  defeatSettlesDown?: boolean;
 }) {
   const hasPng = !!getPlayerSpriteSource(characterId, 'idle');
   const hasDown = !!getPlayerDownSource(characterId);
@@ -279,6 +289,7 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
             width={width}
             height={height}
             pose={pose}
+            defeatSettlesDown={defeatSettlesDown}
           />
         ) : (
           <View style={svgPoseStyle(pose)}>
@@ -303,7 +314,7 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
       <DefeatDustOverlay
         width={width}
         height={height}
-        active={pose === 'defeat'}
+        active={pose === 'defeat' && defeatSettlesDown}
         impactDelayMs={defeatImpactDelayMs(hasDown ? 'topple' : 'collapse')}
         groundOffsetY={
           grounded ? 0 : defeatDropPx != null ? defeatDropPx * 0.9 : height * (hasDown ? 0.3 : 0.38)

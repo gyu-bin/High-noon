@@ -29,6 +29,8 @@ function createFakeServer() {
   const server = {
     offline: false,
     dropNextResponse: false,
+    /** When set, every RPC waits on it: a slow network the test controls. */
+    gate: null,
     /** false = donor-era server: no pvp_capabilities RPC. */
     v3Baseline: true,
     calls: [],
@@ -63,6 +65,14 @@ function createFakeServer() {
       return { contract: 'v3-baseline-20260927', ranked_submit_idempotent: true, forfeit_rpc: true };
     },
     pvp_login_device: () => ({ ...server.profile }),
+    pvp_leaderboard: () => ({
+      entries: [{ ...server.profile, rank: 1 }],
+      me: { ...server.profile, rank: 1 },
+    }),
+    pvp_get_daily: () => ({
+      challenge_date: TODAY, opponent_name: 'Noon Ghost', sample_ms: [250, 250, 250],
+      character_id: 2, completed: server.dailyDone.has(TODAY), completion: null,
+    }),
     pvp_submit_match: (a) => {
       const m = server.matches.get(a.p_opponent_id);
       if (!m || m.status !== 'assigned') throw new Error('match_not_found_or_expired');
@@ -114,8 +124,15 @@ function createFakeServer() {
       return row;
     },
   };
+  /** Hold every RPC until the returned release() is called. */
+  server.hold = () => {
+    let release;
+    server.gate = new Promise((r) => { release = r; });
+    return () => { server.gate = null; release(); };
+  };
   server.rpc = async (name, args = {}) => {
     server.calls.push({ name, args });
+    if (server.gate) await server.gate;
     if (server.offline) return { data: null, error: { message: 'TypeError: Network request failed' } };
     // PostgREST cannot bind a JSON float to integer / integer[] parameters.
     for (const key of ['p_player_rounds', 'p_opponent_rounds', 'p_sample_ms']) {
@@ -185,12 +202,28 @@ function createApp() {
     api: load('@/lib/supabase/pvpApi'),
     sub: load('@/utils/rankingSubmission'),
     routes: load('@/utils/duelRoutes'),
+    board: load('@/utils/bountyBoardSync'),
     pending: () => load('@/store/rankingSubmissionStore').useRankingSubmissionStore.getState().pending,
     pvp: () => load('@/store/pvpStore').usePvpStore.getState(),
   };
 }
 
 const flush = () => new Promise((r) => setImmediate(r));
+const settle = async (n = 20) => { for (let i = 0; i < n; i++) await flush(); };
+const readSource = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
+
+/** Records what the Bounty Board screen would see from its session. */
+function boardProbe(app, options = {}) {
+  const log = { loading: [], data: [], errors: [], slow: 0, flushed: [] };
+  const session = app.board.createBountyBoardSession({
+    onLoading: (v) => log.loading.push(v),
+    onData: (d, meta) => log.data.push({ d, silent: meta.silent }),
+    onError: (e) => log.errors.push(e),
+    onSlow: () => { log.slow++; },
+    onFlushed: (s) => log.flushed.push(s),
+  }, options);
+  return { log, session };
+}
 const submitCalls = (app, name) => app.server.calls.filter((c) => c.name === name);
 
 function rankedEntry(app, overrides = {}) {
@@ -442,6 +475,241 @@ async function test(name, fn) {
     assert.equal(routes.isActiveDuelRoute('/ranking/duel'), true);
     assert.equal(routes.isActiveDuelRoute('/ranking/result'), false);
     assert.equal(routes.isInGameRoute('/ranking/duel'), false, 'status bar rule unchanged');
+  });
+
+  // ---------------- Non-blocking result (Step 2 UX) ----------------
+
+  await test('RA slow server: duel end hands over to Result immediately', async () => {
+    const app = createApp();
+    app.server.addMatch('m-1');
+    const release = app.server.hold();
+    const entry = rankedEntry(app);
+    let resolved = false;
+    const task = app.sub.startRankingSubmission(entry);
+    void task.then(() => { resolved = true; });
+    // Synchronously after start: result state is SUBMITTING, nothing settled.
+    assert.equal(app.pvp().submissionStatus, 'submitting');
+    assert.equal(app.pvp().submissionId, entry.id);
+    assert.equal(app.pvp().lastSubmit, null, 'no guessed rating before the server answers');
+    await settle();
+    assert.equal(resolved, false, 'server still slow');
+    assert.equal(app.pvp().submissionStatus, 'submitting');
+    // Static guard: the duel screen never awaits settlement before navigating.
+    const duel = readSource('app/ranking/duel.tsx');
+    assert.ok(!/await\s+(submitRankingResult|startRankingSubmission)/.test(duel), 'duel must not await submission');
+    const finish = duel.slice(duel.indexOf('const finishMatch'), duel.indexOf('const forfeitIfActive'));
+    assert.ok(finish.indexOf('startRankingSubmission(') < finish.indexOf("router.replace('/ranking/result'"));
+    assert.ok(!/async\s*\(finalPlayerWins/.test(finish), 'finishMatch is synchronous');
+    release();
+    await task;
+  });
+
+  await test('RB submission succeeds later -> rating section revealed from server', async () => {
+    const app = createApp();
+    app.server.addMatch('m-1');
+    const release = app.server.hold();
+    const entry = rankedEntry(app);
+    const task = app.sub.startRankingSubmission(entry);
+    await settle();
+    assert.equal(app.pvp().lastSubmit, null);
+    release();
+    await task;
+    assert.equal(app.pvp().submissionStatus, 'submitted');
+    assert.equal(app.pvp().lastSubmit.rating_delta, 16);
+    assert.equal(app.pvp().lastSubmit.rating_after, 1016);
+    assert.equal(app.pvp().lastSubmit.rank_tier, 'silver');
+    assert.equal(app.pvp().lastSubmit.wins, 1);
+    assert.equal(app.pending().length, 0);
+  });
+
+  await test('RC submission fails -> PENDING, entry stored, no rating shown', async () => {
+    const app = createApp();
+    app.server.addMatch('m-1');
+    app.server.offline = true;
+    const entry = rankedEntry(app);
+    const outcome = await app.sub.startRankingSubmission(entry);
+    assert.equal(outcome.status, 'pending_retry');
+    assert.equal(app.pvp().submissionStatus, 'pending_retry');
+    assert.equal(app.pvp().lastSubmit, null);
+    assert.equal(app.pending().length, 1);
+    await flush();
+    assert.ok(app.storage.get('high-noon-ranking-pending-submissions').includes('m-1'));
+  });
+
+  await test('RD duel screen unmount -> submission continues and reports', async () => {
+    const app = createApp();
+    app.server.addMatch('m-1');
+    const release = app.server.hold();
+    const entry = rankedEntry(app);
+    // The screen keeps no handle: fire and "unmount".
+    void app.sub.startRankingSubmission(entry);
+    await settle();
+    release();
+    await settle();
+    assert.equal(app.server.profile.rating, 1016);
+    assert.equal(app.pending().length, 0);
+    assert.equal(app.pvp().submissionStatus, 'submitted');
+    assert.equal(app.pvp().lastSubmit.rating_after, 1016);
+    const duel = readSource('app/ranking/duel.tsx');
+    assert.ok(!/AbortController|abort\(/.test(duel), 'no cancellation tied to the duel screen');
+  });
+
+  await test('RE same match started repeatedly -> exactly one submit', async () => {
+    const app = createApp();
+    app.server.addMatch('m-1');
+    const release = app.server.hold();
+    const entry = rankedEntry(app);
+    const a = app.sub.startRankingSubmission(entry);
+    const b = app.sub.startRankingSubmission(rankedEntry(app));
+    assert.strictEqual(a, b, 'in-flight start is shared');
+    release();
+    await a;
+    const c = await app.sub.startRankingSubmission(rankedEntry(app));
+    assert.equal(c.status, 'submitted');
+    assert.equal(submitCalls(app, 'pvp_submit_match').length, 1, 'no duplicate submit');
+    assert.equal(app.server.profile.wins, 1);
+    assert.equal(app.pvp().submissionStatus, 'submitted', 're-entered result re-attaches');
+  });
+
+  await test('RE2 late answer for an old match never overwrites the next duel', async () => {
+    const app = createApp();
+    app.server.addMatch('m-1');
+    const release = app.server.hold();
+    const task = app.sub.startRankingSubmission(rankedEntry(app));
+    // Player taps "duel again" before settlement.
+    const pvpStore = app.pvp;
+    pvpStore().beginMatch({ match_id: 'm-2', player: app.server.profile, opponent: { id: 'o', display_name: 'x', character_id: 1, rating: 1000, rank_tier: 'silver', is_bot: true, sample_ms: [300, 300, 300] } });
+    release();
+    await task;
+    assert.equal(pvpStore().submissionStatus, 'idle');
+    assert.equal(pvpStore().lastSubmit, null);
+    assert.equal(app.server.profile.rating, 1016, 'old match still settled');
+  });
+
+  await test('RF forfeit start is untracked and settles once', async () => {
+    const app = createApp();
+    app.server.addMatch('m-1');
+    const forfeit = () => app.sub.buildRankedForfeit({
+      matchId: 'm-1', opponentIsBot: false, opponentRounds: [300, 300, 300], characterId: 2,
+    });
+    const out = await app.sub.startRankingSubmission(forfeit(), { track: false });
+    assert.equal(out.status, 'submitted');
+    assert.equal(app.pvp().submissionId, null, 'forfeit does not drive a result screen');
+    await app.sub.startRankingSubmission(forfeit(), { track: false });
+    assert.equal(submitCalls(app, 'pvp_submit_match').length, 1);
+    assert.equal(app.server.profile.losses, 1);
+  });
+
+  // ---------------- Non-blocking Bounty Board ----------------
+
+  await test('BF pending queue + slow network: board loads without waiting for flush', async () => {
+    const app = createApp();
+    app.server.addMatch('m-1');
+    app.server.offline = true;
+    await app.sub.submitRankingResult(rankedEntry(app));
+    assert.equal(app.pending().length, 1);
+    app.server.offline = false;
+    const release = app.server.hold();
+    const before = app.server.calls.length;
+    const { log, session } = boardProbe(app, { softTimeoutMs: 30 });
+    session.refresh();
+    assert.deepEqual(log.loading, [true]);
+    await settle();
+    const names = app.server.calls.slice(before).map((c) => c.name);
+    assert.ok(names.includes('pvp_login_device'), 'profile load started while flush is pending');
+    const src = readSource('app/ranking/index.tsx');
+    assert.ok(!/await\s+flushPendingSubmissions/.test(src), 'board never awaits the flush');
+    await new Promise((r) => setTimeout(r, 60));
+    assert.equal(log.slow, 1, 'soft timeout releases the spinner');
+    assert.deepEqual(log.loading, [true, false]);
+    release();
+    await settle(60);
+    assert.ok(log.data.length >= 1, 'late answer still applied');
+    session.dispose();
+  });
+
+  await test('BG pending flush success -> silent ranking refresh', async () => {
+    const app = createApp();
+    app.server.addMatch('m-1');
+    app.server.offline = true;
+    await app.sub.submitRankingResult(rankedEntry(app));
+    app.server.offline = false;
+    const { log, session } = boardProbe(app);
+    session.refresh();
+    await settle(80);
+    assert.equal(app.pending().length, 0);
+    assert.deepEqual(log.flushed.at(-1), { settled: 1, remaining: 0 });
+    const silent = log.data.filter((x) => x.silent);
+    assert.equal(silent.length, 1, 'one silent refresh after settlement');
+    assert.equal(silent[0].d.me.rating, 1016);
+    assert.equal(silent[0].d.leaderboard.me.rating, 1016);
+    assert.deepEqual(log.loading, [true, false], 'silent refresh never re-enters loading');
+    session.dispose();
+  });
+
+  await test('BH offline: board usable, pending preserved', async () => {
+    const app = createApp();
+    app.server.addMatch('m-1');
+    app.server.offline = true;
+    await app.sub.submitRankingResult(rankedEntry(app));
+    const { log, session } = boardProbe(app);
+    session.refresh();
+    await settle(60);
+    assert.deepEqual(log.loading, [true, false]);
+    assert.equal(log.errors.length, 1, 'friendly offline error path');
+    assert.equal(log.data.length, 0);
+    assert.equal(app.pending().length, 1, 'pending kept on device');
+    await flush();
+    assert.ok(app.storage.get('high-noon-ranking-pending-submissions').includes('m-1'));
+    session.dispose();
+  });
+
+  await test('BI donor server (no pvp_capabilities): ranked retry NOT sent from board flush', async () => {
+    const app = createApp();
+    app.server.v3Baseline = false;
+    app.server.addMatch('m-1');
+    app.server.offline = true;
+    await app.sub.submitRankingResult(rankedEntry(app));
+    app.server.offline = false;
+    const sent = submitCalls(app, 'pvp_submit_match').length;
+    const { log, session } = boardProbe(app);
+    session.refresh();
+    await settle(80);
+    assert.equal(submitCalls(app, 'pvp_submit_match').length, sent, 'no unsafe ranked re-send');
+    assert.equal(app.pending().length, 1);
+    assert.deepEqual(log.flushed.at(-1), { settled: 0, remaining: 1 });
+    assert.equal(log.data.filter((x) => x.silent).length, 0);
+    assert.equal(log.data.length, 1, 'board itself still loaded');
+    session.dispose();
+  });
+
+  await test('BJ migrated server (pvp_capabilities ok): ranked retry allowed', async () => {
+    const app = createApp();
+    app.server.addMatch('m-1');
+    app.server.offline = true;
+    await app.sub.submitRankingResult(rankedEntry(app));
+    app.server.offline = false;
+    const { log, session } = boardProbe(app);
+    session.refresh();
+    await settle(80);
+    assert.equal(submitCalls(app, 'pvp_submit_match').length, 2, 'retry sent once');
+    assert.equal(app.pending().length, 0);
+    assert.equal(app.server.profile.rating, 1016);
+    assert.deepEqual(log.flushed.at(-1), { settled: 1, remaining: 0 });
+    session.dispose();
+  });
+
+  await test('BK concurrent flushes share one pass', async () => {
+    const app = createApp();
+    app.server.addMatch('m-1');
+    app.server.offline = true;
+    await app.sub.submitRankingResult(rankedEntry(app));
+    app.server.offline = false;
+    const a = app.sub.flushPendingSubmissions();
+    const b = app.sub.flushPendingSubmissions();
+    assert.strictEqual(a, b);
+    await a;
+    assert.equal(submitCalls(app, 'pvp_submit_match').length, 2);
   });
 
   console.log(passed + ' ranking submission regressions passed');
