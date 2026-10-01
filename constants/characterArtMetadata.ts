@@ -98,3 +98,36 @@ export const REDESIGN_STAGED_SOURCES: Partial<Record<RedesignArtKey, StagedArtSo
 );
 
 export const REDESIGN_STAGED_PALE_LOCKED_SILHOUETTE: ImageSourcePropType | null = V3_PALE_LOCKED_SILHOUETTE;
+
+/**
+ * NPC FIRE barrel tip, as a fraction of the duel NPC box (the 1254 production frame; negative x is
+ * left of the box). The arena centres its muzzle flash here. NPCs without an entry keep the legacy
+ * flash box. Read from each -v2 fire.png on a 10% grid.
+ */
+export const NPC_MUZZLE_ANCHOR: Partial<Record<number, { x: number; y: number; scale: number }>> = {
+  9: { x: 0.03, y: 0.18, scale: 0.8 },
+  15: { x: 0.0, y: 0.25, scale: 0.7 },
+  18: { x: -0.03, y: 0.23, scale: 0.7 },
+  19: { x: -0.06, y: 0.15, scale: 0.7 },
+  20: { x: 0.0, y: 0.27, scale: 0.7 },
+  22: { x: -0.01, y: 0.25, scale: 0.7 },
+};
+
+/** Legacy flash box in the NPC lane: 50% x 34% of the box, centred on its own middle. */
+const MUZZLE_BOX = { width: 0.5, height: 0.34 };
+
+export function npcMuzzleStyle(npcId: number, boxSize: number) {
+  const anchor = NPC_MUZZLE_ANCHOR[npcId];
+  if (!anchor) return null;
+  const width = boxSize * MUZZLE_BOX.width * anchor.scale;
+  const height = boxSize * MUZZLE_BOX.height * anchor.scale;
+  return { left: boxSize * anchor.x - width / 2, top: boxSize * anchor.y - height / 2, width, height };
+}
+
+/**
+ * Player FIRE barrel tip as a fraction of the sprite box, in the unflipped source image
+ * (negative x is left of the box). Players without an entry keep the legacy overlay anchor.
+ */
+export const PLAYER_MUZZLE_ANCHOR: Partial<Record<number, { x: number; y: number }>> = {
+  4: { x: -0.02, y: 0.12 },
+};

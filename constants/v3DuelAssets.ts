@@ -3,6 +3,15 @@ import { CLARITY_NPCS } from './clarityCharacterAssets';
 import { NPC_COMBAT_POSES, PLAYER_GROUND_REVOLVER } from './combatPoses';
 
 import type { NpcTier } from '@/types/npc';
+import type { DuelBackgroundId } from '@/utils/duelBackgroundSelection';
+export type { DuelBackgroundId } from '@/utils/duelBackgroundSelection';
+
+/** Approved environments. Legacy scenes below remain available for rollback. */
+export const APPROVED_DUEL_BACKGROUNDS: Record<DuelBackgroundId, ImageSourcePropType> = {
+  twilight: require('@/assets/images/backgrounds/duel_twilight_town.png'),
+  canyon: require('@/assets/images/backgrounds/duel_dusty_canyon.png'),
+  moonlit: require('@/assets/images/backgrounds/duel_moonlit_frontier.png'),
+};
 
 export type V3NpcPose = 'idle' | 'draw' | 'fire' | 'hit' | 'down';
 
@@ -73,7 +82,7 @@ export function getV3NpcDuelPreloadSources(
   dayNight: 'day' | 'night',
 ): ImageSourcePropType[] {
   return [
-    getV3DuelBackground(tier, npcId, dayNight),
+    ...Object.values(APPROVED_DUEL_BACKGROUNDS),
     ...Object.values(CLARITY_NPCS[npcId] ?? CLARITY_NPCS[1]!),
     ...Object.values(NPC_COMBAT_POSES[npcId] ?? {}),
     CINEMATIC_REVOLVER,

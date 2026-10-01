@@ -20,6 +20,8 @@ type Props = {
   flipHorizontal?: boolean;
   /** Horizontal muzzle point in the unflipped source image (0–1). */
   anchorX?: number;
+  /** Vertical muzzle point (0–1); defaults to the legacy 0.38. */
+  anchorY?: number;
 };
 
 /** shoot 포즈 보조 — 스프라이트 머즐이 약할 때 발사 느낌 */
@@ -29,6 +31,7 @@ export const MuzzleFlashOverlay = memo(function MuzzleFlashOverlay({
   active,
   flipHorizontal = false,
   anchorX,
+  anchorY,
 }: Props) {
   const flash = useSharedValue(0);
 
@@ -50,7 +53,7 @@ export const MuzzleFlashOverlay = memo(function MuzzleFlashOverlay({
   }));
 
   const barrelX = width * (anchorX ?? (flipHorizontal ? 0.22 : 0.72));
-  const barrelY = height * 0.38;
+  const barrelY = height * (anchorY ?? 0.38);
 
   return (
     <Animated.View

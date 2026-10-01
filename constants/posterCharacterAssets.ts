@@ -34,5 +34,5 @@ export const POSTER_PLAYER_IDENTITIES: Partial<Record<number, ImageSourcePropTyp
   1: require('@/assets/images/characters/clarity/player/01/identity_poster.png'),
   2: require('@/assets/images/characters/clarity/player/02-v2/identity_poster.png'),
   3: require('@/assets/images/characters/clarity/player/03/identity_poster.png'),
-  4: require('@/assets/images/characters/clarity/player/04/identity_poster.png'),
+  4: require('@/assets/images/characters/clarity/player/04-v2/identity_poster.png'),
 };

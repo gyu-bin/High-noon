@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +15,7 @@ import {
   type NpcRoundModalData,
 } from '@/components/game/NpcRoundModal';
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
+import { CAPTURE_ROUTES_ENABLED } from '@/constants/captureRoutes';
 import { getNpcById } from '@/constants/npcs';
 import { usePhoneStageMetrics, phoneStageSafeOffsets } from '@/hooks/usePhoneStageMetrics';
 import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
@@ -275,7 +276,12 @@ function FrozenLocalDuel() {
   );
 }
 
-export default function CaptureSceneScreen() {
+export default function CaptureSceneRoute() {
+  if (!CAPTURE_ROUTES_ENABLED) return <Redirect href="/" />;
+  return <CaptureSceneScreen />;
+}
+
+function CaptureSceneScreen() {
   const { scene } = useLocalSearchParams<{ scene: string }>();
   const sceneId = scene as CaptureSceneId;
   const config = SCENES[sceneId];

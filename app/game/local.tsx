@@ -1,5 +1,6 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { pickDuelBackground, type DuelBackgroundId } from '@/utils/duelBackgroundSelection';
 import { useMatchHistoryStore } from '@/store/matchHistoryStore';
 import {
   BackHandler,
@@ -123,6 +124,7 @@ export default function LocalGameScreen() {
   );
 
   const [p1Hearts, setP1Hearts] = useState(winsNeeded);
+  const [duelBackgroundId, setDuelBackgroundId] = useState<DuelBackgroundId>('twilight');
   const [p2Hearts, setP2Hearts] = useState(winsNeeded);
   const [p1Wins, setP1Wins] = useState(0);
   const [p2Wins, setP2Wins] = useState(0);
@@ -338,6 +340,7 @@ export default function LocalGameScreen() {
         ]);
         if (cancelled) return;
         const h = heartsForMatchType(matchType);
+        setDuelBackgroundId(pickDuelBackground());
         winsRef.current = { p1: 0, p2: 0 };
         setP1Hearts(h);
         setP2Hearts(h);
@@ -503,6 +506,7 @@ export default function LocalGameScreen() {
   }, [router]);
 
   const rematch = useCallback(() => {
+    setDuelBackgroundId(pickDuelBackground());
     if (defeatRevealTimerRef.current != null) clearTimeout(defeatRevealTimerRef.current);
     if (roundModalTimerRef.current != null) clearTimeout(roundModalTimerRef.current);
     defeatRevealTimerRef.current = null;
@@ -658,6 +662,7 @@ export default function LocalGameScreen() {
         </View>
       ) : isLandscape ? (
         <DuelFullBackground
+          backgroundId={duelBackgroundId}
           variant={battleDayNight}
           style={{ width: winW, height: winH }}
           contentWidth={winW}
@@ -667,6 +672,7 @@ export default function LocalGameScreen() {
         </DuelFullBackground>
       ) : (
         <DuelSplitBackground
+          backgroundId={duelBackgroundId}
           variant={battleDayNight}
           style={{ width: winW, height: winH }}
           contentWidth={winW}

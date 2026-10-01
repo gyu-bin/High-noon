@@ -19,13 +19,13 @@ import { DuelSignalBoard, type DuelSignalBoardPhase } from '@/components/game/Du
 import { DuelCoverImage } from '@/components/game/DuelCoverImage';
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import {
-  getV3DuelBackground,
+  APPROVED_DUEL_BACKGROUNDS,
   getV3NpcPose,
   V3_DUEL_VFX,
   CINEMATIC_REVOLVER,
   type V3NpcPose,
 } from '@/constants/v3DuelAssets';
-import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
+import { characterArtDisplayScale, npcMuzzleStyle, scaledArtStyle } from '@/constants/characterArtMetadata';
 import { NPC_COMBAT_POSES, PLAYER_GROUND_REVOLVER } from '@/constants/combatPoses';
 import { uiV3Colors } from '@/constants/theme';
 import type { SpritePose } from '@/constants/sprites';
@@ -43,6 +43,7 @@ import {
   type PlayerReactionStage,
 } from '@/utils/combatReaction';
 import { getNpcDisplayName } from '@/utils/npcLabels';
+import { pickDuelBackground, type DuelBackgroundId } from '@/utils/duelBackgroundSelection';
 
 type Props = {
   width: number;
@@ -55,6 +56,7 @@ type Props = {
   tier: NpcTier;
   bossFlag: boolean;
   dayNight: 'day' | 'night';
+  backgroundId?: DuelBackgroundId;
   npcPose: SpritePose;
   npcVictoryActive: boolean;
   playerDefeated: boolean;
@@ -119,6 +121,7 @@ export function NpcFirstPersonDuelArena({
   tier,
   bossFlag,
   dayNight,
+  backgroundId,
   npcPose,
   npcVictoryActive,
   playerDefeated,
@@ -147,6 +150,8 @@ export function NpcFirstPersonDuelArena({
   contentShakeStyle,
   combatPreview,
 }: Props) {
+  // Capture previews may inject an ID; normal screens own selection per match.
+  const [fallbackBackgroundId] = useState(() => backgroundId ?? pickDuelBackground());
   const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
   const landscape = width > height;
@@ -357,7 +362,7 @@ export function NpcFirstPersonDuelArena({
   const dustStyle = useAnimatedStyle(() => ({ opacity: dust.value }));
   const impactStyle = useAnimatedStyle(() => ({ opacity: impactFx.value }));
   const muzzleStyle = useAnimatedStyle(() => ({ opacity: muzzle.value }));
-  const npcMuzzleStyle = useAnimatedStyle(() => ({ opacity: npcMuzzle.value }));
+  const npcMuzzleOpacityStyle = useAnimatedStyle(() => ({ opacity: npcMuzzle.value }));
   const shotFlashStyle = useAnimatedStyle(() => ({ opacity: muzzle.value * 0.2 }));
 
   const dedicatedPoses = NPC_COMBAT_POSES[npcId];
@@ -468,18 +473,13 @@ export function NpcFirstPersonDuelArena({
       <Animated.View pointerEvents="box-none" style={[StyleSheet.absoluteFillObject, contentShakeStyle]}>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFillObject, cameraStyle]}>
         <DuelCoverImage
-          source={getV3DuelBackground(tier, npcId, dayNight)}
+          source={APPROVED_DUEL_BACKGROUNDS[backgroundId ?? fallbackBackgroundId]}
           width={width}
           height={height}
           bleed={1.18}
         />
-        <View pointerEvents="none" style={[styles.vignette, { top: -height, bottom: -height, left: -width, right: -width }]} />
-        <LinearGradient
-          pointerEvents="none"
-          colors={['rgba(10, 5, 2, 0.26)', 'transparent', 'rgba(8, 4, 2, 0.64)']}
-          locations={[0, 0.48, 1]}
-          style={[StyleSheet.absoluteFillObject, { top: -height * 0.25, bottom: -height * 0.25, left: -width, right: -width }]}
-        />
+        {/* Approved backgrounds contain their own lighting. No static central dim;
+            impact/ability treatments below remain transient gameplay feedback. */}
 
         <Animated.View pointerEvents="none" style={[styles.npcLane, {
           top: npcBox.top,
@@ -490,7 +490,7 @@ export function NpcFirstPersonDuelArena({
           {(abilityEcho || abilityMirror) && opponentCharacterId == null ? (
             <Image
               source={npcImageSource}
-              style={[styles.afterImage, npcArtStyle]}
+              style={[styles.afterImage, npcArtStyle, npcId === 20 && styles.afterImageBakedEcho]}
               contentFit="contain"
               transition={0}
             />
@@ -518,7 +518,7 @@ export function NpcFirstPersonDuelArena({
                 priority="high"
                 transition={0}
               />
-              <Animated.View style={[styles.npcMuzzle, npcMuzzleStyle]}>
+              <Animated.View style={[styles.npcMuzzle, npcMuzzleStyle(npcId, npcSize), npcMuzzleOpacityStyle]}>
                 <Image source={V3_DUEL_VFX.muzzleFlash} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} />
               </Animated.View>
             </>
@@ -638,6 +638,8 @@ const styles = StyleSheet.create({
   root: { overflow: 'hidden' },
   vignette: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10, 5, 2, 0.20)' },
   npcLane: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  // NPC20's art already carries baked echoes; keep the runtime cue but at half strength.
+  afterImageBakedEcho: { opacity: 0.12 },
   afterImage: { position: 'absolute', opacity: 0.24, transform: [{ translateX: -18 }, { translateY: 8 }], tintColor: uiV3Colors.diamondBlue },
   npcMuzzle: { position: 'absolute', width: '50%', height: '34%', left: '-10%', top: '32%' },
   impact: { position: 'absolute', width: 88, height: 88, top: '36%', left: '38%' },

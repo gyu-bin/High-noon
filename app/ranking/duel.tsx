@@ -1,5 +1,6 @@
 import { Stack, useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { pickDuelBackground } from '@/utils/duelBackgroundSelection';
 import { ActivityIndicator, BackHandler, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -69,6 +70,13 @@ export default function RankingDuelScreen() {
   const winH = stage.windowHeight;
   const opponent = usePvpStore((s) => s.opponent);
   const matchId = usePvpStore((s) => s.matchId);
+  const [duelBackgroundId, setDuelBackgroundId] = useState(pickDuelBackground);
+  const backgroundMatchId = useRef(matchId);
+  useEffect(() => {
+    if (backgroundMatchId.current === matchId) return;
+    backgroundMatchId.current = matchId;
+    setDuelBackgroundId(pickDuelBackground());
+  }, [matchId]);
   const matchMode = usePvpStore((s) => s.matchMode);
   const friendChallenge = usePvpStore((s) => s.friendChallenge);
   const dailyChallenge = usePvpStore((s) => s.dailyChallenge);
@@ -164,15 +172,6 @@ export default function RankingDuelScreen() {
     }
   }, [friendChallenge?.code, matchMode, opponent]);
 
-  useEffect(() => {
-    if (!opponent) return;
-    const playerId = useSettingsStore.getState().selectedCharacterId;
-    void prefetchLocalDuelSprites(
-      { kind: 'player', id: playerId },
-      { kind: 'player', id: opponent.character_id },
-    );
-  }, [opponent]);
-
   const startRound = useCallback(() => {
     if (!opponent) return;
     setRoundBanner(null);
@@ -195,8 +194,20 @@ export default function RankingDuelScreen() {
     processedOutcomeRef.current = null;
     setPlayerWins(0);
     setOppWins(0);
-    const tmr = setTimeout(() => startRound(), 400);
-    return () => clearTimeout(tmr);
+    let cancelled = false;
+    let tmr: ReturnType<typeof setTimeout> | undefined;
+    const playerId = useSettingsStore.getState().selectedCharacterId;
+    // The first READY waits for the same environment cache as subsequent rounds.
+    void prefetchLocalDuelSprites(
+      { kind: 'player', id: playerId },
+      { kind: 'player', id: opponent.character_id },
+    ).then(() => {
+      if (!cancelled) tmr = setTimeout(() => startRound(), 400);
+    });
+    return () => {
+      cancelled = true;
+      if (tmr != null) clearTimeout(tmr);
+    };
   }, [opponent, startRound]);
 
   useEffect(() => {
@@ -477,6 +488,7 @@ export default function RankingDuelScreen() {
         tier="bronze"
         bossFlag={false}
         dayNight={battleDayNight}
+        backgroundId={duelBackgroundId}
         npcPose={npcPose}
         npcVictoryActive={defeatedSide === 'player'}
         playerDefeated={defeatedSide === 'player'}

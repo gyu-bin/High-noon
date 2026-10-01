@@ -11,7 +11,7 @@ import {
 } from '@/constants/spriteAssets';
 import type { DuelCorner } from '@/constants/duelArena';
 import type { LocalDuelSkin } from '@/constants/localDuelSkin';
-import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
+import { NPC_MUZZLE_ANCHOR, PLAYER_MUZZLE_ANCHOR, characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
 import { CLARITY_NPCS, CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
 import {
   SPRITE_CACHE_REVISION,
@@ -213,7 +213,8 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
           width={width}
           height={height}
           flipHorizontal={grounded}
-          anchorX={grounded ? 0.22 : undefined}
+          anchorX={NPC_MUZZLE_ANCHOR[npcId]?.x ?? (grounded ? 0.22 : undefined)}
+          anchorY={NPC_MUZZLE_ANCHOR[npcId]?.y}
           active={pose === 'shoot' && !victoryActive}
         />
         <VictoryEffectsOverlay
@@ -305,7 +306,8 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
           width={width}
           height={height}
           flipHorizontal={grounded}
-          anchorX={grounded ? (characterId === 2 ? 0.07 : 0.22) : undefined}
+          anchorX={PLAYER_MUZZLE_ANCHOR[characterId]?.x ?? (grounded ? (characterId === 2 ? 0.07 : 0.22) : undefined)}
+          anchorY={PLAYER_MUZZLE_ANCHOR[characterId]?.y}
           active={pose === 'shoot' && !victoryActive}
         />
         <VictoryEffectsOverlay

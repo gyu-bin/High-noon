@@ -22,6 +22,7 @@ import { POSTER_NPC_IDENTITIES } from '@/constants/posterCharacterAssets';
 import { uiV3Colors } from '@/constants/theme';
 import { V3_PALE_LOCKED_SILHOUETTE } from '@/constants/v3UiAssets';
 import { NPC_DUEL_SCALE, npcLaneBox } from '@/utils/combatReaction';
+import { CAPTURE_ROUTES_ENABLED } from '@/constants/captureRoutes';
 
 type ScaleMode = 'comp' | 'raw';
 type Backdrop = 'light' | 'dark';
@@ -69,7 +70,7 @@ function CharacterArtPreviewBody({ params }: { params: PreviewParams }) {
   const [backdrop, setBackdrop] = useState<Backdrop>(pick(params.bg, ['light', 'dark'] as const, 'dark'));
   const [view, setView] = useState<CompareView>(pick(params.view, ['new', 'old', 'overlay'] as const, 'new'));
   const [pose, setPose] = useState<StagedPoseSlot>(pick(params.pose, STAGED_POSE_SLOTS, 'idle'));
-  if (!__DEV__) return <Redirect href="/" />;
+  if (!CAPTURE_ROUTES_ENABLED) return <Redirect href="/" />;
 
   const meta = REDESIGN_ART_META[key];
   const staged = REDESIGN_STAGED_SOURCES[key];

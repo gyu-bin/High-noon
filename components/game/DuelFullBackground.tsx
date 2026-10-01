@@ -4,10 +4,13 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { DuelCoverImage } from '@/components/game/DuelCoverImage';
 import { gameImages } from '@/constants/gameImages';
 import type { DuelBackgroundVariant } from '@/constants/duelBackgroundVariants';
+import { APPROVED_DUEL_BACKGROUNDS } from '@/constants/v3DuelAssets';
+import type { DuelBackgroundId } from '@/utils/duelBackgroundSelection';
 
 type Props = {
   /** NPC 1P — 단일 이미지 전체 화면 (분할 없음) */
   variant: DuelBackgroundVariant;
+  backgroundId?: DuelBackgroundId;
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   contentWidth: number;
@@ -42,6 +45,7 @@ const FULL_BG = {
 /** NPC 결투 — 낮/밤 단일 전체 배경 */
 export function DuelFullBackground({
   variant,
+  backgroundId,
   children,
   style,
   contentWidth: w,
@@ -51,16 +55,16 @@ export function DuelFullBackground({
 
   return (
     <View style={[styles.root, { width: w, height: h, backgroundColor: cfg.root }, style]}>
-      <DuelCoverImage source={cfg.source} width={w} height={h} />
+      <DuelCoverImage source={backgroundId ? APPROVED_DUEL_BACKGROUNDS[backgroundId] : cfg.source} width={w} height={h} />
 
-      <View pointerEvents="none" style={[styles.dim, { backgroundColor: cfg.dim }]} />
+      {!backgroundId && <View pointerEvents="none" style={[styles.dim, { backgroundColor: cfg.dim }]} />}
 
-      <LinearGradient
+      {!backgroundId && <LinearGradient
         pointerEvents="none"
         colors={[...cfg.vignette]}
         locations={[0, 0.28, 0.72, 1]}
         style={StyleSheet.absoluteFill}
-      />
+      />}
 
       <View style={styles.foreground} pointerEvents="box-none">
         {children}

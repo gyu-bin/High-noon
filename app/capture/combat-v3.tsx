@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { NpcFirstPersonDuelArena } from '@/components/game/NpcFirstPersonDuelArena';
 import { npcTimeline, playerTimeline, stageAt } from '@/utils/combatReaction';
+import { CAPTURE_ROUTES_ENABLED } from '@/constants/captureRoutes';
 
 /** Offline renderer replay of already-decided results, never submits a match. */
 export default function CombatV3Capture() {
@@ -17,7 +18,7 @@ export default function CombatV3Capture() {
     const timer = setTimeout(() => setStarted(true), 3500);
     return () => clearTimeout(timer);
   }, [params.scenario, params.scale, params.at, params.night, params.signal]);
-  if (!__DEV__) return <Redirect href="/" />;
+  if (!CAPTURE_ROUTES_ENABLED) return <Redirect href="/" />;
   const scenario = params.scenario ?? 'scale';
   const ranked = scenario.startsWith('ranked');
   const playerHit = scenario.startsWith('player');

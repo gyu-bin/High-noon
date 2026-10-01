@@ -91,11 +91,7 @@ function PlayerHalf({
 }) {
   return (
     <View pointerEvents="none" style={styles.playerHalfContent}>
-      <LinearGradient
-        colors={['rgba(8,4,2,0.5)', 'transparent', 'rgba(8,4,2,0.42)']}
-        locations={[0, 0.42, 1]}
-        style={StyleSheet.absoluteFill}
-      />
+      {/* Background lighting is authored into the approved scene; HUD has its own backing. */}
 
       <View style={[styles.hud, { top: paddingOuter + 8 }]}>
         <View>
