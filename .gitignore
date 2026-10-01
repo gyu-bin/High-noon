@@ -72,3 +72,6 @@ artifacts/**/*.jpeg
 artifacts/**/*.gif
 artifacts/**/*.mp4
 artifacts/**/*.mov
+
+# Supabase ops backups / deploy records: keep local only (not application source)
+supabase/ops/backups/*.json
