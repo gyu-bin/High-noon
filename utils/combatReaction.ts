@@ -116,3 +116,7 @@ export function npcLaneBox(input: { baseSize: number; footY: number; scale: numb
 
 /** Duel NPC scale (feet-anchored). Chosen on the iPhone 17 Pro Simulator; 1.0 = previous size. */
 export const NPC_DUEL_SCALE = 1.25;
+
+/** NPC01 prototype: native iPhone 17 Pro scale comparison, 2026-09-30. */
+export const NPC01_DUEL_SCALE = 1.30;
+export const NPC01_DUEL_FOOT_Y = 0.76;

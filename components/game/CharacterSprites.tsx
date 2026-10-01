@@ -11,6 +11,7 @@ import {
 } from '@/constants/spriteAssets';
 import type { DuelCorner } from '@/constants/duelArena';
 import type { LocalDuelSkin } from '@/constants/localDuelSkin';
+import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
 import { CLARITY_NPCS, CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
 import {
   SPRITE_CACHE_REVISION,
@@ -45,11 +46,13 @@ const SpriteLayer = memo(function SpriteLayer({
   source,
   width,
   height,
+  artScale,
   opacity,
 }: {
   source: LayerSource;
   width: number;
   height: number;
+  artScale: number;
   opacity: SharedValue<number>;
 }) {
   const style = useAnimatedStyle(() => ({
@@ -60,7 +63,7 @@ const SpriteLayer = memo(function SpriteLayer({
     <Animated.View pointerEvents="none" style={[layerStyles.absolute, style]}>
       <Image
         source={source}
-        style={{ width, height, backgroundColor: 'transparent' }}
+        style={[scaledArtStyle(width, height, artScale), layerStyles.clear]}
         contentFit="contain"
         cachePolicy="memory-disk"
         priority="high"
@@ -88,6 +91,8 @@ function DuelSpriteStack({
   defeatSettlesDown?: boolean;
 }) {
   const layers = resolveDuelSpriteLayers(mode, id);
+  const artScale = characterArtDisplayScale(mode, id);
+  const artStyle = [scaledArtStyle(width, height, artScale), layerStyles.clear];
   const displayPose = spriteDisplayPose(pose);
   const op = usePoseOpacity(displayPose, layers.down != null && defeatSettlesDown);
   const showAimLayer = layers.aim != null && layers.aim !== layers.idle;
@@ -95,23 +100,23 @@ function DuelSpriteStack({
   return (
     <View style={{ width, height, backgroundColor: 'transparent' }}>
       {layers.idle ? (
-        <SpriteLayer source={layers.idle} width={width} height={height} opacity={op.idle} />
+        <SpriteLayer source={layers.idle} width={width} height={height} artScale={artScale} opacity={op.idle} />
       ) : null}
       {showAimLayer && layers.aim ? (
-        <SpriteLayer source={layers.aim} width={width} height={height} opacity={op.aim} />
+        <SpriteLayer source={layers.aim} width={width} height={height} artScale={artScale} opacity={op.aim} />
       ) : null}
       {layers.defeat ? (
-        <SpriteLayer source={layers.defeat} width={width} height={height} opacity={op.defeat} />
+        <SpriteLayer source={layers.defeat} width={width} height={height} artScale={artScale} opacity={op.defeat} />
       ) : null}
       {layers.down ? (
-        <SpriteLayer source={layers.down} width={width} height={height} opacity={op.down} />
+        <SpriteLayer source={layers.down} width={width} height={height} artScale={artScale} opacity={op.down} />
       ) : null}
       {layers.useDualShootFrames && layers.shootFrame0 && layers.shootFrame1 ? (
         <>
           <Animated.View pointerEvents="none" style={[layerStyles.absolute, op.shootFrame0Style]}>
             <Image
               source={layers.shootFrame0}
-              style={{ width, height, backgroundColor: 'transparent' }}
+              style={artStyle}
               contentFit="contain"
               cachePolicy="memory-disk"
               priority="high"
@@ -122,7 +127,7 @@ function DuelSpriteStack({
           <Animated.View pointerEvents="none" style={[layerStyles.absolute, op.shootFrame1Style]}>
             <Image
               source={layers.shootFrame1}
-              style={{ width, height, backgroundColor: 'transparent' }}
+              style={artStyle}
               contentFit="contain"
               cachePolicy="memory-disk"
               priority="high"
@@ -135,7 +140,7 @@ function DuelSpriteStack({
         <Animated.View pointerEvents="none" style={[layerStyles.absolute, op.singleShootStyle]}>
           <Image
             source={layers.shootFrame0}
-            style={{ width, height, backgroundColor: 'transparent' }}
+            style={artStyle}
             contentFit="contain"
             cachePolicy="memory-disk"
             priority="high"
@@ -372,6 +377,7 @@ export const LocalDuelSkinSprite = memo(function LocalDuelSkinSprite({
 });
 
 const layerStyles = {
+  clear: { backgroundColor: 'transparent' as const },
   absolute: {
     position: 'absolute' as const,
     left: 0,

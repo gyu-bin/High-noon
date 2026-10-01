@@ -25,13 +25,16 @@ import {
   CINEMATIC_REVOLVER,
   type V3NpcPose,
 } from '@/constants/v3DuelAssets';
-import { NPC_COMBAT_POSES } from '@/constants/combatPoses';
+import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
+import { NPC_COMBAT_POSES, PLAYER_GROUND_REVOLVER } from '@/constants/combatPoses';
 import { uiV3Colors } from '@/constants/theme';
 import type { SpritePose } from '@/constants/sprites';
 import type { NpcTier } from '@/types/npc';
 import {
   isLethalHit,
   NPC_DUEL_SCALE,
+  NPC01_DUEL_SCALE,
+  NPC01_DUEL_FOOT_Y,
   npcLaneBox,
   npcPoseForStage,
   npcTimeline,
@@ -78,6 +81,12 @@ type Props = {
   onPause: () => void;
   pauseDisabled: boolean;
   contentShakeStyle?: StyleProp<ViewStyle>;
+  /** Development-only renderer replay; ignored by release builds. */
+  combatPreview?: {
+    scale?: number;
+    npcStage?: NpcReactionStage;
+    playerStage?: PlayerReactionStage;
+  };
 };
 
 function toV3NpcPose(pose: SpritePose): V3NpcPose {
@@ -136,6 +145,7 @@ export function NpcFirstPersonDuelArena({
   onPause,
   pauseDisabled,
   contentShakeStyle,
+  combatPreview,
 }: Props) {
   const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
@@ -146,10 +156,12 @@ export function NpcFirstPersonDuelArena({
     : Math.min(width * 0.48, height * 0.29);
   const npcBox = npcLaneBox({
     baseSize: baseNpcSize,
-    footY: height * (landscape ? 0.7 : 0.58),
-    scale: NPC_DUEL_SCALE,
+    footY: height * (landscape ? 0.7 : npcId === 1 ? NPC01_DUEL_FOOT_Y : 0.58),
+    scale: __DEV__ ? combatPreview?.scale ?? (npcId === 1 ? NPC01_DUEL_SCALE : NPC_DUEL_SCALE)
+      : npcId === 1 ? NPC01_DUEL_SCALE : NPC_DUEL_SCALE,
   });
   const npcSize = npcBox.size;
+  const npcArtStyle = scaledArtStyle(npcSize, npcSize, characterArtDisplayScale('npc', npcId));
   const smokeOpacity = useSharedValue(0);
   const fxOpacity = useSharedValue(0);
   const muzzle = useSharedValue(0);
@@ -157,8 +169,10 @@ export function NpcFirstPersonDuelArena({
   const recoil = useSharedValue(0);
 
   // ---- Combat reaction (presentation of an already-decided result) --------
-  const [npcStage, setNpcStage] = useState<NpcReactionStage>('none');
-  const [playerStage, setPlayerStage] = useState<PlayerReactionStage>('none');
+  const [timedNpcStage, setNpcStage] = useState<NpcReactionStage>('none');
+  const [timedPlayerStage, setPlayerStage] = useState<PlayerReactionStage>('none');
+  const npcStage = (__DEV__ ? combatPreview?.npcStage : undefined) ?? timedNpcStage;
+  const playerStage = (__DEV__ ? combatPreview?.playerStage : undefined) ?? timedPlayerStage;
   const opponentHeartsRef = useRef(opponentHearts);
   opponentHeartsRef.current = opponentHearts;
   const playerHeartsRef = useRef(playerHearts);
@@ -293,11 +307,17 @@ export function NpcFirstPersonDuelArena({
         // Face on the dirt: horizon settles almost level, opponent still standing,
         // the fallen revolver in the foreground.
         roll.value = t(6, 320);
+        gunDrop.value = 1;
         lift.value = t(1.35, 320);
         zoom.value = t(1, 320);
         ground.value = t(1, 260);
         return;
       case 'defeat':
+        gunDrop.value = 1;
+        ground.value = 1;
+        roll.value = 6;
+        lift.value = 1.35;
+        zoom.value = 1;
         shade.value = t(0.55, 210, Easing.inOut(Easing.quad));
         vignette.value = t(0.75, 210);
         return;
@@ -322,7 +342,7 @@ export function NpcFirstPersonDuelArena({
   const groundStyle = useAnimatedStyle(() => ({ opacity: ground.value }));
   const fallenGunStyle = useAnimatedStyle(() => ({
     opacity: ground.value,
-    transform: [{ translateY: (1 - ground.value) * 40 }, { rotate: '-96deg' }],
+    transform: [{ translateY: (1 - ground.value) * 40 }],
   }));
   const vignetteStyle = useAnimatedStyle(() => ({ opacity: vignette.value }));
   const defeatShadeStyle = useAnimatedStyle(() => ({ opacity: shade.value }));
@@ -470,7 +490,7 @@ export function NpcFirstPersonDuelArena({
           {(abilityEcho || abilityMirror) && opponentCharacterId == null ? (
             <Image
               source={npcImageSource}
-              style={[styles.afterImage, { width: npcSize, height: npcSize }]}
+              style={[styles.afterImage, npcArtStyle]}
               contentFit="contain"
               transition={0}
             />
@@ -492,7 +512,7 @@ export function NpcFirstPersonDuelArena({
             <>
               <Image
                 source={npcImageSource}
-                style={{ width: npcSize, height: npcSize }}
+                style={npcArtStyle}
                 contentFit="contain"
                 cachePolicy="memory-disk"
                 priority="high"
@@ -529,9 +549,9 @@ export function NpcFirstPersonDuelArena({
             </Animated.View>
             <Animated.View
               pointerEvents="none"
-              style={[styles.fallenGun, { width: weaponSize * 1.05, height: weaponSize * 1.05, left: -weaponSize * 0.22, bottom: -weaponSize * 0.52 }, fallenGunStyle]}
+              style={[styles.fallenGun, { width: width * 0.92, height: width * 0.92, left: width * 0.04, bottom: height * 0.04 - width * 0.92 * (1 - 838 / 1254) }, fallenGunStyle]}
             >
-              <Image source={weaponSource} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} />
+              <Image source={PLAYER_GROUND_REVOLVER} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} />
             </Animated.View>
           </>
         ) : null}
@@ -634,7 +654,7 @@ const styles = StyleSheet.create({
   hudLabel: { color: uiV3Colors.cream, fontSize: 10, fontWeight: '800', letterSpacing: 1.4 },
   tierLabel: { color: uiV3Colors.gold, fontSize: 7, fontWeight: '800', letterSpacing: 1.5, textTransform: 'uppercase' },
   hearts: { marginTop: 2, color: '#D45342', fontSize: 15, letterSpacing: 1 },
-  roundBlock: { alignItems: 'center', paddingTop: 3 },
+  roundBlock: { alignItems: 'center', minWidth: 64, paddingVertical: 3, paddingHorizontal: 8, backgroundColor: 'rgba(16, 10, 6, 0.72)', borderBottomWidth: 1, borderColor: 'rgba(201, 166, 107, 0.42)' },
   roundLabel: { color: uiV3Colors.cream, fontSize: 9, fontWeight: '800', letterSpacing: 2 },
   roundValue: { color: uiV3Colors.gold, fontFamily: FONT_RYE, fontSize: 25, lineHeight: 28 },
   pause: { position: 'absolute', right: 0, top: 58, padding: 9, borderWidth: 1, borderColor: 'rgba(255, 215, 0, 0.4)', backgroundColor: 'rgba(26, 12, 6, 0.60)' },

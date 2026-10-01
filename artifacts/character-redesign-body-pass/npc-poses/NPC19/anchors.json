@@ -1,0 +1,67 @@
+{
+  "transforms_key": "NPC19",
+  "stage_dir": "assets/images/characters/staged/redesign-v2/npc/19",
+  "stage_names": {
+    "idle": "idle",
+    "draw": "draw",
+    "fire": "fire",
+    "hit": "hit",
+    "kneel": "down",
+    "fall": "combat_fall",
+    "down": "combat_down"
+  },
+  "poses": {
+    "idle": {
+      "file": "npc-poses/NPC19/intake/NPC19_IDLE_V2.png",
+      "chin": 250,
+      "ground": 1250,
+      "x": 700,
+      "rel": 1.0
+    },
+    "draw": {
+      "file": "NPC19_DRAW.png",
+      "ground": null,
+      "x": 790,
+      "rel": 1.0
+    },
+    "fire": {
+      "file": "NPC19_FIRE.png",
+      "ground": null,
+      "x": 865,
+      "rel": 1.0
+    },
+    "hit": {
+      "file": "NPC19_HIT.png",
+      "ground": null,
+      "x": 745,
+      "rel": 1.0
+    },
+    "kneel": {
+      "file": "NPC19_KNEEL.png",
+      "ground": null,
+      "x": 680,
+      "rel": 1.0
+    },
+    "fall": {
+      "file": "NPC19_FALL.png",
+      "ground": null,
+      "x": 742,
+      "rel": 1.0
+    },
+    "down": {
+      "file": "NPC19_DOWN.png",
+      "ground": null,
+      "x": 735,
+      "rel": 1.0
+    }
+  },
+  "note": "Idle = round-3 locked NPC19 (sha 9bc501bc8340, same file PHASE 1 normalized). Anchors from transforms.json NPC19; fragments excluded; black-hole bottom = chin. 2026-10-01: all x = compass-medallion centre (idle 935, read from the 20px grid; PHASE 1 870 was the belt centre) so poses align on the same landmark. Black-hole and hat-badge sizes in the poses \u2264 the idle's \u2192 rel 1.0 (no upscale). IDLE_V2 (06_57_29.png, 1223x1286): chin 250, boot sole 1250, medallion x 700; black hole \u224860 px vs poses 65\u201370 \u2192 rel 1.0.",
+  "retired_idle": {
+    "file": "intake/NPC19_VOID_WALKER.png",
+    "chin": 243,
+    "ground": 1247,
+    "x": 935,
+    "rel": 1.0,
+    "note": "retired 2026-10-01: identity re-locked to the pose-set style (decision A)"
+  }
+}

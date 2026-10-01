@@ -1,0 +1,170 @@
+{
+  "metadata": {
+    "canvasSize": 1624,
+    "frameGroundY": 1185,
+    "displayScale": 1.2951,
+    "pad_each_side": 185,
+    "body_scale": 0.9704,
+    "body_scale_wanted": 0.9704
+  },
+  "records": {
+    "idle": {
+      "source": "artifacts/character-redesign-body-pass/intake/NPC15_SHADOW_HUNTER.png",
+      "source_sha256": "8743a59c09e7d804d6b3719ed2602281a2f0b95bc34ec6914483b226e3698e6b",
+      "format": "PNG",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "true_alpha": true,
+      "source_edge_touch_px": 0,
+      "anchors": {
+        "file": "intake/NPC15_SHADOW_HUNTER.png",
+        "chin": 350,
+        "belt_y": 571,
+        "ground": 1246,
+        "x": 821,
+        "rel": 1.0
+      },
+      "scale": 0.9704,
+      "staged": "assets/images/characters/staged/redesign-v2/npc/15/idle.png",
+      "canvas_margin_min": 8
+    },
+    "draw": {
+      "source": "artifacts/character-redesign-body-pass/npc-poses/NPC15/intake/NPC15_DRAW.png",
+      "source_sha256": "374732f9b4fffcda39a3986285f3a1a6a1d2cdfda5e27cb55cad9dc60332dc6d",
+      "format": "PNG",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "true_alpha": true,
+      "source_edge_touch_px": 0,
+      "anchors": {
+        "file": "NPC15_DRAW.png",
+        "ground": 1232,
+        "x": 720,
+        "rel": 1.0
+      },
+      "scale": 0.9704,
+      "staged": "assets/images/characters/staged/redesign-v2/npc/15/draw.png",
+      "canvas_margin_min": 106
+    },
+    "fire": {
+      "source": "artifacts/character-redesign-body-pass/npc-poses/NPC15/intake/NPC15_FIRE.png",
+      "source_sha256": "0f181e48e1b4641767ac9217ae3c30d064e88a0f6cee5c4a4e0c44bc4f3e673b",
+      "format": "PNG",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "true_alpha": true,
+      "source_edge_touch_px": 0,
+      "anchors": {
+        "file": "NPC15_FIRE.png",
+        "ground": 1233,
+        "x": 820,
+        "rel": 1.0
+      },
+      "scale": 0.9704,
+      "staged": "assets/images/characters/staged/redesign-v2/npc/15/fire.png",
+      "canvas_margin_min": 9
+    },
+    "hit": {
+      "source": "artifacts/character-redesign-body-pass/npc-poses/NPC15/intake/NPC15_HIT.png",
+      "source_sha256": "71a9358698e2f18a2331762d771117024cc965d73775f8158f273dafc9819ae4",
+      "format": "PNG",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "true_alpha": true,
+      "source_edge_touch_px": 0,
+      "anchors": {
+        "file": "NPC15_HIT.png",
+        "ground": 1240,
+        "x": 650,
+        "rel": 1.0
+      },
+      "scale": 0.9704,
+      "staged": "assets/images/characters/staged/redesign-v2/npc/15/hit.png",
+      "canvas_margin_min": 167
+    },
+    "kneel": {
+      "source": "artifacts/character-redesign-body-pass/npc-poses/NPC15/intake/NPC15_KNEEL.png",
+      "source_sha256": "9bc4a700cfb89f81c18abadb2566dddfcf8cff22cf24409adad5d8157f1446f1",
+      "format": "PNG",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "true_alpha": true,
+      "source_edge_touch_px": 0,
+      "anchors": {
+        "file": "NPC15_KNEEL.png",
+        "ground": 1199,
+        "x": 610,
+        "rel": 1.0
+      },
+      "scale": 0.9704,
+      "staged": "assets/images/characters/staged/redesign-v2/npc/15/down.png",
+      "canvas_margin_min": 194
+    },
+    "fall": {
+      "source": "artifacts/character-redesign-body-pass/npc-poses/NPC15/intake/NPC15_FALL.png",
+      "source_sha256": "0e85b423c223f5d70fa326ed26fdd9a9847ba0f33ceac2af113c39093efd742f",
+      "format": "PNG",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "true_alpha": true,
+      "source_edge_touch_px": 0,
+      "anchors": {
+        "file": "NPC15_FALL.png",
+        "ground": 1174,
+        "x": 680,
+        "rel": 1.0
+      },
+      "scale": 0.9704,
+      "staged": "assets/images/characters/staged/redesign-v2/npc/15/combat_fall.png",
+      "canvas_margin_min": 145
+    },
+    "down": {
+      "source": "artifacts/character-redesign-body-pass/npc-poses/NPC15/intake/NPC15_DOWN.png",
+      "source_sha256": "593d944587d8618db3f9938f03f1017e8b6a716c9c16dc7e89771e768656f3b5",
+      "format": "PNG",
+      "mode": "RGBA",
+      "size": [
+        1536,
+        1024
+      ],
+      "true_alpha": true,
+      "source_edge_touch_px": 0,
+      "anchors": {
+        "file": "NPC15_DOWN.png",
+        "ground": 962,
+        "x": 760,
+        "rel": 1.0
+      },
+      "scale": 0.9704,
+      "staged": "assets/images/characters/staged/redesign-v2/npc/15/combat_down.png",
+      "canvas_margin_min": 68
+    }
+  },
+  "sheets": [
+    "A_idle_draw_fire.png",
+    "B_idle_hit_recover.png",
+    "C_defeat_sequence.png",
+    "D_silhouettes.png",
+    "E_duel_sizes.png",
+    "F_dark_background.png"
+  ],
+  "protected_unchanged": true
+}

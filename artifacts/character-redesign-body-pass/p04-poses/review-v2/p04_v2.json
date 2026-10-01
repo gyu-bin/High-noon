@@ -1,0 +1,221 @@
+{
+  "metadata": {
+    "canvasSize": 1720,
+    "frameGroundY": 1211,
+    "displayScale": 1.3716,
+    "pad_each_side": 233,
+    "uniform_scale": 1.0,
+    "uniform_scale_wanted": 1.0157,
+    "union_bounds_in_frame": [
+      -225,
+      -35,
+      1187,
+      1231
+    ]
+  },
+  "records": {
+    "idle": {
+      "source": "P04_IDLE_V2.png",
+      "source_sha256": "951e83cdfdda82b1a5555ed62b497b5cfe672a4ba21278d527a5008844541d90",
+      "checks": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          1145,
+          1374
+        ],
+        "true_alpha": true,
+        "edge_touch_px": 8
+      },
+      "anchors_source": {
+        "ground": 1350,
+        "buckle_x": 633,
+        "chin": 255,
+        "rel": 0.909
+      },
+      "uniform_scale": 0.909,
+      "translate_canvas": [
+        308,
+        217
+      ],
+      "output_bbox": [
+        308,
+        217,
+        1349,
+        1453
+      ],
+      "edge_margin_min": 217,
+      "staged_sha256": "cc548562b6269fdfd130fff67fcea3fb865de49ab77166ab07cd40e9a93db6e3"
+    },
+    "draw": {
+      "source": "P04_DRAW.png",
+      "source_sha256": "ce1ba268a472e87ade62f609ce4ec44496e177ab09b1e98249494b664565b155",
+      "checks": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          1254,
+          1254
+        ],
+        "true_alpha": true,
+        "edge_touch_px": 0
+      },
+      "anchors_source": {
+        "ground": 1234,
+        "buckle_x": 703,
+        "rel": 1.0
+      },
+      "uniform_scale": 1.0,
+      "translate_canvas": [
+        180,
+        210
+      ],
+      "output_bbox": [
+        180,
+        210,
+        1416,
+        1464
+      ],
+      "edge_margin_min": 180,
+      "staged_sha256": "a9d7919a7c5edf4c5b55a6e48d399590512f5f16f5fc6a816e6aafc65207b47e"
+    },
+    "fire": {
+      "source": "P04_FIRE.png",
+      "source_sha256": "b2bd39d3646801fa4392845260a3fe162fd5d5a4f5ac003d808c8981b5a4876f",
+      "checks": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          1254,
+          1254
+        ],
+        "true_alpha": true,
+        "edge_touch_px": 0
+      },
+      "anchors_source": {
+        "ground": 1246,
+        "buckle_x": 875,
+        "rel": 1.0
+      },
+      "uniform_scale": 1.0,
+      "translate_canvas": [
+        8,
+        198
+      ],
+      "output_bbox": [
+        8,
+        198,
+        1262,
+        1452
+      ],
+      "edge_margin_min": 8,
+      "staged_sha256": "8089a68c6990efac10e5e72bb12a0afbace404305dd36a62b6c47293cab4c430"
+    },
+    "hit": {
+      "source": "P04_HIT.png",
+      "source_sha256": "0986b194d3f5b279a5b63de02d9af9cd42171465602b434ecc5389d17da32b04",
+      "checks": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          1254,
+          1254
+        ],
+        "true_alpha": true,
+        "edge_touch_px": 0
+      },
+      "anchors_source": {
+        "ground": 1222,
+        "buckle_x": 717,
+        "rel": 1.0
+      },
+      "uniform_scale": 1.0,
+      "translate_canvas": [
+        166,
+        222
+      ],
+      "output_bbox": [
+        166,
+        231,
+        1420,
+        1458
+      ],
+      "edge_margin_min": 166,
+      "staged_sha256": "6e9a30b43999a4eed86468194fb76e8c7e4b164f66a22e327bdb30206b4c6bc0"
+    },
+    "down": {
+      "source": "P04_KNEEL.png",
+      "source_sha256": "b667b191e467161f34100d3a56f9fd6d778ff4353cb358dd9cd6308c142d7ff1",
+      "checks": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          1254,
+          1254
+        ],
+        "true_alpha": true,
+        "edge_touch_px": 0
+      },
+      "anchors_source": {
+        "ground": 1235,
+        "buckle_x": 636,
+        "rel": 0.83
+      },
+      "uniform_scale": 0.83,
+      "translate_canvas": [
+        355,
+        419
+      ],
+      "output_bbox": [
+        355,
+        438,
+        1396,
+        1460
+      ],
+      "edge_margin_min": 260,
+      "staged_sha256": "272fdd81794c0ef11bc56ca9b2631582d2e061cbe8ca3bdc5ccece7db7c4822a"
+    }
+  },
+  "continuity": [
+    {
+      "transition": "idle->draw",
+      "ground_dy": 0.0,
+      "buckle_dx": 0.0,
+      "ground_canvas_y": 1444
+    },
+    {
+      "transition": "draw->fire",
+      "ground_dy": 0.0,
+      "buckle_dx": 0.0,
+      "ground_canvas_y": 1444
+    },
+    {
+      "transition": "fire->hit",
+      "ground_dy": 0.0,
+      "buckle_dx": 0.0,
+      "ground_canvas_y": 1444
+    },
+    {
+      "transition": "hit->idle",
+      "ground_dy": 0.0,
+      "buckle_dx": 0.0,
+      "ground_canvas_y": 1444
+    },
+    {
+      "transition": "hit->down",
+      "ground_dy": 0.0,
+      "buckle_dx": 0.0,
+      "ground_canvas_y": 1444
+    }
+  ],
+  "sheets": [
+    "A_idle_draw_fire.png",
+    "B1_fire_hit.png",
+    "B2_idle_hit_recover.png",
+    "C_hit_kneel.png",
+    "D_silhouettes.png",
+    "E_duel_sizes.png",
+    "F_dark_background.png"
+  ],
+  "production_unchanged": true
+}

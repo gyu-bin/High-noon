@@ -1,0 +1,211 @@
+{
+  "records": {
+    "idle": {
+      "source": "artifacts/character-redesign-body-pass/intake/P04_GHOST_GUNSLINGER.png",
+      "anchors_source": {
+        "hat_top": 19,
+        "hat_brim_w": 229,
+        "ground": 1244,
+        "cx": 714
+      },
+      "scale": 0.9844
+    },
+    "draw": {
+      "source": "artifacts/character-redesign-body-pass/p04-poses/intake/P04_DRAW.png",
+      "source_sha256": "ce1ba268a472e87ade62f609ce4ec44496e177ab09b1e98249494b664565b155",
+      "checks": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          1254,
+          1254
+        ],
+        "true_alpha": true,
+        "edge_touch_px": 0,
+        "red_orange_edge_pct": 0.58
+      },
+      "anchors_source": {
+        "hat_top": 17,
+        "hat_brim_w": 46,
+        "ground": 1234,
+        "cx": 365
+      },
+      "hat_ratio_vs_idle": 4.9783,
+      "scale_correction": 1.0,
+      "uniform_scale": 0.9844,
+      "translate_canvas": [
+        81,
+        94
+      ],
+      "canvas": [
+        1446,
+        1446
+      ],
+      "frame_ground_y": 1211,
+      "clipped_at_canvas_edge": false,
+      "staged": "assets/images/characters/staged/redesign-v2/player/04/draw.png",
+      "staged_sha256": "1a897c21a77709236323b1dce730842f123ff07c5ab0737b6ac5dfddf74d45cf"
+    },
+    "fire": {
+      "source": "artifacts/character-redesign-body-pass/p04-poses/intake/P04_FIRE.png",
+      "source_sha256": "b2bd39d3646801fa4392845260a3fe162fd5d5a4f5ac003d808c8981b5a4876f",
+      "checks": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          1254,
+          1254
+        ],
+        "true_alpha": true,
+        "edge_touch_px": 0,
+        "red_orange_edge_pct": 0.0
+      },
+      "anchors_source": {
+        "hat_top": 16,
+        "hat_brim_w": 225,
+        "ground": 1246,
+        "cx": 764
+      },
+      "hat_ratio_vs_idle": 1.0178,
+      "scale_correction": 1.0,
+      "uniform_scale": 0.9844,
+      "translate_canvas": [
+        -88,
+        82
+      ],
+      "canvas": [
+        1446,
+        1446
+      ],
+      "frame_ground_y": 1211,
+      "clipped_at_canvas_edge": true,
+      "staged": "assets/images/characters/staged/redesign-v2/player/04/fire.png",
+      "staged_sha256": "5cc96509b0104da9af398988c237b31d2e9a9f1f57e181c4095deebce6197708"
+    },
+    "hit": {
+      "source": "artifacts/character-redesign-body-pass/p04-poses/intake/P04_HIT.png",
+      "source_sha256": "0986b194d3f5b279a5b63de02d9af9cd42171465602b434ecc5389d17da32b04",
+      "checks": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          1254,
+          1254
+        ],
+        "true_alpha": true,
+        "edge_touch_px": 0,
+        "red_orange_edge_pct": 0.5
+      },
+      "anchors_source": {
+        "hat_top": 43,
+        "hat_brim_w": 325,
+        "ground": 1222,
+        "cx": 576
+      },
+      "hat_ratio_vs_idle": 0.7046,
+      "scale_correction": 1.0,
+      "uniform_scale": 0.9844,
+      "translate_canvas": [
+        67,
+        106
+      ],
+      "canvas": [
+        1446,
+        1446
+      ],
+      "frame_ground_y": 1211,
+      "clipped_at_canvas_edge": false,
+      "staged": "assets/images/characters/staged/redesign-v2/player/04/hit.png",
+      "staged_sha256": "e0694bee92dd5f86ecdb8ef2d603114be45f1c0cc7ca1808c02d534855d4ee1d"
+    },
+    "down": {
+      "source": "artifacts/character-redesign-body-pass/p04-poses/intake/P04_KNEEL.png",
+      "source_sha256": "b667b191e467161f34100d3a56f9fd6d778ff4353cb358dd9cd6308c142d7ff1",
+      "checks": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          1254,
+          1254
+        ],
+        "true_alpha": true,
+        "edge_touch_px": 0,
+        "red_orange_edge_pct": 0.45
+      },
+      "anchors_source": {
+        "hat_top": 64,
+        "hat_brim_w": 340,
+        "ground": 1235,
+        "cx": 578
+      },
+      "hat_ratio_vs_idle": 0.6735,
+      "scale_correction": 1.0,
+      "uniform_scale": 0.9844,
+      "translate_canvas": [
+        147,
+        93
+      ],
+      "canvas": [
+        1446,
+        1446
+      ],
+      "frame_ground_y": 1211,
+      "clipped_at_canvas_edge": false,
+      "staged": "assets/images/characters/staged/redesign-v2/player/04/down.png",
+      "staged_sha256": "88a5560ef48677df9e41bbc10cf2c9fa3db154162a531f21528d5ff3d83042c4"
+    }
+  },
+  "continuity": [
+    {
+      "transition": "idle->draw",
+      "hat_top_dy": 8,
+      "hat_brim_ratio": 0.209,
+      "ground_dy": 0,
+      "centre_dx": -268
+    },
+    {
+      "transition": "draw->fire",
+      "hat_top_dy": 3,
+      "hat_brim_ratio": 5.34,
+      "ground_dy": -1,
+      "centre_dx": 168
+    },
+    {
+      "transition": "fire->idle",
+      "hat_top_dy": -11,
+      "hat_brim_ratio": 0.896,
+      "ground_dy": 1,
+      "centre_dx": 100
+    },
+    {
+      "transition": "idle->hit",
+      "hat_top_dy": 46,
+      "hat_brim_ratio": 1.431,
+      "ground_dy": 0,
+      "centre_dx": -79
+    },
+    {
+      "transition": "hit->idle",
+      "hat_top_dy": -46,
+      "hat_brim_ratio": 0.699,
+      "ground_dy": 0,
+      "centre_dx": 79
+    },
+    {
+      "transition": "hit->down",
+      "hat_top_dy": 7,
+      "hat_brim_ratio": 1.05,
+      "ground_dy": 0,
+      "centre_dx": 82
+    }
+  ],
+  "sheets": [
+    "A_idle_draw_fire.png",
+    "B_idle_hit_recover.png",
+    "C_hit_kneel.png",
+    "D_silhouettes.png",
+    "E_duel_sizes.png",
+    "F_dark_background.png"
+  ],
+  "production_unchanged": true
+}

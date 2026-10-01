@@ -1,0 +1,107 @@
+{
+  "manifest": {
+    "P04": {
+      "staged_master": "assets/images/characters/staged/redesign-v2/player/04/idle.png",
+      "staged_master_sha256": "5e4c97b9185b00917ff727bb1ec849eef010a7e3e923a7bec34e510134fd6d58",
+      "source_normalized": "artifacts/character-redesign-body-pass/normalized/P04_GHOST_GUNSLINGER_normalized.png",
+      "source_normalized_sha256": "5e4c97b9185b00917ff727bb1ec849eef010a7e3e923a7bec34e510134fd6d58",
+      "canvas_size": 1446,
+      "display_scale": 1.1531,
+      "production_idle_unchanged_reference": "assets/images/characters/clarity/player/04/idle.png"
+    },
+    "NPC09": {
+      "staged_master": "assets/images/characters/staged/redesign-v2/npc/09/idle.png",
+      "staged_master_sha256": "0ecf70a7c42ebe9e4606925d24c22274382301db502e8ae4b0e237941a9d1829",
+      "source_normalized": "artifacts/character-redesign-body-pass/normalized/NPC09_GOLDEN_SKULL_normalized.png",
+      "source_normalized_sha256": "0ecf70a7c42ebe9e4606925d24c22274382301db502e8ae4b0e237941a9d1829",
+      "canvas_size": 1548,
+      "display_scale": 1.2344,
+      "production_idle_unchanged_reference": "assets/images/characters/clarity/npc/09/idle.png",
+      "staged_poster": "assets/images/characters/staged/redesign-v2/npc/09/identity_poster.png",
+      "staged_poster_sha256": "08de8948215cae68139842a985fd4ae1a2eba4b1052388ec5b1207435eb16d73",
+      "poster_canvas": 1254,
+      "poster_fit_scale_from_normalized": 1.0,
+      "poster_body_size_vs_current_poster": 1.0
+    },
+    "NPC15": {
+      "staged_master": "assets/images/characters/staged/redesign-v2/npc/15/idle.png",
+      "staged_master_sha256": "958320f43e72fa625adc8316bc3677968aacdfa728dd91ab7dab377b21c4a261",
+      "source_normalized": "artifacts/character-redesign-body-pass/normalized/NPC15_SHADOW_HUNTER_normalized.png",
+      "source_normalized_sha256": "958320f43e72fa625adc8316bc3677968aacdfa728dd91ab7dab377b21c4a261",
+      "canvas_size": 1622,
+      "display_scale": 1.2935,
+      "production_idle_unchanged_reference": "assets/images/characters/clarity/npc/15/idle.png",
+      "staged_poster": "assets/images/characters/staged/redesign-v2/npc/15/identity_poster.png",
+      "staged_poster_sha256": "ef5147ec7d586a0de63b0138508f7642f169779ca7cec5260ca143572538e686",
+      "poster_canvas": 1254,
+      "poster_fit_scale_from_normalized": 1.0,
+      "poster_body_size_vs_current_poster": 1.0
+    },
+    "NPC18": {
+      "staged_master": "assets/images/characters/staged/redesign-v2/npc/18/idle.png",
+      "staged_master_sha256": "e33a33dd1bab37633cb87919ebae32dbacd59398cfdb299448b20a600471c944",
+      "source_normalized": "artifacts/character-redesign-body-pass/normalized/NPC18_RED_EYE_ORACLE_normalized.png",
+      "source_normalized_sha256": "e33a33dd1bab37633cb87919ebae32dbacd59398cfdb299448b20a600471c944",
+      "canvas_size": 1708,
+      "display_scale": 1.362,
+      "production_idle_unchanged_reference": "assets/images/characters/clarity/npc/18/idle.png",
+      "staged_poster": "assets/images/characters/staged/redesign-v2/npc/18/identity_poster.png",
+      "staged_poster_sha256": "9470e6fab7e171277706e7d683ad989fa2e6973b3cfbcbad949db449d1b53dd5",
+      "poster_canvas": 1254,
+      "poster_fit_scale_from_normalized": 0.984,
+      "poster_body_size_vs_current_poster": 0.984
+    },
+    "NPC19": {
+      "staged_master": "assets/images/characters/staged/redesign-v2/npc/19/idle.png",
+      "staged_master_sha256": "55b5614da24000c40cfd093732599942addc25f9189a1b638c573e0e6e77219d",
+      "source_normalized": "artifacts/character-redesign-body-pass/normalized/NPC19_VOID_WALKER_normalized.png",
+      "source_normalized_sha256": "55b5614da24000c40cfd093732599942addc25f9189a1b638c573e0e6e77219d",
+      "canvas_size": 1654,
+      "display_scale": 1.319,
+      "production_idle_unchanged_reference": "assets/images/characters/clarity/npc/19/idle.png",
+      "staged_poster": "assets/images/characters/staged/redesign-v2/npc/19/identity_poster.png",
+      "staged_poster_sha256": "513ee863301789d9994046e0ea3d92b43218f1c2bfc05ac990aa63ba457fae7d",
+      "poster_canvas": 1254,
+      "poster_fit_scale_from_normalized": 0.996,
+      "poster_body_size_vs_current_poster": 0.996
+    },
+    "NPC20": {
+      "staged_master": "assets/images/characters/staged/redesign-v2/npc/20/idle.png",
+      "staged_master_sha256": "7ccb3ef1fa239708a5c366533dbfc0cd0b032b01566f702e53b463c027ed8a14",
+      "source_normalized": "artifacts/character-redesign-body-pass/normalized/NPC20_ECHO_PHANTOM_normalized.png",
+      "source_normalized_sha256": "7ccb3ef1fa239708a5c366533dbfc0cd0b032b01566f702e53b463c027ed8a14",
+      "canvas_size": 1712,
+      "display_scale": 1.3652,
+      "production_idle_unchanged_reference": "assets/images/characters/clarity/npc/20/idle.png",
+      "staged_poster": "assets/images/characters/staged/redesign-v2/npc/20/identity_poster.png",
+      "staged_poster_sha256": "4a753739c0e99c54312f0da0cc702c4b02951033dcc73218beb0ab817d456c17",
+      "poster_canvas": 1254,
+      "poster_fit_scale_from_normalized": 0.9809,
+      "poster_body_size_vs_current_poster": 0.9809
+    },
+    "NPC22": {
+      "staged_master": "assets/images/characters/staged/redesign-v2/npc/22/idle.png",
+      "staged_master_sha256": "42422dfa31f05f70224eab12fcff12094c14cc8b0a998a03504f3e404fe906a3",
+      "source_normalized": "artifacts/character-redesign-body-pass/normalized/NPC22_PALE_RIDER_normalized.png",
+      "source_normalized_sha256": "42422dfa31f05f70224eab12fcff12094c14cc8b0a998a03504f3e404fe906a3",
+      "canvas_size": 1642,
+      "display_scale": 1.3094,
+      "production_idle_unchanged_reference": "assets/images/characters/clarity/npc/22/idle.png",
+      "staged_poster": "assets/images/characters/staged/redesign-v2/npc/22/identity_poster.png",
+      "staged_poster_sha256": "507d3d077bf61c420273f7531de4b2c451a04bcfd5cb4e5f187806adcb83c886",
+      "poster_canvas": 1254,
+      "poster_fit_scale_from_normalized": 0.9809,
+      "poster_body_size_vs_current_poster": 0.9809
+    },
+    "NPC22_LOCKED_SILHOUETTE": {
+      "staged": "assets/images/characters/staged/redesign-v2/hidden/pale_rider_locked_silhouette.png",
+      "sha256": "f332e42e48fd6c7d3c271911bc0ad9638c687990c19196a2c7139bb95203f8be",
+      "size": 256,
+      "fit_scale": 0.20096,
+      "alpha": "binary 0/255",
+      "rgb": "black"
+    }
+  },
+  "protected_files_checked": 166,
+  "protected_unchanged": true
+}

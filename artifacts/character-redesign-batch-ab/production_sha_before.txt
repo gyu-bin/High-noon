@@ -1,0 +1,7 @@
+0e8fe2320f032f6c1a2c71068d870efab82a3859f078620e35cb595633a4887d  assets/images/characters/clarity/player/04/idle.png
+75b4923a0eac56b05a3f52f1f21cb2c86438d5dd3fc4907fc1d777baccc54e43  assets/images/characters/clarity/npc/15/idle.png
+7ded7c11ff9e9ec88268e0d9137914b80ba3429c05f7a74e94d21cfb7e2e0067  assets/images/characters/clarity/npc/19/idle.png
+3d4d6fcfcd867cc0db40f3b1f838c06ef3a8f83629dc09b794939d8030fc7028  assets/images/characters/clarity/npc/20/idle.png
+339e0ff90169289803ce8e8ca262320ccb49881dd493426ae4be3b54d4c7c8af  assets/images/characters/clarity/npc/09/idle.png
+6de054d93641b4749445cefea8d08dd78c2a2467ed74592a68fe6628324af19b  assets/images/characters/clarity/npc/18/idle.png
+87e553bcb019bffedd545f691a3da7a3fb853cc6cc6df8094a670f28df386566  assets/images/characters/clarity/npc/22/idle.png

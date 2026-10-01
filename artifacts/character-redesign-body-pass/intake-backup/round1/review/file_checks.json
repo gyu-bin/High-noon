@@ -1,0 +1,330 @@
+{
+  "files": [
+    {
+      "id": "P04",
+      "file": "artifacts/character-redesign-body-pass/intake/P04_GHOST_GUNSLINGER.png",
+      "sha256": "61b76a8c1f555ef5d52354218384810f442630487d3ababa5036b32c4f6c913a",
+      "body_extent_approx": {
+        "hat_top": 19,
+        "lowest_solid": 1244,
+        "hat_cx": 660
+      },
+      "format": "PNG",
+      "source_mode": "RGBA",
+      "canvas": [
+        1254,
+        1254
+      ],
+      "resolution_ok": true,
+      "has_alpha_channel": true,
+      "alpha_zero_pct": 48.0,
+      "alpha_max": 255,
+      "true_alpha": true,
+      "corner_rgba": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bbox_alpha_gt24": [
+        6,
+        5,
+        1243,
+        1247
+      ],
+      "visible_height_fraction": 0.99,
+      "edge_touch_px": 0,
+      "within_8px_of_edge_px": 107,
+      "fringe_white_pct": 1.7,
+      "fringe_black_matte_pct": 0.08,
+      "fringe_red_orange_pct": 0.0,
+      "sharpness_laplacian_var": 3267.6,
+      "flags": [
+        "TIGHT_TO_EDGE"
+      ]
+    },
+    {
+      "id": "NPC15",
+      "file": "artifacts/character-redesign-body-pass/intake/NPC15_SHADOW_HUNTER.png",
+      "sha256": "8743a59c09e7d804d6b3719ed2602281a2f0b95bc34ec6914483b226e3698e6b",
+      "body_extent_approx": {
+        "hat_top": 46,
+        "lowest_solid": 1246,
+        "hat_cx": 713
+      },
+      "format": "PNG",
+      "source_mode": "RGBA",
+      "canvas": [
+        1254,
+        1254
+      ],
+      "resolution_ok": true,
+      "has_alpha_channel": true,
+      "alpha_zero_pct": 38.0,
+      "alpha_max": 255,
+      "true_alpha": true,
+      "corner_rgba": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bbox_alpha_gt24": [
+        19,
+        39,
+        1248,
+        1249
+      ],
+      "visible_height_fraction": 0.965,
+      "edge_touch_px": 0,
+      "within_8px_of_edge_px": 330,
+      "fringe_white_pct": 0.07,
+      "fringe_black_matte_pct": 0.1,
+      "fringe_red_orange_pct": 0.0,
+      "sharpness_laplacian_var": 1492.6,
+      "flags": [
+        "TIGHT_TO_EDGE"
+      ]
+    },
+    {
+      "id": "NPC19",
+      "file": "artifacts/character-redesign-body-pass/intake/NPC19_VOID_WALKER.png",
+      "sha256": "fbfac922b11581fe15690be32d8328ca7a65cc6b077db102e6d29bc72dc9b332",
+      "body_extent_approx": {
+        "hat_top": 7,
+        "lowest_solid": 1252,
+        "hat_cx": 687
+      },
+      "format": "PNG",
+      "source_mode": "RGBA",
+      "canvas": [
+        1254,
+        1254
+      ],
+      "resolution_ok": true,
+      "has_alpha_channel": true,
+      "alpha_zero_pct": 47.7,
+      "alpha_max": 255,
+      "true_alpha": true,
+      "corner_rgba": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bbox_alpha_gt24": [
+        1,
+        0,
+        1254,
+        1254
+      ],
+      "visible_height_fraction": 1.0,
+      "edge_touch_px": 76,
+      "within_8px_of_edge_px": 1362,
+      "fringe_white_pct": 0.48,
+      "fringe_black_matte_pct": 0.13,
+      "fringe_red_orange_pct": 0.02,
+      "sharpness_laplacian_var": 2882.2,
+      "flags": [
+        "CROPPED_AT_EDGE"
+      ]
+    },
+    {
+      "id": "NPC20",
+      "file": "artifacts/character-redesign-body-pass/intake/NPC20_ECHO_PHANTOM.png",
+      "sha256": "cd35230830439612f76d348e05019038851c710a2f7671c3105ef399c103d112",
+      "body_extent_approx": {
+        "hat_top": 46,
+        "lowest_solid": 1240,
+        "hat_cx": 791
+      },
+      "format": "PNG",
+      "source_mode": "RGBA",
+      "canvas": [
+        1254,
+        1254
+      ],
+      "resolution_ok": true,
+      "has_alpha_channel": true,
+      "alpha_zero_pct": 41.7,
+      "alpha_max": 255,
+      "true_alpha": true,
+      "corner_rgba": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bbox_alpha_gt24": [
+        4,
+        33,
+        1250,
+        1243
+      ],
+      "visible_height_fraction": 0.965,
+      "edge_touch_px": 0,
+      "within_8px_of_edge_px": 125,
+      "fringe_white_pct": 4.18,
+      "fringe_black_matte_pct": 0.02,
+      "fringe_red_orange_pct": 0.09,
+      "sharpness_laplacian_var": 2200.7,
+      "flags": [
+        "TIGHT_TO_EDGE",
+        "WHITE_HALO_SUSPECT"
+      ]
+    },
+    {
+      "id": "NPC09",
+      "file": "artifacts/character-redesign-body-pass/intake/NPC09_GOLDEN_SKULL.png",
+      "sha256": "c9f365b6b58b9e758ac08749c4b1f9cc60ce5907cd3b17a130dcc1fd026fdef9",
+      "body_extent_approx": {
+        "hat_top": 8,
+        "lowest_solid": 1250,
+        "hat_cx": 802
+      },
+      "format": "PNG",
+      "source_mode": "RGBA",
+      "canvas": [
+        1254,
+        1254
+      ],
+      "resolution_ok": true,
+      "has_alpha_channel": true,
+      "alpha_zero_pct": 43.6,
+      "alpha_max": 255,
+      "true_alpha": true,
+      "corner_rgba": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bbox_alpha_gt24": [
+        1,
+        1,
+        1254,
+        1253
+      ],
+      "visible_height_fraction": 0.998,
+      "edge_touch_px": 8,
+      "within_8px_of_edge_px": 1093,
+      "fringe_white_pct": 1.45,
+      "fringe_black_matte_pct": 0.15,
+      "fringe_red_orange_pct": 9.53,
+      "sharpness_laplacian_var": 2222.2,
+      "flags": [
+        "CROPPED_AT_EDGE",
+        "RED_ORANGE_RIM_SUSPECT"
+      ]
+    },
+    {
+      "id": "NPC18",
+      "file": "artifacts/character-redesign-body-pass/intake/NPC18_RED_EYE_ORACLE.png",
+      "sha256": "19cb9349e3687fdf466f7daa5e16e2205f43c2f025a8e8666e05b3eaa225e500",
+      "body_extent_approx": {
+        "hat_top": 22,
+        "lowest_solid": 1249,
+        "hat_cx": 723
+      },
+      "format": "PNG",
+      "source_mode": "RGBA",
+      "canvas": [
+        1254,
+        1254
+      ],
+      "resolution_ok": true,
+      "has_alpha_channel": true,
+      "alpha_zero_pct": 43.2,
+      "alpha_max": 255,
+      "true_alpha": true,
+      "corner_rgba": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bbox_alpha_gt24": [
+        1,
+        0,
+        1252,
+        1252
+      ],
+      "visible_height_fraction": 0.998,
+      "edge_touch_px": 1,
+      "within_8px_of_edge_px": 848,
+      "fringe_white_pct": 0.44,
+      "fringe_black_matte_pct": 0.12,
+      "fringe_red_orange_pct": 29.64,
+      "sharpness_laplacian_var": 1965.9,
+      "flags": [
+        "CROPPED_AT_EDGE",
+        "RED_ORANGE_RIM_SUSPECT"
+      ]
+    },
+    {
+      "id": "NPC22",
+      "file": "artifacts/character-redesign-body-pass/intake/NPC22_PALE_RIDER.png",
+      "sha256": "db4ec8448cd2d69152130990fde47274becd3a6bfd782e7e533799db82ca52f6",
+      "body_extent_approx": {
+        "hat_top": 25,
+        "lowest_solid": 1251,
+        "hat_cx": 792
+      },
+      "format": "PNG",
+      "source_mode": "RGBA",
+      "canvas": [
+        1254,
+        1254
+      ],
+      "resolution_ok": true,
+      "has_alpha_channel": true,
+      "alpha_zero_pct": 37.5,
+      "alpha_max": 255,
+      "true_alpha": true,
+      "corner_rgba": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bbox_alpha_gt24": [
+        11,
+        19,
+        1254,
+        1254
+      ],
+      "visible_height_fraction": 0.985,
+      "edge_touch_px": 51,
+      "within_8px_of_edge_px": 1191,
+      "fringe_white_pct": 2.98,
+      "fringe_black_matte_pct": 0.07,
+      "fringe_red_orange_pct": 0.02,
+      "sharpness_laplacian_var": 2885.6,
+      "flags": [
+        "CROPPED_AT_EDGE"
+      ]
+    }
+  ],
+  "unexpected_pngs_ignored": [
+    "ChatGPT 이미지 2026년 10월 1일 오전 08_40_30.png",
+    "ChatGPT 이미지 2026년 10월 1일 오전 08_40_36.png",
+    "ChatGPT 이미지 2026년 10월 1일 오전 08_42_13.png",
+    "ChatGPT 이미지 2026년 10월 1일 오전 08_42_27.png",
+    "ChatGPT 이미지 2026년 10월 1일 오전 08_42_36.png",
+    "ChatGPT 이미지 2026년 10월 1일 오전 08_42_44.png",
+    "ChatGPT 이미지 2026년 10월 1일 오전 08_42_52.png"
+  ],
+  "sheets": [
+    "A_lineup_dark.png",
+    "C_select256_dark.png",
+    "D_duel_160_200_241_dark.png",
+    "F_effects_toned_down_dark.png",
+    "A_lineup_light.png",
+    "C_select256_light.png",
+    "D_duel_160_200_241_light.png",
+    "F_effects_toned_down_light.png",
+    "B_silhouette.png",
+    "E_body_overlap.png"
+  ],
+  "production_unchanged": true
+}

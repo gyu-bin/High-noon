@@ -1,0 +1,61 @@
+{
+  "transforms_key": "NPC15",
+  "scale_method": "belt_to_ground",
+  "stage_dir": "assets/images/characters/staged/redesign-v2/npc/15",
+  "stage_names": {
+    "idle": "idle",
+    "draw": "draw",
+    "fire": "fire",
+    "hit": "hit",
+    "kneel": "down",
+    "fall": "combat_fall",
+    "down": "combat_down"
+  },
+  "poses": {
+    "idle": {
+      "file": "intake/NPC15_SHADOW_HUNTER.png",
+      "chin": 350,
+      "belt_y": 571,
+      "ground": 1246,
+      "x": 821,
+      "rel": 1.0
+    },
+    "draw": {
+      "file": "NPC15_DRAW.png",
+      "ground": null,
+      "x": 720,
+      "rel": 1.0
+    },
+    "fire": {
+      "file": "NPC15_FIRE.png",
+      "ground": null,
+      "x": 820,
+      "rel": 1.0
+    },
+    "hit": {
+      "file": "NPC15_HIT.png",
+      "ground": null,
+      "x": 650,
+      "rel": 1.0
+    },
+    "kneel": {
+      "file": "NPC15_KNEEL.png",
+      "ground": null,
+      "x": 610,
+      "rel": 1.0
+    },
+    "fall": {
+      "file": "NPC15_FALL.png",
+      "ground": null,
+      "x": 680,
+      "rel": 1.0
+    },
+    "down": {
+      "file": "NPC15_DOWN.png",
+      "ground": null,
+      "x": 760,
+      "rel": 1.0
+    }
+  },
+  "note": "Idle anchors = PHASE 1 manual anchors (transforms.json NPC15). belt_to_ground keeps the hunch from being scaled away. Pose anchors 2026-10-01: belt/pelvis centre x read from the source images; standing heights match the idle (\u22481190\u20131230 px solid) so rel=1.0; DOWN is a 1536x1024 landscape single (body length \u2248 idle height)."
+}

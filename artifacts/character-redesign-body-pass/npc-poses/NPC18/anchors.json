@@ -1,0 +1,59 @@
+{
+  "transforms_key": "NPC18",
+  "stage_dir": "assets/images/characters/staged/redesign-v2/npc/18",
+  "stage_names": {
+    "idle": "idle",
+    "draw": "draw",
+    "fire": "fire",
+    "hit": "hit",
+    "kneel": "down",
+    "fall": "combat_fall",
+    "down": "combat_down"
+  },
+  "poses": {
+    "idle": {
+      "file": "intake/NPC18_RED_EYE_ORACLE.png",
+      "chin": 264,
+      "ground": 1238,
+      "x": 879,
+      "rel": 1.0
+    },
+    "draw": {
+      "file": "NPC18_DRAW.png",
+      "ground": null,
+      "x": 750,
+      "rel": 1.0
+    },
+    "fire": {
+      "file": "NPC18_FIRE.png",
+      "ground": null,
+      "x": 765,
+      "rel": 1.0
+    },
+    "hit": {
+      "file": "NPC18_HIT.png",
+      "ground": null,
+      "x": 810,
+      "rel": 1.0
+    },
+    "kneel": {
+      "file": "NPC18_KNEEL.png",
+      "ground": null,
+      "x": 720,
+      "rel": 1.0
+    },
+    "fall": {
+      "file": "NPC18_FALL.png",
+      "ground": null,
+      "x": 740,
+      "rel": 1.0
+    },
+    "down": {
+      "file": "NPC18_DOWN.png",
+      "ground": null,
+      "x": 700,
+      "rel": 1.0
+    }
+  },
+  "note": "Idle anchors = PHASE 1 manual anchors (transforms.json NPC18; halo and raised gun excluded, hat crown = head_top). chin_to_ground. Pose anchors 2026-10-01: red-eye belt medallion centre x from 20px-grid crops; medallion outer diameter \u224855\u201365 px in all poses vs \u224860 px idle \u2192 rel 1.0 (no upscale)."
+}

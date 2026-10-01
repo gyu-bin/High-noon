@@ -1,5 +1,6 @@
 import type { ImageSourcePropType } from 'react-native';
 import { CLARITY_NPCS } from './clarityCharacterAssets';
+import { NPC_COMBAT_POSES, PLAYER_GROUND_REVOLVER } from './combatPoses';
 
 import type { NpcTier } from '@/types/npc';
 
@@ -53,6 +54,9 @@ export function getV3DuelBackground(
   npcId: number,
   dayNight: 'day' | 'night',
 ): ImageSourcePropType {
+  // NPC01 prototype uses the existing cinematic scene registry. The legacy
+  // landscape pixel master magnifies the moon across the entire portrait view.
+  if (npcId === 1) return V3_DUEL_BACKGROUNDS[dayNight === 'night' ? 'bronze_night' : 'bronze_day']!;
   if (dayNight === 'night' || npcId === 22) return require('@/high_noon_terra_asset_pack/output/backgrounds/duel_town_night.png');
   if (tier === 'gold' || tier === 'diamond') return require('@/high_noon_terra_asset_pack/output/backgrounds/duel_arena.png');
   if (tier === 'silver' || tier === 'platinum') return require('@/high_noon_terra_asset_pack/output/backgrounds/duel_town_day.png');
@@ -71,7 +75,9 @@ export function getV3NpcDuelPreloadSources(
   return [
     getV3DuelBackground(tier, npcId, dayNight),
     ...Object.values(CLARITY_NPCS[npcId] ?? CLARITY_NPCS[1]!),
+    ...Object.values(NPC_COMBAT_POSES[npcId] ?? {}),
     CINEMATIC_REVOLVER,
+    PLAYER_GROUND_REVOLVER,
     ...Object.values(V3_DUEL_VFX),
   ];
 }

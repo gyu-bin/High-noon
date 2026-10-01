@@ -1,0 +1,3308 @@
+{
+  "entries": [
+    {
+      "id": "P01",
+      "kind": "player",
+      "number": 1,
+      "poses": {
+        "idle": "assets/images/characters/clarity/player/01/idle.png",
+        "draw": "assets/images/characters/clarity/player/01/draw.png",
+        "fire": "assets/images/characters/clarity/player/01/fire.png",
+        "hit": "assets/images/characters/clarity/player/01/hit.png",
+        "down": "assets/images/characters/clarity/player/01/down.png"
+      },
+      "poster": "assets/images/characters/clarity/player/01/identity_poster.png"
+    },
+    {
+      "id": "P02",
+      "kind": "player",
+      "number": 2,
+      "poses": {
+        "idle": "assets/images/characters/clarity/player/02-v2/idle.png",
+        "draw": "assets/images/characters/clarity/player/02-v2/draw.png",
+        "fire": "assets/images/characters/clarity/player/02-v2/fire.png",
+        "hit": "assets/images/characters/clarity/player/02-v2/hit.png",
+        "down": "assets/images/characters/clarity/player/02-v2/down.png"
+      },
+      "poster": "assets/images/characters/clarity/player/02-v2/identity_poster.png"
+    },
+    {
+      "id": "P03",
+      "kind": "player",
+      "number": 3,
+      "poses": {
+        "idle": "assets/images/characters/clarity/player/03/idle.png",
+        "draw": "assets/images/characters/clarity/player/03/draw.png",
+        "fire": "assets/images/characters/clarity/player/03/fire.png",
+        "hit": "assets/images/characters/clarity/player/03/hit.png",
+        "down": "assets/images/characters/clarity/player/03/down.png"
+      },
+      "poster": "assets/images/characters/clarity/player/03/identity_poster.png"
+    },
+    {
+      "id": "P04",
+      "kind": "player",
+      "number": 4,
+      "poses": {
+        "idle": "assets/images/characters/clarity/player/04/idle.png",
+        "draw": "assets/images/characters/clarity/player/04/draw.png",
+        "fire": "assets/images/characters/clarity/player/04/fire.png",
+        "hit": "assets/images/characters/clarity/player/04/hit.png",
+        "down": "assets/images/characters/clarity/player/04/down.png"
+      },
+      "poster": "assets/images/characters/clarity/player/04/identity_poster.png"
+    },
+    {
+      "id": "N01",
+      "kind": "npc",
+      "number": 1,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/01/idle.png",
+        "draw": "assets/images/characters/clarity/npc/01/draw.png",
+        "fire": "assets/images/characters/clarity/npc/01/fire.png",
+        "hit": "assets/images/characters/clarity/npc/01/hit.png",
+        "down": "assets/images/characters/clarity/npc/01/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/01/identity_poster.png"
+    },
+    {
+      "id": "N02",
+      "kind": "npc",
+      "number": 2,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/02/idle.png",
+        "draw": "assets/images/characters/clarity/npc/02/draw.png",
+        "fire": "assets/images/characters/clarity/npc/02/fire.png",
+        "hit": "assets/images/characters/clarity/npc/02/hit.png",
+        "down": "assets/images/characters/clarity/npc/02/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/02/identity_poster.png"
+    },
+    {
+      "id": "N03",
+      "kind": "npc",
+      "number": 3,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/03/idle.png",
+        "draw": "assets/images/characters/clarity/npc/03/draw.png",
+        "fire": "assets/images/characters/clarity/npc/03/fire.png",
+        "hit": "assets/images/characters/clarity/npc/03/hit.png",
+        "down": "assets/images/characters/clarity/npc/03/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/03/identity_poster.png"
+    },
+    {
+      "id": "N04",
+      "kind": "npc",
+      "number": 4,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/04/idle.png",
+        "draw": "assets/images/characters/clarity/npc/04/draw.png",
+        "fire": "assets/images/characters/clarity/npc/04/fire.png",
+        "hit": "assets/images/characters/clarity/npc/04/hit.png",
+        "down": "assets/images/characters/clarity/npc/04/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/04/identity_poster.png"
+    },
+    {
+      "id": "N05",
+      "kind": "npc",
+      "number": 5,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/05/idle.png",
+        "draw": "assets/images/characters/clarity/npc/05/draw.png",
+        "fire": "assets/images/characters/clarity/npc/05/fire.png",
+        "hit": "assets/images/characters/clarity/npc/05/hit.png",
+        "down": "assets/images/characters/clarity/npc/05/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/05/identity_poster.png"
+    },
+    {
+      "id": "N06",
+      "kind": "npc",
+      "number": 6,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/06/idle.png",
+        "draw": "assets/images/characters/clarity/npc/06/draw.png",
+        "fire": "assets/images/characters/clarity/npc/06/fire.png",
+        "hit": "assets/images/characters/clarity/npc/06/hit.png",
+        "down": "assets/images/characters/clarity/npc/06/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/06/identity_poster.png"
+    },
+    {
+      "id": "N07",
+      "kind": "npc",
+      "number": 7,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/07/idle.png",
+        "draw": "assets/images/characters/clarity/npc/07/draw.png",
+        "fire": "assets/images/characters/clarity/npc/07/fire.png",
+        "hit": "assets/images/characters/clarity/npc/07/hit.png",
+        "down": "assets/images/characters/clarity/npc/07/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/07/identity_poster.png"
+    },
+    {
+      "id": "N08",
+      "kind": "npc",
+      "number": 8,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/08/idle.png",
+        "draw": "assets/images/characters/clarity/npc/08/draw.png",
+        "fire": "assets/images/characters/clarity/npc/08/fire.png",
+        "hit": "assets/images/characters/clarity/npc/08/hit.png",
+        "down": "assets/images/characters/clarity/npc/08/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/08/identity_poster.png"
+    },
+    {
+      "id": "N09",
+      "kind": "npc",
+      "number": 9,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/09/idle.png",
+        "draw": "assets/images/characters/clarity/npc/09/draw.png",
+        "fire": "assets/images/characters/clarity/npc/09/fire.png",
+        "hit": "assets/images/characters/clarity/npc/09/hit.png",
+        "down": "assets/images/characters/clarity/npc/09/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/09/identity_poster.png"
+    },
+    {
+      "id": "N10",
+      "kind": "npc",
+      "number": 10,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/10/idle.png",
+        "draw": "assets/images/characters/clarity/npc/10/draw.png",
+        "fire": "assets/images/characters/clarity/npc/10/fire.png",
+        "hit": "assets/images/characters/clarity/npc/10/hit.png",
+        "down": "assets/images/characters/clarity/npc/10/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/10/identity_poster.png"
+    },
+    {
+      "id": "N11",
+      "kind": "npc",
+      "number": 11,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/11/idle.png",
+        "draw": "assets/images/characters/clarity/npc/11/draw.png",
+        "fire": "assets/images/characters/clarity/npc/11/fire.png",
+        "hit": "assets/images/characters/clarity/npc/11/hit.png",
+        "down": "assets/images/characters/clarity/npc/11/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/11/identity_poster.png"
+    },
+    {
+      "id": "N12",
+      "kind": "npc",
+      "number": 12,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/12/idle.png",
+        "draw": "assets/images/characters/clarity/npc/12/draw.png",
+        "fire": "assets/images/characters/clarity/npc/12/fire.png",
+        "hit": "assets/images/characters/clarity/npc/12/hit.png",
+        "down": "assets/images/characters/clarity/npc/12/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/12/identity_poster.png"
+    },
+    {
+      "id": "N13",
+      "kind": "npc",
+      "number": 13,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/13/idle.png",
+        "draw": "assets/images/characters/clarity/npc/13/draw.png",
+        "fire": "assets/images/characters/clarity/npc/13/fire.png",
+        "hit": "assets/images/characters/clarity/npc/13/hit.png",
+        "down": "assets/images/characters/clarity/npc/13/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/13/identity_poster.png"
+    },
+    {
+      "id": "N14",
+      "kind": "npc",
+      "number": 14,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/14/idle.png",
+        "draw": "assets/images/characters/clarity/npc/14/draw.png",
+        "fire": "assets/images/characters/clarity/npc/14/fire.png",
+        "hit": "assets/images/characters/clarity/npc/14/hit.png",
+        "down": "assets/images/characters/clarity/npc/14/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/14/identity_poster.png"
+    },
+    {
+      "id": "N15",
+      "kind": "npc",
+      "number": 15,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/15/idle.png",
+        "draw": "assets/images/characters/clarity/npc/15/draw.png",
+        "fire": "assets/images/characters/clarity/npc/15/fire.png",
+        "hit": "assets/images/characters/clarity/npc/15/hit.png",
+        "down": "assets/images/characters/clarity/npc/15/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/15/identity_poster.png"
+    },
+    {
+      "id": "N16",
+      "kind": "npc",
+      "number": 16,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/16/idle.png",
+        "draw": "assets/images/characters/clarity/npc/16/draw.png",
+        "fire": "assets/images/characters/clarity/npc/16/fire.png",
+        "hit": "assets/images/characters/clarity/npc/16/hit.png",
+        "down": "assets/images/characters/clarity/npc/16/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/16/identity_poster.png"
+    },
+    {
+      "id": "N17",
+      "kind": "npc",
+      "number": 17,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/17/idle.png",
+        "draw": "assets/images/characters/clarity/npc/17/draw.png",
+        "fire": "assets/images/characters/clarity/npc/17/fire.png",
+        "hit": "assets/images/characters/clarity/npc/17/hit.png",
+        "down": "assets/images/characters/clarity/npc/17/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/17/identity_poster.png"
+    },
+    {
+      "id": "N18",
+      "kind": "npc",
+      "number": 18,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/18/idle.png",
+        "draw": "assets/images/characters/clarity/npc/18/draw.png",
+        "fire": "assets/images/characters/clarity/npc/18/fire.png",
+        "hit": "assets/images/characters/clarity/npc/18/hit.png",
+        "down": "assets/images/characters/clarity/npc/18/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/18/identity_poster.png"
+    },
+    {
+      "id": "N19",
+      "kind": "npc",
+      "number": 19,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/19/idle.png",
+        "draw": "assets/images/characters/clarity/npc/19/draw.png",
+        "fire": "assets/images/characters/clarity/npc/19/fire.png",
+        "hit": "assets/images/characters/clarity/npc/19/hit.png",
+        "down": "assets/images/characters/clarity/npc/19/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/19/identity_poster.png"
+    },
+    {
+      "id": "N20",
+      "kind": "npc",
+      "number": 20,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/20/idle.png",
+        "draw": "assets/images/characters/clarity/npc/20/draw.png",
+        "fire": "assets/images/characters/clarity/npc/20/fire.png",
+        "hit": "assets/images/characters/clarity/npc/20/hit.png",
+        "down": "assets/images/characters/clarity/npc/20/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/20/identity_poster.png"
+    },
+    {
+      "id": "N21",
+      "kind": "npc",
+      "number": 21,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/21/idle.png",
+        "draw": "assets/images/characters/clarity/npc/21/draw.png",
+        "fire": "assets/images/characters/clarity/npc/21/fire.png",
+        "hit": "assets/images/characters/clarity/npc/21/hit.png",
+        "down": "assets/images/characters/clarity/npc/21/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/21/identity_poster.png"
+    },
+    {
+      "id": "N22",
+      "kind": "npc",
+      "number": 22,
+      "poses": {
+        "idle": "assets/images/characters/clarity/npc/22/idle.png",
+        "draw": "assets/images/characters/clarity/npc/22/draw.png",
+        "fire": "assets/images/characters/clarity/npc/22/fire.png",
+        "hit": "assets/images/characters/clarity/npc/22/hit.png",
+        "down": "assets/images/characters/clarity/npc/22/down.png"
+      },
+      "poster": "assets/images/characters/clarity/npc/22/identity_poster.png"
+    }
+  ],
+  "files": {
+    "assets/images/characters/clarity/player/01/idle.png": {
+      "path": "assets/images/characters/clarity/player/01/idle.png",
+      "sha256": "1b4d3509e7af015cd653aa67b6587db293e8ee7b93d54b178aba49e325b030ba",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        335,
+        17,
+        978,
+        1222
+      ],
+      "visible_height_fraction": 0.9609250398724083,
+      "transparent_pixels": 1118938,
+      "partial_alpha_pixels": 453033,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/01/draw.png": {
+      "path": "assets/images/characters/clarity/player/01/draw.png",
+      "sha256": "3bf74f951e8e01f60e06322d2bf4f45c2570798d6364ab1df2d98611f6b61d76",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        307,
+        15,
+        980,
+        1222
+      ],
+      "visible_height_fraction": 0.9625199362041468,
+      "transparent_pixels": 1114397,
+      "partial_alpha_pixels": 457433,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/01/fire.png": {
+      "path": "assets/images/characters/clarity/player/01/fire.png",
+      "sha256": "27f50878aa0b35b8c513ac4393407d2006d2432f5886c6a04fbda210bab1059b",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        312,
+        14,
+        1039,
+        1218
+      ],
+      "visible_height_fraction": 0.960127591706539,
+      "transparent_pixels": 1111161,
+      "partial_alpha_pixels": 460442,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/01/hit.png": {
+      "path": "assets/images/characters/clarity/player/01/hit.png",
+      "sha256": "58cc709823927e2e89df6e0fb353b973bdf739c960519a32848255dbb036ed1f",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        289,
+        35,
+        1157,
+        1229
+      ],
+      "visible_height_fraction": 0.9521531100478469,
+      "transparent_pixels": 1048001,
+      "partial_alpha_pixels": 523612,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/01/down.png": {
+      "path": "assets/images/characters/clarity/player/01/down.png",
+      "sha256": "c7425237c653e85e4c4eb66141e3d192b8d298aabaf5560d476942fac6f44743",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        266,
+        418,
+        1121,
+        1215
+      ],
+      "visible_height_fraction": 0.6355661881977671,
+      "transparent_pixels": 1188196,
+      "partial_alpha_pixels": 383366,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/01/identity_poster.png": {
+      "path": "assets/images/characters/clarity/player/01/identity_poster.png",
+      "sha256": "9cf0a1cd838aac30536824b3689073f53034046f368691175295a18e2525afd5",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        335,
+        17,
+        978,
+        1222
+      ],
+      "visible_height_fraction": 0.9609250398724083,
+      "transparent_pixels": 1118938,
+      "partial_alpha_pixels": 453033,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/02-v2/idle.png": {
+      "path": "assets/images/characters/clarity/player/02-v2/idle.png",
+      "sha256": "efc550fb7ca24c851e7c0820be79bda984e05fd78b55734671a9c859c9bdca99",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        323,
+        16,
+        981,
+        1222
+      ],
+      "visible_height_fraction": 0.9617224880382775,
+      "transparent_pixels": 1099978,
+      "partial_alpha_pixels": 471690,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/02-v2/draw.png": {
+      "path": "assets/images/characters/clarity/player/02-v2/draw.png",
+      "sha256": "bc39b199447784f21f2b7c6d53544839e9bdeb4b1175dd30e48a8bbc5fcdd91f",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        282,
+        14,
+        1008,
+        1223
+      ],
+      "visible_height_fraction": 0.9641148325358851,
+      "transparent_pixels": 1076900,
+      "partial_alpha_pixels": 494987,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/02-v2/fire.png": {
+      "path": "assets/images/characters/clarity/player/02-v2/fire.png",
+      "sha256": "cf38b3e5e7db99d333d70c5383997874d8e8486a4852c8782acc7d8b6e83c1f2",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        72,
+        15,
+        1061,
+        1223
+      ],
+      "visible_height_fraction": 0.9633173843700159,
+      "transparent_pixels": 1048287,
+      "partial_alpha_pixels": 523139,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/02-v2/hit.png": {
+      "path": "assets/images/characters/clarity/player/02-v2/hit.png",
+      "sha256": "2a9f48025f12af73aa8f2e962cafc56a04b5a0194fb561ef52b4257a64987ee4",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        119,
+        10,
+        1169,
+        1221
+      ],
+      "visible_height_fraction": 0.9657097288676236,
+      "transparent_pixels": 1001713,
+      "partial_alpha_pixels": 570198,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/02-v2/down.png": {
+      "path": "assets/images/characters/clarity/player/02-v2/down.png",
+      "sha256": "3b58ea20bd5ba12614e8b252de77429170a3c819d2f3471d31f14ea762ed6df4",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        255,
+        135,
+        1238,
+        1176
+      ],
+      "visible_height_fraction": 0.8301435406698564,
+      "transparent_pixels": 960233,
+      "partial_alpha_pixels": 611697,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/02-v2/identity_poster.png": {
+      "path": "assets/images/characters/clarity/player/02-v2/identity_poster.png",
+      "sha256": "93b8580aef93ebaa9811615a3cc5a320466f43d85a919f0124b11a6e491d7e2c",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        323,
+        16,
+        981,
+        1222
+      ],
+      "visible_height_fraction": 0.9617224880382775,
+      "transparent_pixels": 1099978,
+      "partial_alpha_pixels": 471690,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/03/idle.png": {
+      "path": "assets/images/characters/clarity/player/03/idle.png",
+      "sha256": "40105846b8a382fe7e9cb31e037b0dd16417e9453d114a75aa2c1be31496b662",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        338,
+        10,
+        964,
+        1214
+      ],
+      "visible_height_fraction": 0.960127591706539,
+      "transparent_pixels": 1139270,
+      "partial_alpha_pixels": 432862,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/03/draw.png": {
+      "path": "assets/images/characters/clarity/player/03/draw.png",
+      "sha256": "dc06b0b0e2fedebddb32a70ff93c10b69c05f7b574b8e11529655a6a01e22a6b",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        295,
+        9,
+        993,
+        1221
+      ],
+      "visible_height_fraction": 0.9665071770334929,
+      "transparent_pixels": 1100763,
+      "partial_alpha_pixels": 470803,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/03/fire.png": {
+      "path": "assets/images/characters/clarity/player/03/fire.png",
+      "sha256": "3e5e2454e5615d142911086e9e041785eeaa1d8c030c38dd7753bb863e7651fc",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        280,
+        9,
+        996,
+        1218
+      ],
+      "visible_height_fraction": 0.9641148325358851,
+      "transparent_pixels": 1114242,
+      "partial_alpha_pixels": 457361,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/03/hit.png": {
+      "path": "assets/images/characters/clarity/player/03/hit.png",
+      "sha256": "7c83637168258797e640fee0c4ce733a320dd598f994712c1b640895b0754bdd",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        286,
+        38,
+        1178,
+        1220
+      ],
+      "visible_height_fraction": 0.9425837320574163,
+      "transparent_pixels": 1005923,
+      "partial_alpha_pixels": 565421,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/03/down.png": {
+      "path": "assets/images/characters/clarity/player/03/down.png",
+      "sha256": "aed060695fb16e6be669d089452357e552511257f7355700a26f66a987cb58d5",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        255,
+        402,
+        1135,
+        1214
+      ],
+      "visible_height_fraction": 0.6475279106858054,
+      "transparent_pixels": 1173323,
+      "partial_alpha_pixels": 398460,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/03/identity_poster.png": {
+      "path": "assets/images/characters/clarity/player/03/identity_poster.png",
+      "sha256": "2362a628723945686da258949db9ccdc8b110a7506116891f4117709bd61ed0a",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        338,
+        10,
+        964,
+        1214
+      ],
+      "visible_height_fraction": 0.960127591706539,
+      "transparent_pixels": 1139270,
+      "partial_alpha_pixels": 432862,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/04/idle.png": {
+      "path": "assets/images/characters/clarity/player/04/idle.png",
+      "sha256": "0e8fe2320f032f6c1a2c71068d870efab82a3859f078620e35cb595633a4887d",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        332,
+        19,
+        945,
+        1214
+      ],
+      "visible_height_fraction": 0.9529505582137161,
+      "transparent_pixels": 1132871,
+      "partial_alpha_pixels": 439038,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/04/draw.png": {
+      "path": "assets/images/characters/clarity/player/04/draw.png",
+      "sha256": "10bf41366e1148962c2e13386090b9944bd71788e15203cb32e8358b61a73533",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        298,
+        9,
+        999,
+        1220
+      ],
+      "visible_height_fraction": 0.9657097288676236,
+      "transparent_pixels": 1092103,
+      "partial_alpha_pixels": 479195,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/04/fire.png": {
+      "path": "assets/images/characters/clarity/player/04/fire.png",
+      "sha256": "342154af2e6670356d84528e82117d865b3f0c074e3a4172cc56053e61d34712",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        282,
+        16,
+        972,
+        1220
+      ],
+      "visible_height_fraction": 0.960127591706539,
+      "transparent_pixels": 1113172,
+      "partial_alpha_pixels": 458306,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/04/hit.png": {
+      "path": "assets/images/characters/clarity/player/04/hit.png",
+      "sha256": "5c74423c38ce5744410279ef6ff53806b57913cbbf18d445ee895f465283a2a0",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        290,
+        52,
+        1162,
+        1215
+      ],
+      "visible_height_fraction": 0.9274322169059012,
+      "transparent_pixels": 1078464,
+      "partial_alpha_pixels": 492602,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/04/down.png": {
+      "path": "assets/images/characters/clarity/player/04/down.png",
+      "sha256": "d0e5a80aed815f4e2eda0ebafde0f9217f1e20dcec7a7e26cbe3c67fe1fd4092",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        264,
+        416,
+        1135,
+        1213
+      ],
+      "visible_height_fraction": 0.6355661881977671,
+      "transparent_pixels": 1183448,
+      "partial_alpha_pixels": 388478,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/player/04/identity_poster.png": {
+      "path": "assets/images/characters/clarity/player/04/identity_poster.png",
+      "sha256": "a364b18b950aac0c9c744f7908350c8d05e4c5db9b9ef677c93ba2855c1a962c",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        332,
+        19,
+        945,
+        1214
+      ],
+      "visible_height_fraction": 0.9529505582137161,
+      "transparent_pixels": 1132871,
+      "partial_alpha_pixels": 439038,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/01/idle.png": {
+      "path": "assets/images/characters/clarity/npc/01/idle.png",
+      "sha256": "0823917165743afab667d5cf84519ab3745ac3d079f3d976eb35af7cfce31db5",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        359,
+        23,
+        972,
+        1201
+      ],
+      "visible_height_fraction": 0.9393939393939394,
+      "transparent_pixels": 1159773,
+      "partial_alpha_pixels": 411992,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/01/draw.png": {
+      "path": "assets/images/characters/clarity/npc/01/draw.png",
+      "sha256": "3ca55c398e4883831c13e7911830c76f58b948c8ee47820373b36d1ccf5970b6",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        306,
+        15,
+        1013,
+        1208
+      ],
+      "visible_height_fraction": 0.9513556618819776,
+      "transparent_pixels": 1142060,
+      "partial_alpha_pixels": 429459,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/01/fire.png": {
+      "path": "assets/images/characters/clarity/npc/01/fire.png",
+      "sha256": "a9f281a0befdf26e3be0e926264b91b1f4bb5c7d940c5de24994dac0d0a58b56",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        287,
+        18,
+        1020,
+        1217
+      ],
+      "visible_height_fraction": 0.956140350877193,
+      "transparent_pixels": 1145261,
+      "partial_alpha_pixels": 426505,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/01/hit.png": {
+      "path": "assets/images/characters/clarity/npc/01/hit.png",
+      "sha256": "3491b2aaecada3c5d63c8c1e8186f63e7ca5b03f8d98848b423ddc947543dbda",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        320,
+        50,
+        1067,
+        1206
+      ],
+      "visible_height_fraction": 0.9218500797448166,
+      "transparent_pixels": 1105681,
+      "partial_alpha_pixels": 465624,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/01/down.png": {
+      "path": "assets/images/characters/clarity/npc/01/down.png",
+      "sha256": "7610bc4cb162c1d5eb6ad6926b5deebff70c995e3287002f8d196ddac1d3afcb",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        289,
+        382,
+        1138,
+        1212
+      ],
+      "visible_height_fraction": 0.6618819776714514,
+      "transparent_pixels": 1188157,
+      "partial_alpha_pixels": 384138,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/01/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/01/identity_poster.png",
+      "sha256": "2c792f4939564dd166ff31bd70eb4ce6c89f2c101fa40c41c77f40097aaddfec",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        359,
+        23,
+        972,
+        1201
+      ],
+      "visible_height_fraction": 0.9393939393939394,
+      "transparent_pixels": 1159773,
+      "partial_alpha_pixels": 411992,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/02/idle.png": {
+      "path": "assets/images/characters/clarity/npc/02/idle.png",
+      "sha256": "398fcaa6b16db8aa3ad2f3822c01624bd937e750e22950f36c6ba4d43dd16203",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        355,
+        11,
+        987,
+        1214
+      ],
+      "visible_height_fraction": 0.9593301435406698,
+      "transparent_pixels": 1197999,
+      "partial_alpha_pixels": 373796,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/02/draw.png": {
+      "path": "assets/images/characters/clarity/npc/02/draw.png",
+      "sha256": "c76bc158e8580baed68eb6d702cbb889068f8e937186e83f6b3df17fb2869987",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        295,
+        11,
+        1008,
+        1214
+      ],
+      "visible_height_fraction": 0.9593301435406698,
+      "transparent_pixels": 1187252,
+      "partial_alpha_pixels": 384682,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/02/fire.png": {
+      "path": "assets/images/characters/clarity/npc/02/fire.png",
+      "sha256": "0eccb8fc97f26e4387c1ed855d686bd333a5096e9723c026d405499894f005c6",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        313,
+        12,
+        993,
+        1216
+      ],
+      "visible_height_fraction": 0.960127591706539,
+      "transparent_pixels": 1203900,
+      "partial_alpha_pixels": 367799,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/02/hit.png": {
+      "path": "assets/images/characters/clarity/npc/02/hit.png",
+      "sha256": "15a64045dd9da11768e3ea7dc38c614f9c41ac3a9d1e732b073f748c688710e2",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        328,
+        74,
+        1044,
+        1196
+      ],
+      "visible_height_fraction": 0.8947368421052632,
+      "transparent_pixels": 1189289,
+      "partial_alpha_pixels": 381969,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/02/down.png": {
+      "path": "assets/images/characters/clarity/npc/02/down.png",
+      "sha256": "529a62c1446aa6366f78fe6af52f2166f472fc1fecc0c8d3a2fcddccde14dcb9",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        388,
+        424,
+        1124,
+        1216
+      ],
+      "visible_height_fraction": 0.631578947368421,
+      "transparent_pixels": 1253895,
+      "partial_alpha_pixels": 317832,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/02/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/02/identity_poster.png",
+      "sha256": "852fbc2558845bd77315576ceb089e31a29653a58dc9c9032f434473b1d2bdf3",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        355,
+        11,
+        987,
+        1214
+      ],
+      "visible_height_fraction": 0.9593301435406698,
+      "transparent_pixels": 1197999,
+      "partial_alpha_pixels": 373796,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/03/idle.png": {
+      "path": "assets/images/characters/clarity/npc/03/idle.png",
+      "sha256": "5b6a4db265914b4e1e4eb4a00f9758f02a73050bd74572e79988f9ddd772c645",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        350,
+        11,
+        973,
+        1226
+      ],
+      "visible_height_fraction": 0.9688995215311005,
+      "transparent_pixels": 1085012,
+      "partial_alpha_pixels": 487148,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/03/draw.png": {
+      "path": "assets/images/characters/clarity/npc/03/draw.png",
+      "sha256": "dd71f0ded35d4e6669de0f44ee3e4a9a8a193a86c5f15abe4ee373d3cd64a83f",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        295,
+        15,
+        986,
+        1222
+      ],
+      "visible_height_fraction": 0.9625199362041468,
+      "transparent_pixels": 1057300,
+      "partial_alpha_pixels": 514473,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/03/fire.png": {
+      "path": "assets/images/characters/clarity/npc/03/fire.png",
+      "sha256": "88f537643f79ca76fac4242ea76935dc73721496485a6234cf30854207d15c06",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        301,
+        12,
+        1015,
+        1227
+      ],
+      "visible_height_fraction": 0.9688995215311005,
+      "transparent_pixels": 1077341,
+      "partial_alpha_pixels": 494417,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/03/hit.png": {
+      "path": "assets/images/characters/clarity/npc/03/hit.png",
+      "sha256": "63b7b4f254fc919c4f8f0b96b58fb84fa8fd34f38ab79689790c5bd0f21dd1c0",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        274,
+        55,
+        1095,
+        1221
+      ],
+      "visible_height_fraction": 0.9298245614035088,
+      "transparent_pixels": 1044155,
+      "partial_alpha_pixels": 527410,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/03/down.png": {
+      "path": "assets/images/characters/clarity/npc/03/down.png",
+      "sha256": "1de5cc25f13fb7d4b376e32277adbe0d439a6acd90aca967a2613b01cbfce343",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        217,
+        384,
+        1107,
+        1210
+      ],
+      "visible_height_fraction": 0.6586921850079744,
+      "transparent_pixels": 1148553,
+      "partial_alpha_pixels": 423459,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/03/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/03/identity_poster.png",
+      "sha256": "e0f531e46a9a50eab3be8d2fcb19231b7ad2e837c3520240c4a33d38a9efe0a1",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        350,
+        11,
+        973,
+        1226
+      ],
+      "visible_height_fraction": 0.9688995215311005,
+      "transparent_pixels": 1085012,
+      "partial_alpha_pixels": 487148,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/04/idle.png": {
+      "path": "assets/images/characters/clarity/npc/04/idle.png",
+      "sha256": "cc8b4cbb5e92994af91e9e8009ac6264cc95657e8c8aa9751959857be2823cf3",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        361,
+        8,
+        964,
+        1219
+      ],
+      "visible_height_fraction": 0.9657097288676236,
+      "transparent_pixels": 1148931,
+      "partial_alpha_pixels": 422935,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/04/draw.png": {
+      "path": "assets/images/characters/clarity/npc/04/draw.png",
+      "sha256": "9b76601b192f75492fae4eade3d6e97b606a0a8b8153d23c6026d2c3b44f3654",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        303,
+        8,
+        987,
+        1225
+      ],
+      "visible_height_fraction": 0.970494417862839,
+      "transparent_pixels": 1108301,
+      "partial_alpha_pixels": 463226,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/04/fire.png": {
+      "path": "assets/images/characters/clarity/npc/04/fire.png",
+      "sha256": "1c7fd215b839880ab98f564e3056e7342cfce597845c410da7f7c9b5b2cda17c",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        263,
+        7,
+        1001,
+        1221
+      ],
+      "visible_height_fraction": 0.9681020733652312,
+      "transparent_pixels": 1144210,
+      "partial_alpha_pixels": 427392,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/04/hit.png": {
+      "path": "assets/images/characters/clarity/npc/04/hit.png",
+      "sha256": "e609f6dafea4c3c682a2bc1ea4a63077a2aeb2e01249e8d7027a682871ed4207",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        312,
+        68,
+        1162,
+        1215
+      ],
+      "visible_height_fraction": 0.9146730462519936,
+      "transparent_pixels": 1089972,
+      "partial_alpha_pixels": 481594,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/04/down.png": {
+      "path": "assets/images/characters/clarity/npc/04/down.png",
+      "sha256": "6be2c0fd9d8c0966707edc9d194423b3949170c8231e9a52254f855ae58cb384",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        262,
+        427,
+        1122,
+        1209
+      ],
+      "visible_height_fraction": 0.6236044657097288,
+      "transparent_pixels": 1213359,
+      "partial_alpha_pixels": 358783,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/04/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/04/identity_poster.png",
+      "sha256": "4c13c438fa6fe331e31d3447c1f7f921f5cdbbbf44777dd8a99cfa637b5db3c0",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        361,
+        8,
+        964,
+        1219
+      ],
+      "visible_height_fraction": 0.9657097288676236,
+      "transparent_pixels": 1148931,
+      "partial_alpha_pixels": 422935,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/05/idle.png": {
+      "path": "assets/images/characters/clarity/npc/05/idle.png",
+      "sha256": "d1b12be5c66d37eedad126d7b74af261c9531487fa5410b69e07dc681d4e6794",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        370,
+        9,
+        957,
+        1219
+      ],
+      "visible_height_fraction": 0.9649122807017544,
+      "transparent_pixels": 1172016,
+      "partial_alpha_pixels": 399698,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/05/draw.png": {
+      "path": "assets/images/characters/clarity/npc/05/draw.png",
+      "sha256": "522d171fcdc4f80bdc0a6fc487accb9e372d1fb656de8f9b9508de5f014e74b7",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        299,
+        9,
+        982,
+        1224
+      ],
+      "visible_height_fraction": 0.9688995215311005,
+      "transparent_pixels": 1136378,
+      "partial_alpha_pixels": 435284,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/05/fire.png": {
+      "path": "assets/images/characters/clarity/npc/05/fire.png",
+      "sha256": "6c84e7154e9aded9d2ea642e4ba19c6b36ab200e23a0e2d865b9a076c979d653",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        300,
+        8,
+        965,
+        1221
+      ],
+      "visible_height_fraction": 0.967304625199362,
+      "transparent_pixels": 1160855,
+      "partial_alpha_pixels": 410701,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/05/hit.png": {
+      "path": "assets/images/characters/clarity/npc/05/hit.png",
+      "sha256": "f0765e68cb5898424e4182e27e479f19d366ed040ab41a50c2e9cbf762b0223a",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        304,
+        62,
+        1088,
+        1219
+      ],
+      "visible_height_fraction": 0.9226475279106858,
+      "transparent_pixels": 1093224,
+      "partial_alpha_pixels": 478659,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/05/down.png": {
+      "path": "assets/images/characters/clarity/npc/05/down.png",
+      "sha256": "396218142ee0e9d3d15163eb07ac545b2cdd5b6280eabe326fc62862d0d7d64e",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        250,
+        383,
+        1105,
+        1201
+      ],
+      "visible_height_fraction": 0.6523125996810207,
+      "transparent_pixels": 1196789,
+      "partial_alpha_pixels": 374948,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/05/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/05/identity_poster.png",
+      "sha256": "9bff3f35d870741d2dc0f55b161b84e6f2ec3738fb34d6c7ed18a07bd9d8b962",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        370,
+        9,
+        957,
+        1219
+      ],
+      "visible_height_fraction": 0.9649122807017544,
+      "transparent_pixels": 1172016,
+      "partial_alpha_pixels": 399698,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/06/idle.png": {
+      "path": "assets/images/characters/clarity/npc/06/idle.png",
+      "sha256": "4e4422a4171a343f55a4d3008d6deedb085ccf5f058d420d7c705f5b13fdf6d9",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        322,
+        10,
+        978,
+        1226
+      ],
+      "visible_height_fraction": 0.9696969696969697,
+      "transparent_pixels": 1135772,
+      "partial_alpha_pixels": 436053,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/06/draw.png": {
+      "path": "assets/images/characters/clarity/npc/06/draw.png",
+      "sha256": "a75ca305625595a43b4482fc1c74cd0679166582a62b9c7938226c09f8884ab2",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        304,
+        10,
+        991,
+        1226
+      ],
+      "visible_height_fraction": 0.9696969696969697,
+      "transparent_pixels": 1114537,
+      "partial_alpha_pixels": 457332,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/06/fire.png": {
+      "path": "assets/images/characters/clarity/npc/06/fire.png",
+      "sha256": "70d4eb18f2fcb71d5bbaff2eff5619e58e187c3241d3dd39db51f82deb9fc0a2",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        306,
+        10,
+        986,
+        1228
+      ],
+      "visible_height_fraction": 0.9712918660287081,
+      "transparent_pixels": 1124785,
+      "partial_alpha_pixels": 446785,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/06/hit.png": {
+      "path": "assets/images/characters/clarity/npc/06/hit.png",
+      "sha256": "dffc45c43cb34c6e1e0211167d6c4e1495928cb081c75f391b281d893621bd1c",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        281,
+        41,
+        1152,
+        1232
+      ],
+      "visible_height_fraction": 0.9497607655502392,
+      "transparent_pixels": 1035526,
+      "partial_alpha_pixels": 536061,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/06/down.png": {
+      "path": "assets/images/characters/clarity/npc/06/down.png",
+      "sha256": "559ca8d3e22c4af6811ee30d8c7690c0be65a6b18de394f3cfcec250773c1a17",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        243,
+        395,
+        1131,
+        1216
+      ],
+      "visible_height_fraction": 0.6547049441786283,
+      "transparent_pixels": 1200561,
+      "partial_alpha_pixels": 371556,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/06/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/06/identity_poster.png",
+      "sha256": "ce4253642386a10f53c002d5b43430803a61305267fdd528fa76557dd8d0806a",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        322,
+        10,
+        978,
+        1226
+      ],
+      "visible_height_fraction": 0.9696969696969697,
+      "transparent_pixels": 1135772,
+      "partial_alpha_pixels": 436053,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/07/idle.png": {
+      "path": "assets/images/characters/clarity/npc/07/idle.png",
+      "sha256": "5aa0a5e786977b24bdc1f665be70d9d74a833403bbbbeb2d9523515698456e0a",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        361,
+        11,
+        983,
+        1218
+      ],
+      "visible_height_fraction": 0.9625199362041468,
+      "transparent_pixels": 1145755,
+      "partial_alpha_pixels": 426074,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/07/draw.png": {
+      "path": "assets/images/characters/clarity/npc/07/draw.png",
+      "sha256": "1afa2ad1884ed74ced3dbf72b1240664aa12d4ad5502cc409f046e9beca698b5",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        302,
+        11,
+        991,
+        1216
+      ],
+      "visible_height_fraction": 0.9609250398724083,
+      "transparent_pixels": 1126610,
+      "partial_alpha_pixels": 445239,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/07/fire.png": {
+      "path": "assets/images/characters/clarity/npc/07/fire.png",
+      "sha256": "b188814701678b8095c69c327c4d982e7c74c7c7e44177503054bc2b7dcd09b6",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        273,
+        10,
+        987,
+        1221
+      ],
+      "visible_height_fraction": 0.9657097288676236,
+      "transparent_pixels": 1128844,
+      "partial_alpha_pixels": 442740,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/07/hit.png": {
+      "path": "assets/images/characters/clarity/npc/07/hit.png",
+      "sha256": "e2cf8e7bcb555899df753dba087d1fa6abe1de4a02075b5909f0cbe6443526d4",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        266,
+        32,
+        1097,
+        1222
+      ],
+      "visible_height_fraction": 0.94896331738437,
+      "transparent_pixels": 1054159,
+      "partial_alpha_pixels": 517391,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/07/down.png": {
+      "path": "assets/images/characters/clarity/npc/07/down.png",
+      "sha256": "49586593c8c5e77a102c5b76f74bdc12753a2e697c9e16784f2b70726f1a367b",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        273,
+        435,
+        1130,
+        1211
+      ],
+      "visible_height_fraction": 0.6188197767145136,
+      "transparent_pixels": 1214569,
+      "partial_alpha_pixels": 357534,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/07/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/07/identity_poster.png",
+      "sha256": "efb415fdcf2ab9c0c7bf41ab01e695c46a91d73a6d6ebcf260bbc91067ee8ceb",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        361,
+        11,
+        983,
+        1218
+      ],
+      "visible_height_fraction": 0.9625199362041468,
+      "transparent_pixels": 1145755,
+      "partial_alpha_pixels": 426074,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/08/idle.png": {
+      "path": "assets/images/characters/clarity/npc/08/idle.png",
+      "sha256": "d2c6f3f3e9d8d0ac28badd43c7c8a598eea390ff21d5a8e6e0ec4550892836ed",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        323,
+        10,
+        964,
+        1211
+      ],
+      "visible_height_fraction": 0.9577352472089314,
+      "transparent_pixels": 1137228,
+      "partial_alpha_pixels": 434405,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/08/draw.png": {
+      "path": "assets/images/characters/clarity/npc/08/draw.png",
+      "sha256": "42ad6c52afc57b7447c0001fd907c773259f4e513eccf3adc1a62c18d1c5429c",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        282,
+        7,
+        992,
+        1214
+      ],
+      "visible_height_fraction": 0.9625199362041468,
+      "transparent_pixels": 1103747,
+      "partial_alpha_pixels": 467832,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/08/fire.png": {
+      "path": "assets/images/characters/clarity/npc/08/fire.png",
+      "sha256": "6e3bd9747b19a1bf197fcbe85bf3f6836b57e74c617c630012f7adeac815079c",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        262,
+        8,
+        978,
+        1213
+      ],
+      "visible_height_fraction": 0.9609250398724083,
+      "transparent_pixels": 1128633,
+      "partial_alpha_pixels": 443020,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/08/hit.png": {
+      "path": "assets/images/characters/clarity/npc/08/hit.png",
+      "sha256": "627c3078b73d2409e5e160692ae7581605c1e26133c7aca4d24a35831e7ef3a2",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        300,
+        44,
+        1150,
+        1212
+      ],
+      "visible_height_fraction": 0.9314194577352473,
+      "transparent_pixels": 1074812,
+      "partial_alpha_pixels": 497058,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/08/down.png": {
+      "path": "assets/images/characters/clarity/npc/08/down.png",
+      "sha256": "99330e276e448acb7567bf4e8b5cde0c3fd2d06b4e9eed650fd07c7b78a1477e",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        218,
+        332,
+        1159,
+        1205
+      ],
+      "visible_height_fraction": 0.6961722488038278,
+      "transparent_pixels": 1110448,
+      "partial_alpha_pixels": 461230,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/08/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/08/identity_poster.png",
+      "sha256": "255a30646c2c7c756bae01a36781d8926d3e4e278e50456d3deccacbc63d14a6",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        323,
+        10,
+        964,
+        1211
+      ],
+      "visible_height_fraction": 0.9577352472089314,
+      "transparent_pixels": 1137228,
+      "partial_alpha_pixels": 434405,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/09/idle.png": {
+      "path": "assets/images/characters/clarity/npc/09/idle.png",
+      "sha256": "339e0ff90169289803ce8e8ca262320ccb49881dd493426ae4be3b54d4c7c8af",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        355,
+        14,
+        977,
+        1226
+      ],
+      "visible_height_fraction": 0.9665071770334929,
+      "transparent_pixels": 1116023,
+      "partial_alpha_pixels": 455945,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/09/draw.png": {
+      "path": "assets/images/characters/clarity/npc/09/draw.png",
+      "sha256": "ab492f150b0a84de9e19697fde4c2b74afcf24e2726fc0e1f92a283e3ea43093",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        309,
+        15,
+        984,
+        1227
+      ],
+      "visible_height_fraction": 0.9665071770334929,
+      "transparent_pixels": 1093118,
+      "partial_alpha_pixels": 478548,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/09/fire.png": {
+      "path": "assets/images/characters/clarity/npc/09/fire.png",
+      "sha256": "487af71e4da98a88068a9441845b1c8728a1aea1e73a86eba2eb10725a26fc64",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        333,
+        13,
+        984,
+        1225
+      ],
+      "visible_height_fraction": 0.9665071770334929,
+      "transparent_pixels": 1118650,
+      "partial_alpha_pixels": 453196,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/09/hit.png": {
+      "path": "assets/images/characters/clarity/npc/09/hit.png",
+      "sha256": "090a96eda2202ea0a3055b78d430ea2a1194eaa53da21e351fd46e8db0b66946",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        305,
+        52,
+        1147,
+        1222
+      ],
+      "visible_height_fraction": 0.9330143540669856,
+      "transparent_pixels": 1057476,
+      "partial_alpha_pixels": 513840,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/09/down.png": {
+      "path": "assets/images/characters/clarity/npc/09/down.png",
+      "sha256": "95ffc8219cad025c8e8108c716ef80007a6af9929feeb42b2071307ba72c742c",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        246,
+        379,
+        1128,
+        1200
+      ],
+      "visible_height_fraction": 0.6547049441786283,
+      "transparent_pixels": 1183151,
+      "partial_alpha_pixels": 388967,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/09/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/09/identity_poster.png",
+      "sha256": "74c048eb1f9610d057feb5eabaefa52684c4e11a755526315a1ae03ba890694e",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        355,
+        14,
+        977,
+        1226
+      ],
+      "visible_height_fraction": 0.9665071770334929,
+      "transparent_pixels": 1116023,
+      "partial_alpha_pixels": 455945,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/10/idle.png": {
+      "path": "assets/images/characters/clarity/npc/10/idle.png",
+      "sha256": "a8ab3f77cf3e4ab6b52328513d592d3c8970be0a0f5d92a45bfb7c2b159ed1fc",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        350,
+        11,
+        973,
+        1226
+      ],
+      "visible_height_fraction": 0.9688995215311005,
+      "transparent_pixels": 1151142,
+      "partial_alpha_pixels": 420742,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/10/draw.png": {
+      "path": "assets/images/characters/clarity/npc/10/draw.png",
+      "sha256": "cb10caa787ccaa652ded15e5005a93d7aed34c73e1e9667fe04c61afd9f1fc44",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        278,
+        11,
+        981,
+        1228
+      ],
+      "visible_height_fraction": 0.970494417862839,
+      "transparent_pixels": 1143380,
+      "partial_alpha_pixels": 428593,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/10/fire.png": {
+      "path": "assets/images/characters/clarity/npc/10/fire.png",
+      "sha256": "4c11285ff2a9c97d0c8502c43d543a12a4f3a6089a0612d0dd2d2c4b6f71c15d",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        296,
+        9,
+        985,
+        1227
+      ],
+      "visible_height_fraction": 0.9712918660287081,
+      "transparent_pixels": 1156093,
+      "partial_alpha_pixels": 415745,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/10/hit.png": {
+      "path": "assets/images/characters/clarity/npc/10/hit.png",
+      "sha256": "3ea13a1d7ee024ee095a529fed3eaa967d1b9b95dc3ab33a45d25bf5292ad57d",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        314,
+        52,
+        1097,
+        1209
+      ],
+      "visible_height_fraction": 0.9226475279106858,
+      "transparent_pixels": 1112368,
+      "partial_alpha_pixels": 459166,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/10/down.png": {
+      "path": "assets/images/characters/clarity/npc/10/down.png",
+      "sha256": "0ae09a7037c379cee101526cb4224e619f3f1eb14c863ed9d6fab622cc5dd1cb",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        266,
+        403,
+        1117,
+        1214
+      ],
+      "visible_height_fraction": 0.6467304625199362,
+      "transparent_pixels": 1190560,
+      "partial_alpha_pixels": 381552,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/10/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/10/identity_poster.png",
+      "sha256": "b87bf7b897d5e3ce6fdd93d5a206131c2a5c0e5f6ac9a62c68f41ff0d201ef56",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        350,
+        11,
+        973,
+        1226
+      ],
+      "visible_height_fraction": 0.9688995215311005,
+      "transparent_pixels": 1151142,
+      "partial_alpha_pixels": 420742,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/11/idle.png": {
+      "path": "assets/images/characters/clarity/npc/11/idle.png",
+      "sha256": "04248101ee6bb159ee044f4e710315c7f0415d44199265d5b0a395ecad048887",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        292,
+        20,
+        1027,
+        1229
+      ],
+      "visible_height_fraction": 0.9641148325358851,
+      "transparent_pixels": 1011757,
+      "partial_alpha_pixels": 559797,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/11/draw.png": {
+      "path": "assets/images/characters/clarity/npc/11/draw.png",
+      "sha256": "1126132ee65c278a586c46708cdc5c897de4d0622d118fb7ff828b7551f287c2",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        267,
+        17,
+        1039,
+        1227
+      ],
+      "visible_height_fraction": 0.9649122807017544,
+      "transparent_pixels": 1013347,
+      "partial_alpha_pixels": 558028,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/11/fire.png": {
+      "path": "assets/images/characters/clarity/npc/11/fire.png",
+      "sha256": "b1d782df118a584dbbf5a9aafce06df01d6e96111853bd19ebe3b2eb9e70c124",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        201,
+        15,
+        1038,
+        1229
+      ],
+      "visible_height_fraction": 0.9681020733652312,
+      "transparent_pixels": 1025795,
+      "partial_alpha_pixels": 545757,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/11/hit.png": {
+      "path": "assets/images/characters/clarity/npc/11/hit.png",
+      "sha256": "3ddd97ab4afae15f524519a47304db98d7d576a311fdf4af38894ca61179d268",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        255,
+        57,
+        1179,
+        1213
+      ],
+      "visible_height_fraction": 0.9218500797448166,
+      "transparent_pixels": 987370,
+      "partial_alpha_pixels": 583860,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/11/down.png": {
+      "path": "assets/images/characters/clarity/npc/11/down.png",
+      "sha256": "aac719b6b3149032f9d144da29b942bbf5cfb6db6fcd56f02e1ff56db4c29a22",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        212,
+        352,
+        1175,
+        1200
+      ],
+      "visible_height_fraction": 0.6762360446570973,
+      "transparent_pixels": 1098927,
+      "partial_alpha_pixels": 472602,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/11/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/11/identity_poster.png",
+      "sha256": "ff11c897e41a877fecd381d1a4a0644c36dfbefbab03fe6ba8440c26eb207cb0",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        292,
+        20,
+        1027,
+        1229
+      ],
+      "visible_height_fraction": 0.9641148325358851,
+      "transparent_pixels": 1011757,
+      "partial_alpha_pixels": 559797,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/12/idle.png": {
+      "path": "assets/images/characters/clarity/npc/12/idle.png",
+      "sha256": "9d8c23c200445e062c12b35ae052e54afdb876ac3cfc9b529c21127bf8f89c6d",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        334,
+        13,
+        963,
+        1213
+      ],
+      "visible_height_fraction": 0.9569377990430622,
+      "transparent_pixels": 1126977,
+      "partial_alpha_pixels": 444624,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/12/draw.png": {
+      "path": "assets/images/characters/clarity/npc/12/draw.png",
+      "sha256": "79d4174ad89dd281fe417e577357e04e9346832b2a28adef4d409feaba8c3b83",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        299,
+        12,
+        1009,
+        1216
+      ],
+      "visible_height_fraction": 0.960127591706539,
+      "transparent_pixels": 1090506,
+      "partial_alpha_pixels": 481075,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/12/fire.png": {
+      "path": "assets/images/characters/clarity/npc/12/fire.png",
+      "sha256": "0ea1d6dbcd5101d77cf4b06a49dc7c1275ba3e8ad4c6bc659f19c8188131751d",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        262,
+        12,
+        1031,
+        1224
+      ],
+      "visible_height_fraction": 0.9665071770334929,
+      "transparent_pixels": 1103318,
+      "partial_alpha_pixels": 468108,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/12/hit.png": {
+      "path": "assets/images/characters/clarity/npc/12/hit.png",
+      "sha256": "3e6b0fe2201290174d0158022b080d26c08a6d0aaaf268bd7a576f2dea9f84aa",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        295,
+        65,
+        1141,
+        1216
+      ],
+      "visible_height_fraction": 0.9178628389154705,
+      "transparent_pixels": 1063385,
+      "partial_alpha_pixels": 508167,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/12/down.png": {
+      "path": "assets/images/characters/clarity/npc/12/down.png",
+      "sha256": "4e13d7fdc8525b41a220bc1465daef4c6f5c9a144cacc84124331dc9c77d261d",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        234,
+        385,
+        1131,
+        1204
+      ],
+      "visible_height_fraction": 0.65311004784689,
+      "transparent_pixels": 1159201,
+      "partial_alpha_pixels": 412641,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/12/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/12/identity_poster.png",
+      "sha256": "ce126c56ac46f10743f287352acb7ec99fb82b808cba5745fd68aff4ac9d9654",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        334,
+        13,
+        963,
+        1213
+      ],
+      "visible_height_fraction": 0.9569377990430622,
+      "transparent_pixels": 1126977,
+      "partial_alpha_pixels": 444624,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/13/idle.png": {
+      "path": "assets/images/characters/clarity/npc/13/idle.png",
+      "sha256": "6f675c07723cdf518794e8b90026ca947f279811e6b4e312fd462473b29cd10b",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        369,
+        15,
+        928,
+        1211
+      ],
+      "visible_height_fraction": 0.9537480063795853,
+      "transparent_pixels": 1136917,
+      "partial_alpha_pixels": 435051,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/13/draw.png": {
+      "path": "assets/images/characters/clarity/npc/13/draw.png",
+      "sha256": "0fad4f428ab397c90d9588d793e7c83fa0e66aabdce438fce5f730d0244b55b0",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        314,
+        45,
+        971,
+        1227
+      ],
+      "visible_height_fraction": 0.9425837320574163,
+      "transparent_pixels": 1111241,
+      "partial_alpha_pixels": 460538,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/13/fire.png": {
+      "path": "assets/images/characters/clarity/npc/13/fire.png",
+      "sha256": "aebe65cc34a0d2f040172439e8b97fb4c2bb32bde4fd9b8adcb14bb0b5868ecb",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        299,
+        12,
+        1001,
+        1215
+      ],
+      "visible_height_fraction": 0.9593301435406698,
+      "transparent_pixels": 1114586,
+      "partial_alpha_pixels": 457079,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/13/hit.png": {
+      "path": "assets/images/characters/clarity/npc/13/hit.png",
+      "sha256": "0c148f6853bf19372be0173640b4dc513982a3bd980966465ea49b399e9f8886",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        297,
+        77,
+        1133,
+        1209
+      ],
+      "visible_height_fraction": 0.9027113237639554,
+      "transparent_pixels": 1101990,
+      "partial_alpha_pixels": 469871,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/13/down.png": {
+      "path": "assets/images/characters/clarity/npc/13/down.png",
+      "sha256": "9547b4aef6124c0b33e111c6e9ca29deb9513551ff8950a081d3f82da9511142",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        270,
+        406,
+        1110,
+        1215
+      ],
+      "visible_height_fraction": 0.6451355661881978,
+      "transparent_pixels": 1189631,
+      "partial_alpha_pixels": 382390,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/13/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/13/identity_poster.png",
+      "sha256": "41f35749b08aede1cd8326e0767b0c44df7e90602ca199a7fa7e1ae8d432371e",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        369,
+        15,
+        928,
+        1211
+      ],
+      "visible_height_fraction": 0.9537480063795853,
+      "transparent_pixels": 1136917,
+      "partial_alpha_pixels": 435051,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/14/idle.png": {
+      "path": "assets/images/characters/clarity/npc/14/idle.png",
+      "sha256": "310d0132a59d024a71f95ec79beb67d1291cfa38cf1f4d28f0c45aaf6a5edab3",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        354,
+        18,
+        988,
+        1216
+      ],
+      "visible_height_fraction": 0.9553429027113237,
+      "transparent_pixels": 1133014,
+      "partial_alpha_pixels": 438958,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/14/draw.png": {
+      "path": "assets/images/characters/clarity/npc/14/draw.png",
+      "sha256": "e641c0daa9be724f6c8c797d05f50883e4dcb6cc20d867b219bf682a5ad79fa9",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        297,
+        17,
+        1003,
+        1220
+      ],
+      "visible_height_fraction": 0.9593301435406698,
+      "transparent_pixels": 1100316,
+      "partial_alpha_pixels": 471434,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/14/fire.png": {
+      "path": "assets/images/characters/clarity/npc/14/fire.png",
+      "sha256": "72dff041a06e3df10ebfe12f876df1dec9b0abbde2b856246c3ec20ff788fc2b",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        287,
+        14,
+        999,
+        1219
+      ],
+      "visible_height_fraction": 0.9609250398724083,
+      "transparent_pixels": 1127526,
+      "partial_alpha_pixels": 444275,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/14/hit.png": {
+      "path": "assets/images/characters/clarity/npc/14/hit.png",
+      "sha256": "d0cf866be904d897ef9399335b9421d00d9ed2d13124deffed3ca4f410646fa3",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        288,
+        40,
+        1092,
+        1218
+      ],
+      "visible_height_fraction": 0.9393939393939394,
+      "transparent_pixels": 1081069,
+      "partial_alpha_pixels": 490553,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/14/down.png": {
+      "path": "assets/images/characters/clarity/npc/14/down.png",
+      "sha256": "07955ce87d0f0e9b168af8fbc073843ffcc92cb0a571403c6d351ceebf666b88",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        216,
+        346,
+        1189,
+        1207
+      ],
+      "visible_height_fraction": 0.6866028708133971,
+      "transparent_pixels": 1140634,
+      "partial_alpha_pixels": 431284,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/14/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/14/identity_poster.png",
+      "sha256": "43a5348e4fe4e566a60a80f9ebe0cedc04011eea8ff761673895cc4bc60c3059",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        354,
+        18,
+        988,
+        1216
+      ],
+      "visible_height_fraction": 0.9553429027113237,
+      "transparent_pixels": 1133014,
+      "partial_alpha_pixels": 438958,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/15/idle.png": {
+      "path": "assets/images/characters/clarity/npc/15/idle.png",
+      "sha256": "75b4923a0eac56b05a3f52f1f21cb2c86438d5dd3fc4907fc1d777baccc54e43",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        371,
+        8,
+        975,
+        1188
+      ],
+      "visible_height_fraction": 0.9409888357256778,
+      "transparent_pixels": 1160489,
+      "partial_alpha_pixels": 411407,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/15/draw.png": {
+      "path": "assets/images/characters/clarity/npc/15/draw.png",
+      "sha256": "949df6bb63f766c37f1cccc8f04b221ddab686c2f2515a6d2f48b4ab79692559",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        298,
+        11,
+        998,
+        1199
+      ],
+      "visible_height_fraction": 0.9473684210526315,
+      "transparent_pixels": 1133765,
+      "partial_alpha_pixels": 437891,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/15/fire.png": {
+      "path": "assets/images/characters/clarity/npc/15/fire.png",
+      "sha256": "dce8146aa62059988a1709e83e7dc910113837609ebb640bf0cab510b2056dc7",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        305,
+        7,
+        1006,
+        1204
+      ],
+      "visible_height_fraction": 0.9545454545454546,
+      "transparent_pixels": 1145673,
+      "partial_alpha_pixels": 426125,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/15/hit.png": {
+      "path": "assets/images/characters/clarity/npc/15/hit.png",
+      "sha256": "393043303a69e2290c2277e2ec4cb25964bc4a3b69e0d55fef7eda62bdae5364",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        322,
+        64,
+        1036,
+        1193
+      ],
+      "visible_height_fraction": 0.9003189792663477,
+      "transparent_pixels": 1139643,
+      "partial_alpha_pixels": 432305,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/15/down.png": {
+      "path": "assets/images/characters/clarity/npc/15/down.png",
+      "sha256": "0fae39b3f4bc261786b8867a6980cd70a1bbbffe1ed8777d8005a0e1092eb13b",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        325,
+        391,
+        1120,
+        1189
+      ],
+      "visible_height_fraction": 0.6363636363636364,
+      "transparent_pixels": 1202132,
+      "partial_alpha_pixels": 369810,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/15/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/15/identity_poster.png",
+      "sha256": "4168f6e696571ec45cf5bae2b7e33d5828227376f18fe321a0a8d7cad49d37bb",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        371,
+        8,
+        975,
+        1188
+      ],
+      "visible_height_fraction": 0.9409888357256778,
+      "transparent_pixels": 1160489,
+      "partial_alpha_pixels": 411407,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/16/idle.png": {
+      "path": "assets/images/characters/clarity/npc/16/idle.png",
+      "sha256": "f7662d5d4eae7e9965fc6c549db3c59c1207baa25c80ebee688e54fd67b12a6d",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        352,
+        13,
+        956,
+        1196
+      ],
+      "visible_height_fraction": 0.9433811802232854,
+      "transparent_pixels": 1176448,
+      "partial_alpha_pixels": 395350,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/16/draw.png": {
+      "path": "assets/images/characters/clarity/npc/16/draw.png",
+      "sha256": "9e28db72fe648afe1016aa166c507d07f98bdbc5b5f127d7cb01d5923cca7740",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        256,
+        13,
+        1006,
+        1208
+      ],
+      "visible_height_fraction": 0.9529505582137161,
+      "transparent_pixels": 1138747,
+      "partial_alpha_pixels": 432881,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/16/fire.png": {
+      "path": "assets/images/characters/clarity/npc/16/fire.png",
+      "sha256": "eb4f7d9783b4f2f334ddaf9f42eea36b859d9c86bc8de32b380733317717e778",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        296,
+        9,
+        1006,
+        1205
+      ],
+      "visible_height_fraction": 0.9537480063795853,
+      "transparent_pixels": 1175296,
+      "partial_alpha_pixels": 396409,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/16/hit.png": {
+      "path": "assets/images/characters/clarity/npc/16/hit.png",
+      "sha256": "e1d28e77fa758ea19b20a9432a961350821b26b96f1091b397bd280e00078f62",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        309,
+        73,
+        1067,
+        1192
+      ],
+      "visible_height_fraction": 0.8923444976076556,
+      "transparent_pixels": 1143782,
+      "partial_alpha_pixels": 427644,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/16/down.png": {
+      "path": "assets/images/characters/clarity/npc/16/down.png",
+      "sha256": "ec4f40b8bebe7b48626fef033d0f04727806044076e808b16e9a9b4fd7367849",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        340,
+        386,
+        1114,
+        1180
+      ],
+      "visible_height_fraction": 0.6331738437001595,
+      "transparent_pixels": 1208381,
+      "partial_alpha_pixels": 363828,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/16/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/16/identity_poster.png",
+      "sha256": "7fcade99b99afaf75244b9c673f164ee999fd0d16ebd946f45d47e6ce626d9cb",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        352,
+        13,
+        956,
+        1196
+      ],
+      "visible_height_fraction": 0.9433811802232854,
+      "transparent_pixels": 1176448,
+      "partial_alpha_pixels": 395350,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/17/idle.png": {
+      "path": "assets/images/characters/clarity/npc/17/idle.png",
+      "sha256": "4f5e5d9f32f4e02c7d0c7c64a55ad5e527da8e0fa23ce9127cde3b91d77be81a",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        425,
+        5,
+        892,
+        1224
+      ],
+      "visible_height_fraction": 0.9720893141945773,
+      "transparent_pixels": 1211134,
+      "partial_alpha_pixels": 360666,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/17/draw.png": {
+      "path": "assets/images/characters/clarity/npc/17/draw.png",
+      "sha256": "538649de84e8862c3ea16397d729a68c7f5c916e4e2a76f7e6f266f58f46a350",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        327,
+        10,
+        922,
+        1229
+      ],
+      "visible_height_fraction": 0.9720893141945773,
+      "transparent_pixels": 1147556,
+      "partial_alpha_pixels": 424176,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/17/fire.png": {
+      "path": "assets/images/characters/clarity/npc/17/fire.png",
+      "sha256": "9abc1d30125c4e00efc9ba6d96cb4289fc97e256db87179b13a5faa2c77c4734",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        330,
+        5,
+        945,
+        1235
+      ],
+      "visible_height_fraction": 0.9808612440191388,
+      "transparent_pixels": 1156653,
+      "partial_alpha_pixels": 415080,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/17/hit.png": {
+      "path": "assets/images/characters/clarity/npc/17/hit.png",
+      "sha256": "446c64d485c5daf0a80c131f8a5e182a0977b73f28a5d58cc03864a22031d3c5",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        321,
+        48,
+        1134,
+        1224
+      ],
+      "visible_height_fraction": 0.937799043062201,
+      "transparent_pixels": 1099646,
+      "partial_alpha_pixels": 471874,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/17/down.png": {
+      "path": "assets/images/characters/clarity/npc/17/down.png",
+      "sha256": "dd52b88b721c8e3ff6eea157697ff18ff7d9b2bcdfebbd644ae217f70a948eb2",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        277,
+        398,
+        1114,
+        1215
+      ],
+      "visible_height_fraction": 0.6515151515151515,
+      "transparent_pixels": 1212614,
+      "partial_alpha_pixels": 359317,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/17/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/17/identity_poster.png",
+      "sha256": "8c5f3ae654ed8b0f15ebb81aad4e706def377d905e7638f7566f055930fe9eb4",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        425,
+        5,
+        892,
+        1224
+      ],
+      "visible_height_fraction": 0.9720893141945773,
+      "transparent_pixels": 1211134,
+      "partial_alpha_pixels": 360666,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/18/idle.png": {
+      "path": "assets/images/characters/clarity/npc/18/idle.png",
+      "sha256": "6de054d93641b4749445cefea8d08dd78c2a2467ed74592a68fe6628324af19b",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        349,
+        5,
+        971,
+        1209
+      ],
+      "visible_height_fraction": 0.960127591706539,
+      "transparent_pixels": 1115543,
+      "partial_alpha_pixels": 456418,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/18/draw.png": {
+      "path": "assets/images/characters/clarity/npc/18/draw.png",
+      "sha256": "a4aac1b3f00ca44e54f531e0d34b8254f51187b3f250d121966d3c436b4cf2ef",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        288,
+        9,
+        992,
+        1211
+      ],
+      "visible_height_fraction": 0.9585326953748007,
+      "transparent_pixels": 1094437,
+      "partial_alpha_pixels": 477414,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/18/fire.png": {
+      "path": "assets/images/characters/clarity/npc/18/fire.png",
+      "sha256": "5038be4cedafcbfd51e78220f6cd8901982afb83419e0b2a5ef0b7b7e958569f",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        227,
+        4,
+        997,
+        1211
+      ],
+      "visible_height_fraction": 0.9625199362041468,
+      "transparent_pixels": 1099884,
+      "partial_alpha_pixels": 471813,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/18/hit.png": {
+      "path": "assets/images/characters/clarity/npc/18/hit.png",
+      "sha256": "6278ca692fafa418f5ec6bb65fc6e45bdb73f6639bc9e4e1c93feb5ef64d5367",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        292,
+        60,
+        1126,
+        1208
+      ],
+      "visible_height_fraction": 0.9154704944178629,
+      "transparent_pixels": 1063281,
+      "partial_alpha_pixels": 508177,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/18/down.png": {
+      "path": "assets/images/characters/clarity/npc/18/down.png",
+      "sha256": "3242b3913411a7172baf5b1120a38d641375f229ea08c34d9d71e168537dc2c5",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        282,
+        404,
+        1125,
+        1206
+      ],
+      "visible_height_fraction": 0.6395534290271132,
+      "transparent_pixels": 1179371,
+      "partial_alpha_pixels": 392850,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/18/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/18/identity_poster.png",
+      "sha256": "e51ae5f17c1d89ca2de5dd37dbbf0dbd3c0c91954201680d66621a898f00ed1e",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        349,
+        5,
+        971,
+        1209
+      ],
+      "visible_height_fraction": 0.960127591706539,
+      "transparent_pixels": 1115543,
+      "partial_alpha_pixels": 456418,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/19/idle.png": {
+      "path": "assets/images/characters/clarity/npc/19/idle.png",
+      "sha256": "7ded7c11ff9e9ec88268e0d9137914b80ba3429c05f7a74e94d21cfb7e2e0067",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        373,
+        13,
+        947,
+        1218
+      ],
+      "visible_height_fraction": 0.9609250398724083,
+      "transparent_pixels": 1125372,
+      "partial_alpha_pixels": 446388,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/19/draw.png": {
+      "path": "assets/images/characters/clarity/npc/19/draw.png",
+      "sha256": "1a4d23dd6d88b10c45e148711ba544af55108e9acf53fa69b91ba6a6bdf6bc61",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        298,
+        7,
+        991,
+        1227
+      ],
+      "visible_height_fraction": 0.9728867623604466,
+      "transparent_pixels": 1074822,
+      "partial_alpha_pixels": 496676,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/19/fire.png": {
+      "path": "assets/images/characters/clarity/npc/19/fire.png",
+      "sha256": "b2916421fb7d8dde1cadf953e62caf93a7ff0cbfcee5ad23e53d4bf49abdfe7f",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        276,
+        12,
+        988,
+        1223
+      ],
+      "visible_height_fraction": 0.9657097288676236,
+      "transparent_pixels": 1111016,
+      "partial_alpha_pixels": 460474,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/19/hit.png": {
+      "path": "assets/images/characters/clarity/npc/19/hit.png",
+      "sha256": "a86a60d2e879e6dbf704319409ada61ac167302c9ef3177c485617f09454ad23",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        315,
+        60,
+        1115,
+        1213
+      ],
+      "visible_height_fraction": 0.919457735247209,
+      "transparent_pixels": 1085259,
+      "partial_alpha_pixels": 486237,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/19/down.png": {
+      "path": "assets/images/characters/clarity/npc/19/down.png",
+      "sha256": "32f672df549047c88a893868b2dab16107f229285d546c8c2f1d4706a3930768",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        263,
+        393,
+        1092,
+        1211
+      ],
+      "visible_height_fraction": 0.6523125996810207,
+      "transparent_pixels": 1186139,
+      "partial_alpha_pixels": 386072,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/19/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/19/identity_poster.png",
+      "sha256": "c8876f7e1c748332d77b217ace61d6cb219bba1d3b6ff9d28ebb918731bd334f",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        373,
+        13,
+        947,
+        1218
+      ],
+      "visible_height_fraction": 0.9609250398724083,
+      "transparent_pixels": 1125372,
+      "partial_alpha_pixels": 446388,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/20/idle.png": {
+      "path": "assets/images/characters/clarity/npc/20/idle.png",
+      "sha256": "3d4d6fcfcd867cc0db40f3b1f838c06ef3a8f83629dc09b794939d8030fc7028",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        364,
+        8,
+        939,
+        1216
+      ],
+      "visible_height_fraction": 0.9633173843700159,
+      "transparent_pixels": 1125102,
+      "partial_alpha_pixels": 446705,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/20/draw.png": {
+      "path": "assets/images/characters/clarity/npc/20/draw.png",
+      "sha256": "a3b11086e6885925055cb1a19a19b669e5944a1a6c762af8523a037c0e705500",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        298,
+        6,
+        979,
+        1221
+      ],
+      "visible_height_fraction": 0.9688995215311005,
+      "transparent_pixels": 1077047,
+      "partial_alpha_pixels": 494602,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/20/fire.png": {
+      "path": "assets/images/characters/clarity/npc/20/fire.png",
+      "sha256": "52cff3cf70a5775d525afa4abfd213ab3498a2eb78c9e230df5b887c6d9603e0",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        279,
+        14,
+        976,
+        1216
+      ],
+      "visible_height_fraction": 0.9585326953748007,
+      "transparent_pixels": 1116965,
+      "partial_alpha_pixels": 454714,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/20/hit.png": {
+      "path": "assets/images/characters/clarity/npc/20/hit.png",
+      "sha256": "c2f84a923913165da2aacaeaf5d79a5f504a862936a6f74e5790f62a12f53d71",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        320,
+        45,
+        1140,
+        1214
+      ],
+      "visible_height_fraction": 0.9322169059011164,
+      "transparent_pixels": 1068479,
+      "partial_alpha_pixels": 503168,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/20/down.png": {
+      "path": "assets/images/characters/clarity/npc/20/down.png",
+      "sha256": "23ac00b0c85b7f03d83f7b34ad24cbef773f9ba4df311b46e64c515844bb85a3",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        249,
+        296,
+        1170,
+        1186
+      ],
+      "visible_height_fraction": 0.7097288676236044,
+      "transparent_pixels": 1117485,
+      "partial_alpha_pixels": 454475,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/20/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/20/identity_poster.png",
+      "sha256": "e04f34a4ca51001c1224ac59bbb0d116ab816d842105cd104bf21b6fd6c66da9",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        364,
+        8,
+        939,
+        1216
+      ],
+      "visible_height_fraction": 0.9633173843700159,
+      "transparent_pixels": 1125102,
+      "partial_alpha_pixels": 446705,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/21/idle.png": {
+      "path": "assets/images/characters/clarity/npc/21/idle.png",
+      "sha256": "73c2cc7644e41a2b4c733db0877ad7a143362a99968b4e4523164b31362ccf39",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        310,
+        9,
+        979,
+        1235
+      ],
+      "visible_height_fraction": 0.9776714513556619,
+      "transparent_pixels": 1060039,
+      "partial_alpha_pixels": 511487,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/21/draw.png": {
+      "path": "assets/images/characters/clarity/npc/21/draw.png",
+      "sha256": "d4052ac4676f2c0c4a5a10025c3fcd31ec51aff00b9e85345569fe9148a4fc96",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        290,
+        18,
+        984,
+        1233
+      ],
+      "visible_height_fraction": 0.9688995215311005,
+      "transparent_pixels": 1053853,
+      "partial_alpha_pixels": 517439,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/21/fire.png": {
+      "path": "assets/images/characters/clarity/npc/21/fire.png",
+      "sha256": "749ee4e9e5d9e192090f237cd0ac0b1b3e96571630c4614ef4fc6e6bc0eef422",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        278,
+        9,
+        995,
+        1236
+      ],
+      "visible_height_fraction": 0.9784688995215312,
+      "transparent_pixels": 1051826,
+      "partial_alpha_pixels": 519615,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/21/hit.png": {
+      "path": "assets/images/characters/clarity/npc/21/hit.png",
+      "sha256": "2dfd467be58ccb7d70cc112f4d08a1a7d5031c838de501883c289f3c4081cb80",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        270,
+        53,
+        1088,
+        1210
+      ],
+      "visible_height_fraction": 0.9226475279106858,
+      "transparent_pixels": 1039632,
+      "partial_alpha_pixels": 531383,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/21/down.png": {
+      "path": "assets/images/characters/clarity/npc/21/down.png",
+      "sha256": "1f5e2bcf08a31c32a4b0dafbd16de76ad7439ad018b59f08d3af0fcb4222827c",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        213,
+        353,
+        1048,
+        1220
+      ],
+      "visible_height_fraction": 0.6913875598086124,
+      "transparent_pixels": 1133720,
+      "partial_alpha_pixels": 437630,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/21/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/21/identity_poster.png",
+      "sha256": "f20c47a807db12e88a4a1309eb7aac6df5de9a75ebc8700b6b4488f70dbd2619",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        310,
+        9,
+        979,
+        1235
+      ],
+      "visible_height_fraction": 0.9776714513556619,
+      "transparent_pixels": 1060039,
+      "partial_alpha_pixels": 511487,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/22/idle.png": {
+      "path": "assets/images/characters/clarity/npc/22/idle.png",
+      "sha256": "87e553bcb019bffedd545f691a3da7a3fb853cc6cc6df8094a670f28df386566",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        330,
+        13,
+        1026,
+        1238
+      ],
+      "visible_height_fraction": 0.9768740031897927,
+      "transparent_pixels": 1061033,
+      "partial_alpha_pixels": 510913,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/22/draw.png": {
+      "path": "assets/images/characters/clarity/npc/22/draw.png",
+      "sha256": "e12086ccccf47c718a430046b9516976632cd558b9a0c56809b8a3ee62e68b71",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        300,
+        9,
+        1045,
+        1239
+      ],
+      "visible_height_fraction": 0.9808612440191388,
+      "transparent_pixels": 1034487,
+      "partial_alpha_pixels": 537182,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/22/fire.png": {
+      "path": "assets/images/characters/clarity/npc/22/fire.png",
+      "sha256": "74692e7a397e86fb52ce17ef5d135def2be0112a06267d626fc0ed61ce4b162d",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        320,
+        29,
+        1028,
+        1231
+      ],
+      "visible_height_fraction": 0.9585326953748007,
+      "transparent_pixels": 1073653,
+      "partial_alpha_pixels": 498428,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/22/hit.png": {
+      "path": "assets/images/characters/clarity/npc/22/hit.png",
+      "sha256": "7d1d936d246e46c7b3a5ce2647f95e55b7bc341d62cb521ce69435b431543c1d",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        290,
+        38,
+        1192,
+        1219
+      ],
+      "visible_height_fraction": 0.9417862838915471,
+      "transparent_pixels": 992435,
+      "partial_alpha_pixels": 579412,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/22/down.png": {
+      "path": "assets/images/characters/clarity/npc/22/down.png",
+      "sha256": "f4037c9acbbf244c2196c7af2504619de3ed1586c08ade84756db62f88f80033",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        92,
+        370,
+        1165,
+        1217
+      ],
+      "visible_height_fraction": 0.6754385964912281,
+      "transparent_pixels": 1108954,
+      "partial_alpha_pixels": 463156,
+      "canvas_edge_alpha_gt24": 0
+    },
+    "assets/images/characters/clarity/npc/22/identity_poster.png": {
+      "path": "assets/images/characters/clarity/npc/22/identity_poster.png",
+      "sha256": "b3596ea85ad3f8469aa3fea0331e152329fa206e66e7f09d7807b5fd37ff0be6",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "bbox_alpha_gt24": [
+        330,
+        13,
+        1026,
+        1238
+      ],
+      "visible_height_fraction": 0.9768740031897927,
+      "transparent_pixels": 1061033,
+      "partial_alpha_pixels": 510913,
+      "canvas_edge_alpha_gt24": 0
+    }
+  }
+}

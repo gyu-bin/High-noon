@@ -4,13 +4,15 @@ export type ClarityPose = 'idle' | 'draw' | 'fire' | 'hit' | 'down';
 export type ClarityPoseSet = Record<ClarityPose, ImageSourcePropType>;
 
 // Register only complete, visually reviewed five-pose sets. Original assets remain intact.
+// `-v2` folders are the 2026-10 redesign: expanded square canvases whose render scale lives in
+// constants/characterArtMetadata.ts (REDESIGN_ART_META). Their `down` frame is the KNEEL.
 export const CLARITY_PLAYERS: Partial<Record<number, ClarityPoseSet>> = {
   4: {
-    idle: require('@/assets/images/characters/clarity/player/04/idle.png'),
-    draw: require('@/assets/images/characters/clarity/player/04/draw.png'),
-    fire: require('@/assets/images/characters/clarity/player/04/fire.png'),
-    hit: require('@/assets/images/characters/clarity/player/04/hit.png'),
-    down: require('@/assets/images/characters/clarity/player/04/down.png'),
+    idle: require('@/assets/images/characters/clarity/player/04-v2/idle.png'),
+    draw: require('@/assets/images/characters/clarity/player/04-v2/draw.png'),
+    fire: require('@/assets/images/characters/clarity/player/04-v2/fire.png'),
+    hit: require('@/assets/images/characters/clarity/player/04-v2/hit.png'),
+    down: require('@/assets/images/characters/clarity/player/04-v2/down.png'),
   },
   3: {
     idle: require('@/assets/images/characters/clarity/player/03/idle.png'),
@@ -37,25 +39,25 @@ export const CLARITY_PLAYERS: Partial<Record<number, ClarityPoseSet>> = {
 
 export const CLARITY_NPCS: Partial<Record<number, ClarityPoseSet>> = {
   22: {
-    idle: require('@/assets/images/characters/clarity/npc/22/idle.png'),
-    draw: require('@/assets/images/characters/clarity/npc/22/draw.png'),
-    fire: require('@/assets/images/characters/clarity/npc/22/fire.png'),
-    hit: require('@/assets/images/characters/clarity/npc/22/hit.png'),
-    down: require('@/assets/images/characters/clarity/npc/22/down.png'),
+    idle: require('@/assets/images/characters/clarity/npc/22-v2/idle.png'),
+    draw: require('@/assets/images/characters/clarity/npc/22-v2/draw.png'),
+    fire: require('@/assets/images/characters/clarity/npc/22-v2/fire.png'),
+    hit: require('@/assets/images/characters/clarity/npc/22-v2/hit.png'),
+    down: require('@/assets/images/characters/clarity/npc/22-v2/down.png'),
   },
   20: {
-    idle: require('@/assets/images/characters/clarity/npc/20/idle.png'),
-    draw: require('@/assets/images/characters/clarity/npc/20/draw.png'),
-    fire: require('@/assets/images/characters/clarity/npc/20/fire.png'),
-    hit: require('@/assets/images/characters/clarity/npc/20/hit.png'),
-    down: require('@/assets/images/characters/clarity/npc/20/down.png'),
+    idle: require('@/assets/images/characters/clarity/npc/20-v2/idle.png'),
+    draw: require('@/assets/images/characters/clarity/npc/20-v2/draw.png'),
+    fire: require('@/assets/images/characters/clarity/npc/20-v2/fire.png'),
+    hit: require('@/assets/images/characters/clarity/npc/20-v2/hit.png'),
+    down: require('@/assets/images/characters/clarity/npc/20-v2/down.png'),
   },
   19: {
-    idle: require('@/assets/images/characters/clarity/npc/19/idle.png'),
-    draw: require('@/assets/images/characters/clarity/npc/19/draw.png'),
-    fire: require('@/assets/images/characters/clarity/npc/19/fire.png'),
-    hit: require('@/assets/images/characters/clarity/npc/19/hit.png'),
-    down: require('@/assets/images/characters/clarity/npc/19/down.png'),
+    idle: require('@/assets/images/characters/clarity/npc/19-v2/idle.png'),
+    draw: require('@/assets/images/characters/clarity/npc/19-v2/draw.png'),
+    fire: require('@/assets/images/characters/clarity/npc/19-v2/fire.png'),
+    hit: require('@/assets/images/characters/clarity/npc/19-v2/hit.png'),
+    down: require('@/assets/images/characters/clarity/npc/19-v2/down.png'),
   },
   21: {
     idle: require('@/assets/images/characters/clarity/npc/21/idle.png'),
@@ -79,11 +81,11 @@ export const CLARITY_NPCS: Partial<Record<number, ClarityPoseSet>> = {
     down: require('@/assets/images/characters/clarity/npc/06/down.png'),
   },
   18: {
-    idle: require('@/assets/images/characters/clarity/npc/18/idle.png'),
-    draw: require('@/assets/images/characters/clarity/npc/18/draw.png'),
-    fire: require('@/assets/images/characters/clarity/npc/18/fire.png'),
-    hit: require('@/assets/images/characters/clarity/npc/18/hit.png'),
-    down: require('@/assets/images/characters/clarity/npc/18/down.png'),
+    idle: require('@/assets/images/characters/clarity/npc/18-v2/idle.png'),
+    draw: require('@/assets/images/characters/clarity/npc/18-v2/draw.png'),
+    fire: require('@/assets/images/characters/clarity/npc/18-v2/fire.png'),
+    hit: require('@/assets/images/characters/clarity/npc/18-v2/hit.png'),
+    down: require('@/assets/images/characters/clarity/npc/18-v2/down.png'),
   },
   17: {
     idle: require('@/assets/images/characters/clarity/npc/17/idle.png'),
@@ -100,11 +102,11 @@ export const CLARITY_NPCS: Partial<Record<number, ClarityPoseSet>> = {
     down: require('@/assets/images/characters/clarity/npc/16/down.png'),
   },
   15: {
-    idle: require('@/assets/images/characters/clarity/npc/15/idle.png'),
-    draw: require('@/assets/images/characters/clarity/npc/15/draw.png'),
-    fire: require('@/assets/images/characters/clarity/npc/15/fire.png'),
-    hit: require('@/assets/images/characters/clarity/npc/15/hit.png'),
-    down: require('@/assets/images/characters/clarity/npc/15/down.png'),
+    idle: require('@/assets/images/characters/clarity/npc/15-v2/idle.png'),
+    draw: require('@/assets/images/characters/clarity/npc/15-v2/draw.png'),
+    fire: require('@/assets/images/characters/clarity/npc/15-v2/fire.png'),
+    hit: require('@/assets/images/characters/clarity/npc/15-v2/hit.png'),
+    down: require('@/assets/images/characters/clarity/npc/15-v2/down.png'),
   },
   14: {
     idle: require('@/assets/images/characters/clarity/npc/14/idle.png'),
@@ -135,11 +137,11 @@ export const CLARITY_NPCS: Partial<Record<number, ClarityPoseSet>> = {
     down: require('@/assets/images/characters/clarity/npc/10/down.png'),
   },
   9: {
-    idle: require('@/assets/images/characters/clarity/npc/09/idle.png'),
-    draw: require('@/assets/images/characters/clarity/npc/09/draw.png'),
-    fire: require('@/assets/images/characters/clarity/npc/09/fire.png'),
-    hit: require('@/assets/images/characters/clarity/npc/09/hit.png'),
-    down: require('@/assets/images/characters/clarity/npc/09/down.png'),
+    idle: require('@/assets/images/characters/clarity/npc/09-v2/idle.png'),
+    draw: require('@/assets/images/characters/clarity/npc/09-v2/draw.png'),
+    fire: require('@/assets/images/characters/clarity/npc/09-v2/fire.png'),
+    hit: require('@/assets/images/characters/clarity/npc/09-v2/hit.png'),
+    down: require('@/assets/images/characters/clarity/npc/09-v2/down.png'),
   },
   8: {
     idle: require('@/assets/images/characters/clarity/npc/08/idle.png'),
