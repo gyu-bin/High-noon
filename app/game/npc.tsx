@@ -1,5 +1,6 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { pickDuelBackground, type DuelBackgroundId } from '@/utils/duelBackgroundSelection';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -140,6 +141,7 @@ export default function NpcGameScreen() {
     () => (npc ? pickBattleDayNight(npc.id) : 'day'),
     [npc],
   );
+  const [duelBackgroundId, setDuelBackgroundId] = useState<DuelBackgroundId>('twilight');
   const duelBgmTrack = npc?.bossFlag ? ('boss' as const) : ('duel' as const);
   useScreenBgm(npc ? duelBgmTrack : null, true);
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
@@ -444,6 +446,7 @@ export default function NpcGameScreen() {
           setChaosBanner(null);
         }
         startMatch({ mode: 'npc', playerHearts: HEARTS, opponentHearts: HEARTS });
+        setDuelBackgroundId(pickDuelBackground());
         playerStreakRef.current = 0;
         prevBangDelayRef.current = null;
         mirrorAdaptiveMsRef.current = npc.reactionMs;
@@ -1238,6 +1241,7 @@ export default function NpcGameScreen() {
             tier={npc.tier}
             bossFlag={npc.bossFlag}
             dayNight={battleDayNight}
+            backgroundId={duelBackgroundId}
             npcPose={npcPose}
             npcVictoryActive={defeatedSide === 'player'}
             playerDefeated={defeatedSide === 'player'}

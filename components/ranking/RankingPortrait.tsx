@@ -1,8 +1,7 @@
 import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 
-import { getPlayerSpriteSource } from '@/constants/spriteAssets';
-import { SPRITE_CACHE_REVISION } from '@/constants/sprites';
+import { POSTER_PLAYER_IDENTITIES } from '@/constants/posterCharacterAssets';
 
 type Props = {
   width: number;
@@ -10,13 +9,13 @@ type Props = {
   characterId?: number;
 };
 
-/** 랭킹 UI용 — 결투 이펙트/레이어 없이 idle 이미지만 */
+/** Wanted/ranking-only portrait; gameplay retains the original cinematic idle. */
 export function RankingPortrait({
   width,
   height,
   characterId = 1,
 }: Props) {
-  const source = getPlayerSpriteSource(characterId, 'idle');
+  const source = POSTER_PLAYER_IDENTITIES[characterId];
 
   if (!source) {
     return <View style={{ width, height }} />;
@@ -30,7 +29,7 @@ export function RankingPortrait({
         contentFit="contain"
         cachePolicy="none"
         transition={0}
-        recyclingKey={`rank-portrait-p${characterId}-r${SPRITE_CACHE_REVISION}`}
+        recyclingKey={`wanted-player-${characterId}-poster-v1`}
       />
     </View>
   );

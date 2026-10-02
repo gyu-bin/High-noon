@@ -1,99 +1,115 @@
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { PixelRatio, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
-import { uiV3Colors } from '@/constants/theme';
 import { V3_PALE_LOCKED_SILHOUETTE } from '@/constants/v3UiAssets';
+import { WesternButton } from '@/components/ui/western/WesternPrimitives';
 import { NpcPortrait } from '@/components/npc/NpcPortrait';
 import type { NpcDefinition } from '@/types/npc';
+import { formatReactionMs } from '@/utils/formatReactionMs';
 
-const wantedPaper = require('@/high_noon_terra_asset_pack/output/ui/textures/wanted_paper.png');
+const wantedPaper = require('@/assets/images/ui/western/ui_wanted_paper.png');
 
 export function NpcWantedCard({
-  npc,
-  locked,
-  masked,
-  name,
-  tier,
-  abilityName,
-  abilityHint,
-  duelLabel,
-  wantedLabel,
-  specialLabel,
-  lockedLabel,
-  bossLabel,
-  onDuel,
-  style,
+  npc, locked, masked, name, englishName, tier, typeLabel, abilityName, abilityHint,
+  duelLabel, lockedLabel, bossLabel, posterHeight, onDuel, style,
 }: {
   npc: NpcDefinition;
   locked: boolean;
   masked: boolean;
   name: string;
+  englishName?: string;
   tier: string;
+  typeLabel: string;
   abilityName?: string;
   abilityHint?: string;
   duelLabel: string;
-  wantedLabel: string;
-  specialLabel: string;
   lockedLabel: string;
   bossLabel: string;
+  posterHeight: number;
   onDuel: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { width, height } = useWindowDimensions();
-  const landscape = width > height;
-  const artSize = Math.min(landscape ? height * 0.5 : width * 0.52, 270);
+  // A 256pt canvas is 1.50x the previous 512px / 3pt canvas on iPhone.
+  // Reserve the same hero area for normal, boss and special identities.
+  const artSize = PixelRatio.roundToNearestPixel(Math.min(256, posterHeight - 192));
+  const artSlot = Math.min(270, posterHeight - 190);
   const hidden = locked || masked;
   const isPale = npc.id === 22;
   return (
-    <View style={[styles.card, landscape && styles.cardLandscape, style]}>
-      <Image source={wantedPaper} contentFit="cover" style={styles.paper} />
-      <View style={styles.wash} />
-      <View style={styles.topline}>
-        <Text style={styles.wanted}>{wantedLabel}</Text>
-        {npc.bossFlag ? <Ionicons name="skull-outline" color={uiV3Colors.westernRed} size={19} accessibilityLabel={bossLabel} /> : null}
+    <View style={[styles.frame, { height: posterHeight }, style]}>
+      <View style={styles.card}>
+        <Image source={wantedPaper} contentFit="cover" style={styles.paper} />
+        <View pointerEvents="none" style={styles.wash} />
+        <LinearGradient pointerEvents="none" colors={['rgba(83,42,16,0.18)', 'transparent', 'rgba(83,42,16,0.22)']} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} />
+        <View pointerEvents="none" style={styles.paperEdge} />
+
+        <View style={styles.header}>
+          <Text style={styles.wanted}>WANTED</Text>
+          <View style={styles.ornament}><View style={styles.rule} /><Text style={styles.diamond}>◆</Text><View style={styles.rule} /></View>
+        </View>
+
+        <View style={[styles.artWrap, { height: artSlot }]}>
+          {hidden ? (
+            isPale ? <Image source={V3_PALE_LOCKED_SILHOUETTE} contentFit="contain" style={{ width: artSize, height: artSize, maxWidth: '100%' }} /> : <View style={[styles.genericLocked, { width: artSize * 0.62, height: artSize * 0.84 }]}><Text style={styles.genericQuestion}>?</Text></View>
+          ) : <NpcPortrait id={npc.id} size={artSize} />}
+        </View>
+
+        <View style={styles.identity}>
+          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.name, !hidden && usesCjkFont(name) && styles.nameCjk]}>{hidden ? '???' : name}</Text>
+          {!hidden && englishName && englishName.toLowerCase() !== name.toLowerCase() ? <Text numberOfLines={1} style={styles.englishName}>{englishName.toUpperCase()}</Text> : null}
+        </View>
+
+        <View style={styles.classification}>
+          {!hidden && npc.bossFlag ? <Ionicons name="skull-outline" color="#704127" size={11} accessibilityLabel={bossLabel} /> : <Text style={styles.tierAccent}>◆</Text>}
+          <Text style={styles.tierText}>{hidden ? '???' : `${tier} · ${typeLabel}`}</Text>
+        </View>
+
+        <View style={styles.details}>
+          <Text style={styles.reactionLabel}>REACTION</Text>
+          <Text style={styles.reaction}>{hidden ? '—' : formatReactionMs(npc.reactionMs)}{!hidden ? <Text style={styles.unit}> ms</Text> : null}</Text>
+        </View>
+
+        <View style={styles.description}>
+          {!hidden && abilityName ? <Text numberOfLines={1} style={styles.hint}><Text style={styles.ability}>{abilityName}</Text>{abilityHint ? ` · ${abilityHint}` : ''}</Text> : null}
+        </View>
+
+        <WesternButton title={hidden ? lockedLabel : duelLabel} disabled={hidden}
+          onPress={onDuel} style={styles.duel} />
       </View>
-      {npc.specialAbility !== 'none' && !hidden ? <Text style={styles.special}>{specialLabel}</Text> : null}
-      <View style={styles.artWrap}>
-        {hidden ? (
-          isPale ? <Image source={V3_PALE_LOCKED_SILHOUETTE} contentFit="contain" style={{ width: artSize, height: artSize }} /> : <View style={[styles.genericLocked, { width: artSize * 0.62, height: artSize * 0.72 }]}><Text style={styles.genericQuestion}>?</Text></View>
-        ) : (
-          <NpcPortrait id={npc.id} size={artSize} />
-        )}
-        {hidden ? <View style={styles.lockBadge}><Ionicons name="lock-closed" size={16} color={uiV3Colors.cream} /></View> : null}
-      </View>
-      <Text style={[styles.name, !hidden && usesCjkFont(name) && styles.nameCjk]}>{hidden ? '???' : name}</Text>
-      <View style={styles.tier}><Text style={styles.tierText}>{hidden ? '???' : tier}</Text></View>
-      {!hidden && abilityName ? <Text style={styles.ability}>{abilityName}</Text> : null}
-      <Text style={styles.hint} numberOfLines={2}>{hidden ? '???' : abilityHint}</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel={hidden ? lockedLabel : duelLabel} accessibilityState={{ disabled: hidden }} disabled={hidden} onPress={onDuel} style={({ pressed }) => [styles.duel, hidden && styles.duelLocked, pressed && !hidden && styles.duelPressed]}>
-        <Text style={styles.duelLabel}>{hidden ? lockedLabel : duelLabel}</Text>
-      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { width: '100%', maxWidth: 460, minHeight: 420, alignSelf: 'center', overflow: 'hidden', borderRadius: 4, borderWidth: 2, borderColor: uiV3Colors.ochre, padding: 16, justifyContent: 'space-between', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.48, shadowRadius: 10, elevation: 8 },
-  cardLandscape: { minHeight: 0, flex: 1, maxWidth: 620, paddingVertical: 14 },
-  paper: { ...StyleSheet.absoluteFillObject, opacity: 0.98 },
-  wash: { ...StyleSheet.absoluteFillObject, backgroundColor: uiV3Colors.cream, opacity: 0.08 },
-  topline: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
-  wanted: { color: uiV3Colors.westernRed, fontFamily: FONT_RYE, fontSize: 30, letterSpacing: 2 },
-  special: { color: uiV3Colors.darkBrown, fontSize: 10, textAlign: 'center', fontWeight: '900', letterSpacing: 2, marginTop: 2 },
-  artWrap: { alignItems: 'center', justifyContent: 'center', minHeight: 205, marginVertical: 2 },
-  genericLocked: { alignItems: 'center', justifyContent: 'center', backgroundColor: uiV3Colors.voidBlack, borderRadius: 90, borderBottomWidth: 8, borderBottomColor: uiV3Colors.darkBrown },
-  genericQuestion: { color: uiV3Colors.dustGray, fontFamily: FONT_RYE, fontSize: 72 },
-  lockBadge: { position: 'absolute', right: '22%', bottom: 12, padding: 7, borderRadius: 20, backgroundColor: uiV3Colors.voidBlack, borderWidth: 1, borderColor: uiV3Colors.hiddenRed },
-  name: { color: uiV3Colors.darkBrown, fontFamily: FONT_RYE, fontSize: 26, textAlign: 'center' },
-  nameCjk: { fontFamily: FONT_WESTERN_SERIF, fontSize: 24, fontWeight: '700', letterSpacing: 1.2, textShadowColor: 'rgba(92,45,19,0.18)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 },
-  tier: { alignSelf: 'center', backgroundColor: uiV3Colors.darkBrown, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 4, marginTop: 6 },
-  tierText: { color: uiV3Colors.cream, fontSize: 10, fontWeight: '900', letterSpacing: 1.5 },
-  ability: { color: uiV3Colors.westernRed, fontSize: 12, fontWeight: '900', letterSpacing: 1.4, textAlign: 'center', marginTop: 9 },
-  hint: { color: uiV3Colors.darkBrown, fontSize: 12, lineHeight: 17, fontWeight: '600', textAlign: 'center', minHeight: 34, marginTop: 5 },
-  duel: { marginTop: 10, minHeight: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 3, backgroundColor: '#382315', borderWidth: 1.5, borderColor: uiV3Colors.gold },
-  duelLocked: { backgroundColor: uiV3Colors.darkBrown, borderColor: uiV3Colors.dustGray, opacity: 0.75 },
-  duelPressed: { transform: [{ translateY: 2 }] },
-  duelLabel: { color: uiV3Colors.cream, fontFamily: FONT_RYE, fontSize: 16 },
+  frame: { alignSelf: 'center', shadowColor: '#170B04', shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.55, shadowRadius: 14, elevation: 8 },
+  card: { flex: 1, overflow: 'hidden', borderRadius: 2, borderWidth: 1, borderColor: '#73502F', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#BB945F', alignItems: 'center', justifyContent: 'space-between' },
+  paper: { ...StyleSheet.absoluteFillObject, opacity: 0.74 },
+  wash: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(98,55,22,0.13)' },
+  paperEdge: { ...StyleSheet.absoluteFillObject, borderWidth: 4, borderColor: 'rgba(83,42,16,0.16)' },
+  header: { alignItems: 'center', gap: 2 },
+  wanted: { color: '#6A291C', fontFamily: FONT_RYE, fontSize: 19, lineHeight: 23, letterSpacing: 2.5 },
+  ornament: { flexDirection: 'row', alignItems: 'center', gap: 6, width: 94 },
+  rule: { height: StyleSheet.hairlineWidth, backgroundColor: '#694224', flex: 1, opacity: 0.6 },
+  diamond: { color: '#694224', fontSize: 5, lineHeight: 4 },
+  artWrap: { alignItems: 'center', justifyContent: 'center', width: '100%' },
+  genericLocked: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#221811', borderRadius: 70 },
+  genericQuestion: { color: '#937755', fontFamily: FONT_RYE, fontSize: 48 },
+  identity: { alignItems: 'center', width: '100%', gap: 2 },
+  name: { color: '#302015', fontFamily: FONT_RYE, fontSize: 21, lineHeight: 28, textAlign: 'center' },
+  nameCjk: { fontFamily: FONT_WESTERN_SERIF, fontSize: 23, fontWeight: '700', letterSpacing: 0.4 },
+  englishName: { color: '#63442C', fontSize: 8, lineHeight: 10, fontWeight: '700', letterSpacing: 1.6, textAlign: 'center' },
+  classification: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, minHeight: 13 },
+  tierAccent: { color: '#89612F', fontSize: 8 },
+  tierText: { color: '#644027', fontSize: 9, fontWeight: '800', letterSpacing: 1 },
+  details: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  reactionLabel: { color: '#725135', fontSize: 7, lineHeight: 10, letterSpacing: 1.7, fontWeight: '700' },
+  reaction: { color: '#422B1A', fontSize: 17, lineHeight: 21, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  unit: { fontSize: 10, fontWeight: '500' },
+  description: { alignItems: 'center', justifyContent: 'center', minHeight: 14, marginVertical: 1, width: '100%' },
+  ability: { color: '#6A291C', fontFamily: FONT_WESTERN_SERIF, fontSize: 10, lineHeight: 14 },
+  hint: { color: '#67472E', fontSize: 9, lineHeight: 13, textAlign: 'center' },
+  duel: { alignSelf: 'center', width: '78%', minHeight: 40, marginTop: 2 },
 });

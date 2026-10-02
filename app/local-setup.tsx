@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import { WesternButton, WesternHeader } from '@/components/ui/western/WesternPrimitives';
+import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
 import { CLARITY_NPCS, CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
 import type { PlayerCharacterId } from '@/constants/characters';
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
@@ -104,7 +105,7 @@ export default function LocalSetupScreen() {
               <Ionicons name="chevron-back" size={28} color={uiV3Colors.cream} />
             </Pressable>
             <Image source={sourceFor(activeSkin)} contentFit="contain" transition={0}
-              style={{ width: artSize, height: artSize }} />
+              style={scaledArtStyle(artSize, artSize, characterArtDisplayScale(activeSkin.kind, activeSkin.id))} />
             <Pressable accessibilityRole="button" accessibilityLabel={t('meta.character.next')} onPress={() => move(1)} style={[styles.arrow, { right: 0 }]}>
               <Ionicons name="chevron-forward" size={28} color={uiV3Colors.cream} />
             </Pressable>

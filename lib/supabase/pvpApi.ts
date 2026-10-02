@@ -1,12 +1,18 @@
 import { getOrCreateDeviceKey } from '@/lib/supabase/deviceKey';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
-import { throwSupabaseError } from '@/lib/supabase/errors';
+import { isNetworkError, throwSupabaseError } from '@/lib/supabase/errors';
+import {
+  normalizeReactionMsForServer,
+  normalizeRoundsForServer,
+  normalizeSamplesForServer,
+} from '@/lib/supabase/reactionPayload';
 import type {
   DailyChallenge,
   DailySubmitResult,
   FriendChallenge,
   FriendChallengeCreated,
   FriendChallengeSubmitResult,
+  GhostRoundWire,
   PvpLeaderboardResult,
   PvpHistoryEntry,
   PvpMatchmakeResult,
@@ -20,6 +26,15 @@ import {
   type DailyChallengePayload,
 } from '@/utils/dailyChallenge';
 import { normalizeChallengeCode } from '@/utils/challengeLink';
+import { isRecordShot, type ChallengeRecord } from '@/utils/friendChallenge';
+import { parseGhostRounds } from '@/lib/supabase/ghostRounds';
+
+/**
+ * Ranked only: placeholder for a legacy opponent-sample slot with no shot. The
+ * server scores ranked matches itself and ignores p_opponent_rounds. Friend
+ * challenges never use it (see pvpCreateFriendChallenge).
+ */
+const GHOST_SAMPLE_FALLBACK_MS = 280;
 
 async function requireDeviceKey(): Promise<string> {
   if (!isSupabaseConfigured) throw new Error('supabase_not_configured');
@@ -77,22 +92,39 @@ export async function pvpUpdateProfile(input: {
   return data as PvpProfile;
 }
 
+/**
+ * Ranked matchmaking. On a Ghost V2 server (pvp_capabilities().ghost_snapshot_v2)
+ * the V2 RPC is used and the opponent carries `ghost_rounds`; otherwise the V1
+ * contract is used unchanged.
+ */
 export async function pvpMatchmake(): Promise<PvpMatchmakeResult> {
   const key = await requireDeviceKey();
-  const { data, error } = await getSupabase().rpc('pvp_matchmake', {
+  const v2 = await supportsGhostSnapshotV2();
+  const { data, error } = await getSupabase().rpc(v2 ? 'pvp_matchmake_v2' : 'pvp_matchmake', {
     p_device_key: key,
   });
   if (error) throwSupabaseError(error);
-  const raw = data as PvpMatchmakeResult;
-  const samples = raw.opponent.sample_ms;
-  const sample_ms: [number, number, number] = [
-    Number(samples[0]),
-    Number(samples[1]),
-    Number(samples[2]),
-  ];
+  const raw = data as PvpMatchmakeResult & { opponent: { ghost_rounds?: unknown } };
+  const ghostRounds = v2 ? parseGhostRounds(raw.opponent.ghost_rounds) : null;
+  const samples = raw.opponent.sample_ms as unknown as (number | null)[];
+  const sample_ms: [number, number, number] = [0, 1, 2].map((i) => {
+    const round = ghostRounds?.[i];
+    if (round) return round.outcome === 'shot' ? round.reactionMs : GHOST_SAMPLE_FALLBACK_MS;
+    const n = Number(samples[i]);
+    return Number.isFinite(n) && samples[i] != null ? n : GHOST_SAMPLE_FALLBACK_MS;
+  }) as [number, number, number];
+  const opponent = { ...raw.opponent };
+  delete opponent.ghost_rounds;
+  if (v2 && !ghostRounds) {
+    // Never replay a V2 assignment from guessed values.
+    throw new Error('invalid_ghost_rounds');
+  }
   return {
     ...raw,
-    opponent: { ...raw.opponent, sample_ms },
+    ghost_version: ghostRounds ? 2 : 1,
+    opponent: ghostRounds
+      ? { ...opponent, sample_ms, ghost_rounds: ghostRounds }
+      : { ...opponent, sample_ms },
   };
 }
 
@@ -113,8 +145,8 @@ export async function pvpSubmitMatch(input: {
     // immutable assignment id returned by pvp_matchmake, not a profile id.
     p_opponent_id: input.matchId,
     p_opponent_is_bot: input.opponentIsBot,
-    p_player_rounds: input.playerRounds,
-    p_opponent_rounds: input.opponentRounds,
+    p_player_rounds: normalizeRoundsForServer(input.playerRounds),
+    p_opponent_rounds: normalizeSamplesForServer(input.opponentRounds, GHOST_SAMPLE_FALLBACK_MS),
     p_score_player: input.scorePlayer,
     p_score_opponent: input.scoreOpponent,
     p_result: input.result,
@@ -123,6 +155,68 @@ export async function pvpSubmitMatch(input: {
   });
   if (error) throwSupabaseError(error);
   return data as PvpSubmitResult;
+}
+
+export type PvpServerCapabilities = {
+  contract?: string;
+  ranked_submit_idempotent?: boolean;
+  forfeit_rpc?: boolean;
+  ghost_snapshot_v2?: boolean;
+  history_rounds?: boolean;
+};
+
+/** Ghost V2 submission: the player's played rounds (1..3), scored by the server. */
+export async function pvpSubmitMatchV2(input: {
+  matchId: string;
+  rounds: GhostRoundWire[];
+  characterId: number;
+}): Promise<PvpSubmitResult> {
+  const key = await requireDeviceKey();
+  const { data, error } = await getSupabase().rpc('pvp_submit_match_v2', {
+    p_device_key: key,
+    p_match_id: input.matchId,
+    p_rounds: input.rounds,
+    p_character_id: input.characterId,
+  });
+  if (error) throwSupabaseError(error);
+  return data as PvpSubmitResult;
+}
+
+const GHOST_V2_NEGATIVE_TTL_MS = 5 * 60 * 1000;
+let ghostV2Supported = false;
+let ghostV2CheckedAt = 0;
+
+/**
+ * Only a positive answer is kept for the session; a negative / failed check is
+ * retried after a few minutes so a migrated server is picked up without restart.
+ */
+export async function supportsGhostSnapshotV2(): Promise<boolean> {
+  if (ghostV2Supported) return true;
+  if (Date.now() - ghostV2CheckedAt < GHOST_V2_NEGATIVE_TTL_MS) return false;
+  ghostV2CheckedAt = Date.now();
+  try {
+    const caps = await pvpCapabilities();
+    ghostV2Supported = caps?.ghost_snapshot_v2 === true;
+  } catch {
+    ghostV2CheckedAt = 0;
+    return false;
+  }
+  return ghostV2Supported;
+}
+
+/**
+ * `pvp_capabilities` exists only on the reconciled V3 baseline
+ * (20260927_reconcile_bounty_ranking_v3.sql). A donor-era database has no such
+ * RPC, which is reported as `null`. Network failures still throw.
+ */
+export async function pvpCapabilities(): Promise<PvpServerCapabilities | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await getSupabase().rpc('pvp_capabilities');
+  if (error) {
+    if (isNetworkError(error)) throwSupabaseError(error);
+    return null;
+  }
+  return (data ?? null) as PvpServerCapabilities | null;
 }
 
 export async function pvpRerollDisplayName(): Promise<PvpProfile> {
@@ -191,7 +285,7 @@ export async function pvpSubmitDaily(input: {
   const key = await requireDeviceKey();
   const { data, error } = await getSupabase().rpc('pvp_submit_daily', {
     p_device_key: key,
-    p_player_rounds: input.playerRounds,
+    p_player_rounds: normalizeRoundsForServer(input.playerRounds),
     p_score_player: input.scorePlayer,
     p_score_opponent: input.scoreOpponent,
     p_result: input.result,
@@ -232,20 +326,27 @@ export async function pvpMarkDailyShared(): Promise<void> {
   }
 }
 
+/**
+ * Friend Challenge V3: the record is three real SHOT reactions (integer ms,
+ * 80..2499). Anything else is refused here, before the server would pad it —
+ * no fallback or opponent sample ever stands in for a missing shot.
+ */
 export async function pvpCreateFriendChallenge(input: {
-  sampleMs: [number, number, number];
-  scoreCreator: number;
-  creatorAvgMs: number | null;
-  creatorBestMs: number | null;
+  record: ChallengeRecord;
   characterId: number;
 }): Promise<FriendChallengeCreated> {
+  const { sampleMs, avgMs, bestMs } = input.record;
+  if (sampleMs.length !== 3 || !sampleMs.every(isRecordShot)) {
+    throw new Error('invalid_sample_ms');
+  }
   const key = await requireDeviceKey();
   const { data, error } = await getSupabase().rpc('pvp_create_friend_challenge', {
     p_device_key: key,
-    p_sample_ms: input.sampleMs,
-    p_score_creator: input.scoreCreator,
-    p_creator_avg_ms: input.creatorAvgMs,
-    p_creator_best_ms: input.creatorBestMs,
+    p_sample_ms: [sampleMs[0], sampleMs[1], sampleMs[2]],
+    // A record challenge has no match score; the column is informational only.
+    p_score_creator: 0,
+    p_creator_avg_ms: avgMs,
+    p_creator_best_ms: bestMs,
     p_character_id: input.characterId,
     p_cosmetic_npc_id: null,
   });
@@ -279,7 +380,7 @@ export async function pvpSubmitFriendChallenge(input: {
   const { data, error } = await getSupabase().rpc('pvp_submit_friend_challenge', {
     p_device_key: key,
     p_code: normalizeChallengeCode(input.code),
-    p_player_rounds: input.playerRounds,
+    p_player_rounds: normalizeRoundsForServer(input.playerRounds),
     p_score_player: input.scorePlayer,
     p_score_creator: input.scoreCreator,
     p_result: input.result,

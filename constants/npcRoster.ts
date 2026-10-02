@@ -1,11 +1,11 @@
-/** Canonical names and baseline reaction times from the supplied 22-gunslinger board. */
+/** Canonical names and baseline reaction times — human RT distribution aligned (plat = midgame). */
 export const NPC_ROSTER = [
-  ['THE DRIFTER', 520], ['RED TOM', 498], ['SILENT JOE', 480],
-  ['THE MARSHAL', 460], ['WILD BILL', 440], ['CALAMITY ANNIE', 420],
-  ['BLACK HAWK', 395], ['MAD DOG', 380], ['TWO GUN ROSS', 360],
-  ['THE PREACHER', 340], ['LADY VIXEN', 320], ['EL GRINGO', 310],
-  ['MIRROR JACK', 278], ['THUNDERBOLT', 265], ['SHADOW HUNTER', 252],
-  ['THE VENOM', 240], ['DRYDEN', 230], ['RED EYE', 220],
-  ['THE VOID', 205], ['THE ECHO', 195], ['THE UNDERTAKER', 185],
-  ['PALE RIDER', 198],
+  ['THE DRIFTER', 410], ['RED TOM', 395], ['SILENT JOE', 380],
+  ['THE MARSHAL', 355], ['WILD BILL', 340], ['CALAMITY ANNIE', 325],
+  ['BLACK HAWK', 310], ['MAD DOG', 298], ['TWO GUN ROSS', 285],
+  ['THE PREACHER', 270], ['LADY VIXEN', 258], ['EL GRINGO', 248],
+  ['MIRROR JACK', 235], ['THUNDERBOLT', 225], ['SHADOW HUNTER', 215],
+  ['THE VENOM', 205], ['DRYDEN', 198], ['RED EYE', 192],
+  ['THE VOID', 185], ['THE ECHO', 180], ['THE UNDERTAKER', 175],
+  ['PALE RIDER', 182],
 ] as const;

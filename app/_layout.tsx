@@ -42,7 +42,8 @@ import { consumeOtaJustApplied } from '@/utils/otaUpdateFlag';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
 import { isStoreUpdateRequired } from '@/utils/storeUpdate';
 import { initPurchasesOnBoot } from '@/utils/purchaseService';
-import { challengeCodeFromUrl } from '@/utils/challengeLink';
+import { challengeCodeFromUrl, challengeLinkAction } from '@/utils/challengeLink';
+import { isActiveDuelRoute, isDuelFlowRoute, isInGameRoute } from '@/utils/duelRoutes';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -66,10 +67,6 @@ function waitPersistHydrated(api: {
       resolve();
     });
   });
-}
-
-function isInGameRoute(pathname: string): boolean {
-  return pathname === '/game' || pathname.startsWith('/game/');
 }
 
 /** 스플래시를 내리기 전에 첫 프레임을 그릴 시간을 준다 — 배경 깜빡임 완화 */
@@ -127,6 +124,8 @@ function RootLayoutContent() {
   const router = useRouter();
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
+  /** Latest challenge code received while a duel was in progress. */
+  const pendingChallengeCodeRef = useRef<string | null>(null);
 
   const language = useSettingsStore((s) => s.language);
   const [fontsLoaded, fontError] = useFonts({
@@ -170,17 +169,27 @@ function RootLayoutContent() {
       }
 
       const code = challengeCodeFromUrl(url);
-      if (!code || isInGameRoute(pathnameRef.current)) return;
-      router.push({
-        pathname: '/ranking/challenge',
-        params: { code },
-      } as never);
+      if (!code) return;
+      if (isDuelFlowRoute(pathnameRef.current)) {
+        pendingChallengeCodeRef.current = code;
+        return;
+      }
+      openChallengeLink(router, pathnameRef.current, code);
     };
 
     void Linking.getInitialURL().then(apply);
     const sub = Linking.addEventListener('url', ({ url }) => apply(url));
     return () => sub.remove();
   }, [appReady, router]);
+
+  /** Deliver a challenge link held during a duel once the player is back on a menu. */
+  useEffect(() => {
+    if (!appReady) return;
+    const code = pendingChallengeCodeRef.current;
+    if (!code || isDuelFlowRoute(pathname)) return;
+    pendingChallengeCodeRef.current = null;
+    openChallengeLink(router, pathname, code);
+  }, [appReady, pathname, router]);
 
   useEffect(() => {
     // Keep menus, previews and duels in the same upright orientation.
@@ -199,7 +208,7 @@ function RootLayoutContent() {
 
     const onAppState = (next: AppStateStatus) => {
       if (next !== 'active') return;
-      if (isInGameRoute(pathnameRef.current)) return;
+      if (isActiveDuelRoute(pathnameRef.current)) return;
       void applyOtaUpdateIfAvailable();
     };
 
@@ -325,4 +334,17 @@ function RootLayoutContent() {
       {animatedSplashVisible ? <AnimatedSplash onComplete={dismissAnimatedSplash} /> : null}
     </SafeAreaProvider>
   );
+}
+
+/** A challenge link never stacks a second challenge screen on top of one. */
+function openChallengeLink(
+  router: ReturnType<typeof useRouter>,
+  pathname: string,
+  code: string,
+): void {
+  if (challengeLinkAction(pathname) === 'update') {
+    router.setParams({ code });
+    return;
+  }
+  router.push({ pathname: '/ranking/challenge', params: { code } } as never);
 }

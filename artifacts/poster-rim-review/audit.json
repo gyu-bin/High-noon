@@ -1,0 +1,71 @@
+{
+  "status": "HUMAN_REVIEW_REQUIRED",
+  "method": "Three-pixel exterior-connected saturated rim mask; original local dark material donor. B suppresses donor-relative rim RGB excess 75%; C suppresses 100%. Alpha is identical. No blur, smoothing or resampling in variants.",
+  "samples": [
+    {
+      "npc": 7,
+      "category": "NORMAL",
+      "name": "독침 선인장",
+      "english": "VENOM CACTUS",
+      "source": "assets/images/characters/enemy/07/identity_clean.png",
+      "source_sha256": "fa005eb7ef99fe6e2a124272a8c982fa62ef5a2fe65473c384f2284067e6e140",
+      "selected_pixels": 1794,
+      "visible_pixels": 18238,
+      "alpha_changed_pixels": 0,
+      "unselected_rgba_changed_pixels": 0,
+      "interior_beyond_3px_changed_pixels": 0,
+      "variants": [
+        "original",
+        "reduced",
+        "removed"
+      ]
+    },
+    {
+      "npc": 9,
+      "category": "BOSS",
+      "name": "황금 해골",
+      "english": "GOLDEN SKULL",
+      "source": "assets/images/characters/enemy/09/identity_clean.png",
+      "source_sha256": "6ac6c7e644f0f8bdcad91b2e7333807147f81b90c336d290d2c8cb59dce759da",
+      "selected_pixels": 1147,
+      "visible_pixels": 19279,
+      "alpha_changed_pixels": 0,
+      "unselected_rgba_changed_pixels": 0,
+      "interior_beyond_3px_changed_pixels": 0,
+      "variants": [
+        "original",
+        "reduced",
+        "removed"
+      ]
+    },
+    {
+      "npc": 16,
+      "category": "SPECIAL",
+      "name": "베놈 스파이크",
+      "english": "VENOM SPIKE",
+      "source": "assets/images/characters/enemy/16/identity_clean.png",
+      "source_sha256": "aca5641184b5ee84e3c7608ffc73c456f7d9c8d2bc3377d8e476fa584b7ecdf2",
+      "selected_pixels": 630,
+      "visible_pixels": 17367,
+      "alpha_changed_pixels": 0,
+      "unselected_rgba_changed_pixels": 0,
+      "interior_beyond_3px_changed_pixels": 0,
+      "variants": [
+        "original",
+        "reduced",
+        "removed"
+      ]
+    }
+  ],
+  "production_files_verified": 1037,
+  "production_files_changed": 0,
+  "final_verification": {
+    "protected_files": 1037,
+    "changed_production_files": 0,
+    "original_dark_pixels_changed": 0,
+    "alpha_changed_pixels": 0,
+    "runtime_imports_changed": 0,
+    "batch_22_executed": false,
+    "player_processing_executed": false
+  }
+}

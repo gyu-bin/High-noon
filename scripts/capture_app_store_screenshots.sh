@@ -212,7 +212,10 @@ apply_capture_language "$CAPTURE_LANG"
 build_and_install() {
   if [[ "$USE_RELEASE" == "1" ]]; then
     echo "▶ iOS 시뮬레이터 빌드 (Release — 번들 내장)"
-    (cd "$ROOT/ios" && xcodebuild \
+    # capture/* routes are closed in store builds; this screenshot build opens them.
+    # Metro does not key its cache on EXPO_PUBLIC_* values, so reset it here; clear it again
+    # (expo export --clear / fresh EAS build) before making a store build on this machine.
+    (cd "$ROOT/ios" && EXPO_PUBLIC_ENABLE_CAPTURE_ROUTES=1 EXTRA_PACKAGER_ARGS="--reset-cache" xcodebuild \
       -workspace HighNoon.xcworkspace \
       -scheme HighNoon \
       -configuration Release \

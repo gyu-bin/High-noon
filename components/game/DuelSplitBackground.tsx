@@ -7,10 +7,13 @@ import {
   type DuelBackgroundVariant,
 } from '@/constants/duelBackgroundVariants';
 import { colors } from '@/constants/theme';
+import { APPROVED_DUEL_BACKGROUNDS } from '@/constants/v3DuelAssets';
+import type { DuelBackgroundId } from '@/utils/duelBackgroundSelection';
 
 type Props = {
   /** 2P — 상·하 반쪽 분할 배경 (낮/밤은 매치마다 랜덤) */
   variant: DuelBackgroundVariant;
+  backgroundId?: DuelBackgroundId;
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   contentWidth: number;
@@ -20,6 +23,7 @@ type Props = {
 /** 로컬 2P — 상·하 반쪽 분할 배경 */
 export function DuelSplitBackground({
   variant,
+  backgroundId,
   children,
   style,
   contentWidth: w,
@@ -32,29 +36,29 @@ export function DuelSplitBackground({
     <View style={[styles.root, { width: w, height: h }, style]}>
       <View style={[styles.halfClip, { height: halfH }]}>
         <View style={styles.topArenaRotated}>
-          <DuelCoverImage source={cfg.top} width={w} height={halfH} bleed={1.06} />
-          <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.topDim }]} />
+          <DuelCoverImage source={backgroundId ? APPROVED_DUEL_BACKGROUNDS[backgroundId] : cfg.top} width={w} height={halfH} bleed={1.06} />
+          {!backgroundId && <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.topDim }]} />}
         </View>
       </View>
 
       <View style={[styles.halfClip, styles.bottomHalf, { height: halfH }]}>
-        <DuelCoverImage source={cfg.bottom} width={w} height={halfH} bleed={1.06} />
-        <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.bottomDim }]} />
+        <DuelCoverImage source={backgroundId ? APPROVED_DUEL_BACKGROUNDS[backgroundId] : cfg.bottom} width={w} height={halfH} bleed={1.06} />
+        {!backgroundId && <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.bottomDim }]} />}
       </View>
 
-      <LinearGradient
+      {!backgroundId && <LinearGradient
         pointerEvents="none"
         colors={[...cfg.vignette]}
         locations={[0, 0.46, 0.54, 1]}
         style={StyleSheet.absoluteFill}
-      />
+      />}
 
-      <LinearGradient
+      {!backgroundId && <LinearGradient
         pointerEvents="none"
         colors={[...cfg.splitHorizon]}
         locations={[0.44, 0.5, 0.56]}
         style={[styles.horizonGlow, { top: halfH - 28, height: 56 }]}
-      />
+      />}
 
       <View style={styles.foreground} pointerEvents="box-none">
         {children}

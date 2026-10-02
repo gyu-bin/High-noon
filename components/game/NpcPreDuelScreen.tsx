@@ -10,6 +10,7 @@ import { WesternButton } from '@/components/ui/western/WesternPrimitives';
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { gameImages } from '@/constants/gameImages';
 import { uiV3Colors } from '@/constants/theme';
+import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
 import { V3_PLAYER_IDENTITIES } from '@/constants/v3UiAssets';
 import { useCharacterLabels } from '@/utils/characterLabels';
 
@@ -74,7 +75,7 @@ export function NpcPreDuelScreen({
           source={V3_PLAYER_IDENTITIES[playerId] ?? V3_PLAYER_IDENTITIES[1]}
           contentFit="contain"
           transition={0}
-          style={{ width: figureSize, height: figureSize }}
+          style={scaledArtStyle(figureSize, figureSize, characterArtDisplayScale('player', playerId))}
         />
       </View> : null}
 

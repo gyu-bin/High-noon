@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { Image as RNImage, type ImageSourcePropType } from 'react-native';
 
 import type { LocalDuelSkin } from '@/constants/localDuelSkin';
-import { getV3NpcDuelPreloadSources } from '@/constants/v3DuelAssets';
+import { APPROVED_DUEL_BACKGROUNDS, getV3NpcDuelPreloadSources } from '@/constants/v3DuelAssets';
 import type { NpcTier } from '@/types/npc';
 import {
   getNpcDownSource,
@@ -87,6 +87,7 @@ export async function prefetchLocalDuelSprites(
 
   collectSkinUris(p1, push);
   collectSkinUris(p2, push);
+  Object.values(APPROVED_DUEL_BACKGROUNDS).forEach(push);
 
   await Promise.all(
     uris.map((uri) => Image.prefetch(uri, { cachePolicy: 'memory-disk' }).catch(() => false)),

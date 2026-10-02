@@ -1,0 +1,67 @@
+{
+  "transforms_key": "NPC09",
+  "stage_dir": "assets/images/characters/staged/redesign-v2/npc/09",
+  "stage_names": {
+    "idle": "idle",
+    "draw": "draw",
+    "fire": "fire",
+    "hit": "hit",
+    "kneel": "down",
+    "fall": "combat_fall",
+    "down": "combat_down"
+  },
+  "poses": {
+    "idle": {
+      "file": "npc-poses/NPC09/intake/NPC09_IDLE_V2.png",
+      "chin": 215,
+      "ground": 1195,
+      "x": 568,
+      "rel": 1.0
+    },
+    "draw": {
+      "file": "NPC09_DRAW.png",
+      "ground": null,
+      "x": 685,
+      "rel": 1.0
+    },
+    "fire": {
+      "file": "NPC09_FIRE.png",
+      "ground": null,
+      "x": 755,
+      "rel": 1.0
+    },
+    "hit": {
+      "file": "NPC09_HIT.png",
+      "ground": null,
+      "x": 655,
+      "rel": 1.0
+    },
+    "kneel": {
+      "file": "NPC09_KNEEL.png",
+      "ground": null,
+      "x": 780,
+      "rel": 1.0
+    },
+    "fall": {
+      "file": "NPC09_FALL.png",
+      "ground": null,
+      "x": 713,
+      "rel": 1.0
+    },
+    "down": {
+      "file": "NPC09_DOWN.png",
+      "ground": null,
+      "x": 600,
+      "rel": 1.0
+    }
+  },
+  "note": "Manual anchors 2026-10-01 from 20px-grid buckle crops. Skull-buckle plate width: idle\u224865px, poses 45\u201360px, so the poses are not larger than the idle; rel=1.0 everywhere (upscale forbidden). fall/down x = belt-buckle position on the lying body. IDLE_V2 (02_10_33.png): chin 215, boot sole 1195, buckle x 568, buckle plate \u224848 px (same as the poses) \u2192 rel 1.0.",
+  "retired_idle": {
+    "file": "intake/NPC09_GOLDEN_SKULL.png",
+    "chin": 207,
+    "ground": 1245,
+    "x": 886,
+    "rel": 1.0,
+    "note": "retired 2026-10-01: identity re-locked to the pose-set style"
+  }
+}

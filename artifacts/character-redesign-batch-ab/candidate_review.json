@@ -1,0 +1,450 @@
+[
+  {
+    "id": "P04",
+    "ko_name": "망령 사수",
+    "upload_index": 3,
+    "stated_order_label": "NPC19",
+    "candidate_path": "artifacts/character-redesign-batch-ab/candidates/upload_3.webp",
+    "candidate_sha256": "7859ff4e00856c196a4bb99507df518fc7d43b012762cc72616d3559603d47a2",
+    "production_idle": "assets/images/characters/clarity/player/04/idle.png",
+    "production_sha256": "0e8fe2320f032f6c1a2c71068d870efab82a3859f078620e35cb595633a4887d",
+    "production_resolution": [
+      1254,
+      1254
+    ],
+    "production_body": {
+      "hat_top": 22,
+      "boot_bottom": 1211,
+      "height": 1189,
+      "hat_cx": 635
+    },
+    "candidate_body": {
+      "hat_top": 48,
+      "boot_bottom": 1232,
+      "height": 1184,
+      "hat_cx": 724
+    },
+    "quality": {
+      "canvas": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha_zero_pct": 43.7,
+      "alpha_partial_pct": 56.3,
+      "true_alpha": true,
+      "bbox_alpha_gt24": [
+        73,
+        43,
+        1177,
+        1234
+      ],
+      "canvas_edge_pixels_alpha_gt24": 0,
+      "fringe_white_pct": 3.63,
+      "fringe_black_matte_pct": 0.01,
+      "semi_alpha_white_px": 100,
+      "red_orange_fringe_pct": 0.01,
+      "sharpness_laplacian_var": 3379.5
+    },
+    "normalization": {
+      "uniform_scale_to_match_body_height": 1.0042,
+      "requires_upscale": true,
+      "applied_scale_if_no_upscale": 1.0,
+      "translate_xy": [
+        -89.0,
+        -21.0
+      ],
+      "placed_bbox_on_1254": [
+        -16,
+        22,
+        1088,
+        1213
+      ],
+      "clips_1254_canvas": true
+    }
+  },
+  {
+    "id": "NPC15",
+    "ko_name": "그림자 사냥꾼",
+    "upload_index": 1,
+    "stated_order_label": "P04",
+    "candidate_path": "artifacts/character-redesign-batch-ab/candidates/upload_1.webp",
+    "candidate_sha256": "c067fb7ecbe77561e9c1d33412c8a54acb9841e7430c424bc4eca9e63bee2f23",
+    "production_idle": "assets/images/characters/clarity/npc/15/idle.png",
+    "production_sha256": "75b4923a0eac56b05a3f52f1f21cb2c86438d5dd3fc4907fc1d777baccc54e43",
+    "production_resolution": [
+      1254,
+      1254
+    ],
+    "production_body": {
+      "hat_top": 16,
+      "boot_bottom": 1185,
+      "height": 1169,
+      "hat_cx": 658
+    },
+    "candidate_body": {
+      "hat_top": 29,
+      "boot_bottom": 1230,
+      "height": 1201,
+      "hat_cx": 561
+    },
+    "quality": {
+      "canvas": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha_zero_pct": 49.8,
+      "alpha_partial_pct": 50.2,
+      "true_alpha": true,
+      "bbox_alpha_gt24": [
+        107,
+        12,
+        1177,
+        1238
+      ],
+      "canvas_edge_pixels_alpha_gt24": 0,
+      "fringe_white_pct": 0.02,
+      "fringe_black_matte_pct": 0.16,
+      "semi_alpha_white_px": 0,
+      "red_orange_fringe_pct": 0.0,
+      "sharpness_laplacian_var": 1743.0
+    },
+    "normalization": {
+      "uniform_scale_to_match_body_height": 0.9734,
+      "requires_upscale": false,
+      "applied_scale_if_no_upscale": 0.9734,
+      "translate_xy": [
+        111.9,
+        -12.2
+      ],
+      "placed_bbox_on_1254": [
+        216,
+        -1,
+        1258,
+        1193
+      ],
+      "clips_1254_canvas": true
+    }
+  },
+  {
+    "id": "NPC19",
+    "ko_name": "보이드 워커",
+    "upload_index": 2,
+    "stated_order_label": "NPC15",
+    "candidate_path": "artifacts/character-redesign-batch-ab/candidates/upload_2.webp",
+    "candidate_sha256": "1d751a353b406a9a7c8c8e538ec764a69251625802064d174a330b2aefc2f692",
+    "production_idle": "assets/images/characters/clarity/npc/19/idle.png",
+    "production_sha256": "7ded7c11ff9e9ec88268e0d9137914b80ba3429c05f7a74e94d21cfb7e2e0067",
+    "production_resolution": [
+      1254,
+      1254
+    ],
+    "production_body": {
+      "hat_top": 16,
+      "boot_bottom": 1215,
+      "height": 1199,
+      "hat_cx": 640
+    },
+    "candidate_body": {
+      "hat_top": 18,
+      "boot_bottom": 1238,
+      "height": 1220,
+      "hat_cx": 578
+    },
+    "quality": {
+      "canvas": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha_zero_pct": 48.7,
+      "alpha_partial_pct": 51.3,
+      "true_alpha": true,
+      "bbox_alpha_gt24": [
+        86,
+        13,
+        1114,
+        1240
+      ],
+      "canvas_edge_pixels_alpha_gt24": 0,
+      "fringe_white_pct": 0.6,
+      "fringe_black_matte_pct": 0.03,
+      "semi_alpha_white_px": 2,
+      "red_orange_fringe_pct": 0.21,
+      "sharpness_laplacian_var": 2741.7
+    },
+    "normalization": {
+      "uniform_scale_to_match_body_height": 0.9828,
+      "requires_upscale": false,
+      "applied_scale_if_no_upscale": 0.9828,
+      "translate_xy": [
+        71.9,
+        -1.7
+      ],
+      "placed_bbox_on_1254": [
+        156,
+        11,
+        1167,
+        1217
+      ],
+      "clips_1254_canvas": false
+    }
+  },
+  {
+    "id": "NPC20",
+    "ko_name": "에코 팬텀",
+    "upload_index": 4,
+    "stated_order_label": "NPC20",
+    "candidate_path": "artifacts/character-redesign-batch-ab/candidates/upload_4.webp",
+    "candidate_sha256": "1f9a24d109d5bf5d2d8e86d92bc01207a22a69bec895561ee0d7323a5501ba4c",
+    "production_idle": "assets/images/characters/clarity/npc/20/idle.png",
+    "production_sha256": "3d4d6fcfcd867cc0db40f3b1f838c06ef3a8f83629dc09b794939d8030fc7028",
+    "production_resolution": [
+      1254,
+      1254
+    ],
+    "production_body": {
+      "hat_top": 11,
+      "boot_bottom": 1214,
+      "height": 1203,
+      "hat_cx": 639
+    },
+    "candidate_body": {
+      "hat_top": 27,
+      "boot_bottom": 1105,
+      "height": 1078,
+      "hat_cx": 553
+    },
+    "quality": {
+      "canvas": [
+        1125,
+        1125
+      ],
+      "mode": "RGBA",
+      "alpha_zero_pct": 30.8,
+      "alpha_partial_pct": 69.2,
+      "true_alpha": true,
+      "bbox_alpha_gt24": [
+        22,
+        14,
+        1105,
+        1107
+      ],
+      "canvas_edge_pixels_alpha_gt24": 0,
+      "fringe_white_pct": 0.65,
+      "fringe_black_matte_pct": 0.01,
+      "semi_alpha_white_px": 26,
+      "red_orange_fringe_pct": 0.0,
+      "sharpness_laplacian_var": 1740.7
+    },
+    "normalization": {
+      "uniform_scale_to_match_body_height": 1.116,
+      "requires_upscale": true,
+      "applied_scale_if_no_upscale": 1.0,
+      "translate_xy": [
+        86.0,
+        109.0
+      ],
+      "placed_bbox_on_1254": [
+        108,
+        123,
+        1191,
+        1216
+      ],
+      "clips_1254_canvas": false
+    }
+  },
+  {
+    "id": "NPC09",
+    "ko_name": "황금 해골",
+    "upload_index": 5,
+    "stated_order_label": "NPC09",
+    "candidate_path": "artifacts/character-redesign-batch-ab/candidates/upload_5.webp",
+    "candidate_sha256": "34ef6e37d615df2c83efe00189fe3350ba0f78cdf9839fe218758dfdc62d5816",
+    "production_idle": "assets/images/characters/clarity/npc/09/idle.png",
+    "production_sha256": "339e0ff90169289803ce8e8ca262320ccb49881dd493426ae4be3b54d4c7c8af",
+    "production_resolution": [
+      1254,
+      1254
+    ],
+    "production_body": {
+      "hat_top": 17,
+      "boot_bottom": 1223,
+      "height": 1206,
+      "hat_cx": 664
+    },
+    "candidate_body": {
+      "hat_top": 24,
+      "boot_bottom": 1234,
+      "height": 1210,
+      "hat_cx": 648
+    },
+    "quality": {
+      "canvas": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha_zero_pct": 41.3,
+      "alpha_partial_pct": 58.7,
+      "true_alpha": true,
+      "bbox_alpha_gt24": [
+        31,
+        17,
+        1212,
+        1238
+      ],
+      "canvas_edge_pixels_alpha_gt24": 0,
+      "fringe_white_pct": 0.7,
+      "fringe_black_matte_pct": 0.0,
+      "semi_alpha_white_px": 1,
+      "red_orange_fringe_pct": 15.17,
+      "sharpness_laplacian_var": 2292.3
+    },
+    "normalization": {
+      "uniform_scale_to_match_body_height": 0.9967,
+      "requires_upscale": false,
+      "applied_scale_if_no_upscale": 0.9967,
+      "translate_xy": [
+        18.1,
+        -6.9
+      ],
+      "placed_bbox_on_1254": [
+        49,
+        10,
+        1226,
+        1227
+      ],
+      "clips_1254_canvas": false
+    }
+  },
+  {
+    "id": "NPC18",
+    "ko_name": "레드 아이 오라클",
+    "upload_index": 6,
+    "stated_order_label": "NPC18",
+    "candidate_path": "artifacts/character-redesign-batch-ab/candidates/upload_6.webp",
+    "candidate_sha256": "eab5c9363f0f01e53daf86eef5ae1d19045efa4aceee0ca6fe81f5d224eb6104",
+    "production_idle": "assets/images/characters/clarity/npc/18/idle.png",
+    "production_sha256": "6de054d93641b4749445cefea8d08dd78c2a2467ed74592a68fe6628324af19b",
+    "production_resolution": [
+      1254,
+      1254
+    ],
+    "production_body": {
+      "hat_top": 14,
+      "boot_bottom": 1207,
+      "height": 1193,
+      "hat_cx": 636
+    },
+    "candidate_body": {
+      "hat_top": 13,
+      "boot_bottom": 1223,
+      "height": 1210,
+      "hat_cx": 724
+    },
+    "quality": {
+      "canvas": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha_zero_pct": 42.8,
+      "alpha_partial_pct": 57.2,
+      "true_alpha": true,
+      "bbox_alpha_gt24": [
+        15,
+        0,
+        1245,
+        1226
+      ],
+      "canvas_edge_pixels_alpha_gt24": 3,
+      "fringe_white_pct": 0.88,
+      "fringe_black_matte_pct": 0.01,
+      "semi_alpha_white_px": 4,
+      "red_orange_fringe_pct": 24.86,
+      "sharpness_laplacian_var": 2532.0
+    },
+    "normalization": {
+      "uniform_scale_to_match_body_height": 0.986,
+      "requires_upscale": false,
+      "applied_scale_if_no_upscale": 0.986,
+      "translate_xy": [
+        -77.8,
+        1.2
+      ],
+      "placed_bbox_on_1254": [
+        -63,
+        1,
+        1150,
+        1210
+      ],
+      "clips_1254_canvas": true
+    }
+  },
+  {
+    "id": "NPC22",
+    "ko_name": "창백한 기수",
+    "upload_index": 7,
+    "stated_order_label": "NPC22",
+    "candidate_path": "artifacts/character-redesign-batch-ab/candidates/upload_7.webp",
+    "candidate_sha256": "e32a0e5e89d794c3d52be81f201976c0503726583bd5562c472e2ef5277d611d",
+    "production_idle": "assets/images/characters/clarity/npc/22/idle.png",
+    "production_sha256": "87e553bcb019bffedd545f691a3da7a3fb853cc6cc6df8094a670f28df386566",
+    "production_resolution": [
+      1254,
+      1254
+    ],
+    "production_body": {
+      "hat_top": 20,
+      "boot_bottom": 1236,
+      "height": 1216,
+      "hat_cx": 673
+    },
+    "candidate_body": {
+      "hat_top": 14,
+      "boot_bottom": 1372,
+      "height": 1358,
+      "hat_cx": 647
+    },
+    "quality": {
+      "canvas": [
+        1136,
+        1385
+      ],
+      "mode": "RGBA",
+      "alpha_zero_pct": 36.4,
+      "alpha_partial_pct": 63.6,
+      "true_alpha": true,
+      "bbox_alpha_gt24": [
+        3,
+        10,
+        1132,
+        1375
+      ],
+      "canvas_edge_pixels_alpha_gt24": 0,
+      "fringe_white_pct": 1.46,
+      "fringe_black_matte_pct": 0.05,
+      "semi_alpha_white_px": 21,
+      "red_orange_fringe_pct": 0.5,
+      "sharpness_laplacian_var": 2129.7
+    },
+    "normalization": {
+      "uniform_scale_to_match_body_height": 0.8954,
+      "requires_upscale": false,
+      "applied_scale_if_no_upscale": 0.8954,
+      "translate_xy": [
+        93.7,
+        7.5
+      ],
+      "placed_bbox_on_1254": [
+        96,
+        16,
+        1107,
+        1239
+      ],
+      "clips_1254_canvas": false
+    }
+  }
+]

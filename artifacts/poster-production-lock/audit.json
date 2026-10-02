@@ -1,0 +1,25 @@
+{
+  "POSTER_NPC_ASSETS": "22/22",
+  "POSTER_PLAYER_ASSETS": "4/4",
+  "RIM_LIGHT_REMOVED": "PASS — approved exterior C mask; internal highlights preserved",
+  "ALPHA_PASS": "26/26",
+  "DEVICE_QA": "PASS — iPhone 17 Pro simulator, five NPC Select states",
+  "DUEL_REGRESSION": "PASS — unchanged original hashes and existing actual-renderer capture scenes",
+  "originalBaselineFiles": 1037,
+  "unchangedBaselineFiles": 1033,
+  "changedExistingFiles": [
+    "app/npc-select.tsx",
+    "components/ranking/RankingPortrait.tsx",
+    "components/npc/NpcPortrait.tsx",
+    "components/npc/NpcWantedCard.tsx"
+  ],
+  "originalPngFilesUnchanged": 773,
+  "rimPixelsReplaced": 35862,
+  "alphaChangedPixels": 0,
+  "unselectedVisiblePixelChanges": 0,
+  "limitations": [
+    "Simulator validation, not physical hardware.",
+    "Locked state used production JS (__DEV__ false) in Expo Go, not a native Release binary.",
+    "Duel visual check used existing frozen capture scenes, not a played match."
+  ]
+}

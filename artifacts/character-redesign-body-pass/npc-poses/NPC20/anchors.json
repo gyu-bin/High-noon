@@ -1,0 +1,64 @@
+{
+  "transforms_key": "NPC20",
+  "stage_dir": "assets/images/characters/staged/redesign-v2/npc/20",
+  "stage_names": {
+    "idle": "idle",
+    "draw": "draw",
+    "fire": "fire",
+    "hit": "hit",
+    "kneel": "down",
+    "fall": "combat_fall",
+    "down": "combat_down"
+  },
+  "poses": {
+    "idle": {
+      "file": "intake/NPC20_ECHO_PHANTOM.png",
+      "chin": 300,
+      "ground": 1240,
+      "x": 389,
+      "rel": 1.0,
+      "mirror": true
+    },
+    "draw": {
+      "file": "NPC20_DRAW.png",
+      "ground": null,
+      "x": 602,
+      "rel": 1.0
+    },
+    "fire": {
+      "file": "NPC20_FIRE.png",
+      "ground": null,
+      "x": 760,
+      "rel": 1.0
+    },
+    "hit": {
+      "file": "NPC20_HIT.png",
+      "ground": null,
+      "x": 678,
+      "rel": 1.0
+    },
+    "kneel": {
+      "file": "NPC20_KNEEL.png",
+      "ground": null,
+      "x": 525,
+      "rel": 1.0
+    },
+    "fall": {
+      "file": "NPC20_FALL.png",
+      "ground": null,
+      "x": 486,
+      "rel": 1.0
+    },
+    "down": {
+      "file": "NPC20_DOWN.png",
+      "ground": null,
+      "x": 525,
+      "rel": 1.0
+    }
+  },
+  "note": "Idle anchors = PHASE 1 (main body only; echoes excluded). PHASE 1 wanted x1.0404, clamped to 1.0. If the mirror decision is approved: set idle.mirror=true and idle.x=389 (1253-864). Pose anchors 2026-10-01: compass-buckle centre x from the 50px grid. Hat-crown width (\u2248130\u2013150 px) and boot length (\u2248160 px) match the reference in all poses incl. KNEEL/FALL, so rel=1.0 (the earlier 'enlarged' impression was foreshortening).",
+  "decisions": {
+    "mirror": "APPROVED 2026-10-01 (option M): pure horizontal flip of the locked idle; all poses image-left; echoes trail image-right. Unmirrored idle kept as history at artifacts/character-redesign-body-pass/intake/NPC20_ECHO_PHANTOM.png.",
+    "echo_qa": "Integration QA: check runtime echoReady afterImage (opacity 0.24, blue tint, -18/+8) over baked echoes; if excessive, NPC20-only opacity/offset change or disable."
+  }
+}

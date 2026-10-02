@@ -1,0 +1,46 @@
+{
+  "asset": "NPC01_FALL",
+  "status": "normalized, NOT registered (waiting for DOWN + GROUND_REVOLVER)",
+  "source_generated": {
+    "file": "NPC01_FALL_generated.png",
+    "md5": "188305473df110b21c281218a25ed612",
+    "untouched": true
+  },
+  "reference": "assets/images/characters/clarity/npc/01/down.png (production KNEEL)",
+  "operation": "single uniform downscale (premultiplied RGBa, Lanczos) + integer translation; no upscale, no rotation, no colour/alpha/sharpness edits",
+  "scale": 0.7201,
+  "scaled_size_px": 903,
+  "translate_px": [
+    231,
+    370
+  ],
+  "bbox": [
+    275,
+    584,
+    1119,
+    1212
+  ],
+  "ground_y": 1212,
+  "scale_basis": {
+    "hat_major_axis": "KNEEL 290.0 / FALL 395.6 = 0.733",
+    "holster_length": "142 / ~200 = 0.71",
+    "belt_template": "0.71",
+    "chosen": 0.72,
+    "rejected_first_pass": "0.675 from cartridge size (±1px on ~10px = ±10%, least precise)"
+  },
+  "after": {
+    "hat_major_axis": [
+      284.9,
+      290.0
+    ],
+    "holster_length": [
+      144.0,
+      142
+    ]
+  },
+  "horizontal_anchor": "grounded torn knee: KNEEL (607,1067) -> FALL x=607",
+  "output": {
+    "file": "NPC01_FALL_normalized.png",
+    "md5": "3c89529dfc55e7cda9c4c4c0fa4a1257"
+  }
+}

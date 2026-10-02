@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
+import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
 import type { PlayerCharacter } from '@/constants/characters';
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { uiV3Colors } from '@/constants/theme';
@@ -43,7 +44,7 @@ export function CharacterSelector({
     <View style={[styles.root, landscape && styles.rootLandscape]}>
       <View style={[styles.artStage, landscape && styles.artStageLandscape]}>
         {unlocked ? (
-          <Image source={V3_PLAYER_IDENTITIES[character.id]} contentFit="contain" transition={0} style={{ width: artSize, height: artSize }} />
+          <Image source={V3_PLAYER_IDENTITIES[character.id]} contentFit="contain" transition={0} style={scaledArtStyle(artSize, artSize, characterArtDisplayScale('player', character.id))} />
         ) : (
           <View accessibilityLabel={unlockHint} style={[styles.lockedSilhouette, { width: artSize * 0.58, height: artSize * 0.7 }]}>
             <Text style={styles.question}>?</Text>

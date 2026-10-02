@@ -1,0 +1,42 @@
+{
+  "pairwise_core_iou": {
+    "P04~NPC15": 0.615,
+    "P04~NPC19": 0.654,
+    "P04~NPC20": 0.59,
+    "P04~NPC09": 0.669,
+    "P04~NPC18": 0.618,
+    "P04~NPC22": 0.627,
+    "NPC15~NPC19": 0.673,
+    "NPC15~NPC20": 0.559,
+    "NPC15~NPC09": 0.662,
+    "NPC15~NPC18": 0.639,
+    "NPC15~NPC22": 0.706,
+    "NPC19~NPC20": 0.543,
+    "NPC19~NPC09": 0.682,
+    "NPC19~NPC18": 0.719,
+    "NPC19~NPC22": 0.725,
+    "NPC20~NPC09": 0.628,
+    "NPC20~NPC18": 0.527,
+    "NPC20~NPC22": 0.575,
+    "NPC09~NPC18": 0.697,
+    "NPC09~NPC22": 0.689,
+    "NPC18~NPC22": 0.711
+  },
+  "mean": 0.643,
+  "max": 0.725,
+  "max_pair": "NPC19~NPC22",
+  "previous_batch_range": [
+    0.541,
+    0.742
+  ],
+  "same_id_vs_previous_candidate_iou": {
+    "P04": 0.624,
+    "NPC15": 0.643,
+    "NPC19": 0.604,
+    "NPC20": 0.534,
+    "NPC09": 0.667,
+    "NPC18": 0.64,
+    "NPC22": 0.664
+  },
+  "note": "Lower = more distinct bodies. IoU is a support metric; the visual read decides."
+}

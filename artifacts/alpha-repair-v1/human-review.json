@@ -1,0 +1,418 @@
+[
+  {
+    "path": "assets/images/characters/player/04/identity.png",
+    "character": "player_04",
+    "pose": "identity",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/player/04/identity.png"
+  },
+  {
+    "path": "assets/images/characters/player/04/idle.png",
+    "character": "player_04",
+    "pose": "idle",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/player/04/identity.png"
+  },
+  {
+    "path": "assets/images/characters/player/04/draw.png",
+    "character": "player_04",
+    "pose": "draw",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/player/04/identity.png"
+  },
+  {
+    "path": "assets/images/characters/player/04/fire.png",
+    "character": "player_04",
+    "pose": "fire",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/player/04/identity.png"
+  },
+  {
+    "path": "assets/images/characters/player/04/hit.png",
+    "character": "player_04",
+    "pose": "hit",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/player/04/identity.png"
+  },
+  {
+    "path": "assets/images/characters/player/04/down.png",
+    "character": "player_04",
+    "pose": "down",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/player/04/identity.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/15/idle.png",
+    "character": "npc_15",
+    "pose": "idle",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/15/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/15/draw.png",
+    "character": "npc_15",
+    "pose": "draw",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/15/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/15/fire.png",
+    "character": "npc_15",
+    "pose": "fire",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/15/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/15/hit.png",
+    "character": "npc_15",
+    "pose": "hit",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/15/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/15/down.png",
+    "character": "npc_15",
+    "pose": "down",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/15/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/19/idle.png",
+    "character": "npc_19",
+    "pose": "idle",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/19/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/19/draw.png",
+    "character": "npc_19",
+    "pose": "draw",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/19/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/19/fire.png",
+    "character": "npc_19",
+    "pose": "fire",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/19/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/19/hit.png",
+    "character": "npc_19",
+    "pose": "hit",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/19/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/19/down.png",
+    "character": "npc_19",
+    "pose": "down",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/19/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/20/idle.png",
+    "character": "npc_20",
+    "pose": "idle",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/20/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/20/draw.png",
+    "character": "npc_20",
+    "pose": "draw",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/20/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/20/fire.png",
+    "character": "npc_20",
+    "pose": "fire",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/20/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/20/hit.png",
+    "character": "npc_20",
+    "pose": "hit",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/20/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/enemy/20/down.png",
+    "character": "npc_20",
+    "pose": "down",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/20/identity_clean.png"
+  },
+  {
+    "path": "assets/images/hidden/pale_rider_idle.png",
+    "character": "npc_22",
+    "pose": "idle",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/hidden/pale_rider_identity_clean.png"
+  },
+  {
+    "path": "assets/images/hidden/pale_rider_draw.png",
+    "character": "npc_22",
+    "pose": "draw",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/hidden/pale_rider_identity_clean.png"
+  },
+  {
+    "path": "assets/images/hidden/pale_rider_fire.png",
+    "character": "npc_22",
+    "pose": "fire",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/hidden/pale_rider_identity_clean.png"
+  },
+  {
+    "path": "assets/images/hidden/pale_rider_hit.png",
+    "character": "npc_22",
+    "pose": "hit",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/hidden/pale_rider_identity_clean.png"
+  },
+  {
+    "path": "assets/images/hidden/pale_rider_down.png",
+    "character": "npc_22",
+    "pose": "down",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/hidden/pale_rider_identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/player/04/idle.png",
+    "character": "player_04",
+    "pose": "idle",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/player/04/identity.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/player/04/draw.png",
+    "character": "player_04",
+    "pose": "draw",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/player/04/identity.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/player/04/fire.png",
+    "character": "player_04",
+    "pose": "fire",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/player/04/identity.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/player/04/hit.png",
+    "character": "player_04",
+    "pose": "hit",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/player/04/identity.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/player/04/down.png",
+    "character": "player_04",
+    "pose": "down",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/player/04/identity.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/22/idle.png",
+    "character": "npc_22",
+    "pose": "idle",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/hidden/pale_rider_identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/22/draw.png",
+    "character": "npc_22",
+    "pose": "draw",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/hidden/pale_rider_identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/22/fire.png",
+    "character": "npc_22",
+    "pose": "fire",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/hidden/pale_rider_identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/22/hit.png",
+    "character": "npc_22",
+    "pose": "hit",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/hidden/pale_rider_identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/22/down.png",
+    "character": "npc_22",
+    "pose": "down",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/hidden/pale_rider_identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/20/idle.png",
+    "character": "npc_20",
+    "pose": "idle",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/20/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/20/draw.png",
+    "character": "npc_20",
+    "pose": "draw",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/20/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/20/fire.png",
+    "character": "npc_20",
+    "pose": "fire",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/20/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/20/hit.png",
+    "character": "npc_20",
+    "pose": "hit",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/20/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/20/down.png",
+    "character": "npc_20",
+    "pose": "down",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/20/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/19/idle.png",
+    "character": "npc_19",
+    "pose": "idle",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/19/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/19/draw.png",
+    "character": "npc_19",
+    "pose": "draw",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/19/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/19/fire.png",
+    "character": "npc_19",
+    "pose": "fire",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/19/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/19/hit.png",
+    "character": "npc_19",
+    "pose": "hit",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/19/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/19/down.png",
+    "character": "npc_19",
+    "pose": "down",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/19/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/15/idle.png",
+    "character": "npc_15",
+    "pose": "idle",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/15/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/15/draw.png",
+    "character": "npc_15",
+    "pose": "draw",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/15/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/15/fire.png",
+    "character": "npc_15",
+    "pose": "fire",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/15/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/15/hit.png",
+    "character": "npc_15",
+    "pose": "hit",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/15/identity_clean.png"
+  },
+  {
+    "path": "assets/images/characters/clarity/npc/15/down.png",
+    "character": "npc_15",
+    "pose": "down",
+    "family": "active_clarity",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/characters/enemy/15/identity_clean.png"
+  },
+  {
+    "path": "assets/images/hidden/pale_rider_locked_silhouette.png",
+    "character": "npc_22",
+    "pose": "locked_silhouette",
+    "family": "canonical256",
+    "reason": "Protected spectral/void character: detector cannot distinguish intended negative space.",
+    "material_reference": "assets/images/hidden/pale_rider_identity_clean.png"
+  }
+]

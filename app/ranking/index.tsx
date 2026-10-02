@@ -15,15 +15,20 @@ import { parseRankTier } from '@/constants/pvpRanks';
 import { META_PANEL_BG, META_PANEL_BORDER, metaTextShadow } from '@/constants/westernBackground';
 import { colors, uiV3Colors } from '@/constants/theme';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
-import { isSupabaseConfigured } from '@/lib/supabase/client';
+import { isSupabaseConfigured, supabaseProjectRef } from '@/lib/supabase/client';
 import { formatUnknownError } from '@/lib/supabase/errors';
-import { pvpGetDaily, pvpLeaderboard, pvpLogin, pvpMatchmake, pvpRerollDisplayName } from '@/lib/supabase/pvpApi';
+import { pvpGetDaily, pvpMatchmake, pvpRerollDisplayName } from '@/lib/supabase/pvpApi';
 import { usePvpStatsStore } from '@/store/pvpStatsStore';
 import { usePvpStore } from '@/store/pvpStore';
 import { useRankingRewardStore, whenRankingRewardsReady } from '@/store/rankingRewardStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import type { DailyChallenge, PvpLeaderboardEntry } from '@/types/pvp';
 import { trigger } from '@/utils/hapticService';
+import {
+  createBountyBoardSession,
+  type BountyBoardData,
+  type BountyBoardSession,
+} from '@/utils/bountyBoardSync';
 
 const REROLL_COOLDOWN_MS = 1200;
 
@@ -42,7 +47,7 @@ export default function RankingHubScreen() {
   const characterId = useSettingsStore((s) => s.selectedCharacterId);
   const dailyStreak = usePvpStatsStore((s) => s.dailyStreak);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
   const [matching, setMatching] = useState(false);
   const [dailyMatching, setDailyMatching] = useState(false);
   const [rerolling, setRerolling] = useState(false);
@@ -69,21 +74,11 @@ export default function RankingHubScreen() {
     setError(t('ranking.networkFailed'));
   }, [t]);
 
-  const refresh = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      setError(t('ranking.offlineBody'));
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      await whenRankingRewardsReady();
-      const me = await pvpLogin();
+  const applyBoardData = useCallback(
+    ({ me, leaderboard: lb, daily: today }: BountyBoardData, { silent }: { silent: boolean }) => {
+      if (!silent) setError(null);
       setProfile(me);
-      recordSeasonPeak(me.rank_tier);
-
-      const lb = await pvpLeaderboard(30);
+      void whenRankingRewardsReady().then(() => recordSeasonPeak(me.rank_tier));
       setBoard(lb.entries ?? []);
       setMeRank(lb.me?.rank ?? null);
       if (lb.me) {
@@ -97,23 +92,67 @@ export default function RankingHubScreen() {
           losses: lb.me.losses,
         });
       }
-
-      try {
-        const today = await pvpGetDaily();
+      if (today) {
         setDaily(today);
         setDailyChallenge(today);
-      } catch (cause) {
-        console.warn('[pvp] daily fetch failed', formatUnknownError(cause));
+      } else if (!silent) {
         setDaily(null);
       }
-    } catch (cause) {
-      showFriendlyError('ranking refresh failed', cause);
-    } finally {
-      setLoading(false);
-    }
-  }, [recordSeasonPeak, setDailyChallenge, setProfile, showFriendlyError, t]);
+    },
+    [recordSeasonPeak, setDailyChallenge, setProfile],
+  );
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  // Latest callbacks for the long-lived session without re-creating it.
+  const applyRef = useRef(applyBoardData);
+  applyRef.current = applyBoardData;
+  const errorRef = useRef(showFriendlyError);
+  errorRef.current = showFriendlyError;
+  const sessionRef = useRef<BountyBoardSession | null>(null);
+
+  useEffect(() => {
+    if (__DEV__) {
+      console.log(
+        `[Ranking DEV] project=${supabaseProjectRef} configured=${isSupabaseConfigured}`,
+      );
+    }
+    if (!isSupabaseConfigured) {
+      // Offline build: keep the existing offline presentation. Pending
+      // submissions stay stored on the device untouched.
+      setError(t('ranking.offlineBody'));
+      setLoading(false);
+      return;
+    }
+    // Board opens immediately; the pending queue is flushed in the background
+    // and never gates profile / leaderboard loading.
+    const session = createBountyBoardSession({
+      onLoading: setLoading,
+      onData: (data, meta) => {
+        if (__DEV__ && !meta.silent) {
+          // Alias is display data, not a secret; no key / JWT / device key is logged.
+          console.log(
+            `[Ranking DEV] project=${supabaseProjectRef} backend=connected alias=${data.me.display_name}`,
+          );
+        }
+        applyRef.current(data, meta);
+      },
+      onError: (cause) => errorRef.current('ranking refresh failed', cause),
+      onSlow: () => {
+        if (!usePvpStore.getState().profile) setError(t('ranking.networkFailed'));
+      },
+    });
+    sessionRef.current = session;
+    session.refresh();
+    return () => {
+      session.dispose();
+      if (sessionRef.current === session) sessionRef.current = null;
+    };
+  }, [t]);
+
+  const refresh = useCallback(() => {
+    if (!isSupabaseConfigured) return;
+    setError(null);
+    sessionRef.current?.refresh();
+  }, []);
   useEffect(() => () => {
     if (dimTimer.current) clearTimeout(dimTimer.current);
   }, []);
@@ -192,7 +231,7 @@ export default function RankingHubScreen() {
           <Ionicons name="chevron-back" size={22} color={colors.gold} />
           <Text style={styles.backText}>{t('common.back')}</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('ranking.refresh')} onPress={() => void refresh()} disabled={loading} hitSlop={10} style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('ranking.refresh')} onPress={refresh} disabled={loading} hitSlop={10} style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}>
           <Ionicons name="refresh" size={20} color={loading ? colors.sand : colors.gold} />
         </Pressable>
       </View>

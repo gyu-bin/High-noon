@@ -1,0 +1,15 @@
+{
+  "TOTAL_ASSETS_AUDITED": 291,
+  "ALPHA_PASS": 131,
+  "ALPHA_REPAIRED": 108,
+  "HUMAN_REVIEW_REQUIRED": 52,
+  "canonical_pose_count": 130,
+  "active_pose_count": 130,
+  "originals_backed_up": 108,
+  "source_and_backup_hash_checks": 291,
+  "protected_code_config_files_unchanged": 192,
+  "original_visible_rgba_changes": 0,
+  "restored_rgb_changes": 0,
+  "prior_npc_repairs_preserved": 21,
+  "restored_pixels": 303410
+}

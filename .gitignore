@@ -63,3 +63,15 @@ expo-env.d.ts
 # @end expo-cli
 # Broken/local tool checkouts that must not be gitlinks
 tools/sprite-gen/
+
+# QA artifacts: keep reports/metadata/scripts tracked, keep media local only
+artifacts/**/*.png
+artifacts/**/*.webp
+artifacts/**/*.jpg
+artifacts/**/*.jpeg
+artifacts/**/*.gif
+artifacts/**/*.mp4
+artifacts/**/*.mov
+
+# Supabase ops backups / deploy records: keep local only (not application source)
+supabase/ops/backups/*.json

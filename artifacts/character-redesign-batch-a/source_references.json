@@ -1,0 +1,69 @@
+{
+  "status": "BRIEF_ONLY_NO_GENERATION",
+  "branch": "dev-2.0",
+  "sources": [
+    {
+      "id": "P04",
+      "english_name": "Phantom Sharpshooter",
+      "current_runtime_path": "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/characters/clarity/player/04/idle.png",
+      "high_res_source_path": "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/characters/clarity/player/04/idle.png",
+      "source_resolution": [
+        1254,
+        1254
+      ],
+      "source_sha256": "0e8fe2320f032f6c1a2c71068d870efab82a3859f078620e35cb595633a4887d",
+      "pose": "idle",
+      "source_selection": "current active clarity runtime master; not legacy, poster, rejected or prototype"
+    },
+    {
+      "id": "NPC15",
+      "english_name": "Shadow Hunter",
+      "current_runtime_path": "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/characters/clarity/npc/15/idle.png",
+      "high_res_source_path": "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/characters/clarity/npc/15/idle.png",
+      "source_resolution": [
+        1254,
+        1254
+      ],
+      "source_sha256": "75b4923a0eac56b05a3f52f1f21cb2c86438d5dd3fc4907fc1d777baccc54e43",
+      "pose": "idle",
+      "source_selection": "current active clarity runtime master; not legacy, poster, rejected or prototype"
+    },
+    {
+      "id": "NPC19",
+      "english_name": "Void Walker",
+      "current_runtime_path": "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/characters/clarity/npc/19/idle.png",
+      "high_res_source_path": "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/characters/clarity/npc/19/idle.png",
+      "source_resolution": [
+        1254,
+        1254
+      ],
+      "source_sha256": "7ded7c11ff9e9ec88268e0d9137914b80ba3429c05f7a74e94d21cfb7e2e0067",
+      "pose": "idle",
+      "source_selection": "current active clarity runtime master; not legacy, poster, rejected or prototype"
+    },
+    {
+      "id": "NPC20",
+      "english_name": "Echo Phantom",
+      "current_runtime_path": "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/characters/clarity/npc/20/idle.png",
+      "high_res_source_path": "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/characters/clarity/npc/20/idle.png",
+      "source_resolution": [
+        1254,
+        1254
+      ],
+      "source_sha256": "3d4d6fcfcd867cc0db40f3b1f838c06ef3a8f83629dc09b794939d8030fc7028",
+      "pose": "idle",
+      "source_selection": "current active clarity runtime master; not legacy, poster, rejected or prototype"
+    }
+  ],
+  "protected_sha256": {
+    "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/characters/clarity/player/04/idle.png": "0e8fe2320f032f6c1a2c71068d870efab82a3859f078620e35cb595633a4887d",
+    "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/characters/clarity/npc/15/idle.png": "75b4923a0eac56b05a3f52f1f21cb2c86438d5dd3fc4907fc1d777baccc54e43",
+    "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/characters/clarity/npc/19/idle.png": "7ded7c11ff9e9ec88268e0d9137914b80ba3429c05f7a74e94d21cfb7e2e0067",
+    "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/characters/clarity/npc/20/idle.png": "3d4d6fcfcd867cc0db40f3b1f838c06ef3a8f83629dc09b794939d8030fc7028",
+    "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/combat/npc/01/fall.png": "da77baf2d85c37ddf948ea7b7df8197df6de7747e3f2abee2b403d3910532056",
+    "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/combat/npc/01/down.png": "aae30f8fc1df930bd41dd34469814872907c01ff6ef69e406d820a90265bf00a",
+    "/Users/mungyubin/Desktop/Coding/High-noon/assets/images/combat/weapons/ground-revolver.png": "a9890ecafcb4e55559020ea212878368f6df100e83bcbe8e606d51ac82965778"
+  },
+  "production_assets_changed": false,
+  "application_code_changed": false
+}

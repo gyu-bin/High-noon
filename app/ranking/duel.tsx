@@ -1,6 +1,7 @@
 import { Stack, useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { pickDuelBackground } from '@/utils/duelBackgroundSelection';
+import { ActivityIndicator, BackHandler, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import Animated, {
@@ -35,14 +36,21 @@ import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
 import { useGhostDuelEngine } from '@/hooks/useGhostDuelEngine';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
-import { pvpSubmitDaily, pvpSubmitFriendChallenge, pvpSubmitMatch } from '@/lib/supabase/pvpApi';
 import { recordAppEvent } from '@/lib/supabase/analyticsApi';
+import { playerRoundsForServer } from '@/lib/supabase/ghostRounds';
 import { usePvpStore } from '@/store/pvpStore';
 import { usePvpStatsStore } from '@/store/pvpStatsStore';
-import { useRankingRewardStore } from '@/store/rankingRewardStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import type { PvpMatchResult, PvpRoundRecord } from '@/types/pvp';
 import { utcDateKey } from '@/utils/dailyChallenge';
+import {
+  buildDailySubmission,
+  buildFriendSubmission,
+  buildRankedForfeit,
+  buildRankedSubmission,
+  startRankingSubmission,
+  type RankingSubmitOutcome,
+} from '@/utils/rankingSubmission';
 import { bestPlayerMs } from '@/utils/reactionStats';
 import { playGunshot } from '@/utils/audioService';
 import { speakDuelCue } from '@/utils/duelSignalSpeech';
@@ -62,20 +70,24 @@ export default function RankingDuelScreen() {
   const winH = stage.windowHeight;
   const opponent = usePvpStore((s) => s.opponent);
   const matchId = usePvpStore((s) => s.matchId);
-  const profile = usePvpStore((s) => s.profile);
+  const [duelBackgroundId, setDuelBackgroundId] = useState(pickDuelBackground);
+  const backgroundMatchId = useRef(matchId);
+  useEffect(() => {
+    if (backgroundMatchId.current === matchId) return;
+    backgroundMatchId.current = matchId;
+    setDuelBackgroundId(pickDuelBackground());
+  }, [matchId]);
   const matchMode = usePvpStore((s) => s.matchMode);
   const friendChallenge = usePvpStore((s) => s.friendChallenge);
+  const dailyChallenge = usePvpStore((s) => s.dailyChallenge);
   const pushRound = usePvpStore((s) => s.pushRound);
   const setScores = usePvpStore((s) => s.setScores);
-  const setLastSubmit = usePvpStore((s) => s.setLastSubmit);
-  const setLastDailySubmit = usePvpStore((s) => s.setLastDailySubmit);
-  const setLastFriendSubmit = usePvpStore((s) => s.setLastFriendSubmit);
-  const setProfile = usePvpStore((s) => s.setProfile);
 
   const [playerWins, setPlayerWins] = useState(0);
   const [oppWins, setOppWins] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  /** Match decided: input is closed while the result screen takes over. */
+  const [finished, setFinished] = useState(false);
   const [roundBanner, setRoundBanner] = useState<string | null>(null);
   const [defeatedSide, setDefeatedSide] = useState<'player' | 'npc' | null>(null);
   const [playerShootFlash, setPlayerShootFlash] = useState(false);
@@ -134,6 +146,8 @@ export default function RankingDuelScreen() {
       setGhostShotActive(true);
       fireGunshot();
     },
+    // Every mode follows the server reaction contract; Ranked replays Ghost V2 rounds.
+    scoring: matchMode === 'ranked' ? 'ghost' : 'sample',
   });
 
   useDuelBgmDuck(phase);
@@ -158,15 +172,6 @@ export default function RankingDuelScreen() {
     }
   }, [friendChallenge?.code, matchMode, opponent]);
 
-  useEffect(() => {
-    if (!opponent) return;
-    const playerId = useSettingsStore.getState().selectedCharacterId;
-    void prefetchLocalDuelSprites(
-      { kind: 'player', id: playerId },
-      { kind: 'player', id: opponent.character_id },
-    );
-  }, [opponent]);
-
   const startRound = useCallback(() => {
     if (!opponent) return;
     setRoundBanner(null);
@@ -175,7 +180,9 @@ export default function RankingDuelScreen() {
     const roundIndex = Math.min(roundsRef.current.length, PVP_MAX_ROUNDS - 1);
     // 비동기 기록 결투는 상대의 저장된 각 라운드를 그대로 재생한다.
     // NPC AI처럼 평균값에 임의 흔들림을 더하지 않는다.
-    start(opponent.sample_ms[roundIndex] ?? opponent.sample_ms[0] ?? 280);
+    // Ghost V2 배정이면 SHOT / EARLY / TIMEOUT 라운드를 그대로 재생한다.
+    const ghostRound = opponent.ghost_rounds?.[roundIndex];
+    start(ghostRound ?? opponent.sample_ms[roundIndex] ?? opponent.sample_ms[0] ?? 280);
   }, [opponent, start]);
 
   useEffect(() => {
@@ -187,8 +194,20 @@ export default function RankingDuelScreen() {
     processedOutcomeRef.current = null;
     setPlayerWins(0);
     setOppWins(0);
-    const tmr = setTimeout(() => startRound(), 400);
-    return () => clearTimeout(tmr);
+    let cancelled = false;
+    let tmr: ReturnType<typeof setTimeout> | undefined;
+    const playerId = useSettingsStore.getState().selectedCharacterId;
+    // The first READY waits for the same environment cache as subsequent rounds.
+    void prefetchLocalDuelSprites(
+      { kind: 'player', id: playerId },
+      { kind: 'player', id: opponent.character_id },
+    ).then(() => {
+      if (!cancelled) tmr = setTimeout(() => startRound(), 400);
+    });
+    return () => {
+      cancelled = true;
+      if (tmr != null) clearTimeout(tmr);
+    };
   }, [opponent, startRound]);
 
   useEffect(() => {
@@ -231,10 +250,10 @@ export default function RankingDuelScreen() {
   );
 
   const finishMatch = useCallback(
-    async (finalPlayerWins: number, finalOppWins: number, records: PvpRoundRecord[]) => {
+    (finalPlayerWins: number, finalOppWins: number, records: PvpRoundRecord[]) => {
       if (!opponent || finishingRef.current) return;
       finishingRef.current = true;
-      setSubmitting(true);
+      setFinished(true);
 
       let result: PvpMatchResult = 'draw';
       if (finalPlayerWins > finalOppWins) result = 'win';
@@ -258,94 +277,105 @@ export default function RankingDuelScreen() {
 
       const sessionBest = bestPlayerMs(records);
       usePvpStatsStore.getState().recordBestReaction(sessionBest);
+      // Friend Challenge record: real SHOT reactions only (never padded).
+      usePvpStatsStore.getState().recordRecentShots(records);
 
-      try {
-        const characterId = useSettingsStore.getState().selectedCharacterId;
+      const characterId = useSettingsStore.getState().selectedCharacterId;
+      const entry =
+        matchMode === 'daily'
+          ? buildDailySubmission({
+              challengeDate: dailyChallenge?.challenge_date ?? utcDateKey(),
+              playerRounds,
+              scorePlayer: finalPlayerWins,
+              scoreOpponent: finalOppWins,
+              result,
+            })
+          : matchMode === 'friend' && friendChallenge
+            ? buildFriendSubmission({
+                code: friendChallenge.code,
+                playerRounds,
+                scorePlayer: finalPlayerWins,
+                scoreCreator: finalOppWins,
+                result,
+              })
+            : buildRankedSubmission({
+                matchId: matchId ?? opponent.id,
+                opponentIsBot: opponent.is_bot,
+                playerRounds,
+                opponentRounds,
+                scorePlayer: finalPlayerWins,
+                scoreOpponent: finalOppWins,
+                result,
+                characterId,
+                // Ghost V2 match: the server scores these rounds itself.
+                roundsV2: opponent.ghost_rounds ? playerRoundsForServer(records) : undefined,
+              });
 
-        if (matchMode === 'daily') {
-          const dailySubmit = await pvpSubmitDaily({
-            playerRounds,
-            scorePlayer: finalPlayerWins,
-            scoreOpponent: finalOppWins,
-            result,
-          });
-          setLastDailySubmit(dailySubmit);
-          setLastSubmit(null);
-          setLastFriendSubmit(null);
-          if (!dailySubmit.already_completed) {
-            usePvpStatsStore.getState().recordDailyComplete(utcDateKey());
+      // Settlement is owned by the rankingSubmission service, not this screen:
+      // it keeps running after this component unmounts and reports into
+      // pvpStore, which the result screen reads. Never await it here.
+      const friendCode = friendChallenge?.code ?? null;
+      void startRankingSubmission(entry, {
+        onSettled: (outcome: RankingSubmitOutcome) => {
+          if (outcome.status !== 'submitted') return;
+          if (outcome.kind === 'daily' && !outcome.settlement.already_completed) {
             void recordAppEvent('daily_complete', {
               result,
-              avg_ms: dailySubmit.avg_ms,
+              avg_ms: outcome.settlement.avg_ms,
             });
-          }
-        } else if (matchMode === 'friend' && friendChallenge) {
-          const friendSubmit = await pvpSubmitFriendChallenge({
-            code: friendChallenge.code,
-            playerRounds,
-            scorePlayer: finalPlayerWins,
-            scoreCreator: finalOppWins,
-            result,
-          });
-          setLastFriendSubmit(friendSubmit);
-          setLastSubmit(null);
-          setLastDailySubmit(null);
-          if (!friendSubmit.already_completed) {
+          } else if (outcome.kind === 'friend' && !outcome.settlement.already_completed) {
             void recordAppEvent('challenge_complete', {
-              code: friendChallenge.code,
+              code: friendCode,
               result,
-              avg_ms: friendSubmit.avg_ms,
+              avg_ms: outcome.settlement.avg_ms,
             });
           }
-        } else {
-          const submit = await pvpSubmitMatch({
-            matchId: matchId ?? opponent.id,
-            opponentIsBot: opponent.is_bot,
-            playerRounds,
-            opponentRounds,
-            scorePlayer: finalPlayerWins,
-            scoreOpponent: finalOppWins,
-            result,
-            characterId,
-          });
-          setLastSubmit(submit);
-          setLastDailySubmit(null);
-          setLastFriendSubmit(null);
-          useRankingRewardStore.getState().recordSeasonPeak(submit.rank_tier);
-          if (profile) {
-            setProfile({
-              ...profile,
-              rating: submit.rating_after,
-              rank_tier: submit.rank_tier,
-              wins: submit.wins,
-              losses: submit.losses,
-            });
-          }
-        }
-      } catch (e) {
-        console.warn('[pvp] submit failed', e);
-        setLastSubmit(null);
-        setLastDailySubmit(null);
-        setLastFriendSubmit(null);
-      }
+        },
+      });
 
-      setSubmitting(false);
       router.replace('/ranking/result' as Href);
     },
     [
+      dailyChallenge,
       friendChallenge,
       matchMode,
       matchId,
       opponent,
-      profile,
       router,
-      setLastDailySubmit,
-      setLastFriendSubmit,
-      setLastSubmit,
-      setProfile,
       setScores,
     ],
   );
+
+  /**
+   * Leaving an unfinished ranked duel is a forfeit. The loss and rating are
+   * settled by the server from an all-no-shot submission (buildRankedForfeit);
+   * the client never computes them. Daily / friend duels are unaffected.
+   */
+  const forfeitIfActive = useCallback(() => {
+    if (matchMode !== 'ranked' || !opponent || finishingRef.current) return;
+    finishingRef.current = true;
+    void startRankingSubmission(
+      buildRankedForfeit({
+        matchId: matchId ?? opponent.id,
+        opponentIsBot: opponent.is_bot,
+        opponentRounds: [...opponent.sample_ms],
+        characterId: useSettingsStore.getState().selectedCharacterId,
+      }),
+      { track: false },
+    );
+  }, [matchId, matchMode, opponent]);
+
+  const pauseBlocked = finished || phase === '뱅' || phase === '페이크';
+
+  // Android back opens the pause menu instead of silently leaving the duel.
+  // (While paused, PauseMenuModal's own handler runs first and resumes.)
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (!pauseBlocked) setPaused(true);
+      return true;
+    });
+    return () => sub.remove();
+  }, [pauseBlocked]);
 
   useEffect(() => {
     if (!outcome || phase !== '결과' || finishingRef.current) return;
@@ -358,6 +388,7 @@ export default function RankingDuelScreen() {
       winner: outcome.winner,
       playerEarly: outcome.playerEarly,
       playerTimeout: outcome.playerTimeout,
+      playerInvalid: outcome.playerInvalid ?? false,
     };
     roundsRef.current = [...roundsRef.current, record];
     pushRound(record);
@@ -396,7 +427,7 @@ export default function RankingDuelScreen() {
 
     const nextT = setTimeout(() => {
       if (matchOver) {
-        void finishMatch(pw, ow, roundsRef.current);
+        finishMatch(pw, ow, roundsRef.current);
         return;
       }
       startRound();
@@ -416,7 +447,7 @@ export default function RankingDuelScreen() {
     return npcSpritePoseFromPhase(phase, holdResultShoot);
   }, [defeatedSide, ghostShotActive, phase, holdResultShoot]);
   const shootCapturesEarly =
-    phase !== '대기' && phase !== '결과' && !paused && !submitting;
+    phase !== '대기' && phase !== '결과' && !paused && !finished;
   const shootActive = shootCapturesEarly && isBangReactionArmed();
 
   const onShootPress = useCallback(() => {
@@ -457,6 +488,7 @@ export default function RankingDuelScreen() {
         tier="bronze"
         bossFlag={false}
         dayNight={battleDayNight}
+        backgroundId={duelBackgroundId}
         npcPose={npcPose}
         npcVictoryActive={defeatedSide === 'player'}
         playerDefeated={defeatedSide === 'player'}
@@ -476,10 +508,10 @@ export default function RankingDuelScreen() {
         earlyWarning={false}
         onShootPress={onShootPress}
         onPause={() => {
-          if (phase === '뱅' || phase === '페이크') return;
+          if (pauseBlocked) return;
           setPaused(true);
         }}
-        pauseDisabled={submitting || phase === '뱅' || phase === '페이크'}
+        pauseDisabled={pauseBlocked}
         opponentName={opponent.display_name}
         opponentCharacterId={opponent.character_id}
         opponentTierLabel={t(`ranking.tier.${parseRankTier(opponent.rank_tier)}`)}
@@ -495,24 +527,21 @@ export default function RankingDuelScreen() {
         </View>
       ) : null}
 
-      {submitting ? (
-        <View style={styles.submitting} pointerEvents="auto">
-          <ActivityIndicator color={colors.gold} />
-        </View>
-      ) : null}
-
       <PauseMenuModal
         visible={paused}
         onResume={() => setPaused(false)}
         onSecondaryExit={() => {
           setPaused(false);
           reset();
+          forfeitIfActive();
           leave();
         }}
         secondaryLabel={t('ranking.abort')}
+        notice={matchMode === 'ranked' ? t('ranking.forfeitNotice') : undefined}
         onMainMenu={() => {
           setPaused(false);
           reset();
+          forfeitIfActive();
           router.replace('/menu');
         }}
       />
@@ -521,7 +550,8 @@ export default function RankingDuelScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
+      {/* No swipe-back: every exit goes through pause so ranked leaves are forfeits. */}
+      <Stack.Screen options={{ headerShown: false, gestureEnabled: false }} />
       <PhoneStageShell edgeToEdge>{arena}</PhoneStageShell>
     </>
   );
@@ -549,13 +579,6 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.85)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
-  },
-  submitting: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(8, 4, 2, 0.45)',
-    zIndex: 20,
   },
   tapAck: {
     backgroundColor: '#FFD08A',

@@ -1,0 +1,40 @@
+{
+  "status": "HUMAN_APPROVED_INTEGRATED",
+  "human_approval_date": "2026-09-30",
+  "fall_sha256": "da77baf2d85c37ddf948ea7b7df8197df6de7747e3f2abee2b403d3910532056",
+  "fall_unchanged": true,
+  "down_source_candidate": 3,
+  "down_scale": 0.9003189792663477,
+  "down_translation": [
+    75,
+    342
+  ],
+  "down_bbox": [
+    102,
+    769,
+    1176,
+    1211
+  ],
+  "down_scale_basis": "Candidate 03 normalized review output approved by the human; copied without further transformation",
+  "ground_revolver_scale": 0.8221690590111643,
+  "ground_revolver_translation": [
+    112,
+    95
+  ],
+  "ground_revolver_bbox": [
+    133,
+    466,
+    1133,
+    838
+  ],
+  "ground_revolver_width": 1000,
+  "operations": "Uniform downscale, integer translation; originals preserved",
+  "source_hashes": {
+    "NPC01_DOWN_candidate_01_generated.png": "d395c19e1affb784395766f68686084f7de97ad5cd18c35ed26e2534d0fe53eb",
+    "NPC01_DOWN_candidate_02_generated.png": "0ae62e49bd2e7ba49c710f3eba87478df15d2e559e796b60950318aa304f0690",
+    "NPC01_DOWN_candidate_03_generated.png": "21f8890c700fabb8520fd56b447a9a038d92d94678373551f80ca0fadd387a8f",
+    "NPC01_DOWN_candidate_04_generated.png": "f2c319a6fc8c9ec44d466a166a562875564c4930b12a62fb96ed402246527a25",
+    "PLAYER_GROUND_REVOLVER.png": "ed99fa1a8744a18c2e6be6b6a877ef684fc14b89585e2896063e1013f3d766ba"
+  },
+  "production_registered": true
+}

@@ -29,6 +29,7 @@ import { RM_GAME } from '@/constants/reanimatedGame';
 import { colors } from '@/constants/theme';
 import { FONT_RYE, FONT_WESTERN_SERIF } from '@/constants/fonts';
 import { getNpcById } from '@/constants/npcs';
+import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
 import { getV3NpcPose } from '@/constants/v3DuelAssets';
 import { getNpcDisplayName } from '@/utils/npcLabels';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
@@ -266,12 +267,14 @@ export default function NpcResultScreen() {
     <PhoneStageShell edgeToEdge>
       <OutcomeBackdrop variant={dayNight} width={winW} height={winH}>
         {npc ? (
-          <Image
-            source={getV3NpcPose(npc.id, victory ? 'down' : 'idle')}
-            contentFit="contain"
-            transition={0}
-            style={styles.opponentArt}
-          />
+          <View pointerEvents="none" style={styles.opponentArt}>
+            <Image
+              source={getV3NpcPose(npc.id, victory ? 'down' : 'idle')}
+              contentFit="contain"
+              transition={0}
+              style={scaledArtStyle(winW * 0.64, winH * 0.36, characterArtDisplayScale('npc', npc.id))}
+            />
+          </View>
         ) : null}
         {showContent && outcomeKnown && victory ? (
           <VictorySparkles width={winW} seed={completionStampStr ?? 'win'} />

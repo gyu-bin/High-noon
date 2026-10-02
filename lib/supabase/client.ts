@@ -34,6 +34,11 @@ const ExpoStorageAdapter = {
 export const isSupabaseConfigured =
   supabaseUrl.length > 0 && supabaseAnonKey.length > 0;
 
+/** Project ref only (never the key) — for dev diagnostics. */
+export const supabaseProjectRef =
+  supabaseUrl.match(/^https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1] ??
+  (isSupabaseConfigured ? 'custom-url' : 'not-configured');
+
 let client: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
@@ -49,6 +54,9 @@ export function getSupabase(): SupabaseClient {
         detectSessionInUrl: false,
       },
     });
+    if (__DEV__) {
+      console.log(`[Ranking DEV] project=${supabaseProjectRef} client=created`);
+    }
   }
   return client;
 }

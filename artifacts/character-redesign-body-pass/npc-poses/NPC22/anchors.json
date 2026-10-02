@@ -1,0 +1,67 @@
+{
+  "transforms_key": "NPC22",
+  "stage_dir": "assets/images/characters/staged/redesign-v2/npc/22",
+  "stage_names": {
+    "idle": "idle",
+    "draw": "draw",
+    "fire": "fire",
+    "hit": "hit",
+    "kneel": "down",
+    "fall": "combat_fall",
+    "down": "combat_down"
+  },
+  "poses": {
+    "idle": {
+      "file": "npc-poses/NPC22/intake/NPC22_IDLE_V2.png",
+      "chin": 250,
+      "ground": 1239,
+      "x": 805,
+      "rel": 1.0
+    },
+    "draw": {
+      "file": "NPC22_DRAW.png",
+      "ground": null,
+      "x": 838,
+      "rel": 1.0
+    },
+    "fire": {
+      "file": "NPC22_FIRE.png",
+      "ground": null,
+      "x": 885,
+      "rel": 1.0
+    },
+    "hit": {
+      "file": "NPC22_HIT.png",
+      "ground": null,
+      "x": 748,
+      "rel": 1.0
+    },
+    "kneel": {
+      "file": "NPC22_KNEEL.png",
+      "ground": null,
+      "x": 815,
+      "rel": 1.0
+    },
+    "fall": {
+      "file": "NPC22_FALL.png",
+      "ground": null,
+      "x": 800,
+      "rel": 1.0
+    },
+    "down": {
+      "file": "NPC22_DOWN.png",
+      "ground": null,
+      "x": 1055,
+      "rel": 0.9
+    }
+  },
+  "note": "Idle = round-2 locked NPC22 (sha d1ad2acb1223, same file PHASE 1 normalized). Anchors from transforms.json NPC22; horse skull and trailing cape excluded. PHASE 1 wanted x1.007, clamped to 1.0. Pose anchors 2026-10-01: skull belt-buckle centre x from the full-size images. DOWN (1653x952) body length \u22481400 px vs \u22481200 standing height and a slightly larger buckle \u2192 rel 0.9 (downscale-only); others 1.0. IDLE_V2 (09_15_31.png): chin 250 (bottom of the face void), boot sole 1239, skull-buckle x 805; buckle/hat size \u2248 poses \u2192 rel 1.0.",
+  "retired_idle": {
+    "file": "intake/NPC22_PALE_RIDER.png",
+    "chin": 250,
+    "ground": 1245,
+    "x": 929,
+    "rel": 1.0,
+    "note": "retired 2026-10-01: identity re-locked to the pose-set style (decision A)"
+  }
+}

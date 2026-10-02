@@ -1,0 +1,592 @@
+{
+ "files": [
+  {
+   "file": "assets/images/characters/clarity/npc/09-v2/down.png",
+   "before": 1922571,
+   "after": 1862727,
+   "size": [
+    1548,
+    1548
+   ],
+   "mode": "RGBA",
+   "sha256": "231518657b7b5822a2605ab55238f34d8887da3e678e2e122972f310a09ea0e9"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/09-v2/draw.png",
+   "before": 1958787,
+   "after": 1906566,
+   "size": [
+    1548,
+    1548
+   ],
+   "mode": "RGBA",
+   "sha256": "84df131ebd7b273c54dbd4b1e738c57137293b3a7a5e10da4084f72a8bf314f1"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/09-v2/fire.png",
+   "before": 2096954,
+   "after": 2057033,
+   "size": [
+    1548,
+    1548
+   ],
+   "mode": "RGBA",
+   "sha256": "0aab934c4a276b9f02323f2a7b2e6de0855821c7a5ce2f5dd71ad65f22280eda"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/09-v2/hit.png",
+   "before": 1981619,
+   "after": 1932536,
+   "size": [
+    1548,
+    1548
+   ],
+   "mode": "RGBA",
+   "sha256": "ce0ae205f0ed16dc4487ac482f9e9f0d314a8fb340b72c5a40c6a42bf9ad45ed"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/09-v2/identity_poster.png",
+   "before": 1690943,
+   "after": 1659586,
+   "size": [
+    1254,
+    1254
+   ],
+   "mode": "RGBA",
+   "sha256": "5127a9a4b9058dab9f8335a19e2e2bede75d465869ba00be5782fae4b1b99dd8"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/09-v2/idle.png",
+   "before": 1753101,
+   "after": 1721215,
+   "size": [
+    1548,
+    1548
+   ],
+   "mode": "RGBA",
+   "sha256": "3c57e8844cff318c99c9c912597f9fd54145e0caae5000120bbd940f32bf6d47"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/15-v2/down.png",
+   "before": 1558911,
+   "after": 1490216,
+   "size": [
+    1624,
+    1624
+   ],
+   "mode": "RGBA",
+   "sha256": "1a0a0254aa00b9afe6d82c14a262311d9087142e679eb1ba75481542dba00677"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/15-v2/draw.png",
+   "before": 1859270,
+   "after": 1790615,
+   "size": [
+    1624,
+    1624
+   ],
+   "mode": "RGBA",
+   "sha256": "5920aa97a888eeae02e77fd8b6f37b2488e32d9d216737d40aead7d4818e77cd"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/15-v2/fire.png",
+   "before": 1905189,
+   "after": 1832486,
+   "size": [
+    1624,
+    1624
+   ],
+   "mode": "RGBA",
+   "sha256": "1c6b46e03333e294d503fc9cebd879ff20498b762f80c9786d6aa60ba80cf8ee"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/15-v2/hit.png",
+   "before": 1975287,
+   "after": 1898150,
+   "size": [
+    1624,
+    1624
+   ],
+   "mode": "RGBA",
+   "sha256": "ba7f28017d7289ea4f23ab88ca939105de42362c44f8c964b0ab02b70b45defc"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/15-v2/identity_poster.png",
+   "before": 2130142,
+   "after": 2064667,
+   "size": [
+    1254,
+    1254
+   ],
+   "mode": "RGBA",
+   "sha256": "41b205a29a2f7f5cb4aa59e744810137104bc2e3c62abda988ddff3ab2734f7b"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/15-v2/idle.png",
+   "before": 2156392,
+   "after": 2098072,
+   "size": [
+    1624,
+    1624
+   ],
+   "mode": "RGBA",
+   "sha256": "0db82da32d3051863e2b8ba9a840e81e1ca7ba9c6796d43370499ba93b78b8ca"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/18-v2/down.png",
+   "before": 1636055,
+   "after": 1606964,
+   "size": [
+    1742,
+    1742
+   ],
+   "mode": "RGBA",
+   "sha256": "a7a8c3c3e073317ac48ae4f0817c2ac989ce48e9c71a1d156dfd2b4b693d58f5"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/18-v2/draw.png",
+   "before": 1882602,
+   "after": 1843504,
+   "size": [
+    1742,
+    1742
+   ],
+   "mode": "RGBA",
+   "sha256": "b173bf015cd8b342ec11a33f3cc9f670dd06a5e10a862a8545a962eecbeb34b0"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/18-v2/fire.png",
+   "before": 1874076,
+   "after": 1835514,
+   "size": [
+    1742,
+    1742
+   ],
+   "mode": "RGBA",
+   "sha256": "9eefb78762c9626931c31e9cb5c31815021c6b0bd701c7e168e0cec39764e8cb"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/18-v2/hit.png",
+   "before": 1987770,
+   "after": 1945545,
+   "size": [
+    1742,
+    1742
+   ],
+   "mode": "RGBA",
+   "sha256": "26e09b410d6e461b5c088ee4c0b8bd8667d674a338eec9f5d906d4d3fe97b330"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/18-v2/identity_poster.png",
+   "before": 2223088,
+   "after": 2195964,
+   "size": [
+    1254,
+    1254
+   ],
+   "mode": "RGBA",
+   "sha256": "c91eede2d1600842ca3b5b585dbb1fd9d696e1ed289220ef83ae9a5ac1bf71f3"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/18-v2/idle.png",
+   "before": 2299197,
+   "after": 2274264,
+   "size": [
+    1742,
+    1742
+   ],
+   "mode": "RGBA",
+   "sha256": "87f11213673efec738a689620126f7f36cb80f1d8159fe29faed503466b6357e"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/19-v2/down.png",
+   "before": 1836124,
+   "after": 1777774,
+   "size": [
+    1682,
+    1682
+   ],
+   "mode": "RGBA",
+   "sha256": "6f270dc8e0d411d19115f786bd3ac2f10d330990b2265e00d8fe65e889007312"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/19-v2/draw.png",
+   "before": 1703632,
+   "after": 1658097,
+   "size": [
+    1682,
+    1682
+   ],
+   "mode": "RGBA",
+   "sha256": "92d5b8bc20e247bdd8894807b2a6053fd9507377d30e0ebdaf67b627345ed341"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/19-v2/fire.png",
+   "before": 1908307,
+   "after": 1854773,
+   "size": [
+    1682,
+    1682
+   ],
+   "mode": "RGBA",
+   "sha256": "0e8bb3b716e21612a80c18c661502d5cd3f500ebfee572c4996fba6363b691c6"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/19-v2/hit.png",
+   "before": 1960418,
+   "after": 1904288,
+   "size": [
+    1682,
+    1682
+   ],
+   "mode": "RGBA",
+   "sha256": "c3f6f7b1bf1331275ea5e697a8df03359b7a3a2f0aafba18c5a6a6b70fc87c15"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/19-v2/identity_poster.png",
+   "before": 1595383,
+   "after": 1551987,
+   "size": [
+    1254,
+    1254
+   ],
+   "mode": "RGBA",
+   "sha256": "a60082323927ace70e59a9c595e488da4acd66c93f6d03457451e649f2bf1c86"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/19-v2/idle.png",
+   "before": 1687321,
+   "after": 1643282,
+   "size": [
+    1682,
+    1682
+   ],
+   "mode": "RGBA",
+   "sha256": "25341756f7dcdbbc52b4de8f8b631cebd7f21e4ca9a6eda6fddd35fcdf3f15a7"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/20-v2/down.png",
+   "before": 2080625,
+   "after": 1987390,
+   "size": [
+    1778,
+    1778
+   ],
+   "mode": "RGBA",
+   "sha256": "985d1a5e929a458a28c8ea9489356df0875fb8f9aec43b5d198ee6fa44daf570"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/20-v2/draw.png",
+   "before": 2268309,
+   "after": 2201453,
+   "size": [
+    1778,
+    1778
+   ],
+   "mode": "RGBA",
+   "sha256": "88cd8bd06c80522fca036927fb977cdbf8e8e94a7296f1406f4da87547890ed9"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/20-v2/fire.png",
+   "before": 2083963,
+   "after": 2016683,
+   "size": [
+    1778,
+    1778
+   ],
+   "mode": "RGBA",
+   "sha256": "507ba2b4e8d060e316aba8a12f1975252c1b62744b59406452eb638b6ba114f1"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/20-v2/hit.png",
+   "before": 2329990,
+   "after": 2252123,
+   "size": [
+    1778,
+    1778
+   ],
+   "mode": "RGBA",
+   "sha256": "3c848d65c5a023aaa772ece596b6ffb67896eef90ce5886f34196b7e208cbf78"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/20-v2/identity_poster.png",
+   "before": 2308867,
+   "after": 2250040,
+   "size": [
+    1254,
+    1254
+   ],
+   "mode": "RGBA",
+   "sha256": "0dcb3db1456c96bbf0ea81e8fb612a9605e7262136b86ff1330310d4b9c635c9"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/20-v2/idle.png",
+   "before": 2390725,
+   "after": 2334902,
+   "size": [
+    1778,
+    1778
+   ],
+   "mode": "RGBA",
+   "sha256": "57e31658111cda38d5f6c2f55b8ee89afb0f24eed8b13251b36c03434d04c864"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/22-v2/down.png",
+   "before": 2075890,
+   "after": 1968332,
+   "size": [
+    1684,
+    1684
+   ],
+   "mode": "RGBA",
+   "sha256": "dc3138cc4f64cf909cbe9d7500b7adaa20508dd3269859cf00254984653651a3"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/22-v2/draw.png",
+   "before": 2318223,
+   "after": 2189490,
+   "size": [
+    1684,
+    1684
+   ],
+   "mode": "RGBA",
+   "sha256": "24f68b07e7538487ace341f59876bfe432ea53ed2bc4618efedbf293391719c6"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/22-v2/fire.png",
+   "before": 2306647,
+   "after": 2201308,
+   "size": [
+    1684,
+    1684
+   ],
+   "mode": "RGBA",
+   "sha256": "d56bc420f78c6ee8a11956cbbf99c6452e4cb8f5fcb488726bc3a211c1cc0f97"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/22-v2/hit.png",
+   "before": 2232469,
+   "after": 2120098,
+   "size": [
+    1684,
+    1684
+   ],
+   "mode": "RGBA",
+   "sha256": "91feee1437814935064c56d9485a64a95887d3ada7d796105fe5d731a86bc3b9"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/22-v2/identity_poster.png",
+   "before": 2293913,
+   "after": 2158638,
+   "size": [
+    1254,
+    1254
+   ],
+   "mode": "RGBA",
+   "sha256": "605d8b2ef7cb22c221bb74d6bf6e063b47a6ea238146b34b0a1e7113b9311f44"
+  },
+  {
+   "file": "assets/images/characters/clarity/npc/22-v2/idle.png",
+   "before": 2377364,
+   "after": 2239718,
+   "size": [
+    1684,
+    1684
+   ],
+   "mode": "RGBA",
+   "sha256": "30813e10955aa69e64650c21c190c2ffad4f247a2f955550fc3f9afaf8eb1b75"
+  },
+  {
+   "file": "assets/images/characters/clarity/player/04-v2/down.png",
+   "before": 1505029,
+   "after": 1480558,
+   "size": [
+    1720,
+    1720
+   ],
+   "mode": "RGBA",
+   "sha256": "0a56e8c276a4f37db86048db1de689ef1a7bb6f99fda50997703f59fc2d62efd"
+  },
+  {
+   "file": "assets/images/characters/clarity/player/04-v2/draw.png",
+   "before": 2357326,
+   "after": 2313134,
+   "size": [
+    1720,
+    1720
+   ],
+   "mode": "RGBA",
+   "sha256": "366cee64611ce1984895fd4f7ace434e2b1bb2ee9e670030028c131b6dfa9eb6"
+  },
+  {
+   "file": "assets/images/characters/clarity/player/04-v2/fire.png",
+   "before": 2861423,
+   "after": 2788908,
+   "size": [
+    1720,
+    1720
+   ],
+   "mode": "RGBA",
+   "sha256": "4c365b25ad0d420e944e0886e91302ebe1e31b2fda0bcf68bd38ddb0d825ff28"
+  },
+  {
+   "file": "assets/images/characters/clarity/player/04-v2/hit.png",
+   "before": 2321616,
+   "after": 2279310,
+   "size": [
+    1720,
+    1720
+   ],
+   "mode": "RGBA",
+   "sha256": "7d97dbe7b25c846bba4b5e7083e671a8f0c26025d0c74387e7b44dab3d6d0e7e"
+  },
+  {
+   "file": "assets/images/characters/clarity/player/04-v2/idle.png",
+   "before": 1863901,
+   "after": 1832146,
+   "size": [
+    1720,
+    1720
+   ],
+   "mode": "RGBA",
+   "sha256": "25c8691cf37dc13fa1da405faa462aadd6036b19ff4bc8b459b05c478afdf143"
+  },
+  {
+   "file": "assets/images/combat/npc/09/down.png",
+   "before": 1613929,
+   "after": 1562877,
+   "size": [
+    1548,
+    1548
+   ],
+   "mode": "RGBA",
+   "sha256": "16956408e7a8fa8841edb986a64646d46a333a76066669e0f9945fd608308031"
+  },
+  {
+   "file": "assets/images/combat/npc/09/fall.png",
+   "before": 2076876,
+   "after": 2005133,
+   "size": [
+    1548,
+    1548
+   ],
+   "mode": "RGBA",
+   "sha256": "882ad62583f631b4c8737628585586a7863ade5a6ebcd35837f33aa4bbdd6853"
+  },
+  {
+   "file": "assets/images/combat/npc/15/down.png",
+   "before": 1260220,
+   "after": 1186592,
+   "size": [
+    1624,
+    1624
+   ],
+   "mode": "RGBA",
+   "sha256": "7859949958cda373f524b45e1009b04541384893cd9e2068d2347e008b935c47"
+  },
+  {
+   "file": "assets/images/combat/npc/15/fall.png",
+   "before": 1408945,
+   "after": 1357293,
+   "size": [
+    1624,
+    1624
+   ],
+   "mode": "RGBA",
+   "sha256": "a2a0ff833bfd498eb6c1182c61e688c278014dd78ea960b52c294fc9c677af9f"
+  },
+  {
+   "file": "assets/images/combat/npc/18/down.png",
+   "before": 1805785,
+   "after": 1755679,
+   "size": [
+    1742,
+    1742
+   ],
+   "mode": "RGBA",
+   "sha256": "4e1b45712161e7adb86a963d3d0f4f0e1216713d64c6775c8497bd440dc22730"
+  },
+  {
+   "file": "assets/images/combat/npc/18/fall.png",
+   "before": 1925667,
+   "after": 1878448,
+   "size": [
+    1742,
+    1742
+   ],
+   "mode": "RGBA",
+   "sha256": "66236f9ef2bd97c076f82a95644918c3095ca894af8a4ea8cc7a4ccd53a89d84"
+  },
+  {
+   "file": "assets/images/combat/npc/19/down.png",
+   "before": 1764375,
+   "after": 1694435,
+   "size": [
+    1682,
+    1682
+   ],
+   "mode": "RGBA",
+   "sha256": "1d5dd8cb109699d449d98ef5bc11eb72b7e6f4f2e046fce5c87f7adbd98c7600"
+  },
+  {
+   "file": "assets/images/combat/npc/19/fall.png",
+   "before": 1902291,
+   "after": 1841395,
+   "size": [
+    1682,
+    1682
+   ],
+   "mode": "RGBA",
+   "sha256": "73788d074b2df7f51c288f3d6b3e9eed50fd39484337816b043501bbf6cd6e04"
+  },
+  {
+   "file": "assets/images/combat/npc/20/down.png",
+   "before": 1525198,
+   "after": 1472191,
+   "size": [
+    1778,
+    1778
+   ],
+   "mode": "RGBA",
+   "sha256": "e1d919dd2efdd83cb51a022e9aa51365837e01963585b85057c39ed260f3b38c"
+  },
+  {
+   "file": "assets/images/combat/npc/20/fall.png",
+   "before": 1820881,
+   "after": 1751144,
+   "size": [
+    1778,
+    1778
+   ],
+   "mode": "RGBA",
+   "sha256": "bf2f6e7019525633df0df019aff05176933387f689006ebee37b8f93a8e79148"
+  },
+  {
+   "file": "assets/images/combat/npc/22/down.png",
+   "before": 1443463,
+   "after": 1356388,
+   "size": [
+    1684,
+    1684
+   ],
+   "mode": "RGBA",
+   "sha256": "9e338bc5dc2a20cf39d888beaf37c20f63744db182dfcf70916b5255aac5dc24"
+  },
+  {
+   "file": "assets/images/combat/npc/22/fall.png",
+   "before": 1799217,
+   "after": 1698528,
+   "size": [
+    1684,
+    1684
+   ],
+   "mode": "RGBA",
+   "sha256": "7b5cfcdc63bc08ab4030bf8464f190d84bff982254a8558d7f9a2e8fb222aa30"
+  }
+ ],
+ "before_bytes": 103906266,
+ "after_bytes": 100580159,
+ "skipped": {
+  "assets/images/hidden/pale_rider_locked_silhouette_v2.png": "optimizer would change the colour mode; left untouched (unchanged vs HEAD: True)"
+ }
+}
