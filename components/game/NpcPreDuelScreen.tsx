@@ -8,9 +8,13 @@ import { DuelCoverImage } from '@/components/game/DuelCoverImage';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import { WesternButton } from '@/components/ui/western/WesternPrimitives';
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
-import { gameImages } from '@/constants/gameImages';
 import { uiV3Colors } from '@/constants/theme';
 import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
+import {
+  APPROVED_DUEL_BACKGROUNDS,
+  getV3NpcPose,
+  type DuelBackgroundId,
+} from '@/constants/v3DuelAssets';
 import { V3_PLAYER_IDENTITIES } from '@/constants/v3UiAssets';
 import { useCharacterLabels } from '@/utils/characterLabels';
 
@@ -21,8 +25,9 @@ type Props = {
   paddingBottom: number;
   paddingLeft: number;
   playerId: number;
+  npcId: number;
   opponentName: string;
-  dayNight: 'day' | 'night';
+  backgroundId: DuelBackgroundId;
   onBack: () => void;
   onStart: () => void;
 };
@@ -34,20 +39,22 @@ export function NpcPreDuelScreen({
   paddingBottom,
   paddingLeft,
   playerId,
+  npcId,
   opponentName,
-  dayNight,
+  backgroundId,
   onBack,
   onStart,
 }: Props) {
   const { t } = useTranslation();
   const labels = useCharacterLabels(playerId as 1 | 2 | 3 | 4);
   const landscape = width > height;
-  const figureSize = Math.min(landscape ? height * 0.78 : width * 0.82, landscape ? 430 : 370);
+  const playerSize = Math.min(landscape ? height * 0.7 : width * 0.64, landscape ? 390 : 290);
+  const npcSize = Math.min(landscape ? height * 0.68 : width * 0.58, landscape ? 370 : 270);
 
   return (
     <View style={[styles.root, { width, height }]}>
       <DuelCoverImage
-        source={playerId === 1 ? require('@/assets/branding/cinematic-hero.png') : dayNight === 'night' ? gameImages.duelBgNightFull : gameImages.duelBgDayFull}
+        source={APPROVED_DUEL_BACKGROUNDS[backgroundId]}
         width={width}
         height={height}
         bleed={1}
@@ -70,14 +77,25 @@ export function NpcPreDuelScreen({
         <Text style={[styles.opponent, usesCjkFont(opponentName) && styles.opponentCjk]}>{t('game.versus')}  {opponentName}</Text>
       </View>
 
-      {playerId !== 1 ? <View style={[styles.figure, landscape && styles.figureLandscape]} pointerEvents="none">
-        <Image
-          source={V3_PLAYER_IDENTITIES[playerId] ?? V3_PLAYER_IDENTITIES[1]}
-          contentFit="contain"
-          transition={0}
-          style={scaledArtStyle(figureSize, figureSize, characterArtDisplayScale('player', playerId))}
-        />
-      </View> : null}
+      <View style={[styles.duelists, landscape && styles.duelistsLandscape]} pointerEvents="none">
+        <View style={styles.playerFigure}>
+          <Image
+            source={V3_PLAYER_IDENTITIES[playerId] ?? V3_PLAYER_IDENTITIES[1]}
+            contentFit="contain"
+            transition={0}
+            style={scaledArtStyle(playerSize, playerSize, characterArtDisplayScale('player', playerId))}
+          />
+        </View>
+        <Text style={styles.vs}>VS</Text>
+        <View style={styles.npcFigure}>
+          <Image
+            source={getV3NpcPose(npcId, 'idle')}
+            contentFit="contain"
+            transition={0}
+            style={scaledArtStyle(npcSize, npcSize, characterArtDisplayScale('npc', npcId))}
+          />
+        </View>
+      </View>
 
       <View style={[styles.startWrap, landscape && styles.startWrapLandscape, { bottom: paddingBottom + 22 }]}>
         <Text style={styles.ready}>“{t('game.readyToDraw')}”</Text>
@@ -102,9 +120,11 @@ const styles = StyleSheet.create({
   nameCjk: { fontFamily: FONT_WESTERN_SERIF, fontSize: 27, fontWeight: '700', letterSpacing: 1.4 },
   opponent: { marginTop: 7, color: uiV3Colors.cream, fontSize: 11, fontWeight: '900', letterSpacing: 1.6, textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   opponentCjk: { fontFamily: FONT_WESTERN_SERIF, fontWeight: '700', letterSpacing: 0.9 },
-  figure: { position: 'absolute', left: 0, right: 0, top: '27%', alignItems: 'center', justifyContent: 'center' },
-  figureLandscape: { left: '5%', right: '48%', top: '10%' },
-  halo: { position: 'absolute', borderRadius: 999, backgroundColor: 'rgba(255, 183, 56, 0.18)', borderWidth: 1, borderColor: 'rgba(232, 197, 71, 0.32)' },
+  duelists: { position: 'absolute', left: 8, right: 8, top: '29%', height: '40%', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' },
+  duelistsLandscape: { left: '3%', right: '43%', top: '16%', height: '68%' },
+  playerFigure: { flex: 1, alignItems: 'flex-end', justifyContent: 'flex-end' },
+  npcFigure: { flex: 1, alignItems: 'flex-start', justifyContent: 'flex-end' },
+  vs: { alignSelf: 'center', marginHorizontal: -8, zIndex: 2, color: uiV3Colors.gold, fontFamily: FONT_RYE, fontSize: 20, textShadowColor: '#000', textShadowOffset: { width: 1, height: 2 }, textShadowRadius: 3 },
   startWrap: { position: 'absolute', left: 28, right: 28, gap: 8 },
   startWrapLandscape: { left: '56%', right: '7%' },
   ready: { color: uiV3Colors.cream, fontFamily: FONT_RYE, fontSize: 16, letterSpacing: 1.1, textAlign: 'center', textShadowColor: '#000', textShadowOffset: { width: 1, height: 2 }, textShadowRadius: 3 },

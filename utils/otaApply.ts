@@ -2,7 +2,9 @@ import * as Updates from 'expo-updates';
 
 import { markOtaJustApplied } from '@/utils/otaUpdateFlag';
 
+/** Whole check + fetch budget. Cold start may choose a smaller budget. */
 const DEFAULT_TIMEOUT_MS = 12_000;
+const RELOAD_HANDOFF_TIMEOUT_MS = 1_500;
 /** 포그라운드 반복 체크 스로틀 (스플래시 force 는 무시) */
 const MIN_CHECK_INTERVAL_MS = 30_000;
 
@@ -43,14 +45,17 @@ export async function applyOtaUpdateIfAvailable(opts?: {
   inFlight = true;
   lastCheckAt = now;
   const timeoutMs = opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const deadline = Date.now() + timeoutMs;
+  const withinBudget = <T,>(promise: Promise<T>) =>
+    withTimeout(promise, Math.max(1, deadline - Date.now()));
 
   try {
-    const check = await withTimeout(Updates.checkForUpdateAsync(), timeoutMs);
+    const check = await withinBudget(Updates.checkForUpdateAsync());
     if (!check.isAvailable) return false;
-    await withTimeout(Updates.fetchUpdateAsync(), timeoutMs);
+    await withinBudget(Updates.fetchUpdateAsync());
     await markOtaJustApplied();
     try {
-      await Updates.reloadAsync();
+      await withTimeout(Updates.reloadAsync(), RELOAD_HANDOFF_TIMEOUT_MS);
     } catch {
       return false;
     }

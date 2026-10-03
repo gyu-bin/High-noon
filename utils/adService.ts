@@ -157,15 +157,13 @@ export function preloadInterstitial(): void {
  * `EARNED_REWARD`가 영상 끝에 오므로, 영상 길이보다 짧은 타임아웃은 보상을 통째로 날린다.
  * 그래서 이 값은 어떤 광고보다도 길게 두고, 이벤트 유실로 인한 영구 대기만 막는 안전망으로 쓴다.
  */
-const AD_MAX_VISIBLE_MS = 180_000;
+const AD_MAX_VISIBLE_MS = 90_000;
 /** 보상형 열림 감시 (ms) — 보상을 잃는 쪽이 손해가 크므로 전면보다 여유를 준다 */
 const REWARDED_OPEN_TIMEOUT_MS = 4000;
 /** AppState가 active로 돌아온 뒤 grace period (ms) — CLOSED가 먼저 도착할 여유만 준다 */
 const AD_FOREGROUND_GRACE_MS = 250;
 /** 보상형 로드 대기 최대 시간 (ms) — 유저가 직접 "광고 보기"를 누른 경우에만 적용 */
 const REWARDED_LOAD_TIMEOUT_MS = 6000;
-/** 2매치마다 전면 노출 시 로드 대기 (ms) */
-const INTERSTITIAL_LOAD_WAIT_MS = 20_000;
 
 /** 광고 제거는 1.4+ 네이티브에서만 인정. 1.3에 남은 테스트 구매 플래그는 무시. */
 function isAdFreeActive(): boolean {
@@ -220,95 +218,57 @@ export function showStageCompleteAd(matchKey?: string): Promise<void> {
 async function presentStageInterstitial(): Promise<void> {
   await initAds();
   const lib = await getAdsLib();
-  if (!lib) {
+  const ad = interstitial;
+
+  // Stage completion never initiates or waits for a load. A missed preload is
+  // simply skipped and retained at the due cadence for the next completion.
+  if (!lib || !ad?.loaded || interstitialBusy) {
     preloadInterstitial();
     return;
   }
 
-  await new Promise<void>((resolve) => {
-    let resolved = false;
-    let loadTimeoutId: ReturnType<typeof setTimeout> | null = null;
-    let visibleTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  interstitialBusy = true;
+  let finished = false;
+  let presented = false;
+  let watchdog: ReturnType<typeof setTimeout> | null = null;
 
-    const finish = () => {
-      if (resolved) return;
-      resolved = true;
-      if (loadTimeoutId) {
-        clearTimeout(loadTimeoutId);
-        loadTimeoutId = null;
-      }
-      if (visibleTimeoutId) {
-        clearTimeout(visibleTimeoutId);
-        visibleTimeoutId = null;
-      }
-      interstitialBusy = false;
-      preloadInterstitial();
-      resolve();
-    };
+  const markPresented = () => {
+    if (presented) return;
+    presented = true;
+    matchesSinceLastAd = 0;
+  };
 
-    const finishAfterClosed = () => {
-      lastStageInterstitialClosedAt = Date.now();
-      matchesSinceLastAd = 0;
-      finish();
-    };
-
-    const present = (ad: NonNullable<typeof interstitial>) => {
-      if (resolved || !ad.loaded) {
-        finish();
-        return;
-      }
-
-      interstitialBusy = true;
-      if (loadTimeoutId) {
-        clearTimeout(loadTimeoutId);
-        loadTimeoutId = null;
-      }
-
-      try {
-        const { AdEventType } = lib;
-        ad.removeAllListeners();
-        ad.addAdEventListener(AdEventType.CLOSED, finishAfterClosed);
-        ad.addAdEventListener(AdEventType.ERROR, finish);
-        visibleTimeoutId = setTimeout(() => {
-          if (!resolved) finishAfterClosed();
-        }, AD_MAX_VISIBLE_MS);
-        void ad.show().catch(finish);
-      } catch {
-        finish();
-      }
-    };
-
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    if (watchdog) clearTimeout(watchdog);
     try {
-      if (!interstitial) {
-        interstitial = lib.InterstitialAd.createForAdRequest(getInterstitialUnitId(lib));
-      }
-
-      const ad = interstitial;
-      const { AdEventType } = lib;
-
-      if (ad.loaded) {
-        present(ad);
-        return;
-      }
-
-      loadTimeoutId = setTimeout(() => {
-        if (!resolved) finish();
-      }, INTERSTITIAL_LOAD_WAIT_MS);
-
-      ad.addAdEventListener(AdEventType.LOADED, () => {
-        if (resolved) return;
-        present(ad);
-      });
-      ad.addAdEventListener(AdEventType.ERROR, () => {
-        interstitial = null;
-        finish();
-      });
-      ad.load();
+      ad.removeAllListeners();
     } catch {
-      interstitial = null;
-      finish();
+      // SDK teardown is best effort.
     }
-  });
+    if (interstitial === ad) interstitial = null;
+    interstitialBusy = false;
+    if (presented) lastStageInterstitialClosedAt = Date.now();
+    preloadInterstitial();
+  };
+
+  try {
+    const { AdEventType } = lib;
+    ad.removeAllListeners();
+    ad.addAdEventListener(AdEventType.OPENED, markPresented);
+    ad.addAdEventListener(AdEventType.CLOSED, () => {
+      markPresented();
+      finish();
+    });
+    ad.addAdEventListener(AdEventType.ERROR, finish);
+    watchdog = setTimeout(finish, AD_MAX_VISIBLE_MS);
+    // Do not await close (or even OPENED). Navigation proceeds underneath the
+    // native ad and lost callbacks can only delay internal cleanup.
+    void ad.show().then(markPresented).catch(finish);
+  } catch {
+    finish();
+  }
 }
 
 /** 보상형 광고 미리 로드. 앱 부팅 시 또는 close 직후 호출. */

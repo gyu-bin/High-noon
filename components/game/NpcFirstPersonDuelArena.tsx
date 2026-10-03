@@ -22,7 +22,7 @@ import {
   APPROVED_DUEL_BACKGROUNDS,
   getV3NpcPose,
   V3_DUEL_VFX,
-  CINEMATIC_REVOLVER,
+  V3_FIRST_PERSON_WEAPON,
   type V3NpcPose,
 } from '@/constants/v3DuelAssets';
 import { characterArtDisplayScale, npcMuzzleStyle, scaledArtStyle } from '@/constants/characterArtMetadata';
@@ -43,6 +43,8 @@ import {
   type PlayerReactionStage,
 } from '@/utils/combatReaction';
 import { getNpcDisplayName } from '@/utils/npcLabels';
+import { getCharacterLabels } from '@/utils/characterLabels';
+import type { PlayerCharacterId } from '@/constants/characters';
 import { pickDuelBackground, type DuelBackgroundId } from '@/utils/duelBackgroundSelection';
 
 type Props = {
@@ -72,6 +74,7 @@ type Props = {
   shootCapturesEarly: boolean;
   shootActive: boolean;
   playerShotActive: boolean;
+  playerCharacterId?: number;
   npcShotActive?: boolean;
   opponentCharacterId?: number;
   opponentName?: string;
@@ -137,6 +140,7 @@ export function NpcFirstPersonDuelArena({
   shootCapturesEarly,
   shootActive,
   playerShotActive,
+  playerCharacterId = 1,
   npcShotActive = false,
   opponentCharacterId,
   opponentName,
@@ -153,6 +157,7 @@ export function NpcFirstPersonDuelArena({
   // Capture previews may inject an ID; normal screens own selection per match.
   const [fallbackBackgroundId] = useState(() => backgroundId ?? pickDuelBackground());
   const { t } = useTranslation();
+  const playerLabels = getCharacterLabels(t, playerCharacterId as PlayerCharacterId);
   const reduceMotion = useReducedMotion();
   const landscape = width > height;
   // Feet stay on the same ground line; the body grows upward (NPC_DUEL_SCALE).
@@ -447,7 +452,12 @@ export function NpcFirstPersonDuelArena({
     ? Math.min(height * 0.78, width * 0.34)
     : Math.min(width * 0.67, height * 0.36);
   const npcName = opponentName ?? getNpcDisplayName(t, npcId);
-  const weaponSource = CINEMATIC_REVOLVER;
+  const weaponSource = playerShotActive
+    ? V3_FIRST_PERSON_WEAPON.fire
+    : signalPhase === '집중' || signalPhase === '페이크' || signalPhase === '뱅'
+      ? V3_FIRST_PERSON_WEAPON.draw
+      : V3_FIRST_PERSON_WEAPON.idle;
+  const playerAccent = ['#C8860A', '#A73F32', '#365E78', '#71528C'][playerCharacterId - 1] ?? '#C8860A';
   const abilityEcho = specialPresentation === 'echo' && (signalPhase === '페이크' || signalPhase === '뱅');
   const abilityMirror = specialPresentation === 'mirror' && (signalPhase === '집중' || signalPhase === '페이크');
   const specialAsset = specialPresentation === 'thunderbolt'
@@ -578,7 +588,7 @@ export function NpcFirstPersonDuelArena({
 
         <View pointerEvents="box-none" style={[styles.hud, { top: paddingTop, left: paddingLeft, right: paddingRight }]}>
           <View style={styles.hudSide}>
-            <Text style={styles.hudLabel}>YOU</Text>
+            <Text numberOfLines={1} style={styles.hudLabel}>YOU · {playerLabels.name}</Text>
             <Hearts value={playerHearts} max={heartsMax} />
           </View>
           <View style={styles.roundBlock}>
@@ -620,6 +630,9 @@ export function NpcFirstPersonDuelArena({
 
         <Animated.View pointerEvents="none" style={[styles.weapon, { width: weaponSize, height: weaponSize, right: -weaponSize * 0.06, bottom: -weaponSize * 0.1 }, weaponStyle]}>
           <Image source={weaponSource} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} priority="high" />
+          <View style={[styles.characterGripMark, { borderColor: playerAccent }]}>
+            <Text style={[styles.characterGripText, { color: playerAccent }]}>P{playerCharacterId}</Text>
+          </View>
           <Animated.View style={[styles.weaponMuzzle, muzzleStyle]}>
             <Image source={V3_DUEL_VFX.muzzleFlash} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} />
           </Animated.View>
@@ -665,6 +678,8 @@ const styles = StyleSheet.create({
   recordTagText: { color: uiV3Colors.ochre, fontFamily: FONT_RYE, fontSize: 8, letterSpacing: 1.8 },
   cue: { position: 'absolute', left: '8%', right: '8%', height: 76, alignItems: 'center', justifyContent: 'center' },
   weapon: { position: 'absolute' },
+  characterGripMark: { position: 'absolute', right: '14%', bottom: '22%', minWidth: 28, paddingHorizontal: 5, paddingVertical: 3, alignItems: 'center', borderWidth: 1, backgroundColor: 'rgba(20, 10, 5, 0.76)', transform: [{ rotate: '-10deg' }] },
+  characterGripText: { fontFamily: FONT_RYE, fontSize: 8, letterSpacing: 0.8 },
   weaponMuzzle: { position: 'absolute', width: '52%', height: '42%', left: '-7%', top: '-7%' },
   weaponSmoke: { position: 'absolute', width: '40%', height: '40%', left: '7%', top: '2%' },
   shotFlash: { backgroundColor: '#FFD08A' },

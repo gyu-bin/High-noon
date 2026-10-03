@@ -30,11 +30,13 @@ import { colors } from '@/constants/theme';
 import { FONT_RYE, FONT_WESTERN_SERIF } from '@/constants/fonts';
 import { getNpcById } from '@/constants/npcs';
 import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
+import { CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
 import { getV3NpcPose } from '@/constants/v3DuelAssets';
 import { getNpcDisplayName } from '@/utils/npcLabels';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { useProgressStore } from '@/store/progressStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { bgmPlay } from '@/utils/audioService';
 import { trigger } from '@/utils/hapticService';
 import {
@@ -189,6 +191,8 @@ export default function NpcResultScreen() {
   const dayNight = dayNightStr === 'night' ? 'night' : 'day';
   const theme = victory ? OUTCOME_VICTORY : OUTCOME_DEFEAT;
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
+  const selectedCharacterId = useSettingsStore((s) => s.selectedCharacterId);
+  const playerPoses = CLARITY_PLAYERS[selectedCharacterId] ?? CLARITY_PLAYERS[1]!;
 
   const nextNpc = useMemo(() => {
     if (!victory || !Number.isFinite(id)) return null;
@@ -266,16 +270,24 @@ export default function NpcResultScreen() {
   return (
     <PhoneStageShell edgeToEdge>
       <OutcomeBackdrop variant={dayNight} width={winW} height={winH}>
-        {npc ? (
-          <View pointerEvents="none" style={styles.opponentArt}>
+        <View pointerEvents="none" style={styles.duelistStage}>
+          <View style={styles.playerArt}>
+            <Image
+              source={victory ? playerPoses.fire : playerPoses.down}
+              contentFit="contain"
+              transition={0}
+              style={scaledArtStyle(winW * 0.54, winH * 0.31, characterArtDisplayScale('player', selectedCharacterId))}
+            />
+          </View>
+          {npc ? <View style={styles.opponentArt}>
             <Image
               source={getV3NpcPose(npc.id, victory ? 'down' : 'idle')}
               contentFit="contain"
               transition={0}
-              style={scaledArtStyle(winW * 0.64, winH * 0.36, characterArtDisplayScale('npc', npc.id))}
+              style={scaledArtStyle(winW * 0.5, winH * 0.3, characterArtDisplayScale('npc', npc.id))}
             />
-          </View>
-        ) : null}
+          </View> : null}
+        </View>
         {showContent && outcomeKnown && victory ? (
           <VictorySparkles width={winW} seed={completionStampStr ?? 'win'} />
         ) : null}
@@ -410,12 +422,24 @@ const styles = StyleSheet.create({
     gap: 10,
     overflow: 'hidden',
   },
-  opponentArt: {
+  duelistStage: {
     position: 'absolute',
-    left: '18%',
-    right: '18%',
-    top: '22%',
-    height: '36%',
+    left: 0,
+    right: 0,
+    top: '13%',
+    height: '34%',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  playerArt: {
+    flex: 1,
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+  },
+  opponentArt: {
+    flex: 1,
+    alignItems: 'flex-start',
+    justifyContent: 'flex-end',
   },
   accentBar: {
     height: 3,

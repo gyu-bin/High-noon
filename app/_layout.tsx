@@ -47,6 +47,12 @@ import { isActiveDuelRoute, isDuelFlowRoute, isInGameRoute } from '@/utils/duelR
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
+const I18N_STARTUP_BUDGET_MS = 2_000;
+const FONT_STARTUP_BUDGET_MS = 2_000;
+const OTA_COLD_START_BUDGET_MS = 2_500;
+const HYDRATION_STARTUP_BUDGET_MS = 2_500;
+const HERO_PRELOAD_BUDGET_MS = 1_000;
+
 /**
  * expo-router 라우트 규약 — 이 레이아웃과 모든 하위 화면의 렌더 에러를 잡는 최종 방어선.
  * 여기까지 왔다는 건 화면을 그리지 못했다는 뜻이라, 흰 화면 대신 재시도 경로를 준다.
@@ -55,17 +61,50 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return <AppErrorBoundary error={error} retry={retry} />;
 }
 
-/** zustand persist가 AsyncStorage에서 복구될 때까지 대기 */
+function settleWithin<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      resolve(fallback);
+    }, timeoutMs);
+    promise.then(
+      (value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(fallback);
+      },
+    );
+  });
+}
+
+/** zustand persist recovery. A timeout releases the splash without mutating defaults. */
 function waitPersistHydrated(api: {
   hasHydrated: () => boolean;
   onFinishHydration: (cb: () => void) => () => void;
-}): Promise<void> {
-  if (api.hasHydrated()) return Promise.resolve();
+}, timeoutMs?: number): Promise<boolean> {
+  if (api.hasHydrated()) return Promise.resolve(true);
   return new Promise((resolve) => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const unsub = api.onFinishHydration(() => {
+      if (timer) clearTimeout(timer);
       unsub();
-      resolve();
+      resolve(true);
     });
+    if (timeoutMs != null) {
+      timer = setTimeout(() => {
+        unsub();
+        resolve(false);
+      }, timeoutMs);
+    }
   });
 }
 
@@ -110,7 +149,12 @@ export default function RootLayout() {
       setI18nReady(true);
       return;
     }
-    void i18nInitPromise.then(() => setI18nReady(true));
+    const timer = setTimeout(() => setI18nReady(true), I18N_STARTUP_BUDGET_MS);
+    void i18nInitPromise.finally(() => {
+      clearTimeout(timer);
+      setI18nReady(true);
+    });
+    return () => clearTimeout(timer);
   }, []);
 
   if (!i18nReady) return null;
@@ -133,18 +177,44 @@ function RootLayoutContent() {
     NanumMyeongjo_700Bold,
   });
 
-  const ready = fontsLoaded || fontError != null;
+  const [fontWaitExpired, setFontWaitExpired] = useState(false);
+  useEffect(() => {
+    if (fontsLoaded || fontError != null) return;
+    const timer = setTimeout(() => setFontWaitExpired(true), FONT_STARTUP_BUDGET_MS);
+    return () => clearTimeout(timer);
+  }, [fontError, fontsLoaded]);
+  const ready = fontsLoaded || fontError != null || fontWaitExpired;
   const [appReady, setAppReady] = useState(false);
   // JS 런타임의 첫 cold launch에서만 mount된다. resume 때는 RootLayout이 유지된다.
   const [animatedSplashVisible, setAnimatedSplashVisible] = useState(true);
   const [otaToastVisible, setOtaToastVisible] = useState(false);
   const [storeUpdateVisible, setStoreUpdateVisible] = useState(false);
+  const hydrationRecoveryStartedRef = useRef(false);
+  const hydratedMaintenanceDoneRef = useRef(false);
 
   useAutoScreenshotTour(appReady);
 
   const hideOtaToast = useCallback(() => setOtaToastVisible(false), []);
   const dismissStoreUpdate = useCallback(() => setStoreUpdateVisible(false), []);
   const dismissAnimatedSplash = useCallback(() => setAnimatedSplashVisible(false), []);
+
+  const completeHydratedStartup = useCallback(async () => {
+    if (hydratedMaintenanceDoneRef.current) return;
+    if (!useProgressStore.persist.hasHydrated() || !useSettingsStore.persist.hasHydrated()) return;
+    hydratedMaintenanceDoneRef.current = true;
+
+    const bootUrl = await settleWithin(Linking.getInitialURL(), 1_000, null);
+    const bootLang = languageFromCaptureUrl(bootUrl);
+    if (bootLang) {
+      useSettingsStore.getState().setLanguage(bootLang);
+      changeLanguage(bootLang);
+    }
+
+    // Never inspect or back up defaults before both stores finished hydration.
+    await restoreProgressIfEmpty().catch(() => {});
+    startProgressAutoBackup();
+    checkUnlockConditions();
+  }, []);
 
   useEffect(() => {
     if (!appReady) return;
@@ -233,35 +303,35 @@ function RootLayoutContent() {
 
       try {
         // 재시작 직후 플래그 — 앱 진입 후 하단 작은 토스트만
-        justUpdated = await consumeOtaJustApplied();
+        justUpdated = await settleWithin(consumeOtaJustApplied(), 500, false);
         if (cancelled) return;
 
-        handOffToReload = await applyOtaUpdateIfAvailable({ force: true });
+        handOffToReload = await applyOtaUpdateIfAvailable({
+          force: true,
+          timeoutMs: OTA_COLD_START_BUDGET_MS,
+        });
         if (handOffToReload || cancelled) return;
 
-        await preloadTitleHero();
-        if (cancelled) return;
-
-        // hydration 전에 해금 동기화하면 기본 진행도가 AsyncStorage를 덮어씀 (OTA 재기동 시 특히)
-        await Promise.all([
-          waitPersistHydrated(useProgressStore.persist),
-          waitPersistHydrated(useSettingsStore.persist),
+        const [, hydration] = await Promise.all([
+          settleWithin(preloadTitleHero(), HERO_PRELOAD_BUDGET_MS, undefined),
+          Promise.all([
+            waitPersistHydrated(useProgressStore.persist, HYDRATION_STARTUP_BUDGET_MS),
+            waitPersistHydrated(useSettingsStore.persist, HYDRATION_STARTUP_BUDGET_MS),
+          ]),
         ]);
         if (cancelled) return;
 
-        const bootLang = languageFromCaptureUrl(await Linking.getInitialURL());
-        if (bootLang) {
-          useSettingsStore.getState().setLanguage(bootLang);
-          changeLanguage(bootLang);
+        if (hydration.every(Boolean)) {
+          void completeHydratedStartup();
+        } else if (!hydrationRecoveryStartedRef.current) {
+          // Show the app with in-memory defaults, but do not persist/inspect them.
+          // If storage recovers later, finish restoration and backup safely then.
+          hydrationRecoveryStartedRef.current = true;
+          void Promise.all([
+            waitPersistHydrated(useProgressStore.persist),
+            waitPersistHydrated(useSettingsStore.persist),
+          ]).then(() => completeHydratedStartup());
         }
-
-        // 앱을 지웠다 다시 깐 경우 키체인 스냅샷에서 조용히 되살린다.
-        // hydration 이후여야 한다 — 그 전이면 아직 안 읽힌 진행도를 비었다고 오판한다.
-        await restoreProgressIfEmpty();
-        if (cancelled) return;
-        startProgressAutoBackup();
-
-        checkUnlockConditions();
       } catch (err) {
         // 준비 단계 실패가 부팅 자체를 막아선 안 된다. 프리로드는 없어도 플레이는 가능.
         if (__DEV__) console.warn('[boot] prepare 실패 — 스플래시는 내리고 진행:', err);
@@ -272,8 +342,8 @@ function RootLayoutContent() {
             if (justUpdated) setOtaToastVisible(true);
           }
           // 첫 화면 레이아웃 → 스플래시 내림 순서로 작은 배경 깜빡임 완화
-          await waitForNextFrame();
-          await SplashScreen.hideAsync().catch(() => {});
+          await settleWithin(waitForNextFrame(), 250, undefined);
+          void SplashScreen.hideAsync().catch(() => {});
           scheduleBootSideEffects();
         }
       }
@@ -284,7 +354,7 @@ function RootLayoutContent() {
     return () => {
       cancelled = true;
     };
-  }, [ready]);
+  }, [completeHydratedStartup, ready]);
 
   if (!ready || !appReady) {
     return null;

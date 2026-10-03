@@ -24,6 +24,7 @@ import {
   type AbilityOverlayType,
 } from '@/components/game/AbilityOverlay';
 import { NpcFirstPersonDuelArena } from '@/components/game/NpcFirstPersonDuelArena';
+import { NpcPreDuelScreen } from '@/components/game/NpcPreDuelScreen';
 import { NpcAbilityIntroModal } from '@/components/game/NpcAbilityIntroModal';
 import {
   NpcRoundModal,
@@ -56,6 +57,11 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { applyAbility } from '@/utils/characterAbility';
 import { simulateNpcReaction, type NpcReactionSimulation } from '@/utils/npcAI';
 import {
+  recordNpcRoundSimulation,
+  resetNpcRoundSimulation,
+  resolveNpcRoundSimulation,
+} from '@/utils/npcRoundSimulation';
+import {
   npcSpritePoseFromPhase,
 } from '@/utils/spritePose';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
@@ -64,6 +70,7 @@ import { AdReviveModal } from '@/components/game/AdReviveModal';
 import { preloadInterstitial, preloadRewardedAd, showRewardedAd, showStageCompleteAd } from '@/utils/adService';
 import { play, playGunshot } from '@/utils/audioService';
 import { rememberNpcMatchResult } from '@/utils/npcMatchResult';
+import { getNpcDisplayName } from '@/utils/npcLabels';
 import { hasNpcSpecialAbility } from '@/utils/npcAbilityLabels';
 import { speakDuelCue, stopDuelSignalSpeech, warmupDuelSpeech } from '@/utils/duelSignalSpeech';
 import { trigger } from '@/utils/hapticService';
@@ -218,6 +225,7 @@ export default function NpcGameScreen() {
 
   const startRoundDuel = useCallback(() => {
     if (!npc) return;
+    resetNpcRoundSimulation(npcRoundSimRef);
     let chaosMode: ChaosMode | null = null;
     if (npc.id === 21) {
       chaosMode = CHAOS_MODES[Math.floor(Math.random() * CHAOS_MODES.length)]!;
@@ -240,6 +248,7 @@ export default function NpcGameScreen() {
   }, [npc, startDuelEngine]);
 
   const [abilityIntroVisible, setAbilityIntroVisible] = useState(false);
+  const [preDuelVisible, setPreDuelVisible] = useState(true);
   const [modal, setModal] = useState<NpcRoundModalData | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const modalDataRef = useRef<NpcRoundModalData | null>(null);
@@ -322,9 +331,6 @@ export default function NpcGameScreen() {
   useEffect(() => {
     if (phase !== '뱅' || !npc) {
       clearOpponentShot();
-      if (phase !== '뱅') {
-        npcRoundSimRef.current = null;
-      }
       return;
     }
 
@@ -333,7 +339,7 @@ export default function NpcGameScreen() {
       previousSteadyToBangDelayMs: prevBangDelayRef.current,
       mirrorAdaptiveMs: npc.id === 13 ? mirrorAdaptiveMsRef.current : null,
     });
-    npcRoundSimRef.current = sim;
+    recordNpcRoundSimulation(npcRoundSimRef, sim);
 
     if (sim.reactionMs != null && !sim.npcEarlyTap) {
       scheduleOpponentShot(sim.reactionMs);
@@ -451,6 +457,7 @@ export default function NpcGameScreen() {
         prevBangDelayRef.current = null;
         mirrorAdaptiveMsRef.current = npc.reactionMs;
         processedOutcomeKey.current = '';
+        resetNpcRoundSimulation(npcRoundSimRef);
         adReviveUsedRef.current = false;
         resetDuel();
         setDefeatedSide(null);
@@ -458,11 +465,7 @@ export default function NpcGameScreen() {
         setNpcWeaponShot(false);
         setModalVisible(false);
         setModal(null);
-        if (hasNpcSpecialAbility(npc.specialAbility)) {
-          setAbilityIntroVisible(true);
-        } else {
-          startRoundDuel();
-        }
+        setPreDuelVisible(true);
       })();
       return () => {
         cancelled = true;
@@ -478,7 +481,6 @@ export default function NpcGameScreen() {
       router,
       startMatch,
       resetDuel,
-      startRoundDuel,
     ]),
   );
 
@@ -491,13 +493,13 @@ export default function NpcGameScreen() {
 
     const o = outcome;
     const streakBefore = playerStreakRef.current;
-    const npcSim =
-      npcRoundSimRef.current ??
+    const npcSim = resolveNpcRoundSimulation(npcRoundSimRef, () =>
       simulateNpcReaction({
         npc,
         previousSteadyToBangDelayMs: prevBangDelayRef.current,
         mirrorAdaptiveMs: npc.id === 13 ? mirrorAdaptiveMsRef.current : null,
-      });
+      }),
+    );
 
     let data: NpcRoundModalData;
 
@@ -847,7 +849,7 @@ export default function NpcGameScreen() {
   }, [setHearts, setAbilityUsed]);
 
   const goToMatchResult = useCallback(
-    async (params: {
+    (params: {
       won: boolean;
       playerWins: number;
       npcWins: number;
@@ -868,7 +870,9 @@ export default function NpcGameScreen() {
         dayNight: battleDayNight,
         completionStamp,
       });
-      await showStageCompleteAd(completionStamp);
+      // The result route is authoritative. A prepared ad may cover it briefly,
+      // but SDK load/close callbacks must never hold navigation hostage.
+      void showStageCompleteAd(completionStamp);
       router.replace({
         pathname: '/result/npc',
         params: {
@@ -1021,6 +1025,16 @@ export default function NpcGameScreen() {
     resetDuel();
     router.replace('/menu');
   }, [resetDuel, router]);
+
+  const beginMatchFromPreDuel = useCallback(() => {
+    if (!npc) return;
+    setPreDuelVisible(false);
+    if (hasNpcSpecialAbility(npc.specialAbility)) {
+      setAbilityIntroVisible(true);
+    } else {
+      startRoundDuel();
+    }
+  }, [npc, startRoundDuel]);
 
   const onAdReviveDecline = useCallback(() => {
     setAdRevivePending(null);
@@ -1228,7 +1242,21 @@ export default function NpcGameScreen() {
         </View>
       ) : null}
 
-      {npc && canRenderNpcDuel ? (
+      {npc && canRenderNpcDuel ? preDuelVisible ? (
+        <NpcPreDuelScreen
+          width={winW}
+          height={winH}
+          paddingTop={overlayPad.top}
+          paddingBottom={insets.bottom}
+          paddingLeft={overlayPad.left}
+          playerId={useSettingsStore.getState().selectedCharacterId}
+          npcId={npc.id}
+          opponentName={getNpcDisplayName(t, npc.id)}
+          backgroundId={duelBackgroundId}
+          onBack={leaveToNpcSelect}
+          onStart={beginMatchFromPreDuel}
+        />
+      ) : (
         <>
           <NpcFirstPersonDuelArena
             width={winW}
@@ -1258,6 +1286,7 @@ export default function NpcGameScreen() {
             shootActive={shootActive}
             playerShotActive={playerWeaponShot}
             npcShotActive={npcWeaponShot}
+            playerCharacterId={useSettingsStore.getState().selectedCharacterId}
             earlyWarning={earlyOverlay}
             onShootPress={onShootPress}
             onPause={() => {

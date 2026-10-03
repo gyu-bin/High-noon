@@ -9,6 +9,9 @@
     "ios": "bash scripts/ensure-iphone-17-pro.sh && expo start --ios",
     "screenshots": "bash scripts/capture_app_store_screenshots.sh",
     "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/run-regressions.cjs",
+    "verify": "npm run typecheck && npm run lint && npm test",
     "lint": "expo lint",
     "version:bump": "node scripts/bump-store-version.js",
     "version:sync": "node scripts/sync-store-version.js",
@@ -66,6 +69,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
+    "@electric-sql/pglite": "0.3.16",
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
