@@ -22,7 +22,6 @@ import { useTranslation } from 'react-i18next';
 import { AppErrorBoundary } from '@/components/ui/AppErrorBoundary';
 import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
 import { StoreUpdateModal } from '@/components/ui/StoreUpdateModal';
-import { AnimatedSplash } from '@/components/splash/AnimatedSplash';
 import { useProgressStore } from '@/store/progressStore';
 import {
   restoreProgressIfEmpty,
@@ -47,6 +46,10 @@ import { isActiveDuelRoute, isDuelFlowRoute, isInGameRoute } from '@/utils/duelR
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
+const OTA_COLD_START_BUDGET_MS = 2_500;
+/** 업데이트가 없거나 확인이 느리면 스플래시를 붙잡지 않는다. 받을 업데이트가 있을 때만 이 예산 안에서 받는다. */
+const OTA_FAST_PATH_MS = 400;
+
 /**
  * expo-router 라우트 규약 — 이 레이아웃과 모든 하위 화면의 렌더 에러를 잡는 최종 방어선.
  * 여기까지 왔다는 건 화면을 그리지 못했다는 뜻이라, 흰 화면 대신 재시도 경로를 준다.
@@ -66,6 +69,32 @@ function waitPersistHydrated(api: {
       unsub();
       resolve();
     });
+  });
+}
+
+/** 제한 시간 안에 끝나지 않으면 fallback으로 진행하고, 원래 작업은 계속 둔다. */
+function settleWithin<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      resolve(fallback);
+    }, timeoutMs);
+    promise.then(
+      (value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(fallback);
+      },
+    );
   });
 }
 
@@ -135,8 +164,6 @@ function RootLayoutContent() {
 
   const ready = fontsLoaded || fontError != null;
   const [appReady, setAppReady] = useState(false);
-  // JS 런타임의 첫 cold launch에서만 mount된다. resume 때는 RootLayout이 유지된다.
-  const [animatedSplashVisible, setAnimatedSplashVisible] = useState(true);
   const [otaToastVisible, setOtaToastVisible] = useState(false);
   const [storeUpdateVisible, setStoreUpdateVisible] = useState(false);
 
@@ -144,7 +171,6 @@ function RootLayoutContent() {
 
   const hideOtaToast = useCallback(() => setOtaToastVisible(false), []);
   const dismissStoreUpdate = useCallback(() => setStoreUpdateVisible(false), []);
-  const dismissAnimatedSplash = useCallback(() => setAnimatedSplashVisible(false), []);
 
   useEffect(() => {
     if (!appReady) return;
@@ -236,32 +262,51 @@ function RootLayoutContent() {
         justUpdated = await consumeOtaJustApplied();
         if (cancelled) return;
 
-        handOffToReload = await applyOtaUpdateIfAvailable({ force: true });
-        if (handOffToReload || cancelled) return;
-
-        await preloadTitleHero();
+        const otaPromise = applyOtaUpdateIfAvailable({
+          force: true,
+          timeoutMs: OTA_COLD_START_BUDGET_MS,
+        });
+        const peeked = await settleWithin(
+          otaPromise.then((reloading) => (reloading ? 'reload' : 'none')),
+          OTA_FAST_PATH_MS,
+          'pending' as const,
+        );
         if (cancelled) return;
-
-        // hydration 전에 해금 동기화하면 기본 진행도가 AsyncStorage를 덮어씀 (OTA 재기동 시 특히)
-        await Promise.all([
-          waitPersistHydrated(useProgressStore.persist),
-          waitPersistHydrated(useSettingsStore.persist),
-        ]);
-        if (cancelled) return;
-
-        const bootLang = languageFromCaptureUrl(await Linking.getInitialURL());
-        if (bootLang) {
-          useSettingsStore.getState().setLanguage(bootLang);
-          changeLanguage(bootLang);
+        if (peeked === 'reload') {
+          handOffToReload = true;
+          return;
         }
 
-        // 앱을 지웠다 다시 깐 경우 키체인 스냅샷에서 조용히 되살린다.
-        // hydration 이후여야 한다 — 그 전이면 아직 안 읽힌 진행도를 비었다고 오판한다.
-        await restoreProgressIfEmpty();
-        if (cancelled) return;
-        startProgressAutoBackup();
+        // 화면을 먼저 연다. 저장소 복구와 타이틀 이미지는 스플래시 밖에서 이어 간다.
+        void (async () => {
+          try {
+            await preloadTitleHero();
+            if (cancelled) return;
 
-        checkUnlockConditions();
+            // hydration 전에 해금 동기화하면 기본 진행도가 AsyncStorage를 덮어씀 (OTA 재기동 시 특히)
+            await Promise.all([
+              waitPersistHydrated(useProgressStore.persist),
+              waitPersistHydrated(useSettingsStore.persist),
+            ]);
+            if (cancelled) return;
+
+            const bootLang = languageFromCaptureUrl(await Linking.getInitialURL());
+            if (bootLang) {
+              useSettingsStore.getState().setLanguage(bootLang);
+              changeLanguage(bootLang);
+            }
+
+            // 앱을 지웠다 다시 깐 경우 키체인 스냅샷에서 조용히 되살린다.
+            // hydration 이후여야 한다 — 그 전이면 아직 안 읽힌 진행도를 비었다고 오판한다.
+            await restoreProgressIfEmpty();
+            if (cancelled) return;
+            startProgressAutoBackup();
+
+            checkUnlockConditions();
+          } catch (err) {
+            if (__DEV__) console.warn('[boot] background startup failed:', err);
+          }
+        })();
       } catch (err) {
         // 준비 단계 실패가 부팅 자체를 막아선 안 된다. 프리로드는 없어도 플레이는 가능.
         if (__DEV__) console.warn('[boot] prepare 실패 — 스플래시는 내리고 진행:', err);
@@ -331,7 +376,6 @@ function RootLayoutContent() {
       </Stack>
       <OtaUpdatedToast visible={otaToastVisible} onHidden={hideOtaToast} />
       <StoreUpdateModal visible={storeUpdateVisible} onDismiss={dismissStoreUpdate} />
-      {animatedSplashVisible ? <AnimatedSplash onComplete={dismissAnimatedSplash} /> : null}
     </SafeAreaProvider>
   );
 }
