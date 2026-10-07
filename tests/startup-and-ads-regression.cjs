@@ -26,4 +26,6 @@ assert.match(ota, /const deadline = Date\.now\(\) \+ timeoutMs/);
 assert.match(ota, /withinBudget\(Updates\.checkForUpdateAsync\(\)\)/);
 assert.match(ota, /withinBudget\(Updates\.fetchUpdateAsync\(\)\)/);
 assert.match(layout, /timeoutMs: OTA_COLD_START_BUDGET_MS/);
-console.log('PASS OTA check and fetch share one cold-start budget');
+assert.match(layout, /OTA_FAST_PATH_MS/);
+assert.doesNotMatch(layout, /AnimatedSplash/);
+console.log('PASS OTA stays on a cold-start budget, and no update does not hold the splash');

@@ -1,0 +1,27 @@
+{
+ "READY": {
+  "scale": 1,
+  "translate": [
+   0,
+   0
+  ]
+ },
+ "AIM": {
+  "scale": 1,
+  "translate": [
+   0,
+   0
+  ]
+ },
+ "FIRE": {
+  "scale": 0.93,
+  "translate": [
+   63,
+   57
+  ],
+  "transparent_gap_px": {
+   "right": 9,
+   "bottom": 51
+  }
+ }
+}

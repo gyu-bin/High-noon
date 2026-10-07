@@ -22,7 +22,7 @@ export default function NpcCardCapture() {
   return (
     <View style={styles.root}>
       <NpcWantedCard
-        npc={npc} locked={locked} masked={false}
+        npc={npc} locked={locked}
         name={getNpcDisplayName(t, npc.id)} tier={npc.tier.toUpperCase()} typeLabel="QA"
         duelLabel="DUEL" lockedLabel="LOCKED" bossLabel="BOSS"
         posterHeight={posterHeight} onDuel={() => {}}

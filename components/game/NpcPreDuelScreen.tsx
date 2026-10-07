@@ -10,12 +10,14 @@ import { WesternButton } from '@/components/ui/western/WesternPrimitives';
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { uiV3Colors } from '@/constants/theme';
 import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
+import { CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
 import {
   APPROVED_DUEL_BACKGROUNDS,
   getV3NpcPose,
+  V3_PRE_DUEL_NPC_FACEOFF,
+  V3_PRE_DUEL_PLAYER_FACEOFF,
   type DuelBackgroundId,
 } from '@/constants/v3DuelAssets';
-import { V3_PLAYER_IDENTITIES } from '@/constants/v3UiAssets';
 import { useCharacterLabels } from '@/utils/characterLabels';
 
 type Props = {
@@ -80,7 +82,10 @@ export function NpcPreDuelScreen({
       <View style={[styles.duelists, landscape && styles.duelistsLandscape]} pointerEvents="none">
         <View style={styles.playerFigure}>
           <Image
-            source={V3_PLAYER_IDENTITIES[playerId] ?? V3_PLAYER_IDENTITIES[1]}
+            source={
+              V3_PRE_DUEL_PLAYER_FACEOFF[playerId] ??
+              (CLARITY_PLAYERS[playerId] ?? CLARITY_PLAYERS[1])!.fire
+            }
             contentFit="contain"
             transition={0}
             style={scaledArtStyle(playerSize, playerSize, characterArtDisplayScale('player', playerId))}
@@ -89,7 +94,7 @@ export function NpcPreDuelScreen({
         <Text style={styles.vs}>VS</Text>
         <View style={styles.npcFigure}>
           <Image
-            source={getV3NpcPose(npcId, 'idle')}
+            source={V3_PRE_DUEL_NPC_FACEOFF[npcId] ?? getV3NpcPose(npcId, 'fire')}
             contentFit="contain"
             transition={0}
             style={scaledArtStyle(npcSize, npcSize, characterArtDisplayScale('npc', npcId))}

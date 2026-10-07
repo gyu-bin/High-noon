@@ -45,6 +45,52 @@ export const V3_FIRST_PERSON_WEAPON = {
   fire: require('@/assets/images/weapons/player_fp/player_fp_revolver_fire.png'),
 } as const;
 
+/** Identity-preserving rear three-quarter player silhouettes for NPC duels. */
+export const V3_PLAYER_OVER_SHOULDER = {
+  1: require('@/assets/images/characters/over-shoulder/player_01.png'),
+  2: require('@/assets/images/characters/over-shoulder/player_02.png'),
+  3: require('@/assets/images/characters/over-shoulder/player_03.png'),
+  4: require('@/assets/images/characters/over-shoulder/player_04.png'),
+} as const;
+
+export type OverShoulderStage = 'ready' | 'aim' | 'fire';
+
+/**
+ * Per-stage over-shoulder art with the gun arm painted in (no separate weapon overlay). All three
+ * frames share one 1024x1536 canvas and body placement. `muzzle` is the FIRE barrel tip as a
+ * fraction of that canvas. Players without an entry keep the single body + floating weapon.
+ */
+export const V3_PLAYER_OVER_SHOULDER_STAGES: Partial<Record<number, Record<OverShoulderStage, ImageSourcePropType> & { muzzle: { x: number; y: number } }>> = {
+  1: {
+    ready: require('@/assets/images/characters/over-shoulder/p01/ready.png'),
+    aim: require('@/assets/images/characters/over-shoulder/p01/aim.png'),
+    fire: require('@/assets/images/characters/over-shoulder/p01/fire.png'),
+    muzzle: { x: 0.245, y: 0.231 },
+  },
+};
+
+/**
+ * NPC FIRE art aimed down-left at the player for the portrait diagonal face-off, on the 1254
+ * production canvas. `muzzle` is the barrel tip as a fraction of the NPC box. NPCs without an
+ * entry keep their side-on fire pose.
+ */
+export const V3_NPC_DIAGONAL_FIRE: Partial<Record<number, { source: ImageSourcePropType; muzzle: { x: number; y: number } }>> = {
+  14: { source: require('@/assets/images/characters/diagonal-fire/npc_14.png'), muzzle: { x: 0.1, y: 0.658 } },
+};
+
+/**
+ * Genuine three-quarter face-off poses. These are deliberately sparse until
+ * each identity has approved anatomy; callers fall back to the existing fire
+ * pose instead of mirroring a front-facing body.
+ */
+export const V3_PRE_DUEL_PLAYER_FACEOFF: Partial<Record<number, ImageSourcePropType>> = {
+  1: require('@/assets/images/characters/faceoff/player_01_right.png'),
+};
+
+export const V3_PRE_DUEL_NPC_FACEOFF: Partial<Record<number, ImageSourcePropType>> = {
+  1: require('@/assets/images/characters/faceoff/npc_01_left.png'),
+};
+
 /** Clean cinematic overlay; recoil is animated, never baked into the bitmap. */
 export const CINEMATIC_REVOLVER = require('@/assets/images/weapons/cinematic/revolver-ready.png');
 

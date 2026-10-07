@@ -153,6 +153,10 @@ export default function NpcGameScreen() {
   useScreenBgm(npc ? duelBgmTrack : null, true);
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
   const paleRiderUnlocked = useProgressStore((s) => s.paleRiderUnlocked);
+  // Subscribe instead of reading this only through getState(): hydration or a
+  // selection change that lands while this route is mounted must update both
+  // the face-off and the first-person identity layer together.
+  const selectedCharacterId = useSettingsStore((s) => s.selectedCharacterId);
   const canRenderNpcDuel =
     DEV_UNLOCK_ALL_NPCS ||
     (npc != null &&
@@ -868,6 +872,7 @@ export default function NpcGameScreen() {
         npcMs: params.npcMs,
         lossReason: params.lossReason,
         dayNight: battleDayNight,
+        backgroundId: duelBackgroundId,
         completionStamp,
       });
       // The result route is authoritative. A prepared ad may cover it briefly,
@@ -885,10 +890,11 @@ export default function NpcGameScreen() {
           npcMs: params.npcMs,
           lossReason: params.lossReason,
           dayNight: battleDayNight,
+          backgroundId: duelBackgroundId,
         },
       });
     },
-    [router, npc, battleDayNight],
+    [router, npc, battleDayNight, duelBackgroundId],
   );
 
   /** 광고 부활 결과 처리 — 성공 시 상대 마지막 승 롤백 후 다음 라운드, 실패·거절 시 정상 결과 화면으로 */
@@ -1249,7 +1255,7 @@ export default function NpcGameScreen() {
           paddingTop={overlayPad.top}
           paddingBottom={insets.bottom}
           paddingLeft={overlayPad.left}
-          playerId={useSettingsStore.getState().selectedCharacterId}
+          playerId={selectedCharacterId}
           npcId={npc.id}
           opponentName={getNpcDisplayName(t, npc.id)}
           backgroundId={duelBackgroundId}
@@ -1286,7 +1292,7 @@ export default function NpcGameScreen() {
             shootActive={shootActive}
             playerShotActive={playerWeaponShot}
             npcShotActive={npcWeaponShot}
-            playerCharacterId={useSettingsStore.getState().selectedCharacterId}
+            playerCharacterId={selectedCharacterId}
             earlyWarning={earlyOverlay}
             onShootPress={onShootPress}
             onPause={() => {

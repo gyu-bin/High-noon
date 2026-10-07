@@ -14,6 +14,7 @@ export type NpcMatchResultSnapshot = {
   npcMs: string;
   lossReason: string;
   dayNight: string;
+  backgroundId?: string;
   completionStamp: string;
 };
 

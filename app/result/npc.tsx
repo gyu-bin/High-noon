@@ -33,6 +33,7 @@ import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterA
 import { CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
 import { getV3NpcPose } from '@/constants/v3DuelAssets';
 import { getNpcDisplayName } from '@/utils/npcLabels';
+import { DUEL_BACKGROUND_IDS, type DuelBackgroundId } from '@/utils/duelBackgroundSelection';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { useProgressStore } from '@/store/progressStore';
@@ -154,6 +155,7 @@ export default function NpcResultScreen() {
     npcMs: npcMsParam,
     lossReason: lossReasonParam,
     dayNight: dayNightParam,
+    backgroundId: backgroundIdParam,
   } = useLocalSearchParams<{
     npcId?: string | string[];
     won?: string | string[];
@@ -164,6 +166,7 @@ export default function NpcResultScreen() {
     npcMs?: string | string[];
     lossReason?: string | string[];
     dayNight?: string | string[];
+    backgroundId?: string | string[];
   }>();
 
   const remembered = peekNpcMatchResult();
@@ -183,12 +186,16 @@ export default function NpcResultScreen() {
   const npcMsStr = firstSearchParam(npcMsParam) ?? remembered?.npcMs;
   const lossReasonStr = firstSearchParam(lossReasonParam) ?? remembered?.lossReason ?? '';
   const dayNightStr = firstSearchParam(dayNightParam) ?? remembered?.dayNight;
+  const backgroundIdStr = firstSearchParam(backgroundIdParam) ?? remembered?.backgroundId;
 
   const id = Number(npcIdStr);
   const npc = Number.isFinite(id) ? getNpcById(id) : undefined;
   const outcomeKnown = wonStr === '1' || wonStr === '0';
   const victory = wonStr === '1';
   const dayNight = dayNightStr === 'night' ? 'night' : 'day';
+  const backgroundId = DUEL_BACKGROUND_IDS.includes(backgroundIdStr as DuelBackgroundId)
+    ? backgroundIdStr as DuelBackgroundId
+    : undefined;
   const theme = victory ? OUTCOME_VICTORY : OUTCOME_DEFEAT;
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
   const selectedCharacterId = useSettingsStore((s) => s.selectedCharacterId);
@@ -269,7 +276,7 @@ export default function NpcResultScreen() {
 
   return (
     <PhoneStageShell edgeToEdge>
-      <OutcomeBackdrop variant={dayNight} width={winW} height={winH}>
+      <OutcomeBackdrop variant={dayNight} backgroundId={backgroundId} width={winW} height={winH}>
         <View pointerEvents="none" style={styles.duelistStage}>
           <View style={styles.playerArt}>
             <Image
@@ -353,12 +360,13 @@ export default function NpcResultScreen() {
                   style={styles.btn}
                 />
               ) : null}
-              <WoodButton
-                title={t('result.retry')}
-                onPress={onRetry}
-                style={nextNpc ? styles.btnSecondary : styles.btn}
-                textStyle={nextNpc ? styles.btnSecondaryText : undefined}
-              />
+              {!nextNpc ? (
+                <WoodButton
+                  title={t('result.retry')}
+                  onPress={onRetry}
+                  style={styles.btn}
+                />
+              ) : null}
               <WoodButton
                 title={t('result.toOpponentSelect')}
                 onPress={onNpcSelect}

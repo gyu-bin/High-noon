@@ -13,12 +13,11 @@ import { formatReactionMs } from '@/utils/formatReactionMs';
 const wantedPaper = require('@/assets/images/ui/western/ui_wanted_paper.png');
 
 export function NpcWantedCard({
-  npc, locked, masked, name, englishName, tier, typeLabel, abilityName, abilityHint,
+  npc, locked, name, englishName, tier, typeLabel, abilityName, abilityHint,
   duelLabel, lockedLabel, bossLabel, posterHeight, onDuel, style,
 }: {
   npc: NpcDefinition;
   locked: boolean;
-  masked: boolean;
   name: string;
   englishName?: string;
   tier: string;
@@ -36,8 +35,10 @@ export function NpcWantedCard({
   // Reserve the same hero area for normal, boss and special identities.
   const artSize = PixelRatio.roundToNearestPixel(Math.min(256, posterHeight - 192));
   const artSlot = Math.min(270, posterHeight - 190);
-  const hidden = locked || masked;
   const isPale = npc.id === 22;
+  // Ordinary opponents advertise who is waiting ahead while progression still
+  // controls the duel button. Only the secret final opponent keeps its identity.
+  const identityHidden = isPale && locked;
   return (
     <View style={[styles.frame, { height: posterHeight }, style]}>
       <View style={styles.card}>
@@ -52,31 +53,31 @@ export function NpcWantedCard({
         </View>
 
         <View style={[styles.artWrap, { height: artSlot }]}>
-          {hidden ? (
-            isPale ? <Image source={V3_PALE_LOCKED_SILHOUETTE} contentFit="contain" style={{ width: artSize, height: artSize, maxWidth: '100%' }} /> : <View style={[styles.genericLocked, { width: artSize * 0.62, height: artSize * 0.84 }]}><Text style={styles.genericQuestion}>?</Text></View>
+          {identityHidden ? (
+            <Image source={V3_PALE_LOCKED_SILHOUETTE} contentFit="contain" style={{ width: artSize, height: artSize, maxWidth: '100%' }} />
           ) : <NpcPortrait id={npc.id} size={artSize} />}
         </View>
 
         <View style={styles.identity}>
-          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.name, !hidden && usesCjkFont(name) && styles.nameCjk]}>{hidden ? '???' : name}</Text>
-          {!hidden && englishName && englishName.toLowerCase() !== name.toLowerCase() ? <Text numberOfLines={1} style={styles.englishName}>{englishName.toUpperCase()}</Text> : null}
+          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.name, !identityHidden && usesCjkFont(name) && styles.nameCjk]}>{identityHidden ? '???' : name}</Text>
+          {!identityHidden && englishName && englishName.toLowerCase() !== name.toLowerCase() ? <Text numberOfLines={1} style={styles.englishName}>{englishName.toUpperCase()}</Text> : null}
         </View>
 
         <View style={styles.classification}>
-          {!hidden && npc.bossFlag ? <Ionicons name="skull-outline" color="#704127" size={11} accessibilityLabel={bossLabel} /> : <Text style={styles.tierAccent}>◆</Text>}
-          <Text style={styles.tierText}>{hidden ? '???' : `${tier} · ${typeLabel}`}</Text>
+          {!identityHidden && npc.bossFlag ? <Ionicons name="skull-outline" color="#704127" size={11} accessibilityLabel={bossLabel} /> : <Text style={styles.tierAccent}>◆</Text>}
+          <Text style={styles.tierText}>{identityHidden ? '???' : `${tier} · ${typeLabel}`}</Text>
         </View>
 
         <View style={styles.details}>
           <Text style={styles.reactionLabel}>REACTION</Text>
-          <Text style={styles.reaction}>{hidden ? '—' : formatReactionMs(npc.reactionMs)}{!hidden ? <Text style={styles.unit}> ms</Text> : null}</Text>
+          <Text style={styles.reaction}>{identityHidden ? '—' : formatReactionMs(npc.reactionMs)}{!identityHidden ? <Text style={styles.unit}> ms</Text> : null}</Text>
         </View>
 
         <View style={styles.description}>
-          {!hidden && abilityName ? <Text numberOfLines={1} style={styles.hint}><Text style={styles.ability}>{abilityName}</Text>{abilityHint ? ` · ${abilityHint}` : ''}</Text> : null}
+          {!identityHidden && abilityName ? <Text numberOfLines={1} style={styles.hint}><Text style={styles.ability}>{abilityName}</Text>{abilityHint ? ` · ${abilityHint}` : ''}</Text> : null}
         </View>
 
-        <WesternButton title={hidden ? lockedLabel : duelLabel} disabled={hidden}
+        <WesternButton title={locked ? lockedLabel : duelLabel} disabled={locked}
           onPress={onDuel} style={styles.duel} />
       </View>
     </View>
@@ -95,8 +96,6 @@ const styles = StyleSheet.create({
   rule: { height: StyleSheet.hairlineWidth, backgroundColor: '#694224', flex: 1, opacity: 0.6 },
   diamond: { color: '#694224', fontSize: 5, lineHeight: 4 },
   artWrap: { alignItems: 'center', justifyContent: 'center', width: '100%' },
-  genericLocked: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#221811', borderRadius: 70 },
-  genericQuestion: { color: '#937755', fontFamily: FONT_RYE, fontSize: 48 },
   identity: { alignItems: 'center', width: '100%', gap: 2 },
   name: { color: '#302015', fontFamily: FONT_RYE, fontSize: 21, lineHeight: 28, textAlign: 'center' },
   nameCjk: { fontFamily: FONT_WESTERN_SERIF, fontSize: 23, fontWeight: '700', letterSpacing: 0.4 },

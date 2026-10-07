@@ -22,7 +22,6 @@ import { useTranslation } from 'react-i18next';
 import { AppErrorBoundary } from '@/components/ui/AppErrorBoundary';
 import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
 import { StoreUpdateModal } from '@/components/ui/StoreUpdateModal';
-import { AnimatedSplash } from '@/components/splash/AnimatedSplash';
 import { useProgressStore } from '@/store/progressStore';
 import {
   restoreProgressIfEmpty,
@@ -50,6 +49,8 @@ void SplashScreen.preventAutoHideAsync().catch(() => {});
 const I18N_STARTUP_BUDGET_MS = 2_000;
 const FONT_STARTUP_BUDGET_MS = 2_000;
 const OTA_COLD_START_BUDGET_MS = 2_500;
+/** No update (or a slow check) must not hold the splash. An available update still downloads inside the cold-start budget. */
+const OTA_FAST_PATH_MS = 400;
 const HYDRATION_STARTUP_BUDGET_MS = 2_500;
 const HERO_PRELOAD_BUDGET_MS = 1_000;
 
@@ -186,7 +187,6 @@ function RootLayoutContent() {
   const ready = fontsLoaded || fontError != null || fontWaitExpired;
   const [appReady, setAppReady] = useState(false);
   // JS 런타임의 첫 cold launch에서만 mount된다. resume 때는 RootLayout이 유지된다.
-  const [animatedSplashVisible, setAnimatedSplashVisible] = useState(true);
   const [otaToastVisible, setOtaToastVisible] = useState(false);
   const [storeUpdateVisible, setStoreUpdateVisible] = useState(false);
   const hydrationRecoveryStartedRef = useRef(false);
@@ -196,8 +196,6 @@ function RootLayoutContent() {
 
   const hideOtaToast = useCallback(() => setOtaToastVisible(false), []);
   const dismissStoreUpdate = useCallback(() => setStoreUpdateVisible(false), []);
-  const dismissAnimatedSplash = useCallback(() => setAnimatedSplashVisible(false), []);
-
   const completeHydratedStartup = useCallback(async () => {
     if (hydratedMaintenanceDoneRef.current) return;
     if (!useProgressStore.persist.hasHydrated() || !useSettingsStore.persist.hasHydrated()) return;
@@ -306,32 +304,44 @@ function RootLayoutContent() {
         justUpdated = await settleWithin(consumeOtaJustApplied(), 500, false);
         if (cancelled) return;
 
-        handOffToReload = await applyOtaUpdateIfAvailable({
+        const otaPromise = applyOtaUpdateIfAvailable({
           force: true,
           timeoutMs: OTA_COLD_START_BUDGET_MS,
         });
-        if (handOffToReload || cancelled) return;
-
-        const [, hydration] = await Promise.all([
-          settleWithin(preloadTitleHero(), HERO_PRELOAD_BUDGET_MS, undefined),
-          Promise.all([
-            waitPersistHydrated(useProgressStore.persist, HYDRATION_STARTUP_BUDGET_MS),
-            waitPersistHydrated(useSettingsStore.persist, HYDRATION_STARTUP_BUDGET_MS),
-          ]),
-        ]);
+        const peeked = await settleWithin(
+          otaPromise.then((reloading) => (reloading ? 'reload' : 'none')),
+          OTA_FAST_PATH_MS,
+          'pending' as const,
+        );
         if (cancelled) return;
-
-        if (hydration.every(Boolean)) {
-          void completeHydratedStartup();
-        } else if (!hydrationRecoveryStartedRef.current) {
-          // Show the app with in-memory defaults, but do not persist/inspect them.
-          // If storage recovers later, finish restoration and backup safely then.
-          hydrationRecoveryStartedRef.current = true;
-          void Promise.all([
-            waitPersistHydrated(useProgressStore.persist),
-            waitPersistHydrated(useSettingsStore.persist),
-          ]).then(() => completeHydratedStartup());
+        if (peeked === 'reload') {
+          handOffToReload = true;
+          return;
         }
+
+        // Screen first. Storage restore and the title image stay off the splash.
+        void (async () => {
+          const [, hydration] = await Promise.all([
+            settleWithin(preloadTitleHero(), HERO_PRELOAD_BUDGET_MS, undefined),
+            Promise.all([
+              waitPersistHydrated(useProgressStore.persist, HYDRATION_STARTUP_BUDGET_MS),
+              waitPersistHydrated(useSettingsStore.persist, HYDRATION_STARTUP_BUDGET_MS),
+            ]),
+          ]);
+          if (cancelled) return;
+
+          if (hydration.every(Boolean)) {
+            void completeHydratedStartup();
+          } else if (!hydrationRecoveryStartedRef.current) {
+            // Show the app with in-memory defaults, but do not persist/inspect them.
+            // If storage recovers later, finish restoration and backup safely then.
+            hydrationRecoveryStartedRef.current = true;
+            void Promise.all([
+              waitPersistHydrated(useProgressStore.persist),
+              waitPersistHydrated(useSettingsStore.persist),
+            ]).then(() => completeHydratedStartup());
+          }
+        })();
       } catch (err) {
         // 준비 단계 실패가 부팅 자체를 막아선 안 된다. 프리로드는 없어도 플레이는 가능.
         if (__DEV__) console.warn('[boot] prepare 실패 — 스플래시는 내리고 진행:', err);
@@ -401,7 +411,6 @@ function RootLayoutContent() {
       </Stack>
       <OtaUpdatedToast visible={otaToastVisible} onHidden={hideOtaToast} />
       <StoreUpdateModal visible={storeUpdateVisible} onDismiss={dismissStoreUpdate} />
-      {animatedSplashVisible ? <AnimatedSplash onComplete={dismissAnimatedSplash} /> : null}
     </SafeAreaProvider>
   );
 }
