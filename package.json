@@ -1,6 +1,6 @@
 {
   "name": "high-noon",
-  "version": "1.5",
+  "version": "1.5.0",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
