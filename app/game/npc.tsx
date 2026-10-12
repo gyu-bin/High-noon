@@ -23,7 +23,7 @@ import {
   AbilityOverlay,
   type AbilityOverlayType,
 } from '@/components/game/AbilityOverlay';
-import { NpcFirstPersonDuelArena } from '@/components/game/NpcFirstPersonDuelArena';
+import { NpcFaceoffDuelArena } from '@/components/game/NpcFaceoffDuelArena';
 import { NpcPreDuelScreen } from '@/components/game/NpcPreDuelScreen';
 import { NpcAbilityIntroModal } from '@/components/game/NpcAbilityIntroModal';
 import {
@@ -154,8 +154,8 @@ export default function NpcGameScreen() {
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
   const paleRiderUnlocked = useProgressStore((s) => s.paleRiderUnlocked);
   // Subscribe instead of reading this only through getState(): hydration or a
-  // selection change that lands while this route is mounted must update both
-  // the face-off and the first-person identity layer together.
+  // selection change that lands while this route is mounted must update the
+  // selected full-body character identity.
   const selectedCharacterId = useSettingsStore((s) => s.selectedCharacterId);
   const canRenderNpcDuel =
     DEV_UNLOCK_ALL_NPCS ||
@@ -172,7 +172,7 @@ export default function NpcGameScreen() {
   const setHearts = useGameStore((s) => s.setHearts);
   const setAbilityUsed = useGameStore((s) => s.setAbilityUsed);
   const nextRound = useGameStore((s) => s.nextRound);
-  /** First-person revolver is presentation only; the engine retains tap timing. */
+  /** Shot presentation follows the engine, which retains tap timing. */
   const [playerWeaponShot, setPlayerWeaponShot] = useState(false);
   const [npcWeaponShot, setNpcWeaponShot] = useState(false);
 
@@ -1157,7 +1157,7 @@ export default function NpcGameScreen() {
 
     if (phase === '집중' || phase === '페이크') {
       // Shake animates only the presentation tree. It never changes the fixed
-      // full-screen tap surface rendered by NpcFirstPersonDuelArena.
+      // full-screen tap surface rendered by NpcFaceoffDuelArena.
       const intensity = reduceMotion ? screenShakeIntensity * 0.25 : screenShakeIntensity;
       const duration = screenShakeIntensity >= 15 ? 50 : screenShakeIntensity >= 10 ? 70 : 90;
 
@@ -1264,7 +1264,7 @@ export default function NpcGameScreen() {
         />
       ) : (
         <>
-          <NpcFirstPersonDuelArena
+          <NpcFaceoffDuelArena
             width={winW}
             height={winH}
             paddingTop={overlayPad.top}

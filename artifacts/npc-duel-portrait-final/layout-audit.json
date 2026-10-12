@@ -1,0 +1,250 @@
+[
+  {
+    "playerId": 1,
+    "npcId": 1,
+    "padding": 12,
+    "current": {
+      "size": 229.3008,
+      "playerLeft": -27.31362216,
+      "npcLeft": 199.680336,
+      "gap": 86.77651896000003,
+      "frameCenters": {
+        "playerPercent": 21.72556662686567,
+        "npcPercent": 78.19172537313432
+      }
+    },
+    "final": {
+      "size": 229.3008,
+      "playerLeft": -37.31362216,
+      "npcLeft": 209.680336,
+      "gap": 106.77651896000003,
+      "actorPaddingLeft": 2,
+      "actorPaddingRight": 2,
+      "frameCenters": {
+        "playerPercent": 19.238004437810943,
+        "npcPercent": 80.67928756218905
+      }
+    },
+    "additionalScaleChange": 0,
+    "playerShiftPercent": -2.4875621890547266,
+    "npcShiftPercent": 2.4875621890547266,
+    "groundY": 655.5
+  },
+  {
+    "playerId": 2,
+    "npcId": 9,
+    "padding": 12,
+    "current": {
+      "size": 165.63864901810422,
+      "playerLeft": -13.493444470376417,
+      "npcLeft": 207.45461407661787,
+      "gap": 63.367729803620875,
+      "frameCenters": {
+        "playerPercent": 17.245243790715346,
+        "npcPercent": 72.20744740937064
+      }
+    },
+    "final": {
+      "size": 165.63864901810422,
+      "playerLeft": -23.493444470376417,
+      "npcLeft": 217.45461407661787,
+      "gap": 83.36772980362088,
+      "actorPaddingLeft": 2,
+      "actorPaddingRight": 2,
+      "frameCenters": {
+        "playerPercent": 14.757681601660618,
+        "npcPercent": 74.69500959842537
+      }
+    },
+    "additionalScaleChange": 0,
+    "playerShiftPercent": -2.4875621890547266,
+    "npcShiftPercent": 2.4875621890547266,
+    "groundY": 655.5
+  },
+  {
+    "playerId": 3,
+    "npcId": 15,
+    "padding": 12,
+    "current": {
+      "size": 170.9616840532117,
+      "playerLeft": -23.17365687710778,
+      "npcLeft": 197.49714375608363,
+      "gap": 64.43233681064231,
+      "frameCenters": {
+        "playerPercent": 15.499299788432358,
+        "npcPercent": 70.39253377678843
+      }
+    },
+    "final": {
+      "size": 170.9616840532117,
+      "playerLeft": -33.17365687710778,
+      "npcLeft": 207.49714375608363,
+      "gap": 84.43233681064231,
+      "actorPaddingLeft": 2,
+      "actorPaddingRight": 2,
+      "frameCenters": {
+        "playerPercent": 13.011737599377632,
+        "npcPercent": 72.88009596584315
+      }
+    },
+    "additionalScaleChange": 0,
+    "playerShiftPercent": -2.4875621890547266,
+    "npcShiftPercent": 2.4875621890547266,
+    "groundY": 655.5
+  },
+  {
+    "playerId": 4,
+    "npcId": 22,
+    "padding": 12,
+    "current": {
+      "size": 143.791011821328,
+      "playerLeft": 12.458693327710037,
+      "npcLeft": 254.5790629767915,
+      "gap": 58.99820236426558,
+      "frameCenters": {
+        "playerPercent": 20.983631651336825,
+        "npcPercent": 81.21257932523768
+      }
+    },
+    "final": {
+      "size": 143.791011821328,
+      "playerLeft": 2.458693327710037,
+      "npcLeft": 264.57906297679153,
+      "gap": 78.99820236426558,
+      "actorPaddingLeft": 2,
+      "actorPaddingRight": 2,
+      "frameCenters": {
+        "playerPercent": 18.4960694622821,
+        "npcPercent": 83.70014151429241
+      }
+    },
+    "additionalScaleChange": 0,
+    "playerShiftPercent": -2.4875621890547266,
+    "npcShiftPercent": 2.4875621890547333,
+    "groundY": 655.5
+  },
+  {
+    "playerId": 1,
+    "npcId": 1,
+    "padding": 16,
+    "current": {
+      "size": 229.3008,
+      "playerLeft": -23.31362216,
+      "npcLeft": 195.680336,
+      "gap": 78.77651896000003,
+      "frameCenters": {
+        "playerPercent": 22.72059150248756,
+        "npcPercent": 77.19670049751244
+      }
+    },
+    "final": {
+      "size": 229.3008,
+      "playerLeft": -33.363622160000006,
+      "npcLeft": 205.73033600000002,
+      "gap": 98.87651896000003,
+      "actorPaddingLeft": 5.949999999999999,
+      "actorPaddingRight": 5.949999999999999,
+      "frameCenters": {
+        "playerPercent": 20.22059150248756,
+        "npcPercent": 79.69670049751244
+      }
+    },
+    "additionalScaleChange": 0,
+    "playerShiftPercent": -2.5000000000000013,
+    "npcShiftPercent": 2.500000000000003,
+    "groundY": 655.5
+  },
+  {
+    "playerId": 2,
+    "npcId": 9,
+    "padding": 16,
+    "current": {
+      "size": 162.13306914470522,
+      "playerLeft": -8.953900672061579,
+      "npcLeft": 207.3180084876947,
+      "gap": 62.02661382894098,
+      "frameCenters": {
+        "playerPercent": 17.938466144351004,
+        "npcPercent": 71.73744852239983
+      }
+    },
+    "final": {
+      "size": 162.13306914470522,
+      "playerLeft": -19.00390067206158,
+      "npcLeft": 217.3680084876947,
+      "gap": 82.12661382894098,
+      "actorPaddingLeft": 5.949999999999999,
+      "actorPaddingRight": 5.949999999999999,
+      "frameCenters": {
+        "playerPercent": 15.438466144351004,
+        "npcPercent": 74.23744852239983
+      }
+    },
+    "additionalScaleChange": 0,
+    "playerShiftPercent": -2.5,
+    "npcShiftPercent": 2.500000000000003,
+    "groundY": 655.5
+  },
+  {
+    "playerId": 3,
+    "npcId": 15,
+    "padding": 16,
+    "current": {
+      "size": 167.34344735367284,
+      "playerLeft": -18.42924085854466,
+      "npcLeft": 197.57127827976439,
+      "gap": 63.06868947073457,
+      "frameCenters": {
+        "playerPercent": 16.229473337883523,
+        "npcPercent": 69.96094576034845
+      }
+    },
+    "final": {
+      "size": 167.34344735367284,
+      "playerLeft": -28.47924085854466,
+      "npcLeft": 207.6212782797644,
+      "gap": 83.16868947073456,
+      "actorPaddingLeft": 5.949999999999999,
+      "actorPaddingRight": 5.949999999999999,
+      "frameCenters": {
+        "playerPercent": 13.729473337883524,
+        "npcPercent": 72.46094576034847
+      }
+    },
+    "additionalScaleChange": 0,
+    "playerShiftPercent": -2.5,
+    "npcShiftPercent": 2.500000000000003,
+    "groundY": 655.5
+  },
+  {
+    "playerId": 4,
+    "npcId": 22,
+    "padding": 16,
+    "current": {
+      "size": 140.74781580394537,
+      "playerLeft": 16.448985532414586,
+      "npcLeft": 253.4451145540023,
+      "gap": 57.74956316078914,
+      "frameCenters": {
+        "playerPercent": 21.597734685170963,
+        "npcPercent": 80.55199563581466
+      }
+    },
+    "final": {
+      "size": 140.74781580394537,
+      "playerLeft": 6.398985532414585,
+      "npcLeft": 263.49511455400227,
+      "gap": 77.84956316078913,
+      "actorPaddingLeft": 5.949999999999999,
+      "actorPaddingRight": 5.949999999999999,
+      "frameCenters": {
+        "playerPercent": 19.097734685170963,
+        "npcPercent": 83.05199563581466
+      }
+    },
+    "additionalScaleChange": 0,
+    "playerShiftPercent": -2.5,
+    "npcShiftPercent": 2.4999999999999956,
+    "groundY": 655.5
+  }
+]

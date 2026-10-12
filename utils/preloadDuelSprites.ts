@@ -45,7 +45,7 @@ export async function prefetchDuelSprites(
 }
 
 /**
- * NPC 1P duel's approved V3 presentation assets. This is deliberately
+ * NPC face-off duel's approved presentation assets. This is deliberately
  * separate from `prefetchDuelSprites`, which also supports the unchanged
  * local-duel sprite system.
  */

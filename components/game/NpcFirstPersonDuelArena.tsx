@@ -3,7 +3,7 @@ import MaskedView from '@react-native-masked-view/masked-view';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
   Easing,
@@ -16,7 +16,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { PlayerCharacterSprite } from '@/components/game/CharacterSprites';
-import { DuelSignalBoard, type DuelSignalBoardPhase } from '@/components/game/DuelSignalBoard';
+import type { NpcDuelArenaProps } from './NpcDuelArenaProps';
+import { DuelSignalBoard } from '@/components/game/DuelSignalBoard';
 import { DuelCoverImage } from '@/components/game/DuelCoverImage';
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import {
@@ -33,7 +34,6 @@ import { characterArtDisplayScale, npcMuzzleStyle, scaledArtStyle } from '@/cons
 import { NPC_COMBAT_POSES, PLAYER_GROUND_REVOLVER } from '@/constants/combatPoses';
 import { uiV3Colors } from '@/constants/theme';
 import type { SpritePose } from '@/constants/sprites';
-import type { NpcTier } from '@/types/npc';
 import {
   isLethalHit,
   NPC_DUEL_SCALE,
@@ -49,54 +49,7 @@ import {
 import { getNpcDisplayName } from '@/utils/npcLabels';
 import { getCharacterLabels } from '@/utils/characterLabels';
 import type { PlayerCharacterId } from '@/constants/characters';
-import { pickDuelBackground, type DuelBackgroundId } from '@/utils/duelBackgroundSelection';
-
-type Props = {
-  width: number;
-  height: number;
-  paddingTop: number;
-  paddingBottom: number;
-  paddingLeft: number;
-  paddingRight: number;
-  npcId: number;
-  tier: NpcTier;
-  bossFlag: boolean;
-  dayNight: 'day' | 'night';
-  backgroundId?: DuelBackgroundId;
-  npcPose: SpritePose;
-  npcVictoryActive: boolean;
-  playerDefeated: boolean;
-  signalPhase: DuelSignalBoardPhase;
-  blindBangText: boolean;
-  hideBangText: boolean;
-  voidShroud: boolean;
-  echoBangMiddleSignal: boolean;
-  specialPresentation: 'mirror' | 'thunderbolt' | 'redEye' | 'void' | 'echo' | null;
-  opponentHearts: number;
-  playerHearts: number;
-  currentRound: number;
-  shootCapturesEarly: boolean;
-  shootActive: boolean;
-  playerShotActive: boolean;
-  playerCharacterId?: number;
-  npcShotActive?: boolean;
-  opponentCharacterId?: number;
-  opponentName?: string;
-  opponentTierLabel?: string;
-  recordDuelLabel?: string;
-  heartsMax?: number;
-  earlyWarning: boolean;
-  onShootPress: () => void;
-  onPause: () => void;
-  pauseDisabled: boolean;
-  contentShakeStyle?: StyleProp<ViewStyle>;
-  /** Development-only renderer replay; ignored by release builds. */
-  combatPreview?: {
-    scale?: number;
-    npcStage?: NpcReactionStage;
-    playerStage?: PlayerReactionStage;
-  };
-};
+import { pickDuelBackground } from '@/utils/duelBackgroundSelection';
 
 function toV3NpcPose(pose: SpritePose): V3NpcPose {
   if (pose === 'aim') return 'draw';
@@ -157,7 +110,7 @@ export function NpcFirstPersonDuelArena({
   pauseDisabled,
   contentShakeStyle,
   combatPreview,
-}: Props) {
+}: NpcDuelArenaProps) {
   // Capture previews may inject an ID; normal screens own selection per match.
   const [fallbackBackgroundId] = useState(() => backgroundId ?? pickDuelBackground());
   const { t } = useTranslation();

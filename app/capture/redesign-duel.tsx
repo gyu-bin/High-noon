@@ -5,13 +5,14 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { NpcFirstPersonDuelArena } from '@/components/game/NpcFirstPersonDuelArena';
+import { NpcFaceoffDuelArena } from '@/components/game/NpcFaceoffDuelArena';
 import { NpcPreDuelScreen } from '@/components/game/NpcPreDuelScreen';
 import type { DuelSignalBoardPhase } from '@/components/game/DuelSignalBoard';
 import { getNpcById } from '@/constants/npcs';
 import type { DuelBackgroundId } from '@/constants/v3DuelAssets';
 import type { SpritePose } from '@/constants/sprites';
 import { uiV3Colors } from '@/constants/theme';
-import { npcTimeline, stageAt } from '@/utils/combatReaction';
+import { npcTimeline, playerTimeline, stageAt } from '@/utils/combatReaction';
 import { CAPTURE_ROUTES_ENABLED } from '@/constants/captureRoutes';
 import { getNpcDisplayName } from '@/utils/npcLabels';
 
@@ -26,7 +27,7 @@ const SIGNALS: Record<string, DuelSignalBoardPhase> = { ready: '준비', steady:
 export default function RedesignDuelCapture() {
   const { t } = useTranslation();
   const router = useRouter();
-  const params = useLocalSearchParams<{ npc?: string; player?: string; mode?: string; pose?: string; at?: string; final?: string; opp?: string; signal?: string; echo?: string; background?: string; play?: string; playerDefeated?: string; pshot?: string }>();
+  const params = useLocalSearchParams<{ npc?: string; player?: string; mode?: string; pose?: string; at?: string; final?: string; opp?: string; signal?: string; echo?: string; background?: string; play?: string; playerDefeated?: string; pshot?: string; phearts?: string }>();
   // play=survive|final: idle 1.2s -> draw 0.7s -> fire 0.5s -> idle 0.8s -> hit (arena runs its own timeline)
   const [step, setStep] = useState(0);
   const playing = params.play === 'survive' || params.play === 'final';
@@ -35,7 +36,7 @@ export default function RedesignDuelCapture() {
     setStep(0);
     const timers = [1200, 1900, 2400, 3200].map((ms, i) => setTimeout(() => setStep(i + 1), ms));
     return () => timers.forEach(clearTimeout);
-  }, [playing, params.npc, params.opp, params.play]);
+  }, [playing, params.npc, params.opp, params.play, params.player, params.pshot, params.playerDefeated]);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   if (!CAPTURE_ROUTES_ENABLED) return <Redirect href="/" />;
@@ -46,10 +47,16 @@ export default function RedesignDuelCapture() {
     ? params.background as DuelBackgroundId : undefined;
   const pose = playing ? ((params.pshot === '1' ? ['idle', 'idle', 'idle', 'idle', 'defeat'] : ['idle', 'aim', 'shoot', 'idle', 'defeat']) as SpritePose[])[step]! : POSES[params.pose ?? 'idle'] ?? 'idle';
   const final = playing ? params.play === 'final' : params.final === '1';
-  const hit = pose === 'defeat';
+  const playerHitPreview = params.playerDefeated === '1';
+  const playerHit = playerHitPreview && (!playing || step === 4);
+  const displayNpcPose = playerHitPreview && playing && step === 4 ? 'idle' : pose;
+  const hit = displayNpcPose === 'defeat';
   // pshot=1 (with play=): READY -> STEADY -> BANG + player shot -> hit, to QA the player's own stage art.
   const playerShotPlay = playing && params.pshot === '1';
-  const playerShot = playerShotPlay && step === 2;
+  const playerShot = (playerShotPlay && step === 2) || (!playing && params.pshot === '1');
+  const playerHearts = playerHit ? Math.max(0, Number(params.phearts) || 0) : 3;
+  const playerStage = !playing && params.playerDefeated === '1'
+    ? stageAt(playerTimeline(playerHearts), Math.max(0, Number(params.at) || 0), 'none') : undefined;
   const npcStage = playing ? undefined : hit ? stageAt(npcTimeline(final ? 0 : 1), Math.max(0, Number(params.at) || 0), 'none') : undefined;
   const playerId = Math.min(4, Math.max(1, Number(params.player) || 1));
   if (params.mode === 'preduel') {
@@ -69,9 +76,10 @@ export default function RedesignDuelCapture() {
       />
     );
   }
+  const DuelArena = opponentCharacterId == null ? NpcFaceoffDuelArena : NpcFirstPersonDuelArena;
   return (
     <View style={styles.root}>
-      <NpcFirstPersonDuelArena
+      <DuelArena
         key={JSON.stringify({ ...params, play: undefined })}
         width={width} height={height}
         paddingTop={insets.top + 8} paddingBottom={insets.bottom}
@@ -79,20 +87,20 @@ export default function RedesignDuelCapture() {
         npcId={npc.id} tier={npc.tier} bossFlag={npc.bossFlag}
         dayNight={npc.id === 22 ? 'night' : 'day'}
         backgroundId={backgroundId}
-        npcPose={pose}
-        npcVictoryActive={false} playerDefeated={params.playerDefeated === '1'}
+        npcPose={displayNpcPose}
+        npcVictoryActive={playerHit} playerDefeated={playerHit}
         playerShotActive={playerShot} npcShotActive={pose === 'shoot'}
         playerCharacterId={playerId}
-        signalPhase={playerShotPlay ? (['준비', '집중', '뱅', '뱅', '결과'] as const)[step]! : playing ? (pose === 'shoot' ? '뱅' : hit ? '결과' : '집중') : SIGNALS[params.signal ?? (hit ? 'result' : 'steady')] ?? '집중'}
+        signalPhase={playerShotPlay ? (['준비', '집중', '뱅', '뱅', '결과'] as const)[step]! : playing ? (pose === 'shoot' ? '뱅' : (hit || playerHit) ? '결과' : step === 0 ? '준비' : '집중') : SIGNALS[params.signal ?? (hit ? 'result' : 'steady')] ?? '집중'}
         blindBangText={false} hideBangText={false} voidShroud={false}
         echoBangMiddleSignal={false} specialPresentation={params.echo === '1' ? 'echo' : null}
-        opponentHearts={hit ? (final ? 0 : 1) : 3} playerHearts={params.playerDefeated === '1' ? 0 : 3}
+        opponentHearts={hit ? (final ? 0 : 1) : 3} playerHearts={playerHearts}
         opponentCharacterId={opponentCharacterId}
         opponentName={opponentCharacterId != null ? `RANKED P0${opponentCharacterId}` : undefined}
         heartsMax={3} currentRound={1}
         shootCapturesEarly={false} shootActive={false} earlyWarning={false}
         onShootPress={() => {}} onPause={() => {}} pauseDisabled
-        combatPreview={{ npcStage }}
+        combatPreview={{ npcStage, playerStage }}
       />
     </View>
   );

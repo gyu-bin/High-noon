@@ -28,7 +28,7 @@ assert.doesNotMatch(select, /<Text style=\{styles\.thumbLocked\}>\?<\/Text>/);
 assert.match(select, /itemLocked && item\.id === 22/);
 console.log('PASS ordinary locked NPC art remains visible while NPC 22 stays secret and duels stay locked');
 
-const arena = fs.readFileSync(path.join(root, 'components/game/NpcFirstPersonDuelArena.tsx'), 'utf8');
-assert.match(arena, /Math\.min\(width \* 0\.56, height \* 0\.34\)/);
-assert.match(arena, /V3_PLAYER_OVER_SHOULDER\[playerCharacterId/);
-console.log('PASS portrait duel enlarges the opponent and keeps selected-character identity art');
+const portrait = fs.readFileSync(path.join(root, 'components/npc/NpcPortrait.tsx'), 'utf8');
+assert.match(portrait, /source=\{POSTER_NPC_IDENTITIES\[id\]\}/);
+assert.match(card, /formatReactionMs\(npc\.reactionMs\)/);
+console.log('PASS NPC Select uses production identity posters and configured reaction stats');

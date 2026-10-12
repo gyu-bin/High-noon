@@ -1,6 +1,6 @@
 import type { ImageSourcePropType } from 'react-native';
 import { CLARITY_NPCS } from './clarityCharacterAssets';
-import { NPC_COMBAT_POSES, PLAYER_GROUND_REVOLVER } from './combatPoses';
+import { NPC_COMBAT_POSES } from './combatPoses';
 
 import type { NpcTier } from '@/types/npc';
 import type { DuelBackgroundId } from '@/utils/duelBackgroundSelection';
@@ -91,9 +91,6 @@ export const V3_PRE_DUEL_NPC_FACEOFF: Partial<Record<number, ImageSourcePropType
   1: require('@/assets/images/characters/faceoff/npc_01_left.png'),
 };
 
-/** Clean cinematic overlay; recoil is animated, never baked into the bitmap. */
-export const CINEMATIC_REVOLVER = require('@/assets/images/weapons/cinematic/revolver-ready.png');
-
 export const V3_DUEL_VFX = {
   muzzleFlash: require('@/assets/images/vfx/production/vfx_muzzle_flash.png'),
   gunSmoke: require('@/assets/images/vfx/production/vfx_gun_smoke.png'),
@@ -131,8 +128,6 @@ export function getV3NpcDuelPreloadSources(
     ...Object.values(APPROVED_DUEL_BACKGROUNDS),
     ...Object.values(CLARITY_NPCS[npcId] ?? CLARITY_NPCS[1]!),
     ...Object.values(NPC_COMBAT_POSES[npcId] ?? {}),
-    CINEMATIC_REVOLVER,
-    PLAYER_GROUND_REVOLVER,
     ...Object.values(V3_DUEL_VFX),
   ];
 }

@@ -1,0 +1,199 @@
+npm notice run high-noon@1.4.2 test
+npm notice run node scripts/run-regressions.cjs
+
+=== combat-reaction.cjs ===
+PASS NPC survives (hearts left): HIT -> STAGGER -> RECOVER, never kneels/falls
+PASS NPC final defeat (0 hearts): HIT -> STAGGER -> KNEEL -> FALL -> DOWN on reference timing
+PASS player survives: impact -> recover within 250 ms, no death stages
+PASS player death: IMPACT -> LOSE GRIP -> COLLAPSE -> GROUND POV (held) -> DEFEAT inside the 1650 ms window
+PASS pose mapping: existing hit/kneel reused, fall/down use dedicated art only when registered
+PASS foot-anchored scale: feet stay on the ground line, one box for every pose
+PASS no blood assets referenced by the combat renderer
+PASS ranked opponent uses the same language: non-final holds hit then idle, only final settles down
+
+8 combat reaction checks passed
+
+=== friend-challenge-v3.cjs ===
+PASS R1 record = newest 3 real SHOT reactions; EARLY/TIMEOUT/INVALID never become numbers
+PASS 1 create challenge: exact real shots stored, no padding, no synthetic value
+PASS 2 normalize code: trim / uppercase / strip, same as the server
+PASS 3 get challenge: preview data, creator flag, server expiry
+PASS 4 invalid code -> INVALID CHALLENGE state, raw error never shown
+PASS 5 expired challenge: server decides; client clock only labels
+PASS 6 accept: friend mode, opponent = challenge record + Player poster id, same duel renderer
+PASS 7 submit win (server recalculation, 80..2499, integers)
+PASS 8 submit loss (server recalculation, 80..2499, integers)
+PASS 9 submit draw (server recalculation, 80..2499, integers)
+PASS 9b client claim is ignored: server recalculates a false 3-0
+PASS 10 duplicate submit: already_completed, one attempt row, first result stands
+PASS 11 offline: create / open fail with the offline state, submission kept for retry
+PASS 12 deep link: app link, web landing link and path form all yield the code
+PASS 13 deep link during Duel / Result: held, delivered after leaving
+PASS 14 share: short invitation (title, alias, code, links)
+PASS 15 unranked: rating, W-L, tier and ranked history unchanged by friend duels
+PASS 16 Bounty Board return: existing board in the stack, no remount / reload
+
+FRIEND_CHALLENGE_V3 18/18 PASS
+
+=== ghost-snapshot-v2.cjs ===
+PASS 1 SHOT/SHOT/SHOT: 3-round match settles and becomes the snapshot
+PASS 2 SHOT/EARLY/SHOT: early round kept as EARLY (not a number)
+PASS 3 TIMEOUT/SHOT/SHOT: timeout vs bot shot loses the round, kept as TIMEOUT
+PASS 4 EARLY/EARLY/SHOT: cannot come from one real match; replays correctly as a ghost
+PASS 5 valid human ghost matchmaking: snapshot copied into the match
+PASS 6 bot fallback: explicit is_bot, no snapshot copy, bots never hold snapshots
+PASS 7 profile ghost update: newest match replaces; a 2-0 match keeps the replayable one
+PASS 8 match snapshot is immutable after assignment
+PASS 9 forfeit never updates the ghost (forfeit RPC and V1 compat path)
+PASS 10 duplicate submit is idempotent (same settlement, rating once, ghost unchanged)
+PASS 11a legacy V1 client: unchanged shapes, SHOT-only opponents, 3 shots -> snapshot
+PASS 11b V1 submit on a non-SHOT snapshot match is refused (forfeit still allowed)
+PASS 11c donor remote shape: legacy ghost_samples kept, not converted, not matched
+PASS 11d capability + history are additive
+PASS 12 invalid outcome rejected (match stays assigned, rating untouched)
+PASS 13 invalid reactionMs rejected
+PASS server scoring matrix (every player x ghost outcome)
+PASS security: internal ghost helpers are not client-executable; snapshot CHECK enforced
+PASS client: V2 capability -> pvp_matchmake_v2, ghost_rounds parsed, V2 submit settles
+PASS client: server without ghost_snapshot_v2 -> V1 path unchanged
+PASS client: player round mapping (early/timeout/sub-80/over-window)
+PASS engine: V1 number replay unchanged (ghost fires at recorded ms)
+PASS engine: SHOT replay fires at recorded reaction
+PASS engine: ghost EARLY never fires; player shot wins at once, timeout still wins
+PASS engine: ghost TIMEOUT -> shot wins at once, double timeout draws
+PASS engine: player early loses even against an early ghost
+PASS engine and server agree on every round outcome pair
+PASS V2.1 validator: 2-round and 3-round valid, 1 and 4 rounds rejected
+PASS V2.1 2-0 completed match creates a 2-round ghost (latest), 2-1 creates both
+PASS V2.1 incomplete matches never create a ghost
+PASS V2.1 bot rounds never become a human ghost
+PASS V2.1 history returns only played rounds for a 2-round match
+PASS V2.1 capability keeps old keys and adds ghost_contract
+PASS contract: 4x4 outcome matrix, client table == SQL (plus shot compare, high INVALID)
+PASS contract: EARLY and INVALID stay distinct end to end
+PASS contract: boundary classification (normalizedMs = Math.round(rawMs), valid 80..2499)
+PASS RANKED parity: engine verdict == SQL settlement at every boundary
+PASS DAILY parity: engine sample verdict == pvp_submit_daily at boundaries
+PASS FRIEND parity: engine sample verdict == pvp_submit_friend_challenge at boundaries
+PASS INVALID never updates best reaction (client stats + server best)
+PASS INVALID is stored in history with its value, never as a speed
+PASS INVALID ghost round does not fire; player wins the round
+PASS old client never receives a snapshot with INVALID (or any non-SHOT) round
+PASS full ranked submission settles exactly what the screen showed
+PASS verify SQL: 0 FAIL after V2 (fresh and donor-remote), FAIL before V2, read-only
+45 ghost snapshot v2 checks passed
+
+=== local-duel-regression.cjs ===
+PASS P1 early tap loses
+PASS simultaneous early taps draw
+PASS P1 faster reaction wins
+PASS P2 faster reaction wins
+PASS same-event touches draw
+PASS no input times out to draw
+PASS duplicate tap does not overwrite time
+PASS pause preserves READY remaining time
+PASS reset cancels old round callbacks
+PASS unmount cancels pending timers
+PASS repeated background pause excludes the entire interruption from reaction time
+11 local engine regressions passed
+
+=== npc-faceoff-presentation.cjs ===
+PASS every production fire barrel aims inward; redesign idle exceptions stay left
+PASS expanded canvases retain production scale and share the same ground
+PASS all measured capes, echoes, and defeat poses fit portrait and landscape safe width
+PASS both actors share a scale and wide fire silhouettes leave a central gap
+PASS measured fire anchors preserve redesign metadata and raised P02 barrel
+PASS portrait opens more space within the 8% cap and preserves safe full silhouettes
+PASS landscape placement retains the previous measured coordinates and sizes
+PASS final outward spacing preserves current scale and uses only portrait actor margins
+PASS NPC route opts in while Ranked and Local retain legacy behavior
+
+9 NPC faceoff checks passed
+
+=== npc-round-lifecycle.cjs ===
+PASS BANG sample survives the phase transition and resolves without resimulation
+PASS NPC misfire remains the authoritative result through outcome resolution
+PASS an early player tap creates one fallback and the next round resets it
+PASS screen lifecycle resets at round start, not on the BANG to result transition
+
+4 NPC round lifecycle checks passed
+
+=== npc-select-presentation.cjs ===
+PASS NPC carousel is bounded and keeps edge focus centered
+PASS ordinary locked NPC art remains visible while NPC 22 stays secret and duels stay locked
+PASS portrait duel enlarges the opponent and keeps selected-character identity art
+
+=== ranking-reconcile-migration.cjs ===
+PASS fixture reproduces the real remote (backup-generated) state
+PASS donor-era holes are real in the fixture (not tested on production)
+PASS pre-deploy backup runs on the donor state and captures donor bodies
+PASS post-deploy verification: FAIL before, all PASS after, fingerprint unchanged
+PASS migration preserves profiles, donor ghosts, matches, daily, friend data
+PASS human ghosts: real 3-round record imported; padded and bot records not
+PASS rating_to_rank_tier(r) is kept (parameter name cannot change)
+PASS device hash backfill equals client/server sha256 hex; plaintext kept
+PASS existing device keeps its profile (continuity)
+PASS new install: server-issued key, hash-only identity, no ghost
+PASS no eligible human ghost -> seeded bot opponent (is_bot) with a match_id
+PASS submit rejects float reaction ms (integer[] contract)
+PASS submit is server-authoritative and idempotent; bot rating untouched
+PASS history merges new pvp_matches with legacy matches
+PASS a fully recorded 3-round ranked duel creates a human ghost
+PASS eligible human ghost is matched; forfeit leaves the forfeiter ghost-less
+PASS legacy client (opponent profile id) settles its single assigned match
+PASS legacy ambiguity: several assigned matches vs same opponent -> error, nothing finalized
+PASS another player cannot submit or forfeit your match
+PASS forfeit RPC: server loss, idempotent, ghost untouched
+PASS Step 1 null-round forfeit through submit is a server loss
+PASS device key length is bounded
+PASS expired assignment is rejected with the terminal error
+PASS daily: race-safe creation, server recalculation, idempotent
+PASS friend: pre-migration challenge, server recalculation, idempotent
+PASS anon: no direct table access, no legacy/admin/internal RPCs
+PASS security audit: anon EXECUTE allowlist, definer search_path, no dynamic SQL
+PASS re-running the migration is safe and changes no data
+PASS fresh database: repository baseline -> reconcile converges
+PASS contract assertion aborts and rolls back on a wrong old schema
+PASS client: new install without Web Crypto gets a key from pvp_issue_device_key
+PASS client: capability detected, ranked retry enabled
+PASS client: float rounds settle, lost response recovers without double rating
+PASS client: Step 1 forfeit settles as server loss
+34 reconcile migration checks passed
+
+=== ranking-submission-regression.cjs ===
+PASS A reaction 243.42ms -> server payload 243
+PASS B reaction 243.72ms -> 244; null / NaN keep no-shot meaning
+PASS A0 fake server rejects raw floats (the pre-fix bug)
+PASS C ranked successful submit settles once
+PASS D ranked failed submit -> pending, no fake rating
+PASS E retry success after network returns
+PASS F duplicate retry never double-applies rating (lost response recovered)
+PASS F3 donor-era server: ranked retry is kept but never re-sent
+PASS F4 donor-era server: daily/friend retry still allowed
+PASS F2 expired assignment -> failed(expired), pending cleared
+PASS G daily submit, idempotent repeat, stale date not sent
+PASS H friend submit, lost response recovers via already_completed, closed -> failed
+PASS I ranked leave -> forfeit settled as a loss by the server
+PASS I2 offline forfeit is kept and flushed later
+PASS J challenge deep link is held during ranking duel and result
+PASS RA slow server: duel end hands over to Result immediately
+PASS RB submission succeeds later -> rating section revealed from server
+PASS RC submission fails -> PENDING, entry stored, no rating shown
+PASS RD duel screen unmount -> submission continues and reports
+PASS RE same match started repeatedly -> exactly one submit
+PASS RE2 late answer for an old match never overwrites the next duel
+PASS RF forfeit start is untracked and settles once
+PASS BF pending queue + slow network: board loads without waiting for flush
+PASS BG pending flush success -> silent ranking refresh
+PASS BH offline: board usable, pending preserved
+PASS BI donor server (no pvp_capabilities): ranked retry NOT sent from board flush
+PASS BJ migrated server (pvp_capabilities ok): ranked retry allowed
+PASS BK concurrent flushes share one pass
+28 ranking submission regressions passed
+
+=== startup-and-ads-regression.cjs ===
+PASS stage completion only presents prepared ads and navigation never awaits callbacks
+PASS hydration has a bounded splash wait and deferred safe recovery
+PASS OTA stays on a cold-start budget, and no update does not hold the splash
+
+PASS 10 regression files

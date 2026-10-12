@@ -1,0 +1,166 @@
+[
+  {
+    "player": 1,
+    "npc": 1,
+    "before": {
+      "size": 249.24,
+      "playerLeft": -26.732197999999997,
+      "npcLeft": 179.1308,
+      "gap": 53.45273799999998
+    },
+    "after": {
+      "size": 229.3008,
+      "playerLeft": -23.31362216,
+      "npcLeft": 195.680336,
+      "gap": 78.77651896000003
+    },
+    "scaleChange": -0.07999999999999996,
+    "frameCenters": {
+      "player": 0.2272059150248756,
+      "npc": 0.7719670049751244
+    },
+    "stages": {
+      "idle": {
+        "beforeGap": 0.16798484727082286,
+        "afterGap": 0.2281779002851769,
+        "playerVisibleCenter": 0.24062457502487564,
+        "npcVisibleCenter": 0.754682156490276
+      },
+      "draw": {
+        "beforeGap": 0.1467217148944274,
+        "afterGap": 0.20861581849889316,
+        "playerVisibleCenter": 0.23471237902487563,
+        "npcVisibleCenter": 0.7571839108762409
+      },
+      "fire": {
+        "beforeGap": 0.18825093658501751,
+        "afterGap": 0.24682270245423604,
+        "playerVisibleCenter": 0.20514569502487565,
+        "npcVisibleCenter": 0.7840209124711371
+      }
+    }
+  },
+  {
+    "player": 2,
+    "npc": 9,
+    "before": {
+      "size": 176.2315968964187,
+      "playerLeft": -11.123805078327798,
+      "npcLeft": 191.78044400836384,
+      "gap": 35.246319379283705
+    },
+    "after": {
+      "size": 162.13306914470522,
+      "playerLeft": -8.953900672061579,
+      "npcLeft": 207.3180084876947,
+      "gap": 62.02661382894098
+    },
+    "scaleChange": -0.07999999999999985,
+    "frameCenters": {
+      "player": 0.17938466144351004,
+      "npc": 0.7173744852239983
+    },
+    "stages": {
+      "idle": {
+        "beforeGap": 0.225414240816342,
+        "afterGap": 0.28101294234705443,
+        "playerVisibleCenter": 0.1874267843259613,
+        "npcVisibleCenter": 0.7672263708250712
+      },
+      "draw": {
+        "beforeGap": 0.17506987119548445,
+        "afterGap": 0.23469612229586556,
+        "playerVisibleCenter": 0.18517426394990866,
+        "npcVisibleCenter": 0.7291130000932934
+      },
+      "fire": {
+        "beforeGap": 0.087677411391253,
+        "afterGap": 0.1542950592759725,
+        "playerVisibleCenter": 0.19884264632133666,
+        "npcVisibleCenter": 0.7051540076242854
+      }
+    }
+  },
+  {
+    "player": 3,
+    "npc": 15,
+    "before": {
+      "size": 181.8950514713835,
+      "playerLeft": -21.423087889722453,
+      "npcLeft": 181.1861720432222,
+      "gap": 36.379010294276725
+    },
+    "after": {
+      "size": 167.34344735367284,
+      "playerLeft": -18.42924085854466,
+      "npcLeft": 197.57127827976439,
+      "gap": 63.06868947073457
+    },
+    "scaleChange": -0.07999999999999996,
+    "frameCenters": {
+      "player": 0.16229473337883524,
+      "npc": 0.6996094576034845
+    },
+    "stages": {
+      "idle": {
+        "beforeGap": 0.2355495669029174,
+        "afterGap": 0.29033744234670383,
+        "playerVisibleCenter": 0.17026227960358467,
+        "npcVisibleCenter": 0.7623507620441453
+      },
+      "draw": {
+        "beforeGap": 0.1987407051188452,
+        "afterGap": 0.2564732895053574,
+        "playerVisibleCenter": 0.16793945264778,
+        "npcVisibleCenter": 0.7306470880380365
+      },
+      "fire": {
+        "beforeGap": 0.09735457530990771,
+        "afterGap": 0.16319805008113483,
+        "playerVisibleCenter": 0.15864190066607783,
+        "npcVisibleCenter": 0.6383625884265048
+      }
+    }
+  },
+  {
+    "player": 4,
+    "npc": 22,
+    "before": {
+      "size": 152.98675630863627,
+      "playerLeft": 16.48802775262455,
+      "npcLeft": 241.91860277608944,
+      "gap": 30.597351261727283
+    },
+    "after": {
+      "size": 140.74781580394537,
+      "playerLeft": 16.448985532414586,
+      "npcLeft": 253.4451145540023,
+      "gap": 57.74956316078914
+    },
+    "scaleChange": -0.07999999999999996,
+    "frameCenters": {
+      "player": 0.21597734685170963,
+      "npc": 0.8055199563581467
+    },
+    "stages": {
+      "idle": {
+        "beforeGap": 0.20691649072778281,
+        "afterGap": 0.26399501226558014,
+        "playerVisibleCenter": 0.20732240653660136,
+        "npcVisibleCenter": 0.7883501233058445
+      },
+      "draw": {
+        "beforeGap": 0.18294095429135473,
+        "afterGap": 0.2419375187440663,
+        "playerVisibleCenter": 0.2025747936453041,
+        "npcVisibleCenter": 0.7798334799739266
+      },
+      "fire": {
+        "beforeGap": 0.07611281408389886,
+        "afterGap": 0.1436556297532069,
+        "playerVisibleCenter": 0.2775422621028682,
+        "npcVisibleCenter": 0.765314047333654
+      }
+    }
+  }
+]
