@@ -1,0 +1,518 @@
+{
+  "review": "Independent generated output source acceptance, not runtime approval",
+  "productionEditedByReviewer": false,
+  "imagesEditedByReviewer": false,
+  "assets": [
+    {
+      "id": "P02_FIRE",
+      "source": "artifacts/npc-faceoff-targeted-final-fix/generated/P02_FIRE.png",
+      "sha256": "57abb42d396176a46a15147cda8c72f7f10e8e5d66dab8416cabb00a6d909ec1",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "alpha20Bounds": [
+        65,
+        15,
+        1093,
+        1224
+      ],
+      "identity": "ACCEPTABLE_SOURCE_MATCH",
+      "facingSource": "left",
+      "oppositeFacingClearlyObserved": false,
+      "heldWeaponCount": 1,
+      "bakedShotEffectsObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "geometryStatus": "KEEP_1254_GEOMETRY"
+    },
+    {
+      "id": "P03_FIRE",
+      "source": "artifacts/npc-faceoff-targeted-final-fix/generated/P03_FIRE.png",
+      "sha256": "b24b0d1444f32279f9bed05d2cf7e9bd5fcdcb6c38e43be401c2f97b72af3efd",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "alpha20Bounds": [
+        35,
+        10,
+        1071,
+        1216
+      ],
+      "identity": "ACCEPTABLE_SOURCE_MATCH",
+      "facingSource": "left",
+      "oppositeFacingClearlyObserved": false,
+      "heldWeaponCount": 1,
+      "bakedShotEffectsObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "geometryStatus": "KEEP_1254_GEOMETRY"
+    },
+    {
+      "id": "NPC15_DRAW",
+      "source": "artifacts/npc-faceoff-targeted-final-fix/generated/NPC15_DRAW.png",
+      "sha256": "891fde3f21d641866d6174669d22be396d09b19794bb6effdcf4fcc8fb38fff2",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "alpha20Bounds": [
+        17,
+        97,
+        1234,
+        1160
+      ],
+      "identity": "ACCEPTABLE_SOURCE_MATCH",
+      "facingSource": "right",
+      "oppositeFacingClearlyObserved": false,
+      "heldWeaponCount": 1,
+      "bakedShotEffectsObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "geometryStatus": "NORMALIZATION_REQUIRED"
+    },
+    {
+      "id": "NPC19_DRAW",
+      "source": "artifacts/npc-faceoff-targeted-final-fix/generated/NPC19_DRAW.png",
+      "sha256": "3546c26b6eb62711f55decc68898e5bb1610397600441d51f777a9c963444aa5",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "alpha20Bounds": [
+        30,
+        68,
+        1226,
+        1185
+      ],
+      "identity": "ACCEPTABLE_SOURCE_MATCH",
+      "facingSource": "left",
+      "oppositeFacingClearlyObserved": false,
+      "heldWeaponCount": 1,
+      "bakedShotEffectsObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "geometryStatus": "NORMALIZATION_REQUIRED"
+    },
+    {
+      "id": "NPC22_DRAW",
+      "source": "artifacts/npc-faceoff-targeted-final-fix/generated/NPC22_DRAW.png",
+      "sha256": "a14e0b3b3aabf23bfdae27de09325af940c0e943947d99bfe11b44027165596d",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "alpha20Bounds": [
+        82,
+        50,
+        1196,
+        1178
+      ],
+      "identity": "ACCEPTABLE_SOURCE_MATCH",
+      "facingSource": "left",
+      "oppositeFacingClearlyObserved": false,
+      "heldWeaponCount": 1,
+      "bakedShotEffectsObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "geometryStatus": "NORMALIZATION_REQUIRED"
+    }
+  ],
+  "npcNormalization": [
+    {
+      "id": "NPC15",
+      "canvas": 1624,
+      "uniformScale": 1.1053621825023519,
+      "translateX": 39.53208271480332,
+      "translateY": 91.77986829727183,
+      "mapping": "x_out = uniformScale*x_in + translateX; y_out = uniformScale*y_in + translateY",
+      "idleLandmarks": {
+        "hatCrownTopY": 199,
+        "frontSoleExclusiveBottomAlpha20": 1374,
+        "twoSoleMidpointX": 800.7790327526568
+      },
+      "generatedLandmarks": {
+        "hatCrownTopY": 97,
+        "frontSoleExclusiveBottomAlpha20": 1160,
+        "twoSoleMidpointX": 688.68553862999
+      },
+      "hatTopTolerancePx": 4,
+      "soleMidpointMethod": "average of each boot alpha>20 X centroid in bottom15source rows, local boot region; not full silhouette bbox",
+      "reviewStatus": "NORMALIZATION_REQUIRED; validate normalized preview before production registration"
+    },
+    {
+      "id": "NPC19",
+      "canvas": 1682,
+      "uniformScale": 1.1244153414405986,
+      "translateX": 6.27852784776826,
+      "translateY": 112.56782039289055,
+      "mapping": "x_out = uniformScale*x_in + translateX; y_out = uniformScale*y_in + translateY",
+      "idleLandmarks": {
+        "hatCrownTopY": 243,
+        "frontSoleExclusiveBottomAlpha20": 1445,
+        "twoSoleMidpointX": 820.5598916192605
+      },
+      "generatedLandmarks": {
+        "hatCrownTopY": 116,
+        "frontSoleExclusiveBottomAlpha20": 1185,
+        "twoSoleMidpointX": 724.1820115405368
+      },
+      "hatTopTolerancePx": 4,
+      "soleMidpointMethod": "average of each boot alpha>20 X centroid in bottom15source rows, local boot region; not full silhouette bbox",
+      "reviewStatus": "NORMALIZATION_REQUIRED; validate normalized preview before production registration"
+    },
+    {
+      "id": "NPC22",
+      "canvas": 1684,
+      "uniformScale": 1.1393129770992367,
+      "translateX": 60.893648397375955,
+      "translateY": 106.88931297709905,
+      "mapping": "x_out = uniformScale*x_in + translateX; y_out = uniformScale*y_in + translateY",
+      "idleLandmarks": {
+        "hatCrownTopY": 255,
+        "frontSoleExclusiveBottomAlpha20": 1449,
+        "twoSoleMidpointX": 861.824235423983
+      },
+      "generatedLandmarks": {
+        "hatCrownTopY": 130,
+        "frontSoleExclusiveBottomAlpha20": 1178,
+        "twoSoleMidpointX": 702.9943510920303
+      },
+      "hatTopTolerancePx": 4,
+      "soleMidpointMethod": "average of each boot alpha>20 X centroid in bottom15source rows, local boot region; not full silhouette bbox",
+      "reviewStatus": "NORMALIZATION_REQUIRED; validate normalized preview before production registration"
+    }
+  ],
+  "playerMuzzleSamples": {
+    "P02_FIRE": {
+      "raw": [
+        70,
+        199
+      ],
+      "normalized": [
+        0.05582137161084529,
+        0.15869218500797447
+      ],
+      "tolerancePx": 3
+    },
+    "P03_FIRE": {
+      "raw": [
+        39,
+        216
+      ],
+      "normalized": [
+        0.03110047846889952,
+        0.1722488038277512
+      ],
+      "tolerancePx": 3
+    }
+  },
+  "cautions": [
+    "NPC15 existing gold hip-hilt/scabbard preserved from idle; not a newly introduced second gun.",
+    "NPC19/22 featureless frontal eyes/voids do not clearly read opposite barrel; conservatively acceptable subject to native1x.",
+    "NPC22 isolated colored edge fringes visible enlarged; inspect over actual backgrounds at normalized1x before declaring final alpha pass.",
+    "NPC15 and NPC22 corners contain alpha1 noise; alpha>20 bounds are used for measurements, not full nonzero-alpha bbox.",
+    "Do not replace existing NPC actual-fire muzzle anchors with these draw-frame tips."
+  ],
+  "normalizedFollowup": {
+    "verdict": "SOURCE_ASSET_PASS_5_OF_5; not runtime approval",
+    "productionConnectedAtReview": false,
+    "reviewed": [
+      {
+        "id": "P02_FIRE",
+        "normalizedSource": "artifacts/npc-faceoff-targeted-final-fix/normalized/P02_FIRE.png",
+        "normalizedSha256": "57abb42d396176a46a15147cda8c72f7f10e8e5d66dab8416cabb00a6d909ec1",
+        "canvas": [
+          1254,
+          1254
+        ],
+        "expectedCanvas": 1254,
+        "alpha20Bounds": [
+          65,
+          15,
+          1093,
+          1224
+        ],
+        "cornerAlpha": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "playerPixelsUnchanged": true,
+        "identity": "PASS",
+        "facing": "PASS_SOURCE",
+        "heldWeaponCount": 1,
+        "noBakedShotVfx": "PASS",
+        "transparentCanvas": "PASS",
+        "sourceCanvasClipping": "NONE_OBSERVED",
+        "nominalBodyGround": "PASS",
+        "sourceAssetAcceptance": "PASS",
+        "runtime1x": "PENDING"
+      },
+      {
+        "id": "P03_FIRE",
+        "normalizedSource": "artifacts/npc-faceoff-targeted-final-fix/normalized/P03_FIRE.png",
+        "normalizedSha256": "b24b0d1444f32279f9bed05d2cf7e9bd5fcdcb6c38e43be401c2f97b72af3efd",
+        "canvas": [
+          1254,
+          1254
+        ],
+        "expectedCanvas": 1254,
+        "alpha20Bounds": [
+          35,
+          10,
+          1071,
+          1216
+        ],
+        "cornerAlpha": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "playerPixelsUnchanged": true,
+        "identity": "PASS",
+        "facing": "PASS_SOURCE",
+        "heldWeaponCount": 1,
+        "noBakedShotVfx": "PASS",
+        "transparentCanvas": "PASS",
+        "sourceCanvasClipping": "NONE_OBSERVED",
+        "nominalBodyGround": "PASS",
+        "sourceAssetAcceptance": "PASS",
+        "runtime1x": "PENDING"
+      },
+      {
+        "id": "NPC15_DRAW",
+        "normalizedSource": "artifacts/npc-faceoff-targeted-final-fix/normalized/NPC15_DRAW.png",
+        "normalizedSha256": "98be064318ee353ca9e636024156e8991401e8832a1e630b42a187c461a11dfc",
+        "canvas": [
+          1624,
+          1624
+        ],
+        "expectedCanvas": 1624,
+        "alpha20Bounds": [
+          59,
+          200,
+          1404,
+          1375
+        ],
+        "cornerAlpha": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "playerPixelsUnchanged": null,
+        "identity": "PASS",
+        "facing": "PASS_SOURCE",
+        "heldWeaponCount": 1,
+        "noBakedShotVfx": "PASS",
+        "transparentCanvas": "PASS",
+        "sourceCanvasClipping": "NONE_OBSERVED",
+        "nominalBodyGround": "PASS",
+        "sourceAssetAcceptance": "PASS",
+        "runtime1x": "PENDING"
+      },
+      {
+        "id": "NPC19_DRAW",
+        "normalizedSource": "artifacts/npc-faceoff-targeted-final-fix/normalized/NPC19_DRAW.png",
+        "normalizedSha256": "df31c8c830fdb04ca414c106ef3e09b8622e058a4a4e4d268b2d6724adade7d5",
+        "canvas": [
+          1682,
+          1682
+        ],
+        "expectedCanvas": 1682,
+        "alpha20Bounds": [
+          40,
+          190,
+          1385,
+          1446
+        ],
+        "cornerAlpha": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "playerPixelsUnchanged": null,
+        "identity": "PASS",
+        "facing": "PASS_SOURCE",
+        "heldWeaponCount": 1,
+        "noBakedShotVfx": "PASS",
+        "transparentCanvas": "PASS",
+        "sourceCanvasClipping": "NONE_OBSERVED",
+        "nominalBodyGround": "PASS",
+        "sourceAssetAcceptance": "PASS",
+        "runtime1x": "PENDING"
+      },
+      {
+        "id": "NPC22_DRAW",
+        "normalizedSource": "artifacts/npc-faceoff-targeted-final-fix/normalized/NPC22_DRAW.png",
+        "normalizedSha256": "79e9efb1b2b032ea77c397b136d741f07590636ff889bafb046c3788487c4ef7",
+        "canvas": [
+          1684,
+          1684
+        ],
+        "expectedCanvas": 1684,
+        "alpha20Bounds": [
+          155,
+          164,
+          1424,
+          1450
+        ],
+        "cornerAlpha": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "playerPixelsUnchanged": null,
+        "identity": "PASS",
+        "facing": "PASS_SOURCE",
+        "heldWeaponCount": 1,
+        "noBakedShotVfx": "PASS",
+        "transparentCanvas": "PASS",
+        "sourceCanvasClipping": "NONE_OBSERVED",
+        "nominalBodyGround": "PASS",
+        "sourceAssetAcceptance": "PASS",
+        "runtime1x": "PENDING"
+      }
+    ],
+    "npcFrontSoleComparison": {
+      "NPC15_DRAW": {
+        "idle": 1374,
+        "normalized": 1375,
+        "deltaPx": 1
+      },
+      "NPC19_DRAW": {
+        "idle": 1445,
+        "normalized": 1446,
+        "deltaPx": 1
+      },
+      "NPC22_DRAW": {
+        "idle": 1449,
+        "normalized": 1450,
+        "deltaPx": 1
+      }
+    },
+    "nativeCautions": [
+      "NPC22 colored/white fringe pixels remain visible enlarged; inspect actual normalized1x over approved backgrounds before final visual PASS.",
+      "P03 new muzzle anchor(.031,.172) required; P02 existing anchor deviation roughly1runtimepixel and parent will retain it.",
+      "No layout, stage ground fractions, lane origins or runtime art scale change is needed."
+    ]
+  },
+  "lockedBoundaryFollowup": {
+    "verdict": "CORRECTED_SOURCE_AND_FROZEN_GUARD_PASS",
+    "summary": {
+      "totalStandingCombinations": 264,
+      "noOpaqueClipping": true,
+      "noOpaqueOverlap": true,
+      "minPlayerLeft": 2.1326439270769235,
+      "minNpcRightClearance": 2.0000613495979565,
+      "minOpaqueGap": 19.968319229295588,
+      "playerGuardAll": true,
+      "npcGuardAll": true
+    },
+    "actualFiles": [
+      {
+        "id": "P02_FIRE",
+        "path": "assets/images/characters/clarity/player/02-v2/fire-faceoff.png",
+        "sha256": "864c07a2a51d0e789a1655aae6519fd2f6c1c16376bf6460bbb15ab695efcca7",
+        "canvas": [
+          1254,
+          1254
+        ],
+        "alpha20Bounds": [
+          32,
+          15,
+          1060,
+          1224
+        ]
+      },
+      {
+        "id": "P03_FIRE",
+        "path": "assets/images/characters/clarity/player/03/fire-faceoff.png",
+        "sha256": "fc14521d7874a1cf6e84dfd251b3a2e2a773d655bce6ef64a022fcafbe9ce214",
+        "canvas": [
+          1254,
+          1254
+        ],
+        "alpha20Bounds": [
+          10,
+          10,
+          995,
+          1216
+        ]
+      },
+      {
+        "id": "NPC15_DRAW",
+        "path": "assets/images/characters/clarity/npc/15-v2/draw-faceoff.png",
+        "sha256": "98be064318ee353ca9e636024156e8991401e8832a1e630b42a187c461a11dfc",
+        "canvas": [
+          1624,
+          1624
+        ],
+        "alpha20Bounds": [
+          59,
+          200,
+          1404,
+          1375
+        ]
+      },
+      {
+        "id": "NPC19_DRAW",
+        "path": "assets/images/characters/clarity/npc/19-v2/draw-faceoff.png",
+        "sha256": "594b485c11504c8d3db3a18b79b87a73be3ffee89f2192aaaac2647f2a448ff3",
+        "canvas": [
+          1682,
+          1682
+        ],
+        "alpha20Bounds": [
+          33,
+          190,
+          1378,
+          1446
+        ]
+      },
+      {
+        "id": "NPC22_DRAW",
+        "path": "assets/images/characters/clarity/npc/22-v2/draw-faceoff.png",
+        "sha256": "5066732b30220d9e780626dc69035f203af66b274ece152f080c2ad4cb07646b",
+        "canvas": [
+          1684,
+          1684
+        ],
+        "alpha20Bounds": [
+          127,
+          164,
+          1396,
+          1450
+        ]
+      }
+    ],
+    "runtime1x": "PENDING corrected native capture",
+    "detail": "locked-boundary-acceptance.md/json"
+  }
+}

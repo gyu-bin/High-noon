@@ -1,0 +1,23 @@
+{
+  "branch": "dev-2.0",
+  "head": "259583f3eec7b242c8cb47fe500ce9e44816cac7",
+  "baselineFiles": 1381,
+  "changedSinceTaskStart": [
+    "components/game/NpcFaceoffDuelArena.tsx"
+  ],
+  "unexpectedChanges": [],
+  "deleted": [],
+  "sharedOriginalsRestored": true,
+  "newProductionAssets": [
+    "assets/images/characters/clarity/player/02-v2/fire-faceoff.png",
+    "assets/images/characters/clarity/player/03/fire-faceoff.png",
+    "assets/images/characters/clarity/npc/15-v2/draw-faceoff.png",
+    "assets/images/characters/clarity/npc/19-v2/draw-faceoff.png",
+    "assets/images/characters/clarity/npc/22-v2/draw-faceoff.png"
+  ],
+  "newAssetCount": 5,
+  "stagedFiles": [],
+  "layoutChanged": false,
+  "combatChanged": false,
+  "supabaseChanged": false
+}

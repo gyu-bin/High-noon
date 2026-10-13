@@ -9,13 +9,10 @@ import { MenuBackButton } from '@/components/ui/MenuBackButton';
 import { WesternButton } from '@/components/ui/western/WesternPrimitives';
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { uiV3Colors } from '@/constants/theme';
-import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
-import { CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
+import { scaledArtStyle } from '@/constants/characterArtMetadata';
+import { faceoffStandingArt } from '@/constants/npcFaceoffPoseArt';
 import {
   APPROVED_DUEL_BACKGROUNDS,
-  getV3NpcPose,
-  V3_PRE_DUEL_NPC_FACEOFF,
-  V3_PRE_DUEL_PLAYER_FACEOFF,
   type DuelBackgroundId,
 } from '@/constants/v3DuelAssets';
 import { useCharacterLabels } from '@/utils/characterLabels';
@@ -52,6 +49,8 @@ export function NpcPreDuelScreen({
   const landscape = width > height;
   const playerSize = Math.min(landscape ? height * 0.7 : width * 0.64, landscape ? 390 : 290);
   const npcSize = Math.min(landscape ? height * 0.68 : width * 0.58, landscape ? 370 : 270);
+  const playerAim = faceoffStandingArt('player', playerId, 'aim');
+  const npcAim = faceoffStandingArt('npc', npcId, 'aim');
 
   return (
     <View style={[styles.root, { width, height }]}>
@@ -82,22 +81,19 @@ export function NpcPreDuelScreen({
       <View style={[styles.duelists, landscape && styles.duelistsLandscape]} pointerEvents="none">
         <View style={styles.playerFigure}>
           <Image
-            source={
-              V3_PRE_DUEL_PLAYER_FACEOFF[playerId] ??
-              (CLARITY_PLAYERS[playerId] ?? CLARITY_PLAYERS[1])!.fire
-            }
+            source={playerAim.source}
             contentFit="contain"
             transition={0}
-            style={scaledArtStyle(playerSize, playerSize, characterArtDisplayScale('player', playerId))}
+            style={[scaledArtStyle(playerSize, playerSize, playerAim.artScale), playerAim.flipHorizontal && styles.flipped]}
           />
         </View>
         <Text style={styles.vs}>VS</Text>
         <View style={styles.npcFigure}>
           <Image
-            source={V3_PRE_DUEL_NPC_FACEOFF[npcId] ?? getV3NpcPose(npcId, 'fire')}
+            source={npcAim.source}
             contentFit="contain"
             transition={0}
-            style={scaledArtStyle(npcSize, npcSize, characterArtDisplayScale('npc', npcId))}
+            style={[scaledArtStyle(npcSize, npcSize, npcAim.artScale), npcAim.flipHorizontal && styles.flipped]}
           />
         </View>
       </View>
@@ -117,6 +113,7 @@ export function NpcPreDuelScreen({
 
 const styles = StyleSheet.create({
   root: { overflow: 'hidden', backgroundColor: uiV3Colors.background },
+  flipped: { transform: [{ scaleX: -1 }] },
   back: { position: 'absolute', zIndex: 10 },
   copy: { position: 'absolute', left: 24, right: 24, zIndex: 3, alignItems: 'center' },
   copyLandscape: { left: '55%', right: '6%', alignItems: 'flex-start' },

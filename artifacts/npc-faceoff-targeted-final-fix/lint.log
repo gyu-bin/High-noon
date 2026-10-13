@@ -1,0 +1,7 @@
+npm notice run high-noon@1.4.2 lint
+npm notice run expo lint
+env: load .env
+env: export ELEVENLABS_API_KEY EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY
+npm warn install-scripts .npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line
+npm notice run high-noon@1.4.2 npx
+npm notice run 'eslint' /Users/mungyubin/Desktop/Coding/High-noon/app /Users/mungyubin/Desktop/Coding/High-noon/components --fix=false --cache=true --cache-location=/Users/mungyubin/Desktop/Coding/High-noon/.expo/cache/eslint/

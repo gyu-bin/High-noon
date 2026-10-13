@@ -1,0 +1,27 @@
+{
+  "branch": "dev-2.0",
+  "head": "259583f3eec7b242c8cb47fe500ce9e44816cac7",
+  "locked_layout_sha256": "3257030a65de103957c6067fb443c339bbffba64afcb8bdf55e2309fdbb9d8f9",
+  "protected_files_identical_to_head": {
+    "constants/npcFaceoffPresentation.ts": true,
+    "app/game/npc.tsx": true,
+    "app/npc-select.tsx": true,
+    "app/result/npc.tsx": true,
+    "app/game/local.tsx": true,
+    "components/game/CharacterSprites.tsx": true,
+    "utils/combatReaction.ts": true,
+    "constants/combatPoses.ts": true
+  },
+  "staged_files": [],
+  "production_deletions": [],
+  "diff_check_pass": true,
+  "all_capture_media_ignored": true,
+  "capture_media_count": 48,
+  "modified_tracked_files": [
+    "components/game/NpcFaceoffDuelArena.tsx",
+    "components/game/NpcPreDuelScreen.tsx",
+    "tests/npc-faceoff-presentation.cjs"
+  ],
+  "new_production_helper": "constants/npcFaceoffPoseArt.ts",
+  "commit_push_performed": false
+}

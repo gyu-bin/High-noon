@@ -1,0 +1,971 @@
+{
+  "scope": "NPC02\u201308,10\u201314,16\u201317,21 production DRAW/FIRE source audit only",
+  "codeChangedByAudit": false,
+  "assetPixelsChanged": false,
+  "newAssets": 0,
+  "runtimeStatus": "PENDING parent native evidence; static inspection is not 1x PASS",
+  "sourceOfTruth": "constants/clarityCharacterAssets.ts CLARITY_NPCS; constants/npcFaceoffPoseArt.ts resolves stage and flip; constants/v3DuelAssets.ts getV3NpcPose uses CLARITY_NPCS",
+  "identityLockCaveat": "docs/NPC_HIGH_RES_POSTER_PRODUCTION_LOCK.md records original clarity identity/pose preservation and NPC Select QA, not this Duel runtime. Current registries override stale documentary mappings for redesigned IDs. These fifteen retain their complete non-v2 1254 sets.",
+  "rows": [
+    {
+      "id": 2,
+      "identity": "brown vest, patchwork trousers, stubble, red scarf",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1214,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "high: recognizable human profile angled source-right",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/02/draw.png",
+          "sourceSha256": "c76bc158e8580baed68eb6d702cbb889068f8e937186e83f6b3df17fb2869987",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            295,
+            11,
+            1008,
+            1214
+          ],
+          "squareAlpha20Bounds": [
+            0.235247,
+            0.008772,
+            0.803828,
+            0.968102
+          ],
+          "soleDeltaFromIdleGroundPx": 0,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/02/fire.png",
+          "sourceSha256": "0eccb8fc97f26e4387c1ed855d686bd333a5096e9723c026d405499894f005c6",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            313,
+            12,
+            993,
+            1216
+          ],
+          "squareAlpha20Bounds": [
+            0.249601,
+            0.009569,
+            0.791866,
+            0.969697
+          ],
+          "soleDeltaFromIdleGroundPx": 2,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 3,
+      "identity": "crow-skull hat and black feathered cloak",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1226,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "runtime review: face masked/front/partly hidden, no source-only strict blocker",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/03/draw.png",
+          "sourceSha256": "dd71f0ded35d4e6669de0f44ee3e4a9a8a193a86c5f15abe4ee373d3cd64a83f",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            295,
+            15,
+            986,
+            1222
+          ],
+          "squareAlpha20Bounds": [
+            0.235247,
+            0.011962,
+            0.786284,
+            0.974482
+          ],
+          "soleDeltaFromIdleGroundPx": -4,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/03/fire.png",
+          "sourceSha256": "88f537643f79ca76fac4242ea76935dc73721496485a6234cf30854207d15c06",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            301,
+            12,
+            1015,
+            1227
+          ],
+          "squareAlpha20Bounds": [
+            0.240032,
+            0.009569,
+            0.80941,
+            0.978469
+          ],
+          "soleDeltaFromIdleGroundPx": 1,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 4,
+      "identity": "tan fur-trimmed coat and face wrap",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1219,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "runtime review: face masked/front/partly hidden, no source-only strict blocker",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/04/draw.png",
+          "sourceSha256": "9b76601b192f75492fae4eade3d6e97b606a0a8b8153d23c6026d2c3b44f3654",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            303,
+            8,
+            987,
+            1225
+          ],
+          "squareAlpha20Bounds": [
+            0.241627,
+            0.00638,
+            0.787081,
+            0.976874
+          ],
+          "soleDeltaFromIdleGroundPx": 6,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/04/fire.png",
+          "sourceSha256": "1c7fd215b839880ab98f564e3056e7342cfce597845c410da7f7c9b5b2cda17c",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            263,
+            7,
+            1001,
+            1221
+          ],
+          "squareAlpha20Bounds": [
+            0.209729,
+            0.005582,
+            0.798246,
+            0.973684
+          ],
+          "soleDeltaFromIdleGroundPx": 2,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 5,
+      "identity": "dark shoulder armor, half-mask, crossed cartridge belt",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1220,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "runtime review: face masked/front/partly hidden, no source-only strict blocker",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/05/draw.png",
+          "sourceSha256": "522d171fcdc4f80bdc0a6fc487accb9e372d1fb656de8f9b9508de5f014e74b7",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            299,
+            9,
+            982,
+            1224
+          ],
+          "squareAlpha20Bounds": [
+            0.238437,
+            0.007177,
+            0.783094,
+            0.976077
+          ],
+          "soleDeltaFromIdleGroundPx": 4,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/05/fire.png",
+          "sourceSha256": "6c84e7154e9aded9d2ea642e4ba19c6b36ab200e23a0e2d865b9a076c979d653",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            300,
+            8,
+            965,
+            1221
+          ],
+          "squareAlpha20Bounds": [
+            0.239234,
+            0.00638,
+            0.769537,
+            0.973684
+          ],
+          "soleDeltaFromIdleGroundPx": 1,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 6,
+      "identity": "red-haired woman, fitted brown duster, red scarf",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1226,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "high: recognizable human profile angled source-right",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/06/draw.png",
+          "sourceSha256": "a75ca305625595a43b4482fc1c74cd0679166582a62b9c7938226c09f8884ab2",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            304,
+            10,
+            991,
+            1226
+          ],
+          "squareAlpha20Bounds": [
+            0.242424,
+            0.007974,
+            0.790271,
+            0.977671
+          ],
+          "soleDeltaFromIdleGroundPx": 0,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/06/fire.png",
+          "sourceSha256": "70d4eb18f2fcb71d5bbaff2eff5619e58e187c3241d3dd39db51f82deb9fc0a2",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            306,
+            10,
+            986,
+            1228
+          ],
+          "squareAlpha20Bounds": [
+            0.244019,
+            0.007974,
+            0.786284,
+            0.979266
+          ],
+          "soleDeltaFromIdleGroundPx": 2,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 7,
+      "identity": "green coat and yellow-green wrap",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1218,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "runtime review: face masked/front/partly hidden, no source-only strict blocker",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/07/draw.png",
+          "sourceSha256": "1afa2ad1884ed74ced3dbf72b1240664aa12d4ad5502cc409f046e9beca698b5",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            301,
+            11,
+            991,
+            1216
+          ],
+          "squareAlpha20Bounds": [
+            0.240032,
+            0.008772,
+            0.790271,
+            0.969697
+          ],
+          "soleDeltaFromIdleGroundPx": -2,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/07/fire.png",
+          "sourceSha256": "b188814701678b8095c69c327c4d982e7c74c7c7e44177503054bc2b7dcd09b6",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            273,
+            10,
+            987,
+            1221
+          ],
+          "squareAlpha20Bounds": [
+            0.217703,
+            0.007974,
+            0.787081,
+            0.973684
+          ],
+          "soleDeltaFromIdleGroundPx": 3,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 8,
+      "identity": "red vest, gold accents, brown duster",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1211,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "runtime review: face masked/front/partly hidden, no source-only strict blocker",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/08/draw.png",
+          "sourceSha256": "42ad6c52afc57b7447c0001fd907c773259f4e513eccf3adc1a62c18d1c5429c",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            282,
+            7,
+            992,
+            1214
+          ],
+          "squareAlpha20Bounds": [
+            0.22488,
+            0.005582,
+            0.791069,
+            0.968102
+          ],
+          "soleDeltaFromIdleGroundPx": 3,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/08/fire.png",
+          "sourceSha256": "6e3bd9747b19a1bf197fcbe85bf3f6836b57e74c617c630012f7adeac815079c",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            262,
+            8,
+            978,
+            1213
+          ],
+          "squareAlpha20Bounds": [
+            0.208931,
+            0.00638,
+            0.779904,
+            0.967305
+          ],
+          "soleDeltaFromIdleGroundPx": 2,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 10,
+      "identity": "metal shoulder armor and orange-brown poncho",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1226,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "runtime review: face masked/front/partly hidden, no source-only strict blocker",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/10/draw.png",
+          "sourceSha256": "cb10caa787ccaa652ded15e5005a93d7aed34c73e1e9667fe04c61afd9f1fc44",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            278,
+            11,
+            981,
+            1228
+          ],
+          "squareAlpha20Bounds": [
+            0.221691,
+            0.008772,
+            0.782297,
+            0.979266
+          ],
+          "soleDeltaFromIdleGroundPx": 2,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/10/fire.png",
+          "sourceSha256": "4c11285ff2a9c97d0c8502c43d543a12a4f3a6089a0612d0dd2d2c4b6f71c15d",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            296,
+            9,
+            985,
+            1227
+          ],
+          "squareAlpha20Bounds": [
+            0.236045,
+            0.007177,
+            0.785486,
+            0.978469
+          ],
+          "soleDeltaFromIdleGroundPx": 1,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 11,
+      "identity": "goggles, heavy beard, broad brown coat",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1229,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "high: recognizable human profile angled source-right",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/11/draw.png",
+          "sourceSha256": "1126132ee65c278a586c46708cdc5c897de4d0622d118fb7ff828b7551f287c2",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            267,
+            17,
+            1039,
+            1227
+          ],
+          "squareAlpha20Bounds": [
+            0.212919,
+            0.013557,
+            0.828549,
+            0.978469
+          ],
+          "soleDeltaFromIdleGroundPx": -2,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/11/fire.png",
+          "sourceSha256": "b1d782df118a584dbbf5a9aafce06df01d6e96111853bd19ebe3b2eb9e70c124",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            201,
+            15,
+            1038,
+            1229
+          ],
+          "squareAlpha20Bounds": [
+            0.160287,
+            0.011962,
+            0.827751,
+            0.980064
+          ],
+          "soleDeltaFromIdleGroundPx": 0,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 12,
+      "identity": "dark armor and covered face",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1213,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "runtime review: face masked/front/partly hidden, no source-only strict blocker",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/12/draw.png",
+          "sourceSha256": "79d4174ad89dd281fe417e577357e04e9346832b2a28adef4d409feaba8c3b83",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            299,
+            12,
+            1009,
+            1216
+          ],
+          "squareAlpha20Bounds": [
+            0.238437,
+            0.009569,
+            0.804625,
+            0.969697
+          ],
+          "soleDeltaFromIdleGroundPx": 3,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/12/fire.png",
+          "sourceSha256": "0ea1d6dbcd5101d77cf4b06a49dc7c1275ba3e8ad4c6bc659f19c8188131751d",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            262,
+            12,
+            1031,
+            1224
+          ],
+          "squareAlpha20Bounds": [
+            0.208931,
+            0.009569,
+            0.822169,
+            0.976077
+          ],
+          "soleDeltaFromIdleGroundPx": 11,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 13,
+      "identity": "split mirror mask and pale poncho",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1211,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "runtime review: face masked/front/partly hidden, no source-only strict blocker",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/13/draw.png",
+          "sourceSha256": "0fad4f428ab397c90d9588d793e7c83fa0e66aabdce438fce5f730d0244b55b0",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            314,
+            45,
+            972,
+            1227
+          ],
+          "squareAlpha20Bounds": [
+            0.250399,
+            0.035885,
+            0.77512,
+            0.978469
+          ],
+          "soleDeltaFromIdleGroundPx": 16,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/13/fire.png",
+          "sourceSha256": "aebe65cc34a0d2f040172439e8b97fb4c2bb32bde4fd9b8adcb14bb0b5868ecb",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            299,
+            12,
+            1001,
+            1215
+          ],
+          "squareAlpha20Bounds": [
+            0.238437,
+            0.009569,
+            0.798246,
+            0.9689
+          ],
+          "soleDeltaFromIdleGroundPx": 4,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 14,
+      "identity": "blue electric trim on dark coat",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1216,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "runtime review: face masked/front/partly hidden, no source-only strict blocker",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/14/draw.png",
+          "sourceSha256": "e641c0daa9be724f6c8c797d05f50883e4dcb6cc20d867b219bf682a5ad79fa9",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            297,
+            17,
+            1003,
+            1220
+          ],
+          "squareAlpha20Bounds": [
+            0.236842,
+            0.013557,
+            0.799841,
+            0.972887
+          ],
+          "soleDeltaFromIdleGroundPx": 4,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/14/fire.png",
+          "sourceSha256": "72dff041a06e3df10ebfe12f876df1dec9b0abbde2b856246c3ec20ff788fc2b",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            287,
+            14,
+            999,
+            1219
+          ],
+          "squareAlpha20Bounds": [
+            0.228868,
+            0.011164,
+            0.796651,
+            0.972089
+          ],
+          "soleDeltaFromIdleGroundPx": 3,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 16,
+      "identity": "purple patterned poncho and scarf",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1196,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "runtime review: face masked/front/partly hidden, no source-only strict blocker",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/16/draw.png",
+          "sourceSha256": "9e28db72fe648afe1016aa166c507d07f98bdbc5b5f127d7cb01d5923cca7740",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            256,
+            13,
+            1006,
+            1208
+          ],
+          "squareAlpha20Bounds": [
+            0.204147,
+            0.010367,
+            0.802233,
+            0.963317
+          ],
+          "soleDeltaFromIdleGroundPx": 12,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/16/fire.png",
+          "sourceSha256": "eb4f7d9783b4f2f334ddaf9f42eea36b859d9c86bc8de32b380733317717e778",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            296,
+            9,
+            1006,
+            1205
+          ],
+          "squareAlpha20Bounds": [
+            0.236045,
+            0.007177,
+            0.802233,
+            0.960925
+          ],
+          "soleDeltaFromIdleGroundPx": 9,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 17,
+      "identity": "pale covered face and long dark coat",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1224,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "runtime review: face masked/front/partly hidden, no source-only strict blocker",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/17/draw.png",
+          "sourceSha256": "538649de84e8862c3ea16397d729a68c7f5c916e4e2a76f7e6f266f58f46a350",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            326,
+            10,
+            922,
+            1229
+          ],
+          "squareAlpha20Bounds": [
+            0.259968,
+            0.007974,
+            0.735247,
+            0.980064
+          ],
+          "soleDeltaFromIdleGroundPx": 5,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/17/fire.png",
+          "sourceSha256": "9abc1d30125c4e00efc9ba6d96cb4289fc97e256db87179b13a5faa2c77c4734",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            330,
+            5,
+            945,
+            1235
+          ],
+          "squareAlpha20Bounds": [
+            0.263158,
+            0.003987,
+            0.753589,
+            0.984848
+          ],
+          "soleDeltaFromIdleGroundPx": 11,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    },
+    {
+      "id": 21,
+      "identity": "black/gold formal duster and skull-topped cane",
+      "identityLock": "current CLARITY_NPCS complete five-pose registry; no legacy substitution",
+      "scale": 1,
+      "idleGroundPx": 1235,
+      "drawAssessment": "ground/own-holster aim candidate; visually down, not waist/torso aim",
+      "fireAssessment": "clean source-left waist/abdomen shot; source-facing head differs or remains masked/front",
+      "headConcernPriority": "runtime review: face masked/front/partly hidden, no source-only strict blocker",
+      "sourceEdgeClippingObserved": false,
+      "runtime1x": "NOT_VERIFIED",
+      "poses": {
+        "draw": {
+          "source": "assets/images/characters/clarity/npc/21/draw.png",
+          "sourceSha256": "d4052ac4676f2c0c4a5a10025c3fcd31ec51aff00b9e85345569fe9148a4fc96",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            290,
+            18,
+            984,
+            1233
+          ],
+          "squareAlpha20Bounds": [
+            0.23126,
+            0.014354,
+            0.784689,
+            0.983254
+          ],
+          "soleDeltaFromIdleGroundPx": -2,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "down, slight image-right",
+          "currentRuntimeFlip": true,
+          "obviousBakedShotEffect": false
+        },
+        "fire": {
+          "source": "assets/images/characters/clarity/npc/21/fire.png",
+          "sourceSha256": "749ee4e9e5d9e192090f237cd0ac0b1b3e96571630c4614ef4fc6e6bc0eef422",
+          "size": [
+            1254,
+            1254
+          ],
+          "alpha20Bounds": [
+            278,
+            9,
+            995,
+            1236
+          ],
+          "squareAlpha20Bounds": [
+            0.221691,
+            0.007177,
+            0.793461,
+            0.985646
+          ],
+          "soleDeltaFromIdleGroundPx": 1,
+          "manifestStatus": "visual_qa_passed",
+          "barrelDirectionSource": "image-left, approximately horizontal waist/abdomen",
+          "currentRuntimeFlip": false,
+          "obviousBakedShotEffect": false
+        }
+      }
+    }
+  ]
+}

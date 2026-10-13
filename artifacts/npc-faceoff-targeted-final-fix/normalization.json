@@ -1,0 +1,39 @@
+{
+  "method": "uniform PNG resampling and transparent-canvas placement only; no pose/identity pixels redrawn; runtime layout unchanged; P02 translated within transparent canvas, P03 horizontally contained at 1192/1254 with unchanged crown/sole/body height; no rotation, runtime size or position changes",
+  "specs": {
+    "NPC15_DRAW": {
+      "canvas": 1624,
+      "s": 1.105362,
+      "tx": 39.532,
+      "ty": 91.78
+    },
+    "NPC19_DRAW": {
+      "canvas": 1682,
+      "s": 1.124415,
+      "tx": -0.7210000000000001,
+      "ty": 112.568,
+      "containment_translation": -7
+    },
+    "NPC22_DRAW": {
+      "canvas": 1684,
+      "s": 1.139313,
+      "tx": 32.894,
+      "ty": 106.889,
+      "containment_translation": -28
+    },
+    "P02_FIRE": {
+      "canvas": 1254,
+      "sx": 1,
+      "sy": 1,
+      "tx": -33,
+      "ty": 0
+    },
+    "P03_FIRE": {
+      "canvas": 1254,
+      "sx": 0.9505582137161085,
+      "sy": 1,
+      "tx": -23,
+      "ty": 0
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "P02_FIRE": {
+    "production_path": "assets/images/characters/clarity/player/02-v2/fire-faceoff.png",
+    "before": "cf38b3e5e7db99d333d70c5383997874d8e8486a4852c8782acc7d8b6e83c1f2",
+    "after": "864c07a2a51d0e789a1655aae6519fd2f6c1c16376bf6460bbb15ab695efcca7",
+    "shared_path_restored": "assets/images/characters/clarity/player/02-v2/fire.png",
+    "integration_scope": "NPC faceoff FIRE only",
+    "shared_restored_sha256": "cf38b3e5e7db99d333d70c5383997874d8e8486a4852c8782acc7d8b6e83c1f2",
+    "original_shared_unchanged": true
+  },
+  "P03_FIRE": {
+    "production_path": "assets/images/characters/clarity/player/03/fire-faceoff.png",
+    "before": "3e5e2454e5615d142911086e9e041785eeaa1d8c030c38dd7753bb863e7651fc",
+    "after": "fc14521d7874a1cf6e84dfd251b3a2e2a773d655bce6ef64a022fcafbe9ce214",
+    "shared_path_restored": "assets/images/characters/clarity/player/03/fire.png",
+    "integration_scope": "NPC faceoff FIRE only",
+    "shared_restored_sha256": "3e5e2454e5615d142911086e9e041785eeaa1d8c030c38dd7753bb863e7651fc",
+    "original_shared_unchanged": true
+  },
+  "NPC15_DRAW": {
+    "production_path": "assets/images/characters/clarity/npc/15-v2/draw-faceoff.png",
+    "before": "5920aa97a888eeae02e77fd8b6f37b2488e32d9d216737d40aead7d4818e77cd",
+    "after": "98be064318ee353ca9e636024156e8991401e8832a1e630b42a187c461a11dfc",
+    "shared_path_restored": "assets/images/characters/clarity/npc/15-v2/draw.png",
+    "integration_scope": "NPC faceoff aim/STEADY only",
+    "shared_restored_sha256": "5920aa97a888eeae02e77fd8b6f37b2488e32d9d216737d40aead7d4818e77cd",
+    "original_shared_unchanged": true
+  },
+  "NPC19_DRAW": {
+    "production_path": "assets/images/characters/clarity/npc/19-v2/draw-faceoff.png",
+    "before": "92d5b8bc20e247bdd8894807b2a6053fd9507377d30e0ebdaf67b627345ed341",
+    "after": "594b485c11504c8d3db3a18b79b87a73be3ffee89f2192aaaac2647f2a448ff3",
+    "shared_path_restored": "assets/images/characters/clarity/npc/19-v2/draw.png",
+    "integration_scope": "NPC faceoff aim/STEADY only",
+    "shared_restored_sha256": "92d5b8bc20e247bdd8894807b2a6053fd9507377d30e0ebdaf67b627345ed341",
+    "original_shared_unchanged": true
+  },
+  "NPC22_DRAW": {
+    "production_path": "assets/images/characters/clarity/npc/22-v2/draw-faceoff.png",
+    "before": "24f68b07e7538487ace341f59876bfe432ea53ed2bc4618efedbf293391719c6",
+    "after": "5066732b30220d9e780626dc69035f203af66b274ece152f080c2ad4cb07646b",
+    "shared_path_restored": "assets/images/characters/clarity/npc/22-v2/draw.png",
+    "integration_scope": "NPC faceoff aim/STEADY only",
+    "shared_restored_sha256": "24f68b07e7538487ace341f59876bfe432ea53ed2bc4618efedbf293391719c6",
+    "original_shared_unchanged": true
+  }
+}

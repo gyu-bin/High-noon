@@ -1,0 +1,52 @@
+{
+  "sourceInspectionOnly": true,
+  "newAssets": 0,
+  "faceoff": {
+    "P01": {
+      "source": "assets/images/characters/faceoff/player_01_right.png",
+      "sourceSize": [
+        1024,
+        1536
+      ],
+      "flip": false,
+      "rawMuzzle": [
+        987,
+        507
+      ],
+      "rawMuzzleTolerancePx": 2,
+      "rawSoleBottomAlpha20": 1461,
+      "squareMuzzle": [
+        0.8092447916666666,
+        0.330078125
+      ],
+      "squareGroundFraction": 0.951171875,
+      "squareAlphaX": [
+        0.19140625,
+        0.82421875
+      ]
+    },
+    "NPC01": {
+      "source": "assets/images/characters/faceoff/npc_01_left.png",
+      "sourceSize": [
+        1024,
+        1536
+      ],
+      "flip": false,
+      "rawMuzzle": [
+        103,
+        650
+      ],
+      "rawMuzzleTolerancePx": 2,
+      "rawSoleBottomAlpha20": 1472,
+      "squareMuzzle": [
+        0.23372395833333334,
+        0.4231770833333333
+      ],
+      "squareGroundFraction": 0.9583333333333334,
+      "squareAlphaX": [
+        0.22916666666666666,
+        0.814453125
+      ]
+    }
+  }
+}

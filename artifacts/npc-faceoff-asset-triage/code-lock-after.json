@@ -1,0 +1,13 @@
+{
+  "branch": "dev-2.0",
+  "head": "259583f3eec7b242c8cb47fe500ce9e44816cac7",
+  "checked_files": 1383,
+  "changed_files_since_triage_started": [],
+  "deleted_files_since_triage_started": [],
+  "staged_files": [],
+  "production_code_lock": "PASS",
+  "new_images_generated": 0,
+  "assets_replaced": 0,
+  "commit_created": false,
+  "pushed": false
+}

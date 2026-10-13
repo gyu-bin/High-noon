@@ -8,10 +8,13 @@ import Animated, { cancelAnimation, Easing, useAnimatedStyle, useReducedMotion, 
 
 import { PlayerCharacterSprite } from './CharacterSprites';
 import { DuelCoverImage } from './DuelCoverImage';
+import { DevNpcDuelInput } from './DevNpcDuelInput';
 import { DuelSignalBoard } from './DuelSignalBoard';
 import type { NpcDuelArenaProps } from './NpcDuelArenaProps';
 import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
 import { CLARITY_NPCS, CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
+import { faceoffStandingArt } from '@/constants/npcFaceoffPoseArt';
+import { DUEL_SPRITE_TIMING } from '@/lib/duelSprite/poseSpecs';
 import { NPC_COMBAT_POSES } from '@/constants/combatPoses';
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { faceoffContainedLeft, faceoffFlip, faceoffGroundFraction, faceoffMuzzleAnchor, faceoffOutwardPlacement, faceoffPairLayout } from '@/constants/npcFaceoffPresentation';
@@ -54,9 +57,6 @@ export function NpcFaceoffDuelArena({
   const pairLayout = faceoffOutwardPlacement(fittedPair, { width, paddingLeft, paddingRight, portrait: !landscape && contentShakeStyle == null });
   const size = pairLayout.size;
   const groundY = Math.min(height * (landscape ? 0.82 : 0.75), height - paddingBottom - 18);
-  // Reactions retain their previous origins and margins for the existing recoil.
-  const playerStandingLeft = playerDefeated ? fittedPair.playerLeft : pairLayout.playerLeft;
-  const npcStandingLeft = npcPose === 'defeat' ? fittedPair.npcLeft : pairLayout.npcLeft;
   const playerTop = groundY - size * faceoffGroundFraction('player', playerCharacterId);
   const npcTop = groundY - size * faceoffGroundFraction('npc', npcId);
   const playerLabels = getCharacterLabels(t, playerCharacterId as PlayerCharacterId);
@@ -69,8 +69,25 @@ export function NpcFaceoffDuelArena({
   opponentHeartsRef.current = opponentHearts;
   const playerHeartsRef = useRef(playerHearts);
   playerHeartsRef.current = playerHearts;
-  const npcDefeated = npcPose === 'defeat';
-  const finalPlayerHit = playerDefeated && isLethalHit(playerHearts);
+  const defeatScope = `${npcId}:${playerCharacterId}:${currentRound}`;
+  const [finalNpcScope, holdFinalNpc] = useState<string | null>(null);
+  const [finalPlayerScope, holdFinalPlayer] = useState<string | null>(null);
+  // Continue clears the reveal flags before navigation. Hold only a defeat
+  // already revealed by the engine, until a new round/identity or restored heart.
+  useEffect(() => {
+    holdFinalNpc(previous => !isLethalHit(opponentHearts) ? null
+      : npcPose === 'defeat' ? defeatScope : previous === defeatScope ? previous : null);
+  }, [defeatScope, npcPose, opponentHearts]);
+  useEffect(() => {
+    holdFinalPlayer(previous => !isLethalHit(playerHearts) ? null
+      : playerDefeated ? defeatScope : previous === defeatScope ? previous : null);
+  }, [defeatScope, playerDefeated, playerHearts]);
+  const npcDefeated = npcPose === 'defeat' || (finalNpcScope === defeatScope && isLethalHit(opponentHearts));
+  const playerDefeatActive = playerDefeated || (finalPlayerScope === defeatScope && isLethalHit(playerHearts));
+  const finalPlayerHit = playerDefeatActive && isLethalHit(playerHearts);
+  // Reactions retain their previous origins and margins for the existing recoil.
+  const playerStandingLeft = playerDefeatActive ? fittedPair.playerLeft : pairLayout.playerLeft;
+  const npcStandingLeft = npcDefeated ? fittedPair.npcLeft : pairLayout.npcLeft;
 
   // Use the same presentation timelines as the legacy renderer. Results/timing
   // arrive from the engine and this layer never writes them back.
@@ -80,31 +97,51 @@ export function NpcFaceoffDuelArena({
     return () => timers.forEach(clearTimeout);
   }, [npcDefeated, reduceMotion]);
   useEffect(() => {
-    if (!playerDefeated) { setPlayerStage('none'); return; }
+    if (!playerDefeatActive) { setPlayerStage('none'); return; }
     const timers = playerTimeline(playerHeartsRef.current).map(step => setTimeout(() => setPlayerStage(step.stage), step.at));
     return () => timers.forEach(clearTimeout);
-  }, [playerDefeated]);
+  }, [playerDefeatActive]);
 
+  const aiming = signalPhase === '집중' || signalPhase === '페이크' || signalPhase === '뱅';
+  const playerStandingArt = faceoffStandingArt('player', playerCharacterId, playerShotActive ? 'fire' : aiming ? 'aim' : 'ready');
+  const npcStandingArt = faceoffStandingArt('npc', npcId, npcShotActive ? 'fire' : npcPose === 'aim' || npcPose === 'shoot' || aiming ? 'aim' : 'ready');
   const dedicated = NPC_COMBAT_POSES[npcId];
   const npcArtPose = npcDefeated
     ? npcPoseForStage(npcStage === 'none' ? 'hit' : npcStage, { fall: dedicated?.fall != null, down: dedicated?.down != null })
-    : npcShotActive || npcPose === 'shoot' ? 'fire' : npcPose === 'aim' ? 'draw' : 'idle';
+    : npcStandingArt.pose === 'faceoff' ? 'fire' : npcStandingArt.pose;
+  const npcReactionVisible = npcDefeated && npcArtPose !== 'idle';
   const npcSource = npcArtPose === 'fall' && dedicated?.fall ? dedicated.fall
     : npcArtPose === 'down' && dedicated?.down ? dedicated.down
-      : getV3NpcPose(npcId, npcArtPose === 'kneel' ? 'down' : npcArtPose as V3NpcPose);
-  const aiming = signalPhase === '집중' || signalPhase === '페이크' || signalPhase === '뱅';
-  const playerPose: SpritePose = playerDefeated
+      : npcReactionVisible ? getV3NpcPose(npcId, npcArtPose === 'kneel' ? 'down' : npcArtPose as V3NpcPose) : npcStandingArt.source;
+  const playerPose: SpritePose = playerDefeatActive
     ? !finalPlayerHit && playerStage === 'recover' ? 'idle' : 'defeat'
     : playerShotActive ? 'shoot' : aiming ? 'aim' : 'idle';
-  const playerFlip = faceoffFlip('player', playerCharacterId, playerPose);
-  const npcFlip = faceoffFlip('npc', npcId, npcArtPose);
-  const playerLeft = faceoffContainedLeft({ kind: 'player', id: playerCharacterId, pose: playerPose, left: playerStandingLeft, size, width, paddingLeft: playerDefeated ? paddingLeft : pairLayout.actorPaddingLeft, paddingRight: playerDefeated ? paddingRight : pairLayout.actorPaddingRight });
-  const npcLeft = faceoffContainedLeft({ kind: 'npc', id: npcId, pose: npcArtPose, left: npcStandingLeft, size, width, paddingLeft: npcDefeated ? paddingLeft : pairLayout.actorPaddingLeft, paddingRight: npcDefeated ? paddingRight : pairLayout.actorPaddingRight });
-  const playerAnchor = faceoffMuzzleAnchor('player', playerCharacterId);
-  const npcAnchor = faceoffMuzzleAnchor('npc', npcId);
+  const playerReactionVisible = playerDefeatActive && playerPose === 'defeat';
+  const playerFlip = playerReactionVisible ? faceoffFlip('player', playerCharacterId, playerPose) : playerStandingArt.flipHorizontal;
+  const npcFlip = npcReactionVisible ? faceoffFlip('npc', npcId, npcArtPose) : npcStandingArt.flipHorizontal;
+  const playerBoundsPose = playerReactionVisible ? playerPose : playerStandingArt.pose === 'draw' ? 'draw' : 'fire';
+  const npcBoundsPose = npcReactionVisible ? npcArtPose : npcStandingArt.pose === 'draw' ? 'draw' : 'fire';
+  const playerLeft = faceoffContainedLeft({ kind: 'player', id: playerCharacterId, pose: playerBoundsPose, left: playerStandingLeft, size, width, paddingLeft: playerDefeatActive ? paddingLeft : pairLayout.actorPaddingLeft, paddingRight: playerDefeatActive ? paddingRight : pairLayout.actorPaddingRight });
+  const npcLeft = faceoffContainedLeft({ kind: 'npc', id: npcId, pose: npcBoundsPose, left: npcStandingLeft, size, width, paddingLeft: npcDefeated ? paddingLeft : pairLayout.actorPaddingLeft, paddingRight: npcDefeated ? paddingRight : pairLayout.actorPaddingRight });
+  const playerGroundOffset = playerReactionVisible ? 0 : faceoffGroundFraction('player', playerCharacterId) - playerStandingArt.groundFraction;
+  const npcGroundOffset = npcReactionVisible ? 0 : faceoffGroundFraction('npc', npcId) - npcStandingArt.groundFraction;
+  const playerAnchor = playerReactionVisible ? faceoffMuzzleAnchor('player', playerCharacterId) : playerStandingArt.muzzle;
+  const npcAnchor = npcReactionVisible ? faceoffMuzzleAnchor('npc', npcId) : npcStandingArt.muzzle;
   const playerMuzzleX = (playerFlip ? 1 - playerAnchor.x : playerAnchor.x) * size;
   const npcMuzzleX = (npcFlip ? 1 - npcAnchor.x : npcAnchor.x) * size;
 
+  const playerRecoil = useSharedValue(0);
+  const npcRecoil = useSharedValue(0);
+  useEffect(() => {
+    if (!playerShotActive) { playerRecoil.value = 0; return; }
+    playerRecoil.value = withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: DUEL_SPRITE_TIMING.shootKickInMs, easing: Easing.out(Easing.cubic) }), withTiming(0.35, { duration: DUEL_SPRITE_TIMING.shootKickHoldMs, easing: Easing.out(Easing.quad) }));
+    return () => cancelAnimation(playerRecoil);
+  }, [playerRecoil, playerShotActive]);
+  useEffect(() => {
+    if (!npcShotActive) { npcRecoil.value = 0; return; }
+    npcRecoil.value = withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: DUEL_SPRITE_TIMING.shootKickInMs, easing: Easing.out(Easing.cubic) }), withTiming(0.35, { duration: DUEL_SPRITE_TIMING.shootKickHoldMs, easing: Easing.out(Easing.quad) }));
+    return () => cancelAnimation(npcRecoil);
+  }, [npcRecoil, npcShotActive]);
   const playerFlash = useSharedValue(0);
   const playerSmoke = useSharedValue(0);
   const npcFlash = useSharedValue(0);
@@ -154,6 +191,8 @@ export function NpcFaceoffDuelArena({
     specialFx.value = withSequence(withTiming(1, { duration: reduceMotion ? 1 : 70 }), withTiming(specialPresentation === 'redEye' ? 0.35 : 0, { duration: reduceMotion ? 180 : specialPresentation === 'redEye' ? 600 : 160 }));
     return () => cancelAnimation(specialFx);
   }, [reduceMotion, specialFx, specialFxActive, specialPresentation]);
+  const playerRecoilStyle = useAnimatedStyle(() => reduceMotion ? {} : { transform: [{ translateY: -2 * playerRecoil.value }] });
+  const npcRecoilStyle = useAnimatedStyle(() => reduceMotion ? {} : { transform: [{ translateY: -2 * npcRecoil.value }] });
   const playerFlashStyle = useAnimatedStyle(() => ({ opacity: playerFlash.value }));
   const npcFlashStyle = useAnimatedStyle(() => ({ opacity: npcFlash.value }));
   const playerSmokeStyle = useAnimatedStyle(() => ({ opacity: playerSmoke.value, transform: [{ translateY: -16 * playerSmoke.value }, { scale: 0.85 + playerSmoke.value * 0.3 }] }));
@@ -167,27 +206,37 @@ export function NpcFaceoffDuelArena({
   const flashStyle = useAnimatedStyle(() => ({ opacity: playerFlash.value * 0.2 }));
   const abilityAfterImage = (specialPresentation === 'echo' && (signalPhase === '페이크' || signalPhase === '뱅')) || (specialPresentation === 'mirror' && (signalPhase === '집중' || signalPhase === '페이크'));
   const specialAsset = specialPresentation === 'thunderbolt' ? V3_DUEL_VFX.thunderbolt : specialPresentation === 'void' ? V3_DUEL_VFX.voidCrack : V3_DUEL_VFX.redEye;
-  const npcArtStyle = scaledArtStyle(size, size, characterArtDisplayScale('npc', npcId));
+  const playerStandingStyle = [scaledArtStyle(size, size, playerStandingArt.artScale), { transform: [{ translateY: playerGroundOffset * size }] }];
+  const npcArtStyle = [scaledArtStyle(size, size, npcReactionVisible ? characterArtDisplayScale('npc', npcId) : npcStandingArt.artScale), { transform: [{ translateY: npcGroundOffset * size }] }];
   const flashBox = (x: number, y: number) => ({ left: x - size * 0.175, top: y * size - size * 0.119, width: size * 0.35, height: size * 0.238 });
   const smokeBox = (x: number, y: number) => ({ left: x - size * 0.16, top: y * size - size * 0.20, width: size * 0.32, height: size * 0.32 });
 
   return <View style={[styles.root, { width, height }]}>
+    {__DEV__ ? <DevNpcDuelInput signalPhase={signalPhase} shootActive={shootActive} onShootPress={onShootPress} scope={defeatScope} /> : null}
     <Pressable accessibilityLabel={t('game.duelTapArea')} accessibilityRole="button" accessibilityState={{ disabled: !shootCapturesEarly }} accessibilityHint={shootActive ? t('game.tapHintShoot') : t('game.tapHintEarly')} disabled={!shootCapturesEarly} onPressIn={onShootPress} style={StyleSheet.absoluteFill} />
     <Animated.View pointerEvents="box-none" style={[StyleSheet.absoluteFillObject, contentShakeStyle]}>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFillObject, kickStyle]}>
         <DuelCoverImage source={APPROVED_DUEL_BACKGROUNDS[backgroundId ?? fallbackBackgroundId]} width={width} height={height} bleed={1.18} />
         <View style={[styles.lane, { left: playerLeft, top: playerTop, width: size, height: size }]}>
-          <PlayerCharacterSprite characterId={playerCharacterId} width={size} height={size} pose={playerPose} flipHorizontal={playerFlip} defeatSettlesDown={finalPlayerHit} defeatDropPx={0} muzzleFlashEnabled={false} downOffsetY={playerCharacterId === 2 ? size * (1221 / 1254 - 0.9378) : 0} />
-          <Animated.View style={[styles.effect, flashBox(playerMuzzleX, playerAnchor.y), playerFlashStyle]}><Image source={V3_DUEL_VFX.muzzleFlash} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View>
-          <Animated.View style={[styles.effect, smokeBox(playerMuzzleX, playerAnchor.y), playerSmokeStyle]}><Image source={V3_DUEL_VFX.gunSmoke} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View>
+          {playerReactionVisible ? <PlayerCharacterSprite characterId={playerCharacterId} width={size} height={size} pose={playerPose} flipHorizontal={playerFlip} defeatSettlesDown={finalPlayerHit} defeatDropPx={0} muzzleFlashEnabled={false} downOffsetY={playerCharacterId === 2 ? size * (1221 / 1254 - 0.9378) : 0} /> : (
+            <Animated.View style={[{ width: size, height: size }, playerRecoilStyle]}>
+              <View style={[{ width: size, height: size }, playerFlip && styles.flipped]}>
+                <Image source={playerStandingArt.source} style={playerStandingStyle} contentFit="contain" cachePolicy="memory-disk" priority="high" transition={0} />
+              </View>
+            </Animated.View>
+          )}
+          <Animated.View style={[styles.effect, flashBox(playerMuzzleX, playerAnchor.y + playerGroundOffset), playerFlashStyle]}><Image source={V3_DUEL_VFX.muzzleFlash} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View>
+          <Animated.View style={[styles.effect, smokeBox(playerMuzzleX, playerAnchor.y + playerGroundOffset), playerSmokeStyle]}><Image source={V3_DUEL_VFX.gunSmoke} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View>
         </View>
         <Animated.View style={[styles.lane, { left: npcLeft, top: npcTop, width: size, height: size }, npcReactionStyle]}>
-          <View style={[{ width: size, height: size }, npcFlip && styles.flipped]}>
-            {abilityAfterImage ? <Image source={npcSource} style={[styles.afterImage, npcArtStyle, npcId === 20 && styles.bakedEcho]} contentFit="contain" transition={0} /> : null}
+          <Animated.View style={[{ width: size, height: size }, !npcReactionVisible && npcRecoilStyle]}>
+            <View style={[{ width: size, height: size }, npcFlip && styles.flipped]}>
+            {abilityAfterImage ? <Image source={npcSource} style={[styles.afterImage, npcArtStyle, { transform: [{ translateX: -18 }, { translateY: 8 + npcGroundOffset * size }] }, npcId === 20 && styles.bakedEcho]} contentFit="contain" transition={0} /> : null}
             <Image source={npcSource} style={npcArtStyle} contentFit="contain" cachePolicy="memory-disk" priority="high" transition={0} />
-          </View>
-          <Animated.View style={[styles.effect, flashBox(npcMuzzleX, npcAnchor.y), npcFlashStyle]}><Image source={V3_DUEL_VFX.muzzleFlash} style={[StyleSheet.absoluteFillObject, styles.flipped]} contentFit="contain" transition={0} /></Animated.View>
-          <Animated.View style={[styles.effect, smokeBox(npcMuzzleX, npcAnchor.y), npcSmokeStyle]}><Image source={V3_DUEL_VFX.gunSmoke} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View>
+            </View>
+          </Animated.View>
+          <Animated.View style={[styles.effect, flashBox(npcMuzzleX, npcAnchor.y + npcGroundOffset), npcFlashStyle]}><Image source={V3_DUEL_VFX.muzzleFlash} style={[StyleSheet.absoluteFillObject, styles.flipped]} contentFit="contain" transition={0} /></Animated.View>
+          <Animated.View style={[styles.effect, smokeBox(npcMuzzleX, npcAnchor.y + npcGroundOffset), npcSmokeStyle]}><Image source={V3_DUEL_VFX.gunSmoke} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View>
           {npcDefeated ? <><Animated.View style={[styles.impact, impactStyle]}><Image source={V3_DUEL_VFX.bulletImpact} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View><Animated.View style={[styles.dust, dustStyle]}><Image source={V3_DUEL_VFX.fallDust} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View></> : null}
         </Animated.View>
       </Animated.View>
