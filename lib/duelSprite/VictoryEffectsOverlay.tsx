@@ -2,6 +2,7 @@ import { memo, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -71,6 +72,7 @@ const SmokePuff = memo(function SmokePuff({
         false,
       ),
     );
+    return () => cancelAnimation(progress);
   }, [active, delayMs, progress]);
 
   const style = useAnimatedStyle(() => ({
@@ -132,6 +134,7 @@ const MouthSmokeRing = memo(function MouthSmokeRing({
       -1,
       false,
     );
+    return () => cancelAnimation(progress);
   }, [active, progress]);
 
   const ringStyle = useAnimatedStyle(() => ({
@@ -292,7 +295,7 @@ export const VictoryEffectsOverlay = memo(function VictoryEffectsOverlay({
   active,
 }: Props) {
   const spec = getVictoryEffectSpec(mode, id);
-  if (!spec) return null;
+  if (!active || !spec) return null;
 
   const mouth = spec.mouth ? anchorPx(spec.mouth, width, height) : null;
 

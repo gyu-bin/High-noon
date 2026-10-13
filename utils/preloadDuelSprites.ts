@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { Image as RNImage, type ImageSourcePropType } from 'react-native';
 
+import { faceoffStandingArt } from '@/constants/npcFaceoffPoseArt';
 import type { LocalDuelSkin } from '@/constants/localDuelSkin';
 import { APPROVED_DUEL_BACKGROUNDS, getV3NpcDuelPreloadSources } from '@/constants/v3DuelAssets';
 import type { NpcTier } from '@/types/npc';
@@ -55,7 +56,10 @@ export async function prefetchNpcDuelPresentation(
   dayNight: 'day' | 'night',
 ): Promise<void> {
   const seen = new Set<string>();
-  const uris = getV3NpcDuelPreloadSources(tier, npcId, dayNight)
+  const uris = [
+    ...getV3NpcDuelPreloadSources(tier, npcId, dayNight),
+    ...(['ready', 'aim', 'fire'] as const).map(stage => faceoffStandingArt('npc', npcId, stage).source),
+  ]
     .map(assetUri)
     .filter((uri): uri is string => uri != null)
     .filter((uri) => {

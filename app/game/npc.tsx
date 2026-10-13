@@ -779,8 +779,9 @@ export default function NpcGameScreen() {
 
       const revealHeadshot = () => {
         revealNpcDefeat(npcLostHeart);
-        setModal(headshotModalData);
-        setModalVisible(true);
+        deferredModalRef.current = headshotModalData;
+        setModal(null);
+        setModalVisible(false);
         setAbilityOverlay('headshot');
       };
 
@@ -838,6 +839,19 @@ export default function NpcGameScreen() {
       setHearts(playerHearts, Math.max(0, opponentHearts - 1));
       setAbilityUsed(true);
       setDefeatedSide('npc');
+      const deferred = deferredModalRef.current;
+      deferredModalRef.current = null;
+      if (deferred) {
+        // Extra damage is already authoritative. Let the newly lethal reaction
+        // finish before Continue can navigate away, using the existing reveal window.
+        const delay = opponentHearts <= 1
+          ? DUEL_DEFEAT_MODAL_DELAY_MS - DUEL_DEFEAT_REVEAL_DELAY_MS : 0;
+        outcomeRevealTimersRef.current.modal = setTimeout(() => {
+          setModal(deferred);
+          setModalVisible(true);
+          outcomeRevealTimersRef.current.modal = null;
+        }, delay);
+      }
       return;
     }
     setDefeatedSide(null);

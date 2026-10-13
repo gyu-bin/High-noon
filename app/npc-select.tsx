@@ -162,7 +162,7 @@ export default function NpcSelectScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <MetaScreenShell showDust={false} ambience="poster">
+      <MetaScreenShell showDust={false} background={require('@/assets/branding/cinematic-hero.png')}>
         <ScrollView
           contentContainerStyle={[
             styles.content,

@@ -11,6 +11,7 @@ import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { uiV3Colors } from '@/constants/theme';
 import { scaledArtStyle } from '@/constants/characterArtMetadata';
 import { faceoffStandingArt } from '@/constants/npcFaceoffPoseArt';
+import { npcPreDuelLayout } from '@/constants/npcPreDuelPresentation';
 import {
   APPROVED_DUEL_BACKGROUNDS,
   type DuelBackgroundId,
@@ -47,10 +48,9 @@ export function NpcPreDuelScreen({
   const { t } = useTranslation();
   const labels = useCharacterLabels(playerId as 1 | 2 | 3 | 4);
   const landscape = width > height;
-  const playerSize = Math.min(landscape ? height * 0.7 : width * 0.64, landscape ? 390 : 290);
-  const npcSize = Math.min(landscape ? height * 0.68 : width * 0.58, landscape ? 370 : 270);
   const playerAim = faceoffStandingArt('player', playerId, 'aim');
   const npcAim = faceoffStandingArt('npc', npcId, 'aim');
+  const figures = npcPreDuelLayout({ width, height, playerId, npcId, paddingTop, paddingLeft });
 
   return (
     <View style={[styles.root, { width, height }]}>
@@ -78,22 +78,22 @@ export function NpcPreDuelScreen({
         <Text style={[styles.opponent, usesCjkFont(opponentName) && styles.opponentCjk]}>{t('game.versus')}  {opponentName}</Text>
       </View>
 
-      <View style={[styles.duelists, landscape && styles.duelistsLandscape]} pointerEvents="none">
-        <View style={styles.playerFigure}>
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.figure, { left: figures.player.left, top: figures.player.top, width: figures.player.size, height: figures.player.size }]}>
           <Image
             source={playerAim.source}
             contentFit="contain"
             transition={0}
-            style={[scaledArtStyle(playerSize, playerSize, playerAim.artScale), playerAim.flipHorizontal && styles.flipped]}
+            style={[scaledArtStyle(figures.player.size, figures.player.size, playerAim.artScale), playerAim.flipHorizontal && styles.flipped]}
           />
         </View>
-        <Text style={styles.vs}>VS</Text>
-        <View style={styles.npcFigure}>
+        <Text style={[styles.vs, { left: figures.vsLeft, top: figures.vsTop }]}>VS</Text>
+        <View style={[styles.figure, { left: figures.npc.left, top: figures.npc.top, width: figures.npc.size, height: figures.npc.size }]}>
           <Image
             source={npcAim.source}
             contentFit="contain"
             transition={0}
-            style={[scaledArtStyle(npcSize, npcSize, npcAim.artScale), npcAim.flipHorizontal && styles.flipped]}
+            style={[scaledArtStyle(figures.npc.size, figures.npc.size, npcAim.artScale), npcAim.flipHorizontal && styles.flipped]}
           />
         </View>
       </View>
@@ -122,11 +122,8 @@ const styles = StyleSheet.create({
   nameCjk: { fontFamily: FONT_WESTERN_SERIF, fontSize: 27, fontWeight: '700', letterSpacing: 1.4 },
   opponent: { marginTop: 7, color: uiV3Colors.cream, fontSize: 11, fontWeight: '900', letterSpacing: 1.6, textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   opponentCjk: { fontFamily: FONT_WESTERN_SERIF, fontWeight: '700', letterSpacing: 0.9 },
-  duelists: { position: 'absolute', left: 8, right: 8, top: '29%', height: '40%', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' },
-  duelistsLandscape: { left: '3%', right: '43%', top: '16%', height: '68%' },
-  playerFigure: { flex: 1, alignItems: 'flex-end', justifyContent: 'flex-end' },
-  npcFigure: { flex: 1, alignItems: 'flex-start', justifyContent: 'flex-end' },
-  vs: { alignSelf: 'center', marginHorizontal: -8, zIndex: 2, color: uiV3Colors.gold, fontFamily: FONT_RYE, fontSize: 20, textShadowColor: '#000', textShadowOffset: { width: 1, height: 2 }, textShadowRadius: 3 },
+  figure: { position: 'absolute' },
+  vs: { position: 'absolute', width: 40, textAlign: 'center', zIndex: 2, color: uiV3Colors.gold, fontFamily: FONT_RYE, fontSize: 20, textShadowColor: '#000', textShadowOffset: { width: 1, height: 2 }, textShadowRadius: 3 },
   startWrap: { position: 'absolute', left: 28, right: 28, gap: 8 },
   startWrapLandscape: { left: '56%', right: '7%' },
   ready: { color: uiV3Colors.cream, fontFamily: FONT_RYE, fontSize: 16, letterSpacing: 1.1, textAlign: 'center', textShadowColor: '#000', textShadowOffset: { width: 1, height: 2 }, textShadowRadius: 3 },

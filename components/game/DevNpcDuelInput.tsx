@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef } from 'react';
 
 /** Opt-in input automation for the hard-DEV-only actual match QA route. */
-export const DevNpcDuelInputContext = createContext(false);
+export const DevNpcDuelInputContext = createContext<boolean | { firstRoundDelayMs: number; delayMs: number }>(false);
 
 export function DevNpcDuelInput({ signalPhase, shootActive, onShootPress, scope }: {
   signalPhase: string;
@@ -22,7 +22,7 @@ export function DevNpcDuelInput({ signalPhase, shootActive, onShootPress, scope 
       if (!__DEV__ || input.scope !== scope || input.signalPhase !== '뱅' || !input.shootActive) return;
       firedScope.current = scope;
       input.onShootPress();
-    }, 100);
+    }, typeof enabled === 'object' ? (scope.endsWith(':1') ? enabled.firstRoundDelayMs : enabled.delayMs) : 100);
     return () => clearTimeout(timer);
   }, [enabled, scope, shootActive, signalPhase]);
 

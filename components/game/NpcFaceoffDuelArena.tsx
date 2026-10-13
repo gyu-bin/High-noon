@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
@@ -65,10 +65,8 @@ export function NpcFaceoffDuelArena({
   const [timedPlayerStage, setPlayerStage] = useState<PlayerReactionStage>('none');
   const npcStage = (__DEV__ ? combatPreview?.npcStage : undefined) ?? timedNpcStage;
   const playerStage = (__DEV__ ? combatPreview?.playerStage : undefined) ?? timedPlayerStage;
-  const opponentHeartsRef = useRef(opponentHearts);
-  opponentHeartsRef.current = opponentHearts;
-  const playerHeartsRef = useRef(playerHearts);
-  playerHeartsRef.current = playerHearts;
+  const npcHitLethal = isLethalHit(opponentHearts);
+  const playerHitLethal = isLethalHit(playerHearts);
   const defeatScope = `${npcId}:${playerCharacterId}:${currentRound}`;
   const [finalNpcScope, holdFinalNpc] = useState<string | null>(null);
   const [finalPlayerScope, holdFinalPlayer] = useState<string | null>(null);
@@ -85,22 +83,22 @@ export function NpcFaceoffDuelArena({
   const npcDefeated = npcPose === 'defeat' || (finalNpcScope === defeatScope && isLethalHit(opponentHearts));
   const playerDefeatActive = playerDefeated || (finalPlayerScope === defeatScope && isLethalHit(playerHearts));
   const finalPlayerHit = playerDefeatActive && isLethalHit(playerHearts);
-  // Reactions retain their previous origins and margins for the existing recoil.
-  const playerStandingLeft = playerDefeatActive ? fittedPair.playerLeft : pairLayout.playerLeft;
-  const npcStandingLeft = npcDefeated ? fittedPair.npcLeft : pairLayout.npcLeft;
+  // Reactions start at the same approved resting origin; only pose containment may shift them.
+  const playerStandingLeft = pairLayout.playerLeft;
+  const npcStandingLeft = pairLayout.npcLeft;
 
   // Use the same presentation timelines as the legacy renderer. Results/timing
   // arrive from the engine and this layer never writes them back.
   useEffect(() => {
     if (!npcDefeated) { setNpcStage('none'); return; }
-    const timers = npcTimeline(opponentHeartsRef.current).map(step => setTimeout(() => setNpcStage(step.stage), reduceMotion ? step.at / 3 : step.at));
+    const timers = npcTimeline(npcHitLethal ? 0 : 1).map(step => setTimeout(() => setNpcStage(step.stage), reduceMotion ? step.at / 3 : step.at));
     return () => timers.forEach(clearTimeout);
-  }, [npcDefeated, reduceMotion]);
+  }, [npcDefeated, npcHitLethal, defeatScope, reduceMotion]);
   useEffect(() => {
     if (!playerDefeatActive) { setPlayerStage('none'); return; }
-    const timers = playerTimeline(playerHeartsRef.current).map(step => setTimeout(() => setPlayerStage(step.stage), step.at));
+    const timers = playerTimeline(playerHitLethal ? 0 : 1).map(step => setTimeout(() => setPlayerStage(step.stage), step.at));
     return () => timers.forEach(clearTimeout);
-  }, [playerDefeatActive]);
+  }, [playerDefeatActive, playerHitLethal, defeatScope]);
 
   const aiming = signalPhase === '집중' || signalPhase === '페이크' || signalPhase === '뱅';
   const playerStandingArt = faceoffStandingArt('player', playerCharacterId, playerShotActive ? 'fire' : aiming ? 'aim' : 'ready');
@@ -121,8 +119,8 @@ export function NpcFaceoffDuelArena({
   const npcFlip = npcReactionVisible ? faceoffFlip('npc', npcId, npcArtPose) : npcStandingArt.flipHorizontal;
   const playerBoundsPose = playerReactionVisible ? playerPose : playerStandingArt.pose === 'draw' ? 'draw' : 'fire';
   const npcBoundsPose = npcReactionVisible ? npcArtPose : npcStandingArt.pose === 'draw' ? 'draw' : 'fire';
-  const playerLeft = faceoffContainedLeft({ kind: 'player', id: playerCharacterId, pose: playerBoundsPose, left: playerStandingLeft, size, width, paddingLeft: playerDefeatActive ? paddingLeft : pairLayout.actorPaddingLeft, paddingRight: playerDefeatActive ? paddingRight : pairLayout.actorPaddingRight });
-  const npcLeft = faceoffContainedLeft({ kind: 'npc', id: npcId, pose: npcBoundsPose, left: npcStandingLeft, size, width, paddingLeft: npcDefeated ? paddingLeft : pairLayout.actorPaddingLeft, paddingRight: npcDefeated ? paddingRight : pairLayout.actorPaddingRight });
+  const playerLeft = faceoffContainedLeft({ kind: 'player', id: playerCharacterId, pose: playerBoundsPose, left: playerStandingLeft, size, width, paddingLeft: pairLayout.actorPaddingLeft, paddingRight: pairLayout.actorPaddingRight });
+  const npcLeft = faceoffContainedLeft({ kind: 'npc', id: npcId, pose: npcBoundsPose, left: npcStandingLeft, size, width, paddingLeft: pairLayout.actorPaddingLeft, paddingRight: pairLayout.actorPaddingRight });
   const playerGroundOffset = playerReactionVisible ? 0 : faceoffGroundFraction('player', playerCharacterId) - playerStandingArt.groundFraction;
   const npcGroundOffset = npcReactionVisible ? 0 : faceoffGroundFraction('npc', npcId) - npcStandingArt.groundFraction;
   const playerAnchor = playerReactionVisible ? faceoffMuzzleAnchor('player', playerCharacterId) : playerStandingArt.muzzle;

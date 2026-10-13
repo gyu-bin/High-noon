@@ -230,6 +230,7 @@ function createArenaReplay(overrides = {}) {
       }
       now = until; return render();
     },
+    laneBoxes() { return allNodes(tree).filter(node => node.type === 'View').flatMap(node => [node.props.style].flat(Infinity)).filter(style => style?.left != null && style?.top != null && style?.width > 100 && style?.width === style?.height); },
     recoilYs() { return allNodes(tree).filter(node => node.type === 'AnimatedView' && [node.props.style].flat(Infinity).some(style => style?.width > 10 && style?.height > 10)).flatMap(node => [node.props.style].flat(Infinity).flatMap(style => style?.transform ?? []).filter(value => 'translateY' in value).map(value => value.translateY)); },
     shotEffectOpacities() { return allNodes(tree).filter(node => node.type === 'AnimatedView' && ['runtime-flash', 'runtime-smoke'].includes(node.props.children?.props?.source)).flatMap(node => [node.props.style].flat(Infinity).filter(style => typeof style?.opacity === 'number').map(style => style.opacity)); },
     sources() { return allNodes(tree).filter(node => node.type === 'Image' && typeof node.props.source === 'string').map(node => node.props.source); },
@@ -237,6 +238,35 @@ function createArenaReplay(overrides = {}) {
     npcSource() { return allNodes(tree).find(node => node.type === 'Image' && typeof node.props.source === 'string' && /npc1-|combat\/npc\/01\/|npc_01_left/.test(node.props.source)).props.source; },
   };
 }
+test('delayed fatal headshot promotes the already-revealed surviving reaction to DOWN', () => {
+  const replay = createArenaReplay({ playerCharacterId: 3 });
+  replay.update({ npcPose: 'defeat', opponentHearts: 1, signalPhase: '결과' });
+  replay.advance(1400);
+  assert.match(replay.npcSource(), /npc_01_left/, 'initial ordinary damage recovers');
+  replay.update({ opponentHearts: 0 });
+  replay.advance(1000);
+  assert.match(replay.npcSource(), /combat\/npc\/01\/down\.png$/, 'late lethal damage must promote the timeline');
+  replay.update({ npcPose: 'idle' }); replay.advance(2000);
+  assert.match(replay.npcSource(), /combat\/npc\/01\/down\.png$/, 'terminal pose survives Continue');
+});
+
+test('HIT retains the outward resting origin when the pose already fits', () => {
+  const replay = createArenaReplay({ paddingLeft: 16, paddingRight: 16 });
+  const before = replay.laneBoxes().map(box => box.left);
+  replay.update({ npcPose: 'defeat', playerDefeated: true, opponentHearts: 2, playerHearts: 2 });
+  replay.advance(0);
+  assert.deepEqual(replay.laneBoxes().map(box => box.left), before);
+});
+test('new round cancels the delayed lethal sequence before an old DOWN callback can fire', () => {
+  const replay = createArenaReplay();
+  replay.update({ npcPose: 'defeat', opponentHearts: 1 }); replay.advance(500);
+  replay.update({ opponentHearts: 0 }); replay.advance(300);
+  replay.update({ currentRound: 2, opponentHearts: 3, npcPose: 'idle' }); replay.advance(3000);
+  assert.match(replay.npcSource(), /npc_01_left/);
+  replay.update({ npcPose: 'defeat', opponentHearts: 2 }); replay.advance(1000);
+  assert.match(replay.npcSource(), /npc_01_left/, 'surviving next round must still recover');
+});
+
 test('final revealed NPC defeat persists through Continue and resets for new rounds, identities, or restored hearts', () => {
   const replay = createArenaReplay();
   replay.update({ opponentHearts: 0, signalPhase: '결과' });
@@ -328,7 +358,7 @@ test('BANG pose alone keeps baked-flash NPCs in clean aim until their actual sho
 test('generic NPC STEADY holds existing clean torso FIRE with shot effects off and preserves READY/actual fire', () => {
   const { faceoffStandingArt } = load(path.join(root, 'constants/npcFaceoffPoseArt.ts'));
   const { getV3NpcPose } = load(path.join(root, 'constants/v3DuelAssets.ts'));
-  for (const npcId of [2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 21]) {
+  for (const npcId of [3, 7, 8, 10, 12, 13, 16, 21]) {
     const ready = faceoffStandingArt('npc', npcId, 'ready');
     const held = faceoffStandingArt('npc', npcId, 'aim');
     const fired = faceoffStandingArt('npc', npcId, 'fire');
@@ -467,11 +497,45 @@ test('corrected NPC15/19/22 DRAW is exclusive to NPC aim hold with shared READY 
   assert.doesNotMatch(fs.readFileSync(path.join(root, 'constants/clarityCharacterAssets.ts'), 'utf8'), /draw-faceoff/);
 });
 
+test('accepted replacement aim sources stay NPC-only, inward and effect-free until the actual shot', () => {
+  const { faceoffStandingArt } = load(path.join(root, 'constants/npcFaceoffPoseArt.ts'));
+  const { getV3NpcPose, V3_PRE_DUEL_NPC_FACEOFF } = load(path.join(root, 'constants/v3DuelAssets.ts'));
+  for (const id of [1, 2, 4, 5, 6, 11, 14, 17]) {
+    const held = faceoffStandingArt('npc', id, 'aim');
+    assert.deepEqual(held, faceoffStandingArt('npc', id, 'fire'));
+    assert.equal(held.flipHorizontal, false);
+    assert.notEqual(held.source, getV3NpcPose(id, 'fire'), 'shared FIRE must not be overwritten');
+    assert.match(getV3NpcPose(id, 'fire'), new RegExp(`clarity/npc/${String(id).padStart(2, '0')}/fire\\.png$`));
+    const replay = createArenaReplay({ npcId: id, npcPose: 'aim', signalPhase: '집중', npcShotActive: false });
+    replay.advance(0);
+    assert.ok(replay.sources().includes(held.source));
+    assert.deepEqual(replay.shotEffectOpacities(), [0, 0, 0, 0]);
+    assert.ok(!replay.recoilYs().some(y => y < -.1));
+    replay.update({ npcShotActive: true }); replay.advance(0);
+    assert.ok(replay.sources().includes(held.source));
+    assert.ok(replay.recoilYs().some(y => Math.abs(y + .7) < .001));
+  }
+  assert.match(V3_PRE_DUEL_NPC_FACEOFF[1], /npc_01_left\.png$/);
+  assert.deepEqual(faceoffStandingArt('npc', 1, 'ready'), faceoffStandingArt('npc', 1, 'aim'));
+  assert.equal(faceoffStandingArt('npc', 4, 'ready').source, getV3NpcPose(4, 'draw'));
+  assert.equal(faceoffStandingArt('npc', 4, 'ready').flipHorizontal, true);
+  assert.deepEqual(faceoffStandingArt('npc', 1, 'fire').muzzle, { x: (256 + 102) / 1536, y: 648 / 1536 });
+  assert.deepEqual(faceoffStandingArt('npc', 4, 'fire').muzzle, { x: 267 / 1254, y: 492 / 1254 });
+  assert.equal(faceoffStandingArt('npc', 1, 'fire').groundFraction, 1472 / 1536);
+  assert.equal(faceoffStandingArt('npc', 4, 'fire').groundFraction, 1219 / 1254);
+  for (const [id, x, y, ground] of [[2, 316, 507, 1214], [5, 312, 492, 1220], [6, 333, 466, 1226], [11, 211, 492, 1229], [14, 291, 504, 1216], [17, 337, 497, 1224]]) {
+    assert.deepEqual(faceoffStandingArt('npc', id, 'fire').muzzle, { x: x / 1254, y: y / 1254 });
+    assert.equal(faceoffStandingArt('npc', id, 'fire').groundFraction, ground / 1254);
+    assert.equal(faceoffStandingArt('npc', id, 'ready').source, getV3NpcPose(id, 'draw'));
+    assert.equal(faceoffStandingArt('npc', id, 'ready').flipHorizontal, true);
+  }
+});
+
 test('corrected PNG opaque bounds fit locked actor lanes across all 22 opponents and 12/16 point HUD insets', () => {
   const { PNG } = require('pngjs');
   const { faceoffStandingArt } = load(path.join(root, 'constants/npcFaceoffPoseArt.ts'));
   const measured = new Map();
-  for (const [kind, id] of [['player', 2], ['player', 3], ['npc', 15], ['npc', 19], ['npc', 22]]) {
+  for (const [kind, id] of [['player', 2], ['player', 3], ['npc', 1], ['npc', 2], ['npc', 4], ['npc', 5], ['npc', 6], ['npc', 11], ['npc', 14], ['npc', 17], ['npc', 15], ['npc', 19], ['npc', 22]]) {
     const selected = faceoffStandingArt(kind, id, 'aim');
     const png = PNG.sync.read(fs.readFileSync(selected.source));
     let min = png.width, max = -1;
@@ -480,8 +544,9 @@ test('corrected PNG opaque bounds fit locked actor lanes across all 22 opponents
     }
     assert.ok(max >= min, `${kind}${id} must contain opaque artwork`);
     // scaledArtStyle centers expanded canvases around the fixed production square.
-    const sourceMin = .5 + (min / png.width - .5) * selected.artScale;
-    const sourceMax = .5 + ((max + 1) / png.width - .5) * selected.artScale;
+    const containedWidth = Math.min(1, png.width / png.height);
+    const sourceMin = .5 + (min / png.width - .5) * containedWidth * selected.artScale;
+    const sourceMax = .5 + ((max + 1) / png.width - .5) * containedWidth * selected.artScale;
     measured.set(`${kind}${id}`, selected.flipHorizontal ? [1 - sourceMax, 1 - sourceMin] : [sourceMin, sourceMax]);
   }
   for (const [width, height] of [[320, 568], [402, 874], [430, 932], [874, 402]]) {

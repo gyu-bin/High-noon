@@ -3,7 +3,7 @@ import type { ImageSourcePropType } from 'react-native';
 import { characterArtDisplayScale } from './characterArtMetadata';
 import { CLARITY_PLAYERS } from './clarityCharacterAssets';
 import { faceoffGroundFraction, faceoffMuzzleAnchor } from './npcFaceoffPresentation';
-import { getV3NpcPose, V3_PRE_DUEL_NPC_FACEOFF, V3_PRE_DUEL_PLAYER_FACEOFF } from './v3DuelAssets';
+import { getV3NpcPose, V3_PRE_DUEL_PLAYER_FACEOFF } from './v3DuelAssets';
 
 type StandingStage = 'ready' | 'aim' | 'fire';
 type SourceDirection = 'left' | 'right';
@@ -29,6 +29,24 @@ const PLAYER_FACEOFF_FIRE: Partial<Record<number, ImageSourcePropType>> = {
   2: require('../assets/images/characters/clarity/player/02-v2/fire-faceoff.png'),
   3: require('../assets/images/characters/clarity/player/03/fire-faceoff.png'),
 };
+const NPC_FACEOFF_FIRE: Partial<Record<number, ImageSourcePropType>> = {
+  2: require('../assets/images/characters/faceoff/npc_02_fire_left.png'),
+  4: require('../assets/images/characters/faceoff/npc_04_fire_left.png'),
+  5: require('../assets/images/characters/faceoff/npc_05_fire_left.png'),
+  6: require('../assets/images/characters/faceoff/npc_06_fire_left.png'),
+  11: require('../assets/images/characters/faceoff/npc_11_fire_left.png'),
+  14: require('../assets/images/characters/faceoff/npc_14_fire_left.png'),
+  17: require('../assets/images/characters/faceoff/npc_17_fire_left.png'),
+};
+const NPC_FACEOFF_MUZZLE: Partial<Record<number, { x: number; y: number }>> = {
+  2: { x: 316 / 1254, y: 507 / 1254 },
+  4: { x: 267 / 1254, y: 492 / 1254 },
+  5: { x: 312 / 1254, y: 492 / 1254 },
+  6: { x: 333 / 1254, y: 466 / 1254 },
+  11: { x: 211 / 1254, y: 492 / 1254 },
+  14: { x: 291 / 1254, y: 504 / 1254 },
+  17: { x: 337 / 1254, y: 497 / 1254 },
+};
 const NPC_FACEOFF_DRAW: Partial<Record<number, ImageSourcePropType>> = {
   15: require('../assets/images/characters/clarity/npc/15-v2/draw-faceoff.png'),
   19: require('../assets/images/characters/clarity/npc/19-v2/draw-faceoff.png'),
@@ -42,12 +60,12 @@ export function faceoffStandingArt(kind: 'player' | 'npc', id: number, stage: St
     // Existing clean, coherent body/face/barrel cutouts, contained in a square.
     // The same raised barrel becomes a firing pose only with actual shot FX.
     return {
-      source: kind === 'player' ? V3_PRE_DUEL_PLAYER_FACEOFF[1]! : V3_PRE_DUEL_NPC_FACEOFF[1]!,
+      source: kind === 'player' ? V3_PRE_DUEL_PLAYER_FACEOFF[1]! : require('../assets/images/characters/faceoff/npc_01_left_v2.png'),
       pose: 'faceoff' as const, flipHorizontal: false, artScale: 1,
       groundFraction: kind === 'player' ? 1461 / 1536 : 1472 / 1536,
       muzzle: kind === 'player'
         ? { x: (256 + 987) / 1536, y: 507 / 1536 }
-        : { x: (256 + 103) / 1536, y: 650 / 1536 },
+        : { x: (256 + 102) / 1536, y: 648 / 1536 },
     };
   }
   const fireHold = kind === 'player' || CLEAN_NPC_FIRE_HOLD.has(id);
@@ -57,7 +75,7 @@ export function faceoffStandingArt(kind: 'player' | 'npc', id: number, stage: St
   return {
     source: kind === 'player'
       ? (pose === 'fire' ? PLAYER_FACEOFF_FIRE[id] : undefined) ?? (CLARITY_PLAYERS[id] ?? CLARITY_PLAYERS[1])![pose]
-      : (stage === 'aim' && pose === 'draw' ? NPC_FACEOFF_DRAW[id] : undefined) ?? getV3NpcPose(id, pose),
+      : (pose === 'fire' ? NPC_FACEOFF_FIRE[id] : stage === 'aim' ? NPC_FACEOFF_DRAW[id] : undefined) ?? getV3NpcPose(id, pose),
     pose, flipHorizontal: sourceDirection !== (kind === 'player' ? 'right' : 'left'),
     artScale: characterArtDisplayScale(kind, id),
     groundFraction: faceoffGroundFraction(kind, id),
@@ -67,6 +85,7 @@ export function faceoffStandingArt(kind: 'player' | 'npc', id: number, stage: St
       ? { x: 37 / 1254, y: 199 / 1254 }
       : kind === 'player' && id === 3 && pose === 'fire'
         ? { x: 14 / 1254, y: 216 / 1254 }
-        : faceoffMuzzleAnchor(kind, id),
+        : (kind === 'npc' && pose === 'fire' ? NPC_FACEOFF_MUZZLE[id] : undefined)
+          ?? faceoffMuzzleAnchor(kind, id),
   };
 }
