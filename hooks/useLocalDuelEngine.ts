@@ -164,7 +164,7 @@ export function useLocalDuelEngine(options?: {
         winner: resolveWinner(p1, p2),
       });
     },
-    [finishRound],
+    [finishRound, clearAllTimers],
   );
 
   const tryFinishBang = useCallback(() => {
@@ -408,7 +408,6 @@ export function useLocalDuelEngine(options?: {
   }, [clearAllTimers]);
 
   const pauseTimers = useCallback(() => {
-    if (pauseWallMsRef.current != null) return;
     if (phaseRef.current === '뱅' && bangArmedRef.current) {
       pausePerfRef.current = performance.now();
     } else {

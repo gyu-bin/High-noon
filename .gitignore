@@ -37,9 +37,6 @@ yarn-error.*
 .venv/
 .venv-tools/
 output/
-# Metro/앱이 참조하는 UI 에셋은 예외 (루트 output/ 만 무시)
-!high_noon_terra_asset_pack/output/
-!high_noon_terra_asset_pack/output/**
 reference_sprite.png
 __pycache__/
 *.pyc
@@ -63,15 +60,3 @@ expo-env.d.ts
 # @end expo-cli
 # Broken/local tool checkouts that must not be gitlinks
 tools/sprite-gen/
-
-# QA artifacts: keep reports/metadata/scripts tracked, keep media local only
-artifacts/**/*.png
-artifacts/**/*.webp
-artifacts/**/*.jpg
-artifacts/**/*.jpeg
-artifacts/**/*.gif
-artifacts/**/*.mp4
-artifacts/**/*.mov
-
-# Supabase ops backups / deploy records: keep local only (not application source)
-supabase/ops/backups/*.json

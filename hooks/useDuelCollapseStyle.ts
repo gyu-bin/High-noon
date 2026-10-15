@@ -15,12 +15,12 @@ export function duelCollapseStyleFor(
   progress: number,
   corner: DuelCorner,
 ): {
-  transform: (
+  transform: Array<
     | { translateY: number }
     | { translateX: number }
     | { rotate: string }
     | { scale: number }
-  )[];
+  >;
   opacity: number;
 } {
   'worklet';

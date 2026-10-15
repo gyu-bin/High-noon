@@ -1,10 +1,6 @@
-import { Redirect, Stack } from 'expo-router';
-
-import { CAPTURE_ROUTES_ENABLED } from '@/constants/captureRoutes';
+import { Stack } from 'expo-router';
 
 export default function CaptureLayout() {
-  // Single choke point for every capture route; each screen also checks the same flag.
-  if (!CAPTURE_ROUTES_ENABLED) return <Redirect href="/" />;
   return (
     <Stack
       screenOptions={{

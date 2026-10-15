@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { FONT_WESTERN_SERIF } from '@/constants/fonts';
 import { META_PANEL_BG, META_PANEL_BORDER, metaTextShadow } from '@/constants/westernBackground';
 import { colors } from '@/constants/theme';
 import { resolveLanguage } from '@/locales';
@@ -131,10 +130,8 @@ const styles = StyleSheet.create({
   },
   label: {
     flex: 1,
-    fontFamily: FONT_WESTERN_SERIF,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
-    letterSpacing: 0.45,
     color: colors.cream,
     ...metaTextShadow,
   },
@@ -155,7 +152,6 @@ const styles = StyleSheet.create({
   },
   triggerText: {
     flexShrink: 1,
-    fontFamily: FONT_WESTERN_SERIF,
     fontSize: 14,
     fontWeight: '700',
     color: colors.sand,
@@ -180,7 +176,6 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   menuTitle: {
-    fontFamily: FONT_WESTERN_SERIF,
     fontSize: 12,
     fontWeight: '800',
     color: colors.sand,
@@ -209,7 +204,6 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   optionLabel: {
-    fontFamily: FONT_WESTERN_SERIF,
     fontSize: 15,
     fontWeight: '700',
     color: colors.cream,
@@ -219,7 +213,6 @@ const styles = StyleSheet.create({
     color: colors.gold,
   },
   optionSub: {
-    fontFamily: FONT_WESTERN_SERIF,
     fontSize: 11,
     fontWeight: '600',
     color: 'rgba(212, 170, 112, 0.75)',

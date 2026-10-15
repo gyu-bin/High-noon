@@ -1,11 +1,11 @@
-import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import type { SpritePose } from '@/components/game/CharacterSprites';
-import { NpcFirstPersonDuelArena } from '@/components/game/NpcFirstPersonDuelArena';
+import { DuelArenaLayout } from '@/components/game/DuelArenaLayout';
 import type { DuelSignalBoardPhase } from '@/components/game/DuelSignalBoard';
 import { DuelFullBackground } from '@/components/game/DuelFullBackground';
 import { DuelSplitBackground } from '@/components/game/DuelSplitBackground';
@@ -15,7 +15,6 @@ import {
   type NpcRoundModalData,
 } from '@/components/game/NpcRoundModal';
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
-import { CAPTURE_ROUTES_ENABLED } from '@/constants/captureRoutes';
 import { getNpcById } from '@/constants/npcs';
 import { usePhoneStageMetrics, phoneStageSafeOffsets } from '@/hooks/usePhoneStageMetrics';
 import { prefetchDuelSprites } from '@/utils/preloadDuelSprites';
@@ -29,8 +28,6 @@ try {
 }
 
 type CaptureSceneId =
-  | 'duel-clarity'
-  | 'duel-clarity-down'
   | 'duel-steady'
   | 'duel-bang'
   | 'duel-win'
@@ -55,14 +52,6 @@ type DuelFrame = {
 };
 
 const SCENES: Record<CaptureSceneId, DuelFrame | 'local'> = {
-  'duel-clarity': {
-    npcId: 1, signalPhase: '집중', npcPose: 'aim', playerPose: 'aim',
-    playerCharacterId: 1, orientation: 'landscape',
-  },
-  'duel-clarity-down': {
-    npcId: 1, signalPhase: '결과', npcPose: 'defeat', playerPose: 'idle',
-    playerCharacterId: 1, orientation: 'landscape', defeatedSide: 'npc',
-  },
   'duel-steady': {
     npcId: 1,
     signalPhase: '집중',
@@ -168,6 +157,12 @@ function FrozenNpcDuel({ frame }: { frame: DuelFrame }) {
   const m = usePhoneStageMetrics();
   const overlayPad = phoneStageSafeOffsets(m, insets);
   const npc = getNpcById(frame.npcId);
+  const playerTapAck = useSharedValue(0);
+  const playerTapAckStyle = useAnimatedStyle(() => ({
+    opacity: playerTapAck.value,
+  }));
+
+  const orientation = frame.orientation ?? 'portrait';
   const winW = m.windowWidth;
   const winH = m.windowHeight;
 
@@ -183,43 +178,42 @@ function FrozenNpcDuel({ frame }: { frame: DuelFrame }) {
         contentHeight={winH}
         variant="day"
       >
-        <NpcFirstPersonDuelArena
+        <DuelArenaLayout
           width={winW}
           height={winH}
           paddingTop={overlayPad.top}
           paddingBottom={insets.bottom}
           paddingRight={overlayPad.right}
-          paddingLeft={overlayPad.left}
-          dayNight="day"
           npcId={npc.id}
           tier={npc.tier}
           bossFlag={npc.bossFlag}
           npcPose={frame.npcPose}
           npcVictoryActive={frame.defeatedSide === 'player'}
-          playerDefeated={frame.defeatedSide === 'player'}
-          playerShotActive={frame.playerPose === 'shoot'}
+          playerVictoryActive={frame.defeatedSide === 'npc'}
+          playerCharacterId={frame.playerCharacterId}
+          playerPose={frame.playerPose}
           signalPhase={frame.signalPhase}
           blindBangText={false}
-          hideBangText={false}
-          voidShroud={false}
-          echoBangMiddleSignal={false}
-          specialPresentation={null}
-          earlyWarning={false}
+          swapSignalLabels={false}
+          invertSignalColors={false}
           opponentHearts={2}
           playerHearts={3}
-          currentRound={1}
+          playerScore={1}
+          opponentScore={1}
           shootCapturesEarly={false}
           shootActive={frame.signalPhase === '뱅'}
           onShootPress={noop}
           onPause={noop}
           pauseDisabled={false}
+          playerTapAckStyle={playerTapAckStyle}
+          hideBottomHud={modalVisible}
+          orientation={orientation}
         />
 
         <NpcRoundModal
           visible={modalVisible}
           data={frame.modal ?? null}
           onContinue={noop}
-          onMenu={noop}
           winBurstId={modalVisible && frame.modal?.kind === 'win' ? 1 : 0}
           paddingBottom={insets.bottom}
         />
@@ -276,12 +270,7 @@ function FrozenLocalDuel() {
   );
 }
 
-export default function CaptureSceneRoute() {
-  if (!CAPTURE_ROUTES_ENABLED) return <Redirect href="/" />;
-  return <CaptureSceneScreen />;
-}
-
-function CaptureSceneScreen() {
+export default function CaptureSceneScreen() {
   const { scene } = useLocalSearchParams<{ scene: string }>();
   const sceneId = scene as CaptureSceneId;
   const config = SCENES[sceneId];
@@ -295,9 +284,15 @@ function CaptureSceneScreen() {
 
   useEffect(() => {
     if (!ScreenOrientation) return;
-    void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+    const cfg = SCENES[sceneId];
+    const wantsLandscape =
+      cfg != null && cfg !== 'local' && cfg.orientation === 'landscape';
+    const lock = wantsLandscape
+      ? ScreenOrientation.OrientationLock.LANDSCAPE
+      : ScreenOrientation.OrientationLock.PORTRAIT_UP;
+    void ScreenOrientation.lockAsync(lock);
     return () => {
-      void ScreenOrientation?.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+      void ScreenOrientation?.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     };
   }, [sceneId]);
 

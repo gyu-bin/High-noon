@@ -234,7 +234,7 @@ export function AbilityOverlay({ abilityType, onComplete }: Props) {
       visible={visible}
       animationType="none"
       statusBarTranslucent
-      supportedOrientations={['portrait']}
+      supportedOrientations={['portrait', 'landscape']}
     >
       {visible && abilityType ? (
         <View pointerEvents="none" style={styles.root}>

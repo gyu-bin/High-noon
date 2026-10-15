@@ -1,7 +1,5 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { pickDuelBackground, type DuelBackgroundId } from '@/utils/duelBackgroundSelection';
-import { useMatchHistoryStore } from '@/store/matchHistoryStore';
 import {
   BackHandler,
   StyleSheet,
@@ -47,7 +45,6 @@ import {
   usePhoneStageMetrics,
 } from '@/hooks/usePhoneStageMetrics';
 import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
-import { useDuelBackgroundPause } from '@/hooks/useDuelBackgroundPause';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
 import { preloadSceneImages } from '@/utils/preloadSceneImages';
 import { RM_GAME } from '@/constants/reanimatedGame';
@@ -111,6 +108,14 @@ export default function LocalGameScreen() {
   const winW = stage.windowWidth;
   const winH = stage.windowHeight;
 
+  // 전 화면 회전 허용 — NPC 결투와 동일
+  useFocusEffect(
+    useCallback(() => {
+      const so = ScreenOrientation;
+      if (!so) return;
+      void so.unlockAsync().catch(() => {});
+    }, []),
+  );
 
   const overlayPad = useMemo(
     () =>
@@ -124,7 +129,6 @@ export default function LocalGameScreen() {
   );
 
   const [p1Hearts, setP1Hearts] = useState(winsNeeded);
-  const [duelBackgroundId, setDuelBackgroundId] = useState<DuelBackgroundId>('twilight');
   const [p2Hearts, setP2Hearts] = useState(winsNeeded);
   const [p1Wins, setP1Wins] = useState(0);
   const [p2Wins, setP2Wins] = useState(0);
@@ -155,7 +159,6 @@ export default function LocalGameScreen() {
   const roundIdx = useRef(0);
   const defeatRevealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const roundModalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const soundTimersRef = useRef(new Set<ReturnType<typeof setTimeout>>());
 
   const triggerBangFlash = useCallback(() => {
     if (bangHapticDone.current) return;
@@ -262,10 +265,6 @@ export default function LocalGameScreen() {
 
   useScreenBgm('duel', true);
   useDuelBgmDuck(phase);
-  useDuelBackgroundPause(phase !== '대기' && phase !== '결과', useCallback(() => {
-    pauseTimers();
-    setPaused(true);
-  }, [pauseTimers]));
 
   const redStyle = useAnimatedStyle(() => ({ opacity: redFlash.value }));
   const p1TapAckStyle = useAnimatedStyle(() => ({ opacity: p1TapAck.value }));
@@ -334,13 +333,11 @@ export default function LocalGameScreen() {
       let cancelled = false;
       void (async () => {
         await Promise.all([
-          ScreenOrientation?.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {}),
           preloadSceneImages(),
           prefetchLocalDuelSprites(p1Skin, p2Skin),
         ]);
         if (cancelled) return;
         const h = heartsForMatchType(matchType);
-        setDuelBackgroundId(pickDuelBackground());
         winsRef.current = { p1: 0, p2: 0 };
         setP1Hearts(h);
         setP2Hearts(h);
@@ -355,8 +352,6 @@ export default function LocalGameScreen() {
       })();
       return () => {
         cancelled = true;
-        soundTimersRef.current.forEach(clearTimeout);
-        soundTimersRef.current.clear();
         if (defeatRevealTimerRef.current != null) {
           clearTimeout(defeatRevealTimerRef.current);
           defeatRevealTimerRef.current = null;
@@ -445,7 +440,6 @@ export default function LocalGameScreen() {
               ? 'p1'
               : 'p2';
       setMatchWinner(winner);
-      useMatchHistoryStore.getState().record({ id: `local-${Date.now()}`, mode: 'local', winner, at: Date.now() });
     }
 
     // 매치 종료 포함 — 라운드 결과 먼저 → 탭 후 매치 결과(LocalMatchModal)
@@ -455,19 +449,13 @@ export default function LocalGameScreen() {
     } else {
       defeatRevealTimerRef.current = setTimeout(() => {
         setRoundDefeated(nextRoundDefeated);
-        const thud = setTimeout(() => {
-          soundTimersRef.current.delete(thud);
-          void play('defeat_thud');
-        }, 170);
-        soundTimersRef.current.add(thud);
-        void trigger('medium');
-        if (heartLost) {
-          const heart = setTimeout(() => {
-            soundTimersRef.current.delete(heart);
-            void play('heart_break');
-          }, 130);
-          soundTimersRef.current.add(heart);
-        }
+        requestAnimationFrame(() => {
+          setTimeout(() => void play('defeat_thud'), 170);
+          void trigger('medium');
+          if (heartLost) {
+            setTimeout(() => void play('heart_break'), 130);
+          }
+        });
         defeatRevealTimerRef.current = null;
       }, DUEL_DEFEAT_REVEAL_DELAY_MS);
       roundModalTimerRef.current = setTimeout(() => {
@@ -502,36 +490,13 @@ export default function LocalGameScreen() {
 
   const exitMatch = useCallback(() => {
     setModalStep(null);
-    router.replace('/local-setup');
+    router.back();
   }, [router]);
-
-  const rematch = useCallback(() => {
-    setDuelBackgroundId(pickDuelBackground());
-    if (defeatRevealTimerRef.current != null) clearTimeout(defeatRevealTimerRef.current);
-    if (roundModalTimerRef.current != null) clearTimeout(roundModalTimerRef.current);
-    defeatRevealTimerRef.current = null;
-    roundModalTimerRef.current = null;
-    soundTimersRef.current.forEach(clearTimeout);
-    soundTimersRef.current.clear();
-    winsRef.current = { p1: 0, p2: 0 };
-    roundIdx.current = 0;
-    processedKey.current = '';
-    setP1Hearts(winsNeeded);
-    setP2Hearts(winsNeeded);
-    setP1Wins(0);
-    setP2Wins(0);
-    setRoundDefeated(null);
-    setMatchWinner(null);
-    setModalStep(null);
-    setPaused(false);
-    reset();
-    start();
-  }, [reset, start, winsNeeded]);
 
   const leaveLocalDuel = useCallback(() => {
     setPaused(false);
     reset();
-    router.replace('/local-setup');
+    router.back();
   }, [reset, router]);
 
   useFocusEffect(
@@ -552,16 +517,21 @@ export default function LocalGameScreen() {
     router.replace('/menu');
   }, [reset, router]);
 
+  const holdResultShoot = phase === '결과' && roundDefeated == null;
+
   const p1Pose = useMemo(() => {
     if (roundDefeated === 'p1') return 'defeat' as const;
-    return localPlayerSpritePoseFromPhase(phase, p1ShootFlash, false);
-  }, [roundDefeated, phase, p1ShootFlash]);
+    return localPlayerSpritePoseFromPhase(phase, p1ShootFlash, holdResultShoot);
+  }, [roundDefeated, phase, p1ShootFlash, holdResultShoot]);
   const p2Pose = useMemo(() => {
     if (roundDefeated === 'p2') return 'defeat' as const;
-    return localPlayerSpritePoseFromPhase(phase, p2ShootFlash, false);
-  }, [roundDefeated, phase, p2ShootFlash]);
+    return localPlayerSpritePoseFromPhase(phase, p2ShootFlash, holdResultShoot);
+  }, [roundDefeated, phase, p2ShootFlash, holdResultShoot]);
 
-  const [battleDayNight] = useState(() => pickBattleDayNight(0));
+  const battleDayNight = useMemo(
+    () => pickBattleDayNight(0),
+    [matchType],
+  );
 
   const minimalTheme = DUEL_VISUAL_THEME === 'minimal';
 
@@ -593,7 +563,7 @@ export default function LocalGameScreen() {
             p2TapAckStyle={p2TapAckStyle}
             p1LiveMs={p1LiveMs}
             p2LiveMs={p2LiveMs}
-            hideBottomHud={modalStep != null}
+            hideBottomHud={false}
             onHalfPressIn={onHalfPressIn}
             onBack={leaveLocalDuel}
             onPause={() => {
@@ -625,7 +595,6 @@ export default function LocalGameScreen() {
         p2Wins={p2Wins}
         winsNeeded={winsNeeded}
         onExit={exitMatch}
-        onRematch={rematch}
         fxBurstId={fxBurstId}
         backgroundVariant={battleDayNight}
         width={winW}
@@ -662,7 +631,6 @@ export default function LocalGameScreen() {
         </View>
       ) : isLandscape ? (
         <DuelFullBackground
-          backgroundId={duelBackgroundId}
           variant={battleDayNight}
           style={{ width: winW, height: winH }}
           contentWidth={winW}
@@ -672,7 +640,6 @@ export default function LocalGameScreen() {
         </DuelFullBackground>
       ) : (
         <DuelSplitBackground
-          backgroundId={duelBackgroundId}
           variant={battleDayNight}
           style={{ width: winW, height: winH }}
           contentWidth={winW}

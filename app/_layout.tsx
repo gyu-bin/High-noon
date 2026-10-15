@@ -3,8 +3,7 @@ import 'react-native-gesture-handler';
 import i18n, { changeLanguage, i18nInitPromise, languageFromCaptureUrl } from '@/locales';
 
 import { Rye_400Regular, useFonts } from '@expo-google-fonts/rye';
-import { NanumMyeongjo_700Bold } from '@expo-google-fonts/nanum-myeongjo/700Bold';
-import { Stack, usePathname, useRouter, type ErrorBoundaryProps } from 'expo-router';
+import { Stack, usePathname, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
@@ -41,14 +40,8 @@ import { consumeOtaJustApplied } from '@/utils/otaUpdateFlag';
 import { preloadSceneImages, preloadTitleHero } from '@/utils/preloadSceneImages';
 import { isStoreUpdateRequired } from '@/utils/storeUpdate';
 import { initPurchasesOnBoot } from '@/utils/purchaseService';
-import { challengeCodeFromUrl, challengeLinkAction } from '@/utils/challengeLink';
-import { isActiveDuelRoute, isDuelFlowRoute, isInGameRoute } from '@/utils/duelRoutes';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
-
-const OTA_COLD_START_BUDGET_MS = 2_500;
-/** 업데이트가 없거나 확인이 느리면 스플래시를 붙잡지 않는다. 받을 업데이트가 있을 때만 이 예산 안에서 받는다. */
-const OTA_FAST_PATH_MS = 400;
 
 /**
  * expo-router 라우트 규약 — 이 레이아웃과 모든 하위 화면의 렌더 에러를 잡는 최종 방어선.
@@ -72,30 +65,8 @@ function waitPersistHydrated(api: {
   });
 }
 
-/** 제한 시간 안에 끝나지 않으면 fallback으로 진행하고, 원래 작업은 계속 둔다. */
-function settleWithin<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
-  return new Promise((resolve) => {
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      resolve(fallback);
-    }, timeoutMs);
-    promise.then(
-      (value) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        resolve(value);
-      },
-      () => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        resolve(fallback);
-      },
-    );
-  });
+function isInGameRoute(pathname: string): boolean {
+  return pathname === '/game' || pathname.startsWith('/game/');
 }
 
 /** 스플래시를 내리기 전에 첫 프레임을 그릴 시간을 준다 — 배경 깜빡임 완화 */
@@ -150,16 +121,12 @@ export default function RootLayout() {
 function RootLayoutContent() {
   const { t } = useTranslation();
   const pathname = usePathname();
-  const router = useRouter();
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
-  /** Latest challenge code received while a duel was in progress. */
-  const pendingChallengeCodeRef = useRef<string | null>(null);
 
   const language = useSettingsStore((s) => s.language);
   const [fontsLoaded, fontError] = useFonts({
     Rye_400Regular,
-    NanumMyeongjo_700Bold,
   });
 
   const ready = fontsLoaded || fontError != null;
@@ -189,44 +156,25 @@ function RootLayoutContent() {
 
     const apply = (url: string | null) => {
       const lang = languageFromCaptureUrl(url);
-      if (lang) {
-        useSettingsStore.getState().setLanguage(lang);
-        changeLanguage(lang);
-      }
-
-      const code = challengeCodeFromUrl(url);
-      if (!code) return;
-      if (isDuelFlowRoute(pathnameRef.current)) {
-        pendingChallengeCodeRef.current = code;
-        return;
-      }
-      openChallengeLink(router, pathnameRef.current, code);
+      if (!lang) return;
+      useSettingsStore.getState().setLanguage(lang);
+      changeLanguage(lang);
     };
 
     void Linking.getInitialURL().then(apply);
     const sub = Linking.addEventListener('url', ({ url }) => apply(url));
     return () => sub.remove();
-  }, [appReady, router]);
-
-  /** Deliver a challenge link held during a duel once the player is back on a menu. */
-  useEffect(() => {
-    if (!appReady) return;
-    const code = pendingChallengeCodeRef.current;
-    if (!code || isDuelFlowRoute(pathname)) return;
-    pendingChallengeCodeRef.current = null;
-    openChallengeLink(router, pathname, code);
-  }, [appReady, pathname, router]);
+  }, [appReady]);
 
   useEffect(() => {
-    // Keep menus, previews and duels in the same upright orientation.
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const so: typeof import('expo-screen-orientation') = require('expo-screen-orientation');
-      void so.lockAsync(so.OrientationLock.PORTRAIT_UP).catch(() => {});
+      void so.unlockAsync().catch(() => {});
     } catch {
       // 네이티브 모듈 미포함 빌드
     }
-  }, [pathname]);
+  }, []);
 
   /** 백그라운드 → 포그라운드 복귀 시 OTA 확인·즉시 reload (결투 중 제외) */
   useEffect(() => {
@@ -234,7 +182,7 @@ function RootLayoutContent() {
 
     const onAppState = (next: AppStateStatus) => {
       if (next !== 'active') return;
-      if (isActiveDuelRoute(pathnameRef.current)) return;
+      if (isInGameRoute(pathnameRef.current)) return;
       void applyOtaUpdateIfAvailable();
     };
 
@@ -262,51 +210,32 @@ function RootLayoutContent() {
         justUpdated = await consumeOtaJustApplied();
         if (cancelled) return;
 
-        const otaPromise = applyOtaUpdateIfAvailable({
-          force: true,
-          timeoutMs: OTA_COLD_START_BUDGET_MS,
-        });
-        const peeked = await settleWithin(
-          otaPromise.then((reloading) => (reloading ? 'reload' : 'none')),
-          OTA_FAST_PATH_MS,
-          'pending' as const,
-        );
+        handOffToReload = await applyOtaUpdateIfAvailable({ force: true });
+        if (handOffToReload || cancelled) return;
+
+        await preloadTitleHero();
         if (cancelled) return;
-        if (peeked === 'reload') {
-          handOffToReload = true;
-          return;
+
+        // hydration 전에 해금 동기화하면 기본 진행도가 AsyncStorage를 덮어씀 (OTA 재기동 시 특히)
+        await Promise.all([
+          waitPersistHydrated(useProgressStore.persist),
+          waitPersistHydrated(useSettingsStore.persist),
+        ]);
+        if (cancelled) return;
+
+        const bootLang = languageFromCaptureUrl(await Linking.getInitialURL());
+        if (bootLang) {
+          useSettingsStore.getState().setLanguage(bootLang);
+          changeLanguage(bootLang);
         }
 
-        // 화면을 먼저 연다. 저장소 복구와 타이틀 이미지는 스플래시 밖에서 이어 간다.
-        void (async () => {
-          try {
-            await preloadTitleHero();
-            if (cancelled) return;
+        // 앱을 지웠다 다시 깐 경우 키체인 스냅샷에서 조용히 되살린다.
+        // hydration 이후여야 한다 — 그 전이면 아직 안 읽힌 진행도를 비었다고 오판한다.
+        await restoreProgressIfEmpty();
+        if (cancelled) return;
+        startProgressAutoBackup();
 
-            // hydration 전에 해금 동기화하면 기본 진행도가 AsyncStorage를 덮어씀 (OTA 재기동 시 특히)
-            await Promise.all([
-              waitPersistHydrated(useProgressStore.persist),
-              waitPersistHydrated(useSettingsStore.persist),
-            ]);
-            if (cancelled) return;
-
-            const bootLang = languageFromCaptureUrl(await Linking.getInitialURL());
-            if (bootLang) {
-              useSettingsStore.getState().setLanguage(bootLang);
-              changeLanguage(bootLang);
-            }
-
-            // 앱을 지웠다 다시 깐 경우 키체인 스냅샷에서 조용히 되살린다.
-            // hydration 이후여야 한다 — 그 전이면 아직 안 읽힌 진행도를 비었다고 오판한다.
-            await restoreProgressIfEmpty();
-            if (cancelled) return;
-            startProgressAutoBackup();
-
-            checkUnlockConditions();
-          } catch (err) {
-            if (__DEV__) console.warn('[boot] background startup failed:', err);
-          }
-        })();
+        checkUnlockConditions();
       } catch (err) {
         // 준비 단계 실패가 부팅 자체를 막아선 안 된다. 프리로드는 없어도 플레이는 가능.
         if (__DEV__) console.warn('[boot] prepare 실패 — 스플래시는 내리고 진행:', err);
@@ -337,7 +266,7 @@ function RootLayoutContent() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" hidden={isInGameRoute(pathname)} />
+      <StatusBar style="light" />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: colors.darkBrown },
@@ -362,33 +291,15 @@ function RootLayoutContent() {
           options={{ title: t('nav.stats'), headerTitleAlign: 'center' }}
         />
         <Stack.Screen
-          name="settings"
-          options={{ title: t('menu.settings'), headerTitleAlign: 'center' }}
-        />
-        <Stack.Screen
           name="character-select"
           options={{ title: t('nav.character'), headerTitleAlign: 'center' }}
         />
         <Stack.Screen name="game" options={{ headerShown: false }} />
         <Stack.Screen name="capture" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ headerShown: false }} />
-        <Stack.Screen name="ranking" options={{ headerShown: false }} />
       </Stack>
       <OtaUpdatedToast visible={otaToastVisible} onHidden={hideOtaToast} />
       <StoreUpdateModal visible={storeUpdateVisible} onDismiss={dismissStoreUpdate} />
     </SafeAreaProvider>
   );
-}
-
-/** A challenge link never stacks a second challenge screen on top of one. */
-function openChallengeLink(
-  router: ReturnType<typeof useRouter>,
-  pathname: string,
-  code: string,
-): void {
-  if (challengeLinkAction(pathname) === 'update') {
-    router.setParams({ code });
-    return;
-  }
-  router.push({ pathname: '/ranking/challenge', params: { code } } as never);
 }

@@ -1,11 +1,10 @@
 import { memo, useEffect } from 'react';
-import { StyleSheet } from 'react-native';
-import { Image } from 'expo-image';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
-  cancelAnimation,
+  withRepeat,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
@@ -18,10 +17,6 @@ type Props = {
   active: boolean;
   /** PNG 조준 방향(→). NPC는 scaleX 반전으로 ← */
   flipHorizontal?: boolean;
-  /** Horizontal muzzle point in the unflipped source image (0–1). */
-  anchorX?: number;
-  /** Vertical muzzle point (0–1); defaults to the legacy 0.38. */
-  anchorY?: number;
 };
 
 /** shoot 포즈 보조 — 스프라이트 머즐이 약할 때 발사 느낌 */
@@ -30,8 +25,6 @@ export const MuzzleFlashOverlay = memo(function MuzzleFlashOverlay({
   height,
   active,
   flipHorizontal = false,
-  anchorX,
-  anchorY,
 }: Props) {
   const flash = useSharedValue(0);
 
@@ -40,11 +33,14 @@ export const MuzzleFlashOverlay = memo(function MuzzleFlashOverlay({
       flash.value = withTiming(0, { duration: 100, reduceMotion: RM_GAME });
       return;
     }
-    flash.value = withSequence(
-      withTiming(1, { duration: 20, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME }),
-      withTiming(0, { duration: 180, easing: Easing.inOut(Easing.quad), reduceMotion: RM_GAME }),
+    flash.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 55, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME }),
+        withTiming(0.3, { duration: 110, easing: Easing.inOut(Easing.quad), reduceMotion: RM_GAME }),
+      ),
+      -1,
+      false,
     );
-    return () => cancelAnimation(flash);
   }, [active, flash]);
 
   const style = useAnimatedStyle(() => ({
@@ -52,8 +48,8 @@ export const MuzzleFlashOverlay = memo(function MuzzleFlashOverlay({
     transform: [{ scale: 0.85 + flash.value * 0.35 }],
   }));
 
-  const barrelX = width * (anchorX ?? (flipHorizontal ? 0.22 : 0.72));
-  const barrelY = height * (anchorY ?? 0.38);
+  const barrelX = flipHorizontal ? width * 0.22 : width * 0.72;
+  const barrelY = height * 0.38;
 
   return (
     <Animated.View
@@ -61,16 +57,17 @@ export const MuzzleFlashOverlay = memo(function MuzzleFlashOverlay({
       style={[
         styles.root,
         {
-          left: barrelX - width * 0.23,
-          top: barrelY - height * 0.15,
-          width: width * 0.46,
-          height: height * 0.3,
+          left: barrelX - width * 0.14,
+          top: barrelY - height * 0.1,
+          width: width * 0.28,
+          height: height * 0.2,
         },
         style,
       ]}
     >
-      <Image source={require('@/assets/images/vfx/production/vfx_muzzle_flash.png')}
-        contentFit="contain" transition={0} style={StyleSheet.absoluteFill} />
+      <View style={[styles.core, { backgroundColor: '#FFF4C2' }]} />
+      <View style={[styles.burst, { backgroundColor: '#FF9F1A' }]} />
+      <View style={[styles.burstOuter, { backgroundColor: '#FF5C00' }]} />
     </Animated.View>
   );
 });

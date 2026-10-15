@@ -27,33 +27,12 @@ const FADE_MS = 380;
 const LOAD_POLL_MS = 48;
 const LOAD_TIMEOUT_MS = 12_000;
 
-type BgmRuntime = {
-  players: Map<BgmTrack, AudioPlayer>;
-  activeTrack: BgmTrack | null;
-  bootedMenuBgm: boolean;
-  duckTimer: ReturnType<typeof setTimeout> | null;
-  fadeTimer: ReturnType<typeof setInterval> | null;
-  playChain: Promise<void>;
-  playGeneration: number;
-};
-
-const runtimeKey = '__highNoonBgmRuntime';
-
-function getRuntime(): BgmRuntime {
-  const g = globalThis as typeof globalThis & { [runtimeKey]?: BgmRuntime };
-  if (!g[runtimeKey]) {
-    g[runtimeKey] = {
-      players: new Map(),
-      activeTrack: null,
-      bootedMenuBgm: false,
-      duckTimer: null,
-      fadeTimer: null,
-      playChain: Promise.resolve(),
-      playGeneration: 0,
-    };
-  }
-  return g[runtimeKey];
-}
+const players = new Map<BgmTrack, AudioPlayer>();
+let activeTrack: BgmTrack | null = null;
+let bootedMenuBgm = false;
+let duckTimer: ReturnType<typeof setTimeout> | null = null;
+let fadeTimer: ReturnType<typeof setInterval> | null = null;
+let playChain: Promise<void> = Promise.resolve();
 
 async function ensureAudioMode(): Promise<void> {
   await ensureGameAudioSession();
@@ -64,16 +43,14 @@ function musicOn(): boolean {
 }
 
 function clearFadeTimer(): void {
-  const rt = getRuntime();
-  if (rt.fadeTimer != null) {
-    clearInterval(rt.fadeTimer);
-    rt.fadeTimer = null;
+  if (fadeTimer != null) {
+    clearInterval(fadeTimer);
+    fadeTimer = null;
   }
 }
 
 function getPlayer(track: BgmTrack): AudioPlayer {
-  const rt = getRuntime();
-  let player = rt.players.get(track);
+  let player = players.get(track);
   if (!player) {
     player = createAudioPlayer(SOURCES[track], {
       downloadFirst: true,
@@ -81,7 +58,7 @@ function getPlayer(track: BgmTrack): AudioPlayer {
     });
     player.loop = true;
     player.volume = 0;
-    rt.players.set(track, player);
+    players.set(track, player);
   }
   return player;
 }
@@ -103,7 +80,6 @@ async function waitForPlayerLoaded(player: AudioPlayer): Promise<void> {
 }
 
 function fadePlayerTo(player: AudioPlayer, target: number, onDone?: () => void): void {
-  const rt = getRuntime();
   clearFadeTimer();
   const start = player.volume;
   const delta = target - start;
@@ -115,7 +91,7 @@ function fadePlayerTo(player: AudioPlayer, target: number, onDone?: () => void):
   const steps = 12;
   const stepMs = FADE_MS / steps;
   let step = 0;
-  rt.fadeTimer = setInterval(() => {
+  fadeTimer = setInterval(() => {
     step += 1;
     const t = step / steps;
     setPlayerVolume(player, start + delta * t);
@@ -128,8 +104,7 @@ function fadePlayerTo(player: AudioPlayer, target: number, onDone?: () => void):
 }
 
 function pauseOtherTracks(except: BgmTrack): void {
-  const rt = getRuntime();
-  for (const [track, player] of rt.players) {
+  for (const [track, player] of players) {
     if (track === except) continue;
     try {
       player.pause();
@@ -141,29 +116,26 @@ function pauseOtherTracks(except: BgmTrack): void {
 }
 
 async function startTrack(track: BgmTrack, opts?: { fadeIn?: boolean }): Promise<void> {
-  const rt = getRuntime();
-  const gen = rt.playGeneration;
   if (!musicOn()) {
     stopBgm();
     return;
   }
 
   await ensureAudioMode();
-  if (!musicOn() || gen !== rt.playGeneration) return;
+  if (!musicOn()) return;
 
   const player = getPlayer(track);
   await waitForPlayerLoaded(player);
-  if (!musicOn() || gen !== rt.playGeneration) return;
 
-  if (rt.activeTrack === track && player.playing) {
+  if (activeTrack === track && player.playing) {
     setPlayerVolume(player, BASE_VOLUME[track]);
     return;
   }
 
   pauseOtherTracks(track);
 
-  if (rt.activeTrack != null && rt.activeTrack !== track) {
-    const prev = rt.players.get(rt.activeTrack);
+  if (activeTrack != null && activeTrack !== track) {
+    const prev = players.get(activeTrack);
     if (prev) {
       fadePlayerTo(prev, 0, () => {
         try {
@@ -175,20 +147,11 @@ async function startTrack(track: BgmTrack, opts?: { fadeIn?: boolean }): Promise
     }
   }
 
-  rt.activeTrack = track;
+  activeTrack = track;
   try {
     await player.seekTo(0);
   } catch {
     /* ignore */
-  }
-  if (!musicOn() || gen !== rt.playGeneration) {
-    try {
-      player.pause();
-      setPlayerVolume(player, 0);
-    } catch {
-      /* ignore */
-    }
-    return;
   }
 
   const target = BASE_VOLUME[track];
@@ -206,8 +169,7 @@ async function startTrack(track: BgmTrack, opts?: { fadeIn?: boolean }): Promise
 }
 
 function enqueuePlay(track: BgmTrack, opts?: { fadeIn?: boolean }): void {
-  const rt = getRuntime();
-  rt.playChain = rt.playChain
+  playChain = playChain
     .then(() => startTrack(track, opts))
     .catch(() => {
       /* ignore */
@@ -229,14 +191,12 @@ export async function preloadBgm(): Promise<void> {
 
 /** 타이틀·앱 기동 직후 — 메뉴 BGM 즉시 시작 */
 export async function bootMenuBgm(): Promise<void> {
-  const rt = getRuntime();
-  if (rt.bootedMenuBgm) {
+  if (bootedMenuBgm) {
     playBgm('menu', { fadeIn: false });
     return;
   }
-  rt.bootedMenuBgm = true;
+  bootedMenuBgm = true;
   await preloadBgm();
-  if (!musicOn()) return;
   playBgm('menu', { fadeIn: false });
 }
 
@@ -251,53 +211,46 @@ export function playBgm(track: BgmTrack, opts?: { fadeIn?: boolean }): void {
 
 /** BGM 정지 */
 export function stopBgm(): void {
-  const rt = getRuntime();
-  rt.playGeneration += 1;
-  if (rt.duckTimer != null) {
-    clearTimeout(rt.duckTimer);
-    rt.duckTimer = null;
+  if (duckTimer != null) {
+    clearTimeout(duckTimer);
+    duckTimer = null;
   }
   clearFadeTimer();
-  rt.activeTrack = null;
-  for (const player of rt.players.values()) {
+  activeTrack = null;
+  for (const player of players.values()) {
     try {
       player.pause();
       setPlayerVolume(player, 0);
-      // expo-audio: remove()로 네이티브 소스까지 끊는다 (HMR orphan 방지)
-      player.remove();
     } catch {
       /* ignore */
     }
   }
-  rt.players.clear();
 }
 
 /** 뱅·페이크 순간 BGM ducking */
 export function duckBgm(active = true): void {
-  const rt = getRuntime();
-  if (!musicOn() || rt.activeTrack == null) return;
-  const player = rt.players.get(rt.activeTrack);
+  if (!musicOn() || activeTrack == null) return;
+  const player = players.get(activeTrack);
   if (!player) return;
 
-  if (rt.duckTimer != null) {
-    clearTimeout(rt.duckTimer);
-    rt.duckTimer = null;
+  if (duckTimer != null) {
+    clearTimeout(duckTimer);
+    duckTimer = null;
   }
 
   if (active) {
     setPlayerVolume(player, DUCK_VOLUME);
-    const track = rt.activeTrack;
-    rt.duckTimer = setTimeout(() => {
-      rt.duckTimer = null;
-      if (rt.activeTrack != null && musicOn()) {
-        const p = rt.players.get(rt.activeTrack);
-        if (p) fadePlayerTo(p, BASE_VOLUME[track]);
+    duckTimer = setTimeout(() => {
+      duckTimer = null;
+      if (activeTrack != null && musicOn()) {
+        const p = players.get(activeTrack);
+        if (p) fadePlayerTo(p, BASE_VOLUME[activeTrack]);
       }
     }, DUCK_MS);
     return;
   }
 
-  fadePlayerTo(player, BASE_VOLUME[rt.activeTrack]);
+  fadePlayerTo(player, BASE_VOLUME[activeTrack]);
 }
 
 /** 설정에서 BGM 끄면 즉시 정지 */

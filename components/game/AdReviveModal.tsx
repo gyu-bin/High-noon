@@ -33,7 +33,7 @@ export function AdReviveModal({
       animationType="fade"
       visible={visible}
       onRequestClose={onDecline}
-      supportedOrientations={['portrait']}
+      supportedOrientations={['portrait', 'landscape']}
     >
       <View style={styles.backdrop}>
         <View style={styles.card}>

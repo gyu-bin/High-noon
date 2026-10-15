@@ -1,208 +1,275 @@
 import { Stack, useRouter } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Animated as RNAnimated,
-  PanResponder,
-  Pressable,
-  ScrollView,
+  FlatList,
+  ListRenderItem,
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { MetaScreenShell } from '@/components/layout/MetaScreenShell';
-import { NpcWantedCard } from '@/components/npc/NpcWantedCard';
 import { MenuBackButton } from '@/components/ui/MenuBackButton';
-import { DEV_UNLOCK_ALL_NPCS } from '@/constants/devFlags';
-import { Ionicons } from '@expo/vector-icons';
-import { FONT_RYE } from '@/constants/fonts';
-import { getNpcVisualMeta } from '@/constants/npcVisual';
-import { getNpcById, NPCS } from '@/constants/npcs';
-import { uiV3Colors } from '@/constants/theme';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
-import { selectPaleRiderUnlocked, useProgressStore } from '@/store/progressStore';
+import { MaskedLegendCard } from '@/components/npc/MaskedLegendCard';
+import { NpcSelectCard } from '@/components/npc/NpcSelectCard';
+import { colors } from '@/constants/theme';
+import { FONT_RYE } from '@/constants/fonts';
+import { DEV_UNLOCK_ALL_NPCS } from '@/constants/devFlags';
+import { getNpcById, NPCS } from '@/constants/npcs';
+import {
+  selectPaleRiderUnlocked,
+  useProgressStore,
+} from '@/store/progressStore';
 import type { NpcDefinition } from '@/types/npc';
-import { getNpcDisplayName } from '@/utils/npcLabels';
+import { formatReactionMs } from '@/utils/formatReactionMs';
 
+/** 레전드 공개: #18 레드 아이 오라클 클리어 후 */
 const MASTER_LEGEND_GATE_ID = 18;
 
-function CarouselArrow({
-  npc,
-  hidden,
-  side,
-  onPress,
-}: {
-  npc: NpcDefinition;
-  hidden: boolean;
-  side: 'left' | 'right';
-  onPress: () => void;
-}) {
+const GRID_COLUMNS = 3;
+
+type GridCell =
+  | { type: 'npc'; key: string; npc: NpcDefinition; revealDelayMs?: number }
+  | { type: 'masked'; key: string }
+  | { type: 'empty'; key: string };
+
+function buildGridCells(
+  masterLegendGateCleared: boolean,
+  legendRevealBurst: number,
+  paleUnlocked: boolean,
+): GridCell[] {
+  const legendOpen = DEV_UNLOCK_ALL_NPCS || masterLegendGateCleared;
+  const paleOpen = DEV_UNLOCK_ALL_NPCS || paleUnlocked;
+  const cells: GridCell[] = [];
+
+  for (let id = 1; id <= 18; id++) {
+    const npc = getNpcById(id);
+    if (!npc) continue;
+    cells.push({ type: 'npc', key: `npc-${id}`, npc });
+  }
+
+  if (!legendOpen) {
+    for (const id of [19, 20, 21]) {
+      cells.push({ type: 'masked', key: `masked-${id}` });
+    }
+  } else {
+    for (let id = 19; id <= 21; id++) {
+      const npc = getNpcById(id)!;
+      cells.push({
+        type: 'npc',
+        key: `npc-${id}`,
+        npc,
+        revealDelayMs:
+          legendRevealBurst > 0 ? (id - 19) * 90 : undefined,
+      });
+    }
+  }
+
+  if (paleOpen) {
+    const pale = getNpcById(22);
+    if (pale) cells.push({ type: 'npc', key: 'npc-22', npc: pale });
+  }
+
+  while (cells.length % GRID_COLUMNS !== 0) {
+    cells.push({ type: 'empty', key: `empty-${cells.length}` });
+  }
+
+  return cells;
+}
+
+function NpcSelectStatsHeader({ paleUnlocked }: { paleUnlocked: boolean }) {
   const { t } = useTranslation();
+  const avg = useProgressStore((s) => {
+    if (s.reactionAggregate.count <= 0) return null;
+    return s.reactionAggregate.sumMs / s.reactionAggregate.count;
+  });
+  const clearCount = useProgressStore((s) => {
+    let n = 0;
+    for (const npc of NPCS) {
+      if (s.npcById[npc.id]?.cleared) n += 1;
+    }
+    return n;
+  });
+  const total = DEV_UNLOCK_ALL_NPCS || paleUnlocked ? NPCS.length : NPCS.length - 1;
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={hidden ? t('meta.npc.locked') : getNpcDisplayName(t, npc.id)}
-      onPress={onPress}
-      style={({ pressed }) => [styles.peek, side === 'left' ? styles.peekLeft : styles.peekRight, pressed && styles.peekPressed]}
-    >
-      <Ionicons name={side === 'left' ? 'chevron-back' : 'chevron-forward'} size={19} color={uiV3Colors.gold} />
-    </Pressable>
+    <View style={styles.statsBar}>
+      <Text style={styles.statsText}>
+        {t('npcSelect.avgReaction')}{' '}
+        <Text style={styles.statsValue}>
+          {avg != null ? `${formatReactionMs(avg)} ms` : '—'}
+        </Text>
+      </Text>
+      <Text style={styles.statsText}>
+        {t('npcSelect.clearLabel')}{' '}
+        <Text style={styles.statsValue}>
+          {clearCount} / {total}
+        </Text>
+      </Text>
+    </View>
   );
 }
 
 export default function NpcSelectScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
+  useScreenBgm('menu');
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
-  const landscape = width > height;
-  const posterHeight = Math.max(448, Math.min(466, height * 0.484));
-  const english = i18n.getFixedT('en');
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
   const npcById = useProgressStore((s) => s.npcById);
   const paleUnlocked = useProgressStore(() => selectPaleRiderUnlocked());
   const masterLegendGateCleared = npcById[MASTER_LEGEND_GATE_ID]?.cleared ?? false;
-  const [focusedId, setFocusedId] = useState(1);
-  const npc = useMemo(() => getNpcById(focusedId) ?? NPCS[0]!, [focusedId]);
-  const index = NPCS.findIndex((entry) => entry.id === npc.id);
-  const previous = NPCS[(index - 1 + NPCS.length) % NPCS.length]!;
-  const next = NPCS[(index + 1) % NPCS.length]!;
-  const dragX = useRef(new RNAnimated.Value(0)).current;
 
-  const moveNpc = useCallback((direction: -1 | 1) => {
-    setFocusedId((currentId) => {
-      const currentIndex = Math.max(0, NPCS.findIndex((entry) => entry.id === currentId));
-      return NPCS[(currentIndex + direction + NPCS.length) % NPCS.length]!.id;
-    });
-  }, []);
+  const [legendRevealBurst, setLegendRevealBurst] = useState(0);
+  const wasLegendHiddenRef = useRef(!masterLegendGateCleared);
 
-  const swipeResponder = useMemo(() => PanResponder.create({
-    onMoveShouldSetPanResponder: (_, gesture) => (
-      Math.abs(gesture.dx) > 10 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.25
-    ),
-    onPanResponderMove: (_, gesture) => dragX.setValue(gesture.dx * 0.55),
-    onPanResponderRelease: (_, gesture) => {
-      const shouldMove = Math.abs(gesture.dx) > 42 || Math.abs(gesture.vx) > 0.45;
-      if (!shouldMove) {
-        RNAnimated.spring(dragX, { toValue: 0, useNativeDriver: true }).start();
-        return;
-      }
-      RNAnimated.timing(dragX, {
-        toValue: gesture.dx < 0 ? -width * 0.18 : width * 0.18,
-        duration: 110,
-        useNativeDriver: true,
-      }).start(() => {
-        moveNpc(gesture.dx < 0 ? 1 : -1);
-        dragX.setValue(0);
+  useEffect(() => {
+    if (wasLegendHiddenRef.current && masterLegendGateCleared) {
+      setLegendRevealBurst((n) => n + 1);
+    }
+    wasLegendHiddenRef.current = !masterLegendGateCleared;
+  }, [masterLegendGateCleared]);
+
+  const cells = useMemo(
+    () => buildGridCells(masterLegendGateCleared, legendRevealBurst, paleUnlocked),
+    [masterLegendGateCleared, legendRevealBurst, paleUnlocked],
+  );
+
+  const onSelect = useCallback(
+    (npc: NpcDefinition) => {
+      router.push({
+        pathname: '/game/npc',
+        params: { npcId: String(npc.id) },
       });
     },
-    onPanResponderTerminate: () => {
-      RNAnimated.spring(dragX, { toValue: 0, useNativeDriver: true }).start();
+    [router],
+  );
+
+  const renderItem: ListRenderItem<GridCell> = useCallback(
+    ({ item }) => {
+      if (item.type === 'empty') {
+        return <View style={styles.emptyCell} />;
+      }
+      if (item.type === 'masked') {
+        return <MaskedLegendCard />;
+      }
+      const npc = item.npc;
+      const locked = DEV_UNLOCK_ALL_NPCS
+        ? false
+        : npc.id === 22
+          ? !paleUnlocked
+          : npc.secret === true
+            ? !paleUnlocked
+            : npc.id > highestUnlocked;
+      const row = npcById[npc.id] ?? { cleared: false, bestReactionMs: null };
+      return (
+        <NpcSelectCard
+          npc={npc}
+          locked={locked}
+          cleared={row.cleared}
+          bestMs={row.bestReactionMs}
+          revealDelayMs={item.revealDelayMs}
+          onPress={locked ? undefined : onSelect}
+        />
+      );
     },
-  }), [dragX, moveNpc, width]);
+    [highestUnlocked, npcById, onSelect, paleUnlocked],
+  );
 
-  const isMasked = useCallback((entry: NpcDefinition) => (
-    entry.id >= 19 && entry.id <= 21 && !DEV_UNLOCK_ALL_NPCS && !masterLegendGateCleared
-  ), [masterLegendGateCleared]);
-  const isLocked = useCallback((entry: NpcDefinition) => (
-    !DEV_UNLOCK_ALL_NPCS && (entry.id === 22 ? !paleUnlocked : entry.id > highestUnlocked || isMasked(entry))
-  ), [highestUnlocked, isMasked, paleUnlocked]);
-
-  const maskedLegend = isMasked(npc);
-  const locked = isLocked(npc);
-  const special = npc.specialAbility !== 'none';
-  const abilityName = special ? t(`npcs.specialAbility.${npc.specialAbility}.name`) : undefined;
-  const abilityHint = special
-    ? t(`npcs.specialAbility.${npc.specialAbility}.desc`).split(/[.!?。]/u)[0]
-    : undefined;
-
-  useScreenBgm('menu');
-  const select = useCallback(() => {
-    if (locked) return;
-    router.push({ pathname: '/game/npc', params: { npcId: String(npc.id) } });
-  }, [locked, npc.id, router]);
-  const back = useCallback(() => router.replace('/menu'), [router]);
+  const keyExtractor = useCallback((item: GridCell) => item.key, []);
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
-      <MetaScreenShell showDust={false} ambience="poster">
-        <ScrollView
-          contentContainerStyle={[
-            styles.content,
-            { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 18 },
-            landscape && styles.contentLandscape,
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.topbar}>
-            <MenuBackButton onPress={back} variant="header" style={styles.back} />
-            <View style={styles.heading}>
-              <Text style={styles.eyebrow}>CHOOSE YOUR</Text>
-              <Text style={styles.title}>OPPONENT</Text>
-            </View>
-            <Text style={styles.counter}>{String(npc.id).padStart(2, '0')} / {NPCS.length}</Text>
-          </View>
-
-          <RNAnimated.View
-            {...swipeResponder.panHandlers}
-            style={[
-              styles.posterStage,
-              landscape && styles.posterStageLandscape,
-              { transform: [{ translateX: dragX }] },
-            ]}
-          >
-            <CarouselArrow npc={previous} hidden={isLocked(previous)} side="left" onPress={() => moveNpc(-1)} />
-            <NpcWantedCard
-              npc={npc}
-              locked={locked}
-              masked={maskedLegend}
-              name={getNpcDisplayName(t, npc.id)}
-              englishName={getNpcDisplayName(english, npc.id)}
-              tier={english(`npcs.tier.${npc.tier}`)}
-              typeLabel={special ? 'SPECIAL DUEL' : npc.bossFlag ? 'BOSS' : (getNpcVisualMeta(npc.id)?.zone.toUpperCase() ?? '')}
-              posterHeight={posterHeight}
-              abilityName={abilityName}
-              abilityHint={abilityHint}
-              duelLabel={t('meta.npc.duel')}
-              lockedLabel={t('meta.npc.locked')}
-              bossLabel={t('meta.npc.boss')}
-              onDuel={select}
-              style={[styles.featuredCard, landscape && styles.featuredCardLandscape]}
-            />
-            <CarouselArrow npc={next} hidden={isLocked(next)} side="right" onPress={() => moveNpc(1)} />
-          </RNAnimated.View>
-
-          <View style={styles.dots}>
-            <Text style={styles.swipeHint}>SWIPE TO BROWSE</Text>
-          </View>
-        </ScrollView>
+      <Stack.Screen
+        options={{
+          title: t('nav.npcSelect'),
+          headerTransparent: false,
+          headerBackVisible: false,
+          headerTitleAlign: 'center',
+          headerTitle: () => (
+            <Text
+              style={{
+                fontFamily: FONT_RYE,
+                fontSize: 17,
+                color: colors.cream,
+                letterSpacing: 1,
+                textAlign: 'center',
+              }}
+            >
+              {t('nav.npcSelect')}
+            </Text>
+          ),
+          headerLeft: () => <MenuBackButton onPress={() => router.back()} />,
+        }}
+      />
+      <MetaScreenShell showDust={false}>
+        <View style={[styles.root, { paddingBottom: insets.bottom + 16 }]}>
+          <NpcSelectStatsHeader paleUnlocked={paleUnlocked} />
+          <FlatList
+            data={cells}
+            keyExtractor={keyExtractor}
+            renderItem={renderItem}
+            numColumns={GRID_COLUMNS}
+            style={styles.listFlex}
+            contentContainerStyle={styles.list}
+            columnWrapperStyle={styles.row}
+            extraData={`${highestUnlocked}:${legendRevealBurst}:${paleUnlocked}`}
+            initialNumToRender={9}
+            maxToRenderPerBatch={6}
+            windowSize={5}
+            removeClippedSubviews
+          />
+        </View>
       </MetaScreenShell>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingHorizontal: 16, gap: 12 },
-  contentLandscape: { paddingHorizontal: 34 },
-  topbar: { minHeight: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  back: { position: 'absolute', left: 0, zIndex: 1 },
-  heading: { flex: 1, alignItems: 'center' },
-  eyebrow: { color: uiV3Colors.gold, fontSize: 10, fontWeight: '900', letterSpacing: 3 },
-  title: { color: uiV3Colors.cream, fontFamily: FONT_RYE, fontSize: 22, letterSpacing: 1.2, marginTop: 2 },
-  counter: { position: 'absolute', right: 0, bottom: 0, minWidth: 58, color: uiV3Colors.cream, fontSize: 10, fontWeight: '800', textAlign: 'right', opacity: 0.75 },
-  posterStage: { flex: 1, minHeight: 448, paddingTop: 24, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: -16 },
-  posterStageLandscape: { minHeight: 424, marginHorizontal: 0 },
-  featuredCard: { width: '79%', maxWidth: 360 },
-  featuredCardLandscape: { width: '60%', maxWidth: 360 },
-  peek: { position: 'absolute', top: '50%', marginTop: -16, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', opacity: 0.48 },
-  peekLeft: { left: 3 },
-  peekRight: { right: 3 },
-  peekPressed: { opacity: 1 },
-  dots: { height: 38, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  swipeHint: { color: uiV3Colors.cream, opacity: 0.42, fontSize: 8, fontWeight: '700', letterSpacing: 2 },
+  root: {
+    flex: 1,
+  },
+  listFlex: {
+    flex: 1,
+  },
+  list: {
+    paddingHorizontal: 8,
+    paddingTop: 4,
+    paddingBottom: 12,
+  },
+  row: {
+    justifyContent: 'flex-start',
+  },
+  emptyCell: {
+    flex: 1,
+    marginHorizontal: 4,
+    marginBottom: 10,
+    minHeight: 148,
+  },
+  statsBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: 8,
+    marginTop: 10,
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: 'rgba(60, 36, 20, 0.92)',
+    borderWidth: 1,
+    borderColor: colors.sand,
+  },
+  statsText: {
+    fontSize: 15,
+    color: colors.cream,
+    fontWeight: '600',
+  },
+  statsValue: {
+    color: colors.ochre,
+    fontWeight: '800',
+  },
 });

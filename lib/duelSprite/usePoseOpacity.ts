@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import {
   Easing,
-  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -75,9 +74,6 @@ export function usePoseOpacity(pose: SpritePose, hasDown = false) {
       });
     }
     // shoot 퇴장 시 shootFrame을 0으로 스냅하지 않음 — shoot_01→00 플래시 방지
-    return () => {
-      [idle, aim, defeat, down, shoot, shootFrame].forEach(cancelAnimation);
-    };
   }, [
     pose,
     hasDown,

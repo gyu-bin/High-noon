@@ -1,8 +1,9 @@
 import { Image } from 'expo-image';
-import { memo } from 'react';
+import { memo, type FC } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
+import type { SvgProps } from 'react-native-svg';
 
 import {
   getNpcSpriteSource,
@@ -11,8 +12,6 @@ import {
 } from '@/constants/spriteAssets';
 import type { DuelCorner } from '@/constants/duelArena';
 import type { LocalDuelSkin } from '@/constants/localDuelSkin';
-import { NPC_MUZZLE_ANCHOR, PLAYER_MUZZLE_ANCHOR, characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
-import { CLARITY_NPCS, CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
 import {
   SPRITE_CACHE_REVISION,
   SPRITE_POSE_TRANSFORM,
@@ -29,8 +28,54 @@ import {
   VictoryEffectsOverlay,
 } from '@/lib/duelSprite';
 
+import Npc01 from '@/assets/images/characters/npc_01_clay.svg';
+import Npc02 from '@/assets/images/characters/npc_02_doug.svg';
+import Npc03 from '@/assets/images/characters/npc_03_betty.svg';
+import Npc04 from '@/assets/images/characters/npc_04_billy.svg';
+import Npc05 from '@/assets/images/characters/npc_05_sam.svg';
+import Npc06 from '@/assets/images/characters/npc_06_rosa.svg';
+import Npc07 from '@/assets/images/characters/npc_07_jack.svg';
+import Npc08 from '@/assets/images/characters/npc_08_colt.svg';
+import Npc09 from '@/assets/images/characters/npc_09_rider_boss.svg';
+import Npc10 from '@/assets/images/characters/npc_10_eagle.svg';
+import Npc11 from '@/assets/images/characters/npc_11_daisy.svg';
+import Npc12 from '@/assets/images/characters/npc_12_sybil_boss.svg';
+import Npc13 from '@/assets/images/characters/npc_13_seth.svg';
+import Npc14 from '@/assets/images/characters/npc_14_doc.svg';
+import Npc15 from '@/assets/images/characters/npc_15_lace_boss.svg';
+import Npc16 from '@/assets/images/characters/npc_16_angel.svg';
+import Npc17 from '@/assets/images/characters/npc_17_dryden_boss.svg';
+import Npc18 from '@/assets/images/characters/npc_18_unknown.svg';
+import Npc19 from '@/assets/images/characters/npc_19_unknown.svg';
+import Npc20 from '@/assets/images/characters/npc_20_whiteman_finalboss.svg';
 import PlayerSvg from '@/assets/images/characters/player.svg';
 
+const NPC_BY_ID: Record<number, FC<SvgProps>> = {
+  1: Npc01,
+  2: Npc02,
+  3: Npc03,
+  4: Npc04,
+  5: Npc05,
+  6: Npc06,
+  7: Npc07,
+  8: Npc08,
+  9: Npc09,
+  10: Npc10,
+  11: Npc11,
+  12: Npc12,
+  13: Npc13,
+  14: Npc14,
+  15: Npc15,
+  16: Npc16,
+  17: Npc17,
+  18: Npc18,
+  19: Npc19,
+  20: Npc20,
+  21: Npc20,
+  22: Npc18,
+};
+
+const DefaultNpc = Npc01;
 
 type BaseProps = {
   width: number;
@@ -46,13 +91,11 @@ const SpriteLayer = memo(function SpriteLayer({
   source,
   width,
   height,
-  artScale,
   opacity,
 }: {
   source: LayerSource;
   width: number;
   height: number;
-  artScale: number;
   opacity: SharedValue<number>;
 }) {
   const style = useAnimatedStyle(() => ({
@@ -63,7 +106,7 @@ const SpriteLayer = memo(function SpriteLayer({
     <Animated.View pointerEvents="none" style={[layerStyles.absolute, style]}>
       <Image
         source={source}
-        style={[scaledArtStyle(width, height, artScale), layerStyles.clear]}
+        style={{ width, height, backgroundColor: 'transparent' }}
         contentFit="contain"
         cachePolicy="memory-disk"
         priority="high"
@@ -80,43 +123,38 @@ function DuelSpriteStack({
   width,
   height,
   pose,
-  defeatSettlesDown = true,
 }: {
   mode: 'npc' | 'player';
   id: number;
   width: number;
   height: number;
   pose: SpritePose;
-  /** false: a non-final hit — stay on the hit frame, never swap to the down frame. */
-  defeatSettlesDown?: boolean;
 }) {
   const layers = resolveDuelSpriteLayers(mode, id);
-  const artScale = characterArtDisplayScale(mode, id);
-  const artStyle = [scaledArtStyle(width, height, artScale), layerStyles.clear];
   const displayPose = spriteDisplayPose(pose);
-  const op = usePoseOpacity(displayPose, layers.down != null && defeatSettlesDown);
+  const op = usePoseOpacity(displayPose, layers.down != null);
   const showAimLayer = layers.aim != null && layers.aim !== layers.idle;
 
   return (
     <View style={{ width, height, backgroundColor: 'transparent' }}>
       {layers.idle ? (
-        <SpriteLayer source={layers.idle} width={width} height={height} artScale={artScale} opacity={op.idle} />
+        <SpriteLayer source={layers.idle} width={width} height={height} opacity={op.idle} />
       ) : null}
       {showAimLayer && layers.aim ? (
-        <SpriteLayer source={layers.aim} width={width} height={height} artScale={artScale} opacity={op.aim} />
+        <SpriteLayer source={layers.aim} width={width} height={height} opacity={op.aim} />
       ) : null}
       {layers.defeat ? (
-        <SpriteLayer source={layers.defeat} width={width} height={height} artScale={artScale} opacity={op.defeat} />
+        <SpriteLayer source={layers.defeat} width={width} height={height} opacity={op.defeat} />
       ) : null}
       {layers.down ? (
-        <SpriteLayer source={layers.down} width={width} height={height} artScale={artScale} opacity={op.down} />
+        <SpriteLayer source={layers.down} width={width} height={height} opacity={op.down} />
       ) : null}
       {layers.useDualShootFrames && layers.shootFrame0 && layers.shootFrame1 ? (
         <>
           <Animated.View pointerEvents="none" style={[layerStyles.absolute, op.shootFrame0Style]}>
             <Image
               source={layers.shootFrame0}
-              style={artStyle}
+              style={{ width, height, backgroundColor: 'transparent' }}
               contentFit="contain"
               cachePolicy="memory-disk"
               priority="high"
@@ -127,7 +165,7 @@ function DuelSpriteStack({
           <Animated.View pointerEvents="none" style={[layerStyles.absolute, op.shootFrame1Style]}>
             <Image
               source={layers.shootFrame1}
-              style={artStyle}
+              style={{ width, height, backgroundColor: 'transparent' }}
               contentFit="contain"
               cachePolicy="memory-disk"
               priority="high"
@@ -140,7 +178,7 @@ function DuelSpriteStack({
         <Animated.View pointerEvents="none" style={[layerStyles.absolute, op.singleShootStyle]}>
           <Image
             source={layers.shootFrame0}
-            style={artStyle}
+            style={{ width, height, backgroundColor: 'transparent' }}
             contentFit="contain"
             cachePolicy="memory-disk"
             priority="high"
@@ -178,7 +216,6 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
   defeatDropPx?: number;
 }) {
   const hasPng = !!getNpcSpriteSource(npcId, 'idle');
-  const grounded = Boolean(CLARITY_NPCS[npcId]);
   const motionStyle = useDuelSpriteMotion(
     pose,
     victoryActive,
@@ -186,7 +223,6 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
     'topple',
     height,
     defeatDropPx,
-    grounded,
   );
 
   return (
@@ -212,9 +248,6 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
         <MuzzleFlashOverlay
           width={width}
           height={height}
-          flipHorizontal={grounded}
-          anchorX={NPC_MUZZLE_ANCHOR[npcId]?.x ?? (grounded ? 0.22 : undefined)}
-          anchorY={NPC_MUZZLE_ANCHOR[npcId]?.y}
           active={pose === 'shoot' && !victoryActive}
         />
         <VictoryEffectsOverlay
@@ -230,7 +263,7 @@ export const NpcCharacterSprite = memo(function NpcCharacterSprite({
         height={height}
         active={pose === 'defeat'}
         impactDelayMs={defeatImpactDelayMs('topple')}
-        groundOffsetY={grounded ? 0 : defeatDropPx != null ? defeatDropPx * 0.9 : height * 0.3}
+        groundOffsetY={defeatDropPx != null ? defeatDropPx * 0.9 : height * 0.3}
       />
     </View>
   );
@@ -246,23 +279,15 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
   victoryActive = false,
   duelCorner = 'bottomLeft',
   defeatDropPx,
-  defeatSettlesDown = true,
 }: BaseProps & {
   characterId?: number;
   victoryActive?: boolean;
   duelCorner?: DuelCorner;
   /** 낙하 거리 px — landscape 등 같은 지면선 구도에서 제자리 착지용 */
   defeatDropPx?: number;
-  /**
-   * Combat reaction: true (default) = final defeat, the hit frame settles into
-   * the down frame. false = non-final hit, the hit frame is held and the caller
-   * returns the pose to idle (RECOVER). The duel result is decided elsewhere.
-   */
-  defeatSettlesDown?: boolean;
 }) {
   const hasPng = !!getPlayerSpriteSource(characterId, 'idle');
   const hasDown = !!getPlayerDownSource(characterId);
-  const grounded = Boolean(CLARITY_PLAYERS[characterId]);
   const motionStyle = useDuelSpriteMotion(
     pose,
     victoryActive,
@@ -270,7 +295,6 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
     hasDown ? 'topple' : 'collapse',
     height,
     defeatDropPx,
-    grounded,
   );
 
   return (
@@ -295,7 +319,6 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
             width={width}
             height={height}
             pose={pose}
-            defeatSettlesDown={defeatSettlesDown}
           />
         ) : (
           <View style={svgPoseStyle(pose)}>
@@ -305,9 +328,6 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
         <MuzzleFlashOverlay
           width={width}
           height={height}
-          flipHorizontal={grounded}
-          anchorX={PLAYER_MUZZLE_ANCHOR[characterId]?.x ?? (grounded ? (characterId === 2 ? 0.07 : 0.22) : undefined)}
-          anchorY={PLAYER_MUZZLE_ANCHOR[characterId]?.y}
           active={pose === 'shoot' && !victoryActive}
         />
         <VictoryEffectsOverlay
@@ -321,10 +341,10 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
       <DefeatDustOverlay
         width={width}
         height={height}
-        active={pose === 'defeat' && defeatSettlesDown}
+        active={pose === 'defeat'}
         impactDelayMs={defeatImpactDelayMs(hasDown ? 'topple' : 'collapse')}
         groundOffsetY={
-          grounded ? 0 : defeatDropPx != null ? defeatDropPx * 0.9 : height * (hasDown ? 0.3 : 0.38)
+          defeatDropPx != null ? defeatDropPx * 0.9 : height * (hasDown ? 0.3 : 0.38)
         }
       />
     </View>
@@ -379,7 +399,6 @@ export const LocalDuelSkinSprite = memo(function LocalDuelSkinSprite({
 });
 
 const layerStyles = {
-  clear: { backgroundColor: 'transparent' as const },
   absolute: {
     position: 'absolute' as const,
     left: 0,

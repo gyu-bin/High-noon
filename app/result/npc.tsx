@@ -1,5 +1,4 @@
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
-import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   StyleSheet,
@@ -22,15 +21,14 @@ import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
 import { WoodButton } from '@/components/ui/WoodButton';
 import {
   OUTCOME_DEFEAT,
+  OUTCOME_PANEL,
   OUTCOME_VICTORY,
   outcomeTextShadow,
 } from '@/constants/outcomeTheme';
 import { RM_GAME } from '@/constants/reanimatedGame';
 import { colors } from '@/constants/theme';
-import { FONT_RYE, FONT_WESTERN_SERIF } from '@/constants/fonts';
+import { FONT_RYE } from '@/constants/fonts';
 import { getNpcById } from '@/constants/npcs';
-import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
-import { getV3NpcPose } from '@/constants/v3DuelAssets';
 import { getNpcDisplayName } from '@/utils/npcLabels';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
@@ -258,7 +256,7 @@ export default function NpcResultScreen() {
   }, [nextNpc, router]);
 
   const onNpcSelect = useCallback(() => {
-    router.replace('/npc-select');
+    router.dismissTo('/npc-select');
   }, [router]);
 
   const showContent = adFlowComplete;
@@ -266,16 +264,6 @@ export default function NpcResultScreen() {
   return (
     <PhoneStageShell edgeToEdge>
       <OutcomeBackdrop variant={dayNight} width={winW} height={winH}>
-        {npc ? (
-          <View pointerEvents="none" style={styles.opponentArt}>
-            <Image
-              source={getV3NpcPose(npc.id, victory ? 'down' : 'idle')}
-              contentFit="contain"
-              transition={0}
-              style={scaledArtStyle(winW * 0.64, winH * 0.36, characterArtDisplayScale('npc', npc.id))}
-            />
-          </View>
-        ) : null}
         {showContent && outcomeKnown && victory ? (
           <VictorySparkles width={winW} seed={completionStampStr ?? 'win'} />
         ) : null}
@@ -296,14 +284,14 @@ export default function NpcResultScreen() {
                   titleAnimatedStyle,
                 ]}
               >
-                YOU WIN
+                {t('result.victory')}
               </Animated.Text>
             ) : (
               <Animated.Text
                 entering={FadeInDown.duration(380)}
                 style={[styles.title, { fontFamily: FONT_RYE, color: theme.title }]}
               >
-                OUTDRAWN
+                {t('result.defeat')}
               </Animated.Text>
             )}
 
@@ -379,10 +367,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     paddingHorizontal: 22,
-    paddingTop: 28,
-    paddingBottom: 24,
+    paddingVertical: 28,
     zIndex: 6,
   },
   contentHidden: {
@@ -397,25 +384,14 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
   },
   panel: {
-    width: '100%',
-    maxWidth: 430,
-    alignSelf: 'center',
-    borderRadius: 3,
-    backgroundColor: 'rgba(13, 7, 4, 0.82)',
+    borderRadius: OUTCOME_PANEL.borderRadius,
+    backgroundColor: OUTCOME_PANEL.background,
     borderWidth: 1,
-    borderColor: 'rgba(212, 165, 116, 0.52)',
     paddingHorizontal: 20,
     paddingTop: 0,
-    paddingBottom: 18,
-    gap: 10,
+    paddingBottom: 22,
+    gap: 14,
     overflow: 'hidden',
-  },
-  opponentArt: {
-    position: 'absolute',
-    left: '18%',
-    right: '18%',
-    top: '22%',
-    height: '36%',
   },
   accentBar: {
     height: 3,
@@ -423,7 +399,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    fontSize: 40,
+    fontSize: 44,
     textAlign: 'center',
     letterSpacing: 3,
     marginTop: 8,
@@ -457,7 +433,6 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   opponentName: {
-    fontFamily: FONT_WESTERN_SERIF,
     fontSize: 17,
     fontWeight: '700',
     color: colors.cream,

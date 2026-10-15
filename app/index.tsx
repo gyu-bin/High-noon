@@ -1,13 +1,16 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { SplashBrand, SplashScene } from '@/components/splash/SplashScene';
+import { WesternHomeBackground } from '@/components/layout/WesternHomeBackground';
+import { ShimmerTitle } from '@/components/title/ShimmerTitle';
 import { DEV_AUTO_SCREENSHOTS } from '@/constants/devFlags';
 import { colors } from '@/constants/theme';
+import { FONT_RYE } from '@/constants/fonts';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
+import { bootMenuBgm } from '@/utils/bgmService';
 import { play } from '@/utils/audioService';
 import { trigger } from '@/utils/hapticService';
 
@@ -15,7 +18,6 @@ export default function TitleScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const entering = useRef(false);
 
   useScreenBgm('menu');
 
@@ -24,18 +26,14 @@ export default function TitleScreen() {
     router.replace('/menu');
   }, [router]);
 
-  const goMenu = () => {
-    if (entering.current) return;
-    entering.current = true;
-    // Sound/haptics must not block navigation or enqueue duplicate menu routes.
-    void trigger('medium');
-    void play('bang_shot');
-    router.replace('/menu');
+  const goMenu = async () => {
+    // 소리 시작을 기다린 뒤 이동 — play()가 void면 네비게이션이 총성을 가로챔
+    await Promise.all([trigger('medium'), play('bang_shot')]);
+    router.push('/menu');
   };
 
   return (
-    <SplashScene>
-      <SplashBrand />
+    <WesternHomeBackground>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('a11y.titleTap')}
@@ -52,17 +50,18 @@ export default function TitleScreen() {
           ]}
           pointerEvents="box-none"
         >
+          <ShimmerTitle label="HIGH NOON" fontFamily={FONT_RYE} fontSize={48} />
           <Text style={styles.tapHint}>{t('title.tapToStart')}</Text>
         </View>
       </Pressable>
-    </SplashScene>
+    </WesternHomeBackground>
   );
 }
 
 const styles = StyleSheet.create({
   center: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     alignItems: 'center',
     gap: 28,
     paddingHorizontal: 20,

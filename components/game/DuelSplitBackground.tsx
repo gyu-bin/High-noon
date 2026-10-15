@@ -7,13 +7,10 @@ import {
   type DuelBackgroundVariant,
 } from '@/constants/duelBackgroundVariants';
 import { colors } from '@/constants/theme';
-import { APPROVED_DUEL_BACKGROUNDS } from '@/constants/v3DuelAssets';
-import type { DuelBackgroundId } from '@/utils/duelBackgroundSelection';
 
 type Props = {
   /** 2P — 상·하 반쪽 분할 배경 (낮/밤은 매치마다 랜덤) */
   variant: DuelBackgroundVariant;
-  backgroundId?: DuelBackgroundId;
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   contentWidth: number;
@@ -23,7 +20,6 @@ type Props = {
 /** 로컬 2P — 상·하 반쪽 분할 배경 */
 export function DuelSplitBackground({
   variant,
-  backgroundId,
   children,
   style,
   contentWidth: w,
@@ -35,30 +31,35 @@ export function DuelSplitBackground({
   return (
     <View style={[styles.root, { width: w, height: h }, style]}>
       <View style={[styles.halfClip, { height: halfH }]}>
-        <View style={styles.topArenaRotated}>
-          <DuelCoverImage source={backgroundId ? APPROVED_DUEL_BACKGROUNDS[backgroundId] : cfg.top} width={w} height={halfH} bleed={1.06} />
-          {!backgroundId && <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.topDim }]} />}
-        </View>
+        <DuelCoverImage
+          source={cfg.top}
+          width={w}
+          height={h}
+          bleed={1.24}
+        />
+        <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.topDim }]} />
       </View>
 
       <View style={[styles.halfClip, styles.bottomHalf, { height: halfH }]}>
-        <DuelCoverImage source={backgroundId ? APPROVED_DUEL_BACKGROUNDS[backgroundId] : cfg.bottom} width={w} height={halfH} bleed={1.06} />
-        {!backgroundId && <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.bottomDim }]} />}
+        <View style={{ position: 'absolute', left: 0, top: -halfH, width: w, height: h }}>
+          <DuelCoverImage source={cfg.bottom} width={w} height={h} bleed={1.24} />
+        </View>
+        <View pointerEvents="none" style={[styles.halfDim, { backgroundColor: cfg.bottomDim }]} />
       </View>
 
-      {!backgroundId && <LinearGradient
+      <LinearGradient
         pointerEvents="none"
         colors={[...cfg.vignette]}
         locations={[0, 0.46, 0.54, 1]}
         style={StyleSheet.absoluteFill}
-      />}
+      />
 
-      {!backgroundId && <LinearGradient
+      <LinearGradient
         pointerEvents="none"
         colors={[...cfg.splitHorizon]}
         locations={[0.44, 0.5, 0.56]}
         style={[styles.horizonGlow, { top: halfH - 28, height: 56 }]}
-      />}
+      />
 
       <View style={styles.foreground} pointerEvents="box-none">
         {children}
@@ -83,10 +84,6 @@ const styles = StyleSheet.create({
   bottomHalf: {
     top: undefined,
     bottom: 0,
-  },
-  topArenaRotated: {
-    ...StyleSheet.absoluteFillObject,
-    transform: [{ rotate: '180deg' }],
   },
   halfDim: {
     ...StyleSheet.absoluteFillObject,

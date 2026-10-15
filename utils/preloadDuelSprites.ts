@@ -2,8 +2,6 @@ import { Image } from 'expo-image';
 import { Image as RNImage, type ImageSourcePropType } from 'react-native';
 
 import type { LocalDuelSkin } from '@/constants/localDuelSkin';
-import { APPROVED_DUEL_BACKGROUNDS, getV3NpcDuelPreloadSources } from '@/constants/v3DuelAssets';
-import type { NpcTier } from '@/types/npc';
 import {
   getNpcDownSource,
   getNpcShootFrames,
@@ -44,31 +42,6 @@ export async function prefetchDuelSprites(
   );
 }
 
-/**
- * NPC 1P duel's approved V3 presentation assets. This is deliberately
- * separate from `prefetchDuelSprites`, which also supports the unchanged
- * local-duel sprite system.
- */
-export async function prefetchNpcDuelPresentation(
-  npcId: number,
-  tier: NpcTier,
-  dayNight: 'day' | 'night',
-): Promise<void> {
-  const seen = new Set<string>();
-  const uris = getV3NpcDuelPreloadSources(tier, npcId, dayNight)
-    .map(assetUri)
-    .filter((uri): uri is string => uri != null)
-    .filter((uri) => {
-      if (seen.has(uri)) return false;
-      seen.add(uri);
-      return true;
-    });
-
-  await Promise.all(
-    uris.map((uri) => Image.prefetch(uri, { cachePolicy: 'memory-disk' }).catch(() => false)),
-  );
-}
-
 /** 로컬 2인전 — P1/P2 스킨(유저·NPC) 선캐시 */
 export async function prefetchLocalDuelSprites(
   p1: LocalDuelSkin,
@@ -87,7 +60,6 @@ export async function prefetchLocalDuelSprites(
 
   collectSkinUris(p1, push);
   collectSkinUris(p2, push);
-  Object.values(APPROVED_DUEL_BACKGROUNDS).forEach(push);
 
   await Promise.all(
     uris.map((uri) => Image.prefetch(uri, { cachePolicy: 'memory-disk' }).catch(() => false)),

@@ -409,7 +409,7 @@ export async function initPurchases(): Promise<void> {
 /**
  * 부팅용 — iOS/Android 모두 lazy.
  * 앱 시작마다 StoreKit/Billing에 붙으면 Apple ID·스토어 로그인 팝업이 반복된다.
- * 설정·구매 시에만 initPurchases()를 호출한다.
+ * 메뉴·구매 시에만 initPurchases()를 호출한다.
  */
 export async function initPurchasesOnBoot(): Promise<void> {
   return;

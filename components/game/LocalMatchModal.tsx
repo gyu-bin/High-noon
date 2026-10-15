@@ -1,5 +1,4 @@
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { WesternButton } from '@/components/ui/western/WesternPrimitives';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -21,7 +20,6 @@ type Props = {
   p2Wins: number;
   winsNeeded: number;
   onExit: () => void;
-  onRematch: () => void;
   fxBurstId: number;
   backgroundVariant: DuelBackgroundVariant;
   width: number;
@@ -37,7 +35,6 @@ export function LocalMatchModal({
   p2Wins,
   winsNeeded,
   onExit,
-  onRematch,
   fxBurstId,
   backgroundVariant,
   width,
@@ -64,10 +61,15 @@ export function LocalMatchModal({
       animationType="fade"
       visible={visible}
       onRequestClose={onExit}
-      supportedOrientations={['portrait']}
+      supportedOrientations={['portrait', 'landscape']}
     >
       <OutcomeBackdrop variant={backgroundVariant} width={width} height={height}>
-        <View style={styles.root}>
+        <Pressable
+          accessibilityLabel={t('game.tapToExit')}
+          accessibilityRole="button"
+          onPress={onExit}
+          style={styles.root}
+        >
           {fxBurstId > 0 ? (
             <View style={styles.fxLayer} pointerEvents="none">
               <LocalDuelFireworks
@@ -80,8 +82,8 @@ export function LocalMatchModal({
             </View>
           ) : null}
 
-          <ScrollView
-            contentContainerStyle={[
+          <View
+            style={[
               styles.content,
               {
                 paddingTop: Math.max(paddingTop, 16) + 12,
@@ -131,11 +133,10 @@ export function LocalMatchModal({
                 </View>
               </View>
 
-              <WesternButton title={t('result.retry')} onPress={onRematch} />
-              <WesternButton title={t('localDuel.selectCharacters')} onPress={onExit} variant="secondary" />
+              <Text style={styles.continueHint}>{t('game.tapToExit')}</Text>
             </Animated.View>
-          </ScrollView>
-        </View>
+          </View>
+        </Pressable>
       </OutcomeBackdrop>
     </Modal>
   );
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   content: {
-    flexGrow: 1,
+    flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 22,
     zIndex: 4,
