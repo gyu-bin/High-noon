@@ -428,7 +428,8 @@ test('generic NPC STEADY holds existing clean torso FIRE with shot effects off a
     assert.deepEqual(held, fired, 'holding clean FIRE must not introduce source/ground/anchor differences');
     assert.equal(held.groundFraction, layout.faceoffGroundFraction('npc', npcId));
     assert.deepEqual(held.muzzle, layout.faceoffMuzzleAnchor('npc', npcId));
-    const replay = createArenaReplay({ npcId, npcPose: 'aim', signalPhase: '집중', npcShotActive: false });
+    // P04 keeps the legacy standing renderer for every NPC (no quick-draw registry entry).
+    const replay = createArenaReplay({ npcId, playerCharacterId: 4, npcPose: 'aim', signalPhase: '집중', npcShotActive: false });
     replay.advance(0);
     assert.ok(replay.sources().includes(held.source), `NPC${npcId} must hold its production FIRE in STEADY`);
     assert.ok(!replay.recoilYs().some(y => y < -.1));
@@ -626,16 +627,17 @@ test('corrected PNG opaque bounds fit locked actor lanes across all 22 opponents
 
 console.log(`\n${count} NPC faceoff checks passed`);
 
-test('quickdraw compositor is limited to nine registry portrait pairs and passes only actual shot flags', () => {
+test('quickdraw compositor is limited to the 24 registry portrait pairs and passes only actual shot flags', () => {
   for (const playerCharacterId of [1, 2, 3, 4]) for (let npcId = 1; npcId <= 22; npcId++) {
     const replay = createArenaReplay({ playerCharacterId, npcId, signalPhase: '뱅', npcPose: 'shoot', playerShotActive: false, npcShotActive: false });
     const actors = replay.pilotActors();
-    assert.equal(actors.length, [1, 2, 3].includes(playerCharacterId) && [1, 2, 4].includes(npcId) ? 2 : 0);
+    assert.equal(actors.length, [1, 2, 3].includes(playerCharacterId) && [1, 2, 3, 4, 5, 6, 7, 8].includes(npcId) ? 2 : 0);
     if (actors.length) {
       assert.ok(actors.every(actor => actor.shotActive === false && actor.bang && !actor.preparation));
       assert.ok(actors.every(actor => !('nonOverlappingTransition' in actor)), 'every actor uses the exclusive pose switch');
       assert.notEqual(actors[0].readyArt.source, actors[0].aimArt.source);
-      assert.notEqual(actors[1].aimArt.source, actors[1].fireArt.source);
+      if ([1, 2, 4].includes(npcId)) assert.notEqual(actors[1].aimArt.source, actors[1].fireArt.source);
+      else assert.equal(actors[1].aimArt.source, actors[1].fireArt.source, 'batch 2 holds the AIM frame for the actual shot');
       assert.deepEqual(replay.shotEffectOpacities(), [], 'pilot suppresses legacy duplicate shot overlays');
       replay.update({ signalPhase: '결과', playerShotActive: true });
       assert.equal(replay.pilotActors()[0].shotActive, true, 'RESULT-batched actual shot reaches compositor');

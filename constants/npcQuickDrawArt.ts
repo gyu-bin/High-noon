@@ -42,12 +42,42 @@ const fireMeasurements: Record<string, Omit<PoseArt, 'source'>> = {
   'player:3': { groundFraction: 1215 / 1254, muzzle: { x: 1230 / 1254, y: 351 / 1254 } },
 };
 
+// Batch 2 (NPC03/05/06/07/08): READY = IDLE, STEADY = dedicated `preparation` frame (hand on the
+// holstered grip), BANG start = clarity DRAW (gun clearing the holster), AIM (120ms) = the
+// left-facing FIRE frame, and the actual shot holds that same frame while runtime flash/smoke fire.
+// Without `preparation`, STEADY falls back to DRAW. Sole rows and painted barrel tips are measured
+// on the 1254 canvas (alpha > 127).
+const reuseBatch: Record<number, { fire: ImageSourcePropType; preparation?: { source: ImageSourcePropType; ground: number }; ground: Record<'ready' | 'draw' | 'fire', number>; muzzle: { x: number; y: number } }> = {
+  3: { fire: CLARITY_NPCS[3]!.fire, preparation: { source: require('../assets/images/characters/faceoff/batch2/npc03-preparation.png'), ground: 1221 }, ground: { ready: 1225, draw: 1222, fire: 1227 }, muzzle: { x: 302 / 1254, y: 514 / 1254 } },
+  5: { fire: require('../assets/images/characters/faceoff/npc_05_fire_left.png'), preparation: { source: require('../assets/images/characters/faceoff/batch2/npc05-preparation.png'), ground: 1224 }, ground: { ready: 1219, draw: 1223, fire: 1223 }, muzzle: { x: 312 / 1254, y: 492 / 1254 } },
+  6: { fire: require('../assets/images/characters/faceoff/npc_06_fire_left.png'), preparation: { source: require('../assets/images/characters/faceoff/batch2/npc06-preparation.png'), ground: 1224 }, ground: { ready: 1225, draw: 1225, fire: 1229 }, muzzle: { x: 333 / 1254, y: 466 / 1254 } },
+  7: { fire: CLARITY_NPCS[7]!.fire, preparation: { source: require('../assets/images/characters/faceoff/batch2/npc07-preparation.png'), ground: 1218 }, ground: { ready: 1218, draw: 1215, fire: 1220 }, muzzle: { x: 274 / 1254, y: 499 / 1254 } },
+  8: { fire: CLARITY_NPCS[8]!.fire, preparation: { source: require('../assets/images/characters/faceoff/batch2/npc08-preparation.png'), ground: 1210 }, ground: { ready: 1210, draw: 1213, fire: 1212 }, muzzle: { x: 263 / 1254, y: 483 / 1254 } },
+};
+export const QUICK_DRAW_NPC_IDS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+
 export function usesNpcQuickDraw(playerId: number, npcId: number, portrait: boolean) {
-  return portrait && [1, 2, 3].includes(playerId) && [1, 2, 4].includes(npcId);
+  return portrait && [1, 2, 3].includes(playerId) && (QUICK_DRAW_NPC_IDS as readonly number[]).includes(npcId);
 }
 
 export function quickDrawArt(kind: Kind, id: number, stage: Stage) {
   if (id === 1) return cinematicPilotArt(kind, stage);
+  const reused = kind === 'npc' ? reuseBatch[id] : undefined;
+  if (reused) {
+    const clarity = CLARITY_NPCS[id]!;
+    const firing = stage === 'aim' || stage === 'fire';
+    const preparation = stage === 'preparation' ? reused.preparation : undefined;
+    const source = stage === 'ready' ? clarity.idle : firing ? reused.fire : preparation?.source ?? clarity.draw;
+    return {
+      source,
+      offsetX: quickDrawOffsetX(kind, id, stage),
+      groundFraction: (preparation?.ground ?? reused.ground[stage === 'ready' ? 'ready' : firing ? 'fire' : 'draw']) / 1254,
+      muzzle: reused.muzzle,
+      artScale: 1,
+      // IDLE/DRAW sources gaze right and are mirrored inward; the FIRE frames already point left.
+      flipHorizontal: !firing,
+    };
+  }
   const sources = batchSources[kind] as Partial<Record<number, { preparation: ImageSourcePropType; aim: ImageSourcePropType; fire?: ImageSourcePropType }>>;
   const added = sources[id];
   if (!added) throw new Error(`Unsupported NPC quickdraw art: ${kind} ${id}`);

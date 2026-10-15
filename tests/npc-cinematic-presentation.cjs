@@ -349,12 +349,12 @@ console.log('PASS scope reset underneath hidden HIT clears stale AIM/shot, prese
   const { quickDrawArt, usesNpcQuickDraw } = loadArt(path.join(root, 'constants/npcQuickDrawArt.ts'));
   let supported = 0;
   for (let player = 1; player <= 4; player++) for (let npc = 1; npc <= 22; npc++) {
-    const expected = [1, 2, 3].includes(player) && [1, 2, 4].includes(npc);
+    const expected = [1, 2, 3].includes(player) && [1, 2, 3, 4, 5, 6, 7, 8].includes(npc);
     assert.equal(usesNpcQuickDraw(player, npc, true), expected, 'portrait quickdraw supports registry actors independently: P' + player + '/NPC' + npc);
     assert.equal(usesNpcQuickDraw(player, npc, false), false, 'landscape retains legacy renderer');
     supported += Number(expected);
   }
-  assert.equal(supported, 9, 'exactly9 approved portrait pairs use this batch registry');
+  assert.equal(supported, 24, 'exactly 24 approved portrait pairs (P01–P03 × NPC01–08) use the quickdraw registry');
   assert.equal(usesNpcQuickDraw(0, 1, true), false);
   assert.equal(usesNpcQuickDraw(1, 23, true), false);
   for (const kind of ['player', 'npc']) for (const stage of ['ready', 'preparation', 'draw', 'aim', 'fire']) {
@@ -378,7 +378,44 @@ console.log('PASS scope reset underneath hidden HIT clears stale AIM/shot, prese
     assert.notEqual(poses.preparation.source, poses.aim.source, kind + id + ' STEADY cannot reuse an already aimed pose');
     assert.notEqual(poses.aim.source, poses.fire.source, kind + id + ' shot recoil has a distinct FIRE source');
   }
-  console.log('PASS exact9-pair portrait gate, preserved pilot art, batch actual PNG sole/barrel metadata and distinct preparation/AIM/FIRE');
+  console.log('PASS exact 24-pair portrait gate, preserved pilot art, batch actual PNG sole/barrel metadata and distinct preparation/AIM/FIRE');
+  // Batch 2 reuses production art: READY=IDLE, STEADY=DRAW (held through the 120ms draw),
+  // AIM=left-facing FIRE, and the actual shot holds that frame while runtime VFX fire.
+  for (const id of [3, 5, 6, 7, 8]) {
+    const poses = {};
+    for (const stage of ['ready', 'preparation', 'draw', 'aim', 'fire']) {
+      const selected = quickDrawArt('npc', id, stage); poses[stage] = selected;
+      const png = PNG.sync.read(fs.readFileSync(selected.source));
+      assert.equal(png.width, 1254); assert.equal(png.height, 1254); assert.equal(selected.artScale, 1);
+      let bottom = -1;
+      for (let y = 0; y < png.height; y++) for (let x = 0; x < png.width; x++) if (png.data[(y * png.width + x) * 4 + 3] > 127) bottom = Math.max(bottom, y);
+      assert.ok(Math.abs(selected.groundFraction - (bottom + 1) / 1254) <= 1 / 1254, 'npc' + id + '/' + stage + ' ground uses the actual opaque sole');
+      assert.equal(selected.flipHorizontal, stage === 'ready' || stage === 'preparation' || stage === 'draw', 'npc' + id + '/' + stage + ' only right-gazing IDLE/DRAW sources are mirrored inward');
+    }
+    assert.notEqual(poses.ready.source, poses.preparation.source, 'npc' + id + ' STEADY visibly differs from READY');
+    if ([3, 5, 6, 7, 8].includes(id)) assert.notEqual(poses.preparation.source, poses.draw.source, 'npc' + id + ' has a dedicated STEADY; DRAW becomes the BANG intermediate');
+    else assert.equal(poses.preparation.source, poses.draw.source, 'npc' + id + ' STEADY and the 120ms draw share the clarity DRAW frame');
+    assert.notEqual(poses.draw.source, poses.aim.source, 'npc' + id + ' AIM is a different, left-facing frame');
+    assert.equal(poses.aim.source, poses.fire.source, 'npc' + id + ' actual shot holds the AIM frame (VFX only)');
+    // The painted barrel tip of the left-facing FIRE frame: leftmost opaque pixel in the upper body band.
+    const png = PNG.sync.read(fs.readFileSync(poses.fire.source));
+    let top = 1254, bottom = -1;
+    for (let y = 0; y < 1254; y++) for (let x = 0; x < 1254; x++) if (png.data[(y * 1254 + x) * 4 + 3] > 127) { top = Math.min(top, y); bottom = Math.max(bottom, y); }
+    let leftmost = 1254, leftY = 0;
+    for (let y = top; y < top + (bottom - top) * .55; y++) for (let x = 0; x < leftmost; x++) if (png.data[(y * 1254 + x) * 4 + 3] > 127) { leftmost = x; leftY = y; break; }
+    assert.ok(Math.abs(poses.fire.muzzle.x * 1254 - leftmost) <= 12 && Math.abs(poses.fire.muzzle.y * 1254 - leftY) <= 30, 'npc' + id + ' FIRE muzzle sits on the painted barrel tip');
+  }
+  console.log('PASS batch 2 production-art reuse: distinct READY/STEADY/AIM, held FIRE, actual soles, inward mirroring and barrel-tip muzzles');
+  // NPC03 dedicated STEADY: one revolver, fully holstered (no steel above the holster mouth is
+  // checked visually); here the frame is held to the shared lane, sole and READY->DRAW pelvis.
+  for (const [id, legShift] of [[3, 0], [5, 26], [6, 0], [7, 4], [8, -4]]) {
+    const steady = quickDrawArt('npc', id, 'preparation'), draw = quickDrawArt('npc', id, 'draw');
+    assert.match(String(steady.source), new RegExp('batch2/npc0' + id + '-preparation\\.png$'));
+    // Mirrored at runtime: a source shifted right by legShift needs offsetX larger by legShift/1254.
+    assert.ok(Math.abs(steady.offsetX - draw.offsetX - legShift / 1254) < 1e-9, 'npc' + id + ' STEADY -> BANG draw keeps the legs still');
+    assert.ok(Math.abs(steady.groundFraction - draw.groundFraction) <= 3 / 1254, 'npc' + id + ' STEADY and DRAW soles agree');
+  }
+  console.log('PASS NPC03/05/06/07/08 dedicated STEADY frames: registered to DRAW legs, same sole, distinct from the BANG intermediate');
 
 }
 
