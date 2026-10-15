@@ -172,6 +172,7 @@ function createArenaReplay(overrides = {}) {
       }];
     },
     useRef(value) { const index = cursor++; return (slots[index] ??= { current: value }); },
+    useCallback(fn, deps) { const index = cursor++; if (!slots[index] || deps.some((value, i) => !Object.is(value, slots[index].deps[i]))) slots[index] = { fn, deps }; return slots[index].fn; },
     useEffect(effect, deps) {
       const index = cursor++, previous = slots[index];
       if (!previous || deps.some((value, i) => !Object.is(value, previous.deps[i]))) {
@@ -198,6 +199,7 @@ function createArenaReplay(overrides = {}) {
     'expo-linear-gradient': { LinearGradient: 'Gradient' }, 'react-i18next': { useTranslation: () => ({ t: key => key }) },
     '@/components/game/DevNpcDuelInput': { DevNpcDuelInput: () => null },
     './DevNpcDuelInput': { DevNpcDuelInput: () => null },
+    './NpcCinematicActor': { NpcCinematicActor: 'PilotActor' },
     './CharacterSprites': { PlayerCharacterSprite: 'PlayerSprite' }, './DuelCoverImage': { DuelCoverImage: 'Background' }, './DuelSignalBoard': { DuelSignalBoard: 'Signal' },
     '@/constants/fonts': { FONT_RYE: 'rye', FONT_WESTERN_SERIF: 'serif', usesCjkFont: () => false },
     '@/constants/clarityCharacterAssets': { CLARITY_NPCS: {}, CLARITY_PLAYERS: {} },
@@ -235,14 +237,71 @@ function createArenaReplay(overrides = {}) {
     shotEffectOpacities() { return allNodes(tree).filter(node => node.type === 'AnimatedView' && ['runtime-flash', 'runtime-smoke'].includes(node.props.children?.props?.source)).flatMap(node => [node.props.style].flat(Infinity).filter(style => typeof style?.opacity === 'number').map(style => style.opacity)); },
     sources() { return allNodes(tree).filter(node => node.type === 'Image' && typeof node.props.source === 'string').map(node => node.props.source); },
     player() { return allNodes(tree).find(node => node.type === 'PlayerSprite')?.props ?? null; },
-    npcSource() { return allNodes(tree).find(node => node.type === 'Image' && typeof node.props.source === 'string' && /npc1-|combat\/npc\/01\/|npc_01_left/.test(node.props.source)).props.source; },
+    npcSource() {
+      const nodes = allNodes(tree);
+      const image = nodes.find(node => node.type === 'Image' && typeof node.props.source === 'string' && /npc1-|combat\/npc\/01\/|npc_01_left/.test(node.props.source));
+      if (image) return image.props.source;
+      const actor = nodes.find(node => node.type === 'PilotActor' && node.props.direction === 'left' && !node.props.hidden);
+      return (actor.props.bang ? actor.props.aimArt : actor.props.preparation ? actor.props.preparationArt : actor.props.readyArt).source;
+    },
+    pilotActors() { return allNodes(tree).filter(node => node.type === 'PilotActor').map(node => node.props); },
+    nodes() { return allNodes(tree); },
   };
 }
+test('quickdraw hit hand-off keeps the standing pose until the reaction art is displayed', () => {
+  const opacityOf = style => [style].flat(Infinity).filter(Boolean).reduce((alpha, item) => alpha * (item.opacity ?? 1), 1);
+  const visibleOf = (nodes, match) => {
+    // Walk from the root so ancestor opacity (the loading wrapper) is included.
+    let found = null;
+    const walk = (node, inherited) => {
+      if (!node || typeof node !== 'object' || found != null) return;
+      const alpha = inherited * opacityOf(node.props?.style);
+      if (match(node)) { found = alpha; return; }
+      for (const child of [node.props?.children].flat(Infinity)) walk(child, alpha);
+    };
+    walk(nodes[0], 1); return found;
+  };
+  for (const [playerCharacterId, npcId] of [[1, 1], [3, 4], [2, 2]]) {
+    // Player HIT: the sprite mounts hidden; the actor stays on screen until its hit art displays.
+    const replay = createArenaReplay({ playerCharacterId, npcId, signalPhase: '뱅' });
+    replay.update({ playerDefeated: true, playerHearts: 2, signalPhase: '결과' });
+    const actor = () => replay.pilotActors().find(item => item.direction === 'right');
+    assert.equal(actor().hidden, false, `P${playerCharacterId} keeps its pose while hit art loads`);
+    assert.equal(visibleOf(replay.nodes(), node => node.type === 'PlayerSprite'), 0, 'loading reaction is mounted but not shown');
+    assert.equal(typeof replay.player().onDefeatArtDisplay, 'function');
+    replay.player().onDefeatArtDisplay(); replay.update({});
+    assert.equal(actor().hidden, true, 'actor hides in the same commit the reaction appears');
+    assert.equal(visibleOf(replay.nodes(), node => node.type === 'PlayerSprite'), 1);
+    // A reaction whose display event never arrives still takes over after the bounded wait
+    // (lethal hit: the survive timeline already recovers at 220ms, keeping the standing pose).
+    const slow = createArenaReplay({ playerCharacterId, npcId, signalPhase: '뱅' });
+    slow.update({ playerDefeated: true, playerHearts: 0, signalPhase: '결과' });
+    slow.advance(249); assert.equal(slow.pilotActors().find(item => item.direction === 'right').hidden, false);
+    slow.advance(1); assert.equal(slow.pilotActors().find(item => item.direction === 'right').hidden, true, 'fallback reveal');
+    // NPC HIT: same gate on the NPC reaction image.
+    const npc = createArenaReplay({ playerCharacterId, npcId, signalPhase: '뱅' });
+    npc.update({ npcPose: 'defeat', opponentHearts: 2, signalPhase: '결과' });
+    const npcActor = () => npc.pilotActors().find(item => item.direction === 'left');
+    const reaction = node => node.type === 'Image' && typeof node.props.onDisplay === 'function';
+    assert.equal(npcActor().hidden, false, `NPC${npcId} keeps its pose while hit art loads`);
+    assert.equal(visibleOf(npc.nodes(), reaction), 0);
+    npc.nodes().find(reaction).props.onDisplay(); npc.update({});
+    assert.equal(npcActor().hidden, true);
+    assert.equal(visibleOf(npc.nodes(), reaction), 1);
+    // Recovery to the next round re-arms the gate.
+    npc.update({ npcPose: 'idle', opponentHearts: 2, currentRound: 2, signalPhase: '준비' }); npc.advance(3000);
+    assert.equal(npcActor().hidden, false, 'next round shows the standing actor');
+  }
+  // Non-quickdraw pairs keep the immediate legacy hand-off and receive no display callback.
+  const legacy = createArenaReplay({ playerCharacterId: 4, npcId: 9 });
+  legacy.update({ playerDefeated: true, playerHearts: 2, signalPhase: '결과' });
+  assert.equal(legacy.player().onDefeatArtDisplay, undefined);
+});
 test('delayed fatal headshot promotes the already-revealed surviving reaction to DOWN', () => {
   const replay = createArenaReplay({ playerCharacterId: 3 });
   replay.update({ npcPose: 'defeat', opponentHearts: 1, signalPhase: '결과' });
   replay.advance(1400);
-  assert.match(replay.npcSource(), /npc_01_left/, 'initial ordinary damage recovers');
+  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'initial ordinary damage recovers');
   replay.update({ opponentHearts: 0 });
   replay.advance(1000);
   assert.match(replay.npcSource(), /combat\/npc\/01\/down\.png$/, 'late lethal damage must promote the timeline');
@@ -262,35 +321,35 @@ test('new round cancels the delayed lethal sequence before an old DOWN callback 
   replay.update({ npcPose: 'defeat', opponentHearts: 1 }); replay.advance(500);
   replay.update({ opponentHearts: 0 }); replay.advance(300);
   replay.update({ currentRound: 2, opponentHearts: 3, npcPose: 'idle' }); replay.advance(3000);
-  assert.match(replay.npcSource(), /npc_01_left/);
+  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/);
   replay.update({ npcPose: 'defeat', opponentHearts: 2 }); replay.advance(1000);
-  assert.match(replay.npcSource(), /npc_01_left/, 'surviving next round must still recover');
+  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'surviving next round must still recover');
 });
 
 test('final revealed NPC defeat persists through Continue and resets for new rounds, identities, or restored hearts', () => {
   const replay = createArenaReplay();
   replay.update({ opponentHearts: 0, signalPhase: '결과' });
-  assert.match(replay.npcSource(), /npc_01_left/, 'zero hearts must not start the reveal early');
+  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'zero hearts must not start the reveal early');
   replay.update({ npcPose: 'defeat' }); replay.advance(1000);
   assert.match(replay.npcSource(), /combat\/npc\/01\/down\.png$/);
   replay.update({ npcPose: 'idle' }); replay.advance(2000);
   assert.match(replay.npcSource(), /combat\/npc\/01\/down\.png$/, 'Continue must not stand the final loser up');
   replay.update({ opponentHearts: 1 });
-  assert.match(replay.npcSource(), /npc_01_left/, 'restored heart releases the terminal pose');
+  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'restored heart releases the terminal pose');
   replay.update({ opponentHearts: 0, npcPose: 'defeat' }); replay.advance(1000);
   replay.update({ npcPose: 'idle', currentRound: 2 });
-  assert.match(replay.npcSource(), /npc_01_left/, 'new round clears the previous terminal pose');
+  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'new round clears the previous terminal pose');
   replay.update({ currentRound: 1 });
-  assert.match(replay.npcSource(), /npc_01_left/, 'returning to the old round must not resurrect the terminal pose');
+  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'returning to the old round must not resurrect the terminal pose');
   replay.update({ npcPose: 'defeat' }); replay.advance(1000);
   replay.update({ npcPose: 'idle', playerCharacterId: 2 });
-  assert.match(replay.npcSource(), /npc_01_left/, 'new identity clears the previous terminal pose');
+  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'new identity clears the previous terminal pose');
   replay.update({ playerCharacterId: 1 });
-  assert.match(replay.npcSource(), /npc_01_left/, 'returning to the old player identity must not resurrect the terminal pose');
+  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'returning to the old player identity must not resurrect the terminal pose');
   replay.update({ npcPose: 'defeat' }); replay.advance(1000);
   replay.update({ npcPose: 'idle', npcId: 2 });
   replay.update({ npcId: 1 });
-  assert.match(replay.npcSource(), /npc_01_left/, 'NPC A→B→A must not restore an old terminal pose');
+  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'NPC A→B→A must not restore an old terminal pose');
 });
 test('final player pose persists through cleared reveal while ordinary hit reactions recover', () => {
   const replay = createArenaReplay();
@@ -317,13 +376,13 @@ test('final player pose persists through cleared reveal while ordinary hit react
   assert.equal(replay.player(), null, 'round A→B→A must not restore an old player terminal pose');
   const surviving = createArenaReplay({ signalPhase: '결과', opponentHearts: 1, playerHearts: 1 });
   surviving.update({ npcPose: 'defeat', playerDefeated: true }); surviving.advance(1000);
-  assert.match(surviving.npcSource(), /npc_01_left/); assert.equal(surviving.player(), null);
+  assert.match(surviving.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/); assert.equal(surviving.player(), null);
   surviving.update({ npcPose: 'idle', playerDefeated: false });
-  assert.match(surviving.npcSource(), /npc_01_left/); assert.equal(surviving.player(), null);
+  assert.match(surviving.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/); assert.equal(surviving.player(), null);
 });
 
-test('coherent standing art stays aimed without a shot recoil until actual shot flags arrive', () => {
-  const replay = createArenaReplay();
+test('legacy landscape standing art keeps its existing actual-shot-only recoil outside the portrait pilot', () => {
+  const replay = createArenaReplay({ width: 874, height: 402 });
   for (const signalPhase of ['준비', '집중', '뱅']) {
     replay.update({ signalPhase }); replay.advance(0);
     assert.equal(replay.player(), null, 'standing art must not invoke PlayerSprite shoot choreography');
@@ -468,7 +527,7 @@ test('corrected P02/P03 FIRE is confined to NPC art selection while shared Local
       assert.notEqual(selected.source, CLARITY_PLAYERS[id].fire);
       assert.equal(selected.flipHorizontal, true);
     }
-    const replay = createArenaReplay({ playerCharacterId: id, signalPhase: '집중' }); replay.advance(0);
+    const replay = createArenaReplay({ playerCharacterId: id, npcId: 9, signalPhase: '집중' }); replay.advance(0);
     assert.ok(replay.sources().includes(faceoffStandingArt('player', id, 'aim').source));
     assert.ok(!replay.sources().includes(CLARITY_PLAYERS[id].fire));
   }
@@ -499,14 +558,14 @@ test('corrected NPC15/19/22 DRAW is exclusive to NPC aim hold with shared READY 
 
 test('accepted replacement aim sources stay NPC-only, inward and effect-free until the actual shot', () => {
   const { faceoffStandingArt } = load(path.join(root, 'constants/npcFaceoffPoseArt.ts'));
-  const { getV3NpcPose, V3_PRE_DUEL_NPC_FACEOFF } = load(path.join(root, 'constants/v3DuelAssets.ts'));
+  const { getV3NpcPose } = load(path.join(root, 'constants/v3DuelAssets.ts'));
   for (const id of [1, 2, 4, 5, 6, 11, 14, 17]) {
     const held = faceoffStandingArt('npc', id, 'aim');
     assert.deepEqual(held, faceoffStandingArt('npc', id, 'fire'));
     assert.equal(held.flipHorizontal, false);
     assert.notEqual(held.source, getV3NpcPose(id, 'fire'), 'shared FIRE must not be overwritten');
     assert.match(getV3NpcPose(id, 'fire'), new RegExp(`clarity/npc/${String(id).padStart(2, '0')}/fire\\.png$`));
-    const replay = createArenaReplay({ npcId: id, npcPose: 'aim', signalPhase: '집중', npcShotActive: false });
+    const replay = createArenaReplay({ playerCharacterId: 4, npcId: id, npcPose: 'aim', signalPhase: '집중', npcShotActive: false });
     replay.advance(0);
     assert.ok(replay.sources().includes(held.source));
     assert.deepEqual(replay.shotEffectOpacities(), [0, 0, 0, 0]);
@@ -515,7 +574,7 @@ test('accepted replacement aim sources stay NPC-only, inward and effect-free unt
     assert.ok(replay.sources().includes(held.source));
     assert.ok(replay.recoilYs().some(y => Math.abs(y + .7) < .001));
   }
-  assert.match(V3_PRE_DUEL_NPC_FACEOFF[1], /npc_01_left\.png$/);
+  assert.match(getV3NpcPose(1, 'fire'), /clarity\/npc\/01\/fire\.png$/, 'NPC-only art must preserve shared NPC01 FIRE');
   assert.deepEqual(faceoffStandingArt('npc', 1, 'ready'), faceoffStandingArt('npc', 1, 'aim'));
   assert.equal(faceoffStandingArt('npc', 4, 'ready').source, getV3NpcPose(4, 'draw'));
   assert.equal(faceoffStandingArt('npc', 4, 'ready').flipHorizontal, true);
@@ -566,3 +625,22 @@ test('corrected PNG opaque bounds fit locked actor lanes across all 22 opponents
 });
 
 console.log(`\n${count} NPC faceoff checks passed`);
+
+test('quickdraw compositor is limited to nine registry portrait pairs and passes only actual shot flags', () => {
+  for (const playerCharacterId of [1, 2, 3, 4]) for (let npcId = 1; npcId <= 22; npcId++) {
+    const replay = createArenaReplay({ playerCharacterId, npcId, signalPhase: '뱅', npcPose: 'shoot', playerShotActive: false, npcShotActive: false });
+    const actors = replay.pilotActors();
+    assert.equal(actors.length, [1, 2, 3].includes(playerCharacterId) && [1, 2, 4].includes(npcId) ? 2 : 0);
+    if (actors.length) {
+      assert.ok(actors.every(actor => actor.shotActive === false && actor.bang && !actor.preparation));
+      assert.ok(actors.every(actor => !('nonOverlappingTransition' in actor)), 'every actor uses the exclusive pose switch');
+      assert.notEqual(actors[0].readyArt.source, actors[0].aimArt.source);
+      assert.notEqual(actors[1].aimArt.source, actors[1].fireArt.source);
+      assert.deepEqual(replay.shotEffectOpacities(), [], 'pilot suppresses legacy duplicate shot overlays');
+      replay.update({ signalPhase: '결과', playerShotActive: true });
+      assert.equal(replay.pilotActors()[0].shotActive, true, 'RESULT-batched actual shot reaches compositor');
+      assert.equal(replay.pilotActors()[1].shotActive, false);
+    }
+  }
+  assert.equal(createArenaReplay({ width: 874, height: 402 }).pilotActors().length, 0, 'landscape remains legacy');
+});

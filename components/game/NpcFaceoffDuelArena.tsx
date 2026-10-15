@@ -1,12 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
 import { PlayerCharacterSprite } from './CharacterSprites';
+import { NpcCinematicActor } from './NpcCinematicActor';
+import { quickDrawContainedLeft } from '@/constants/npcQuickDrawAlignment';
+import { quickDrawArt, usesNpcQuickDraw } from '@/constants/npcQuickDrawArt';
 import { DuelCoverImage } from './DuelCoverImage';
 import { DevNpcDuelInput } from './DevNpcDuelInput';
 import { DuelSignalBoard } from './DuelSignalBoard';
@@ -26,6 +29,9 @@ import { isLethalHit, npcPoseForStage, npcTimeline, playerTimeline, type NpcReac
 import { getCharacterLabels } from '@/utils/characterLabels';
 import { pickDuelBackground } from '@/utils/duelBackgroundSelection';
 import { getNpcDisplayName } from '@/utils/npcLabels';
+
+/** Upper bound for holding the standing pose while reaction art loads (it normally shows in 1–6 frames). */
+const REACTION_READY_FALLBACK_MS = 250;
 
 function Hearts({ value, max }: { value: number; max: number }) {
   return <Text accessibilityLabel={`${value} hearts`} style={styles.hearts}>{Array.from({ length: max }, (_, index) => index < value ? '♥' : '♡').join(' ')}</Text>;
@@ -51,6 +57,7 @@ export function NpcFaceoffDuelArena({
   const reduceMotion = useReducedMotion();
   const [fallbackBackgroundId] = useState(() => backgroundId ?? pickDuelBackground());
   const landscape = width > height;
+  const cinematicPilot = usesNpcQuickDraw(playerCharacterId, npcId, !landscape);
   const preferredSize = (landscape ? Math.min(height * 0.60, width * 0.32) : Math.min(width * 0.62, height * 0.40)) * ((__DEV__ ? combatPreview?.scale : undefined) ?? 1);
   const fittedPair = faceoffPairLayout({ playerId: playerCharacterId, npcId, width, preferredSize, paddingLeft, paddingRight, portrait: !landscape });
   // Whole-screen shake needs the original actor margins for its existing travel.
@@ -115,12 +122,33 @@ export function NpcFaceoffDuelArena({
     ? !finalPlayerHit && playerStage === 'recover' ? 'idle' : 'defeat'
     : playerShotActive ? 'shoot' : aiming ? 'aim' : 'idle';
   const playerReactionVisible = playerDefeatActive && playerPose === 'defeat';
+  // Quick-draw actors hand off to a separately mounted reaction renderer whose image loads
+  // asynchronously. Keep the current pose on screen until the reaction art has actually been
+  // displayed, then switch both in one commit, so the hand-off never shows an empty lane.
+  const [playerReactionReady, setPlayerReactionReady] = useState(false);
+  const [npcReactionReady, setNpcReactionReady] = useState(false);
+  const markPlayerReactionReady = useCallback(() => setPlayerReactionReady(true), []);
+  const markNpcReactionReady = useCallback(() => setNpcReactionReady(true), []);
+  useEffect(() => {
+    if (!playerReactionVisible) { setPlayerReactionReady(false); return; }
+    if (playerReactionReady) return;
+    const fallback = setTimeout(markPlayerReactionReady, REACTION_READY_FALLBACK_MS);
+    return () => clearTimeout(fallback);
+  }, [markPlayerReactionReady, playerReactionReady, playerReactionVisible]);
+  useEffect(() => {
+    if (!npcReactionVisible) { setNpcReactionReady(false); return; }
+    if (npcReactionReady) return;
+    const fallback = setTimeout(markNpcReactionReady, REACTION_READY_FALLBACK_MS);
+    return () => clearTimeout(fallback);
+  }, [markNpcReactionReady, npcReactionReady, npcReactionVisible]);
+  const playerReactionShown = playerReactionVisible && (!cinematicPilot || playerReactionReady);
+  const npcReactionShown = npcReactionVisible && (!cinematicPilot || npcReactionReady);
   const playerFlip = playerReactionVisible ? faceoffFlip('player', playerCharacterId, playerPose) : playerStandingArt.flipHorizontal;
   const npcFlip = npcReactionVisible ? faceoffFlip('npc', npcId, npcArtPose) : npcStandingArt.flipHorizontal;
-  const playerBoundsPose = playerReactionVisible ? playerPose : playerStandingArt.pose === 'draw' ? 'draw' : 'fire';
-  const npcBoundsPose = npcReactionVisible ? npcArtPose : npcStandingArt.pose === 'draw' ? 'draw' : 'fire';
-  const playerLeft = faceoffContainedLeft({ kind: 'player', id: playerCharacterId, pose: playerBoundsPose, left: playerStandingLeft, size, width, paddingLeft: pairLayout.actorPaddingLeft, paddingRight: pairLayout.actorPaddingRight });
-  const npcLeft = faceoffContainedLeft({ kind: 'npc', id: npcId, pose: npcBoundsPose, left: npcStandingLeft, size, width, paddingLeft: pairLayout.actorPaddingLeft, paddingRight: pairLayout.actorPaddingRight });
+  const playerBoundsPose = playerReactionShown ? playerPose : playerStandingArt.pose === 'draw' ? 'draw' : 'fire';
+  const npcBoundsPose = npcReactionShown ? npcArtPose : npcStandingArt.pose === 'draw' ? 'draw' : 'fire';
+  const playerLeft = (cinematicPilot && playerCharacterId !== 1 ? quickDrawContainedLeft : faceoffContainedLeft)({ kind: 'player', id: playerCharacterId, pose: playerBoundsPose, left: playerStandingLeft, size, width, paddingLeft: pairLayout.actorPaddingLeft, paddingRight: pairLayout.actorPaddingRight });
+  const npcLeft = (cinematicPilot && npcId !== 1 ? quickDrawContainedLeft : faceoffContainedLeft)({ kind: 'npc', id: npcId, pose: npcBoundsPose, left: npcStandingLeft, size, width, paddingLeft: pairLayout.actorPaddingLeft, paddingRight: pairLayout.actorPaddingRight });
   const playerGroundOffset = playerReactionVisible ? 0 : faceoffGroundFraction('player', playerCharacterId) - playerStandingArt.groundFraction;
   const npcGroundOffset = npcReactionVisible ? 0 : faceoffGroundFraction('npc', npcId) - npcStandingArt.groundFraction;
   const playerAnchor = playerReactionVisible ? faceoffMuzzleAnchor('player', playerCharacterId) : playerStandingArt.muzzle;
@@ -201,7 +229,7 @@ export function NpcFaceoffDuelArena({
   const kickStyle = useAnimatedStyle(() => ({ transform: [{ translateX: -4 * kick.value }, { translateY: 5 * kick.value }] }));
   const vignetteStyle = useAnimatedStyle(() => ({ opacity: vignette.value }));
   const specialStyle = useAnimatedStyle(() => ({ opacity: specialFx.value }));
-  const flashStyle = useAnimatedStyle(() => ({ opacity: playerFlash.value * 0.2 }));
+  const flashStyle = useAnimatedStyle(() => ({ opacity: cinematicPilot ? 0 : playerFlash.value * 0.2 }));
   const abilityAfterImage = (specialPresentation === 'echo' && (signalPhase === '페이크' || signalPhase === '뱅')) || (specialPresentation === 'mirror' && (signalPhase === '집중' || signalPhase === '페이크'));
   const specialAsset = specialPresentation === 'thunderbolt' ? V3_DUEL_VFX.thunderbolt : specialPresentation === 'void' ? V3_DUEL_VFX.voidCrack : V3_DUEL_VFX.redEye;
   const playerStandingStyle = [scaledArtStyle(size, size, playerStandingArt.artScale), { transform: [{ translateY: playerGroundOffset * size }] }];
@@ -216,25 +244,27 @@ export function NpcFaceoffDuelArena({
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFillObject, kickStyle]}>
         <DuelCoverImage source={APPROVED_DUEL_BACKGROUNDS[backgroundId ?? fallbackBackgroundId]} width={width} height={height} bleed={1.18} />
         <View style={[styles.lane, { left: playerLeft, top: playerTop, width: size, height: size }]}>
-          {playerReactionVisible ? <PlayerCharacterSprite characterId={playerCharacterId} width={size} height={size} pose={playerPose} flipHorizontal={playerFlip} defeatSettlesDown={finalPlayerHit} defeatDropPx={0} muzzleFlashEnabled={false} downOffsetY={playerCharacterId === 2 ? size * (1221 / 1254 - 0.9378) : 0} /> : (
+          {cinematicPilot ? <View style={StyleSheet.absoluteFillObject}><NpcCinematicActor readyArt={quickDrawArt('player', playerCharacterId, 'ready')} preparationArt={quickDrawArt('player', playerCharacterId, 'preparation')} drawArt={quickDrawArt('player', playerCharacterId, 'draw')} aimArt={quickDrawArt('player', playerCharacterId, 'aim')} fireArt={quickDrawArt('player', playerCharacterId, 'fire')} size={size} groundFraction={faceoffGroundFraction('player', playerCharacterId)} preparation={signalPhase === '집중' || signalPhase === '페이크'} bang={signalPhase === '뱅'} holding={signalPhase === '결과'} shotActive={playerShotActive} scope={defeatScope} direction="right" hidden={playerReactionShown} /></View> : null}
+          {playerReactionVisible ? <View style={!playerReactionShown && styles.reactionLoading}><PlayerCharacterSprite characterId={playerCharacterId} width={size} height={size} pose={playerPose} flipHorizontal={playerFlip} defeatSettlesDown={finalPlayerHit} defeatDropPx={0} muzzleFlashEnabled={false} downOffsetY={playerCharacterId === 2 ? size * (1221 / 1254 - 0.9378) : 0} onDefeatArtDisplay={cinematicPilot ? markPlayerReactionReady : undefined} /></View> : !cinematicPilot ? (
             <Animated.View style={[{ width: size, height: size }, playerRecoilStyle]}>
               <View style={[{ width: size, height: size }, playerFlip && styles.flipped]}>
                 <Image source={playerStandingArt.source} style={playerStandingStyle} contentFit="contain" cachePolicy="memory-disk" priority="high" transition={0} />
               </View>
             </Animated.View>
-          )}
-          <Animated.View style={[styles.effect, flashBox(playerMuzzleX, playerAnchor.y + playerGroundOffset), playerFlashStyle]}><Image source={V3_DUEL_VFX.muzzleFlash} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View>
-          <Animated.View style={[styles.effect, smokeBox(playerMuzzleX, playerAnchor.y + playerGroundOffset), playerSmokeStyle]}><Image source={V3_DUEL_VFX.gunSmoke} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View>
+          ) : null}
+          {!cinematicPilot ? <><Animated.View style={[styles.effect, flashBox(playerMuzzleX, playerAnchor.y + playerGroundOffset), playerFlashStyle]}><Image source={V3_DUEL_VFX.muzzleFlash} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View>
+          <Animated.View style={[styles.effect, smokeBox(playerMuzzleX, playerAnchor.y + playerGroundOffset), playerSmokeStyle]}><Image source={V3_DUEL_VFX.gunSmoke} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View></> : null}
         </View>
         <Animated.View style={[styles.lane, { left: npcLeft, top: npcTop, width: size, height: size }, npcReactionStyle]}>
-          <Animated.View style={[{ width: size, height: size }, !npcReactionVisible && npcRecoilStyle]}>
-            <View style={[{ width: size, height: size }, npcFlip && styles.flipped]}>
+          {cinematicPilot ? <View style={StyleSheet.absoluteFillObject}><NpcCinematicActor readyArt={quickDrawArt('npc', npcId, 'ready')} preparationArt={quickDrawArt('npc', npcId, 'preparation')} drawArt={quickDrawArt('npc', npcId, 'draw')} aimArt={quickDrawArt('npc', npcId, 'aim')} fireArt={quickDrawArt('npc', npcId, 'fire')} size={size} groundFraction={faceoffGroundFraction('npc', npcId)} preparation={signalPhase === '집중' || signalPhase === '페이크'} bang={signalPhase === '뱅'} holding={signalPhase === '결과'} shotActive={npcShotActive} scope={defeatScope} direction="left" hidden={npcReactionShown} /></View> : null}
+          {!cinematicPilot || npcReactionVisible ? <Animated.View style={[{ width: size, height: size }, !npcReactionVisible && !cinematicPilot && npcRecoilStyle]}>
+            <View style={[{ width: size, height: size }, npcFlip && styles.flipped, !npcReactionShown && npcReactionVisible && styles.reactionLoading]}>
             {abilityAfterImage ? <Image source={npcSource} style={[styles.afterImage, npcArtStyle, { transform: [{ translateX: -18 }, { translateY: 8 + npcGroundOffset * size }] }, npcId === 20 && styles.bakedEcho]} contentFit="contain" transition={0} /> : null}
-            <Image source={npcSource} style={npcArtStyle} contentFit="contain" cachePolicy="memory-disk" priority="high" transition={0} />
+            <Image source={npcSource} style={npcArtStyle} contentFit="contain" cachePolicy="memory-disk" priority="high" transition={0} onDisplay={cinematicPilot ? markNpcReactionReady : undefined} />
             </View>
-          </Animated.View>
-          <Animated.View style={[styles.effect, flashBox(npcMuzzleX, npcAnchor.y + npcGroundOffset), npcFlashStyle]}><Image source={V3_DUEL_VFX.muzzleFlash} style={[StyleSheet.absoluteFillObject, styles.flipped]} contentFit="contain" transition={0} /></Animated.View>
-          <Animated.View style={[styles.effect, smokeBox(npcMuzzleX, npcAnchor.y + npcGroundOffset), npcSmokeStyle]}><Image source={V3_DUEL_VFX.gunSmoke} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View>
+          </Animated.View> : null}
+          {!cinematicPilot ? <><Animated.View style={[styles.effect, flashBox(npcMuzzleX, npcAnchor.y + npcGroundOffset), npcFlashStyle]}><Image source={V3_DUEL_VFX.muzzleFlash} style={[StyleSheet.absoluteFillObject, styles.flipped]} contentFit="contain" transition={0} /></Animated.View>
+          <Animated.View style={[styles.effect, smokeBox(npcMuzzleX, npcAnchor.y + npcGroundOffset), npcSmokeStyle]}><Image source={V3_DUEL_VFX.gunSmoke} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View></> : null}
           {npcDefeated ? <><Animated.View style={[styles.impact, impactStyle]}><Image source={V3_DUEL_VFX.bulletImpact} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View><Animated.View style={[styles.dust, dustStyle]}><Image source={V3_DUEL_VFX.fallDust} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View></> : null}
         </Animated.View>
       </Animated.View>
@@ -259,6 +289,8 @@ export function NpcFaceoffDuelArena({
 const styles = StyleSheet.create({
   root: { overflow: 'hidden', backgroundColor: uiV3Colors.background },
   lane: { position: 'absolute' }, flipped: { transform: [{ scaleX: -1 }] }, effect: { position: 'absolute' },
+  // Mounted and loading, but not shown until its art is on screen (see REACTION_READY_FALLBACK_MS).
+  reactionLoading: { opacity: 0 },
   afterImage: { position: 'absolute', opacity: 0.24, transform: [{ translateX: -18 }, { translateY: 8 }], tintColor: uiV3Colors.diamondBlue }, bakedEcho: { opacity: 0.12 },
   impact: { position: 'absolute', width: 88, height: 88, top: '36%', left: '38%' }, dust: { position: 'absolute', width: '98%', height: '45%', bottom: '-10%' },
   specialFx: { alignItems: 'center', justifyContent: 'center' }, specialImage: { width: '72%', height: '72%' }, voidShade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10, 10, 10, 0.55)' },

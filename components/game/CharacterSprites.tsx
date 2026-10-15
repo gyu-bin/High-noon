@@ -49,6 +49,7 @@ const SpriteLayer = memo(function SpriteLayer({
   artScale,
   opacity,
   offsetY = 0,
+  onDisplay,
 }: {
   source: LayerSource;
   width: number;
@@ -56,6 +57,7 @@ const SpriteLayer = memo(function SpriteLayer({
   artScale: number;
   opacity: SharedValue<number>;
   offsetY?: number;
+  onDisplay?: () => void;
 }) {
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -71,6 +73,7 @@ const SpriteLayer = memo(function SpriteLayer({
         priority="high"
         transition={0}
         recyclingKey={`${String(source)}-r${SPRITE_CACHE_REVISION}`}
+        onDisplay={onDisplay}
       />
     </Animated.View>
   );
@@ -84,6 +87,7 @@ function DuelSpriteStack({
   pose,
   defeatSettlesDown = true,
   downOffsetY = 0,
+  onDefeatArtDisplay,
 }: {
   mode: 'npc' | 'player';
   id: number;
@@ -93,6 +97,7 @@ function DuelSpriteStack({
   /** false: a non-final hit — stay on the hit frame, never swap to the down frame. */
   defeatSettlesDown?: boolean;
   downOffsetY?: number;
+  onDefeatArtDisplay?: () => void;
 }) {
   const layers = resolveDuelSpriteLayers(mode, id);
   const artScale = characterArtDisplayScale(mode, id);
@@ -110,7 +115,7 @@ function DuelSpriteStack({
         <SpriteLayer source={layers.aim} width={width} height={height} artScale={artScale} opacity={op.aim} />
       ) : null}
       {layers.defeat ? (
-        <SpriteLayer source={layers.defeat} width={width} height={height} artScale={artScale} opacity={op.defeat} />
+        <SpriteLayer source={layers.defeat} width={width} height={height} artScale={artScale} opacity={op.defeat} onDisplay={onDefeatArtDisplay} />
       ) : null}
       {layers.down ? (
         <SpriteLayer source={layers.down} width={width} height={height} artScale={artScale} opacity={op.down} offsetY={downOffsetY} />
@@ -253,6 +258,7 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
   defeatSettlesDown = true,
   muzzleFlashEnabled = true,
   downOffsetY = 0,
+  onDefeatArtDisplay,
 }: BaseProps & {
   characterId?: number;
   victoryActive?: boolean;
@@ -269,6 +275,8 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
   muzzleFlashEnabled?: boolean;
   /** Optional presentation-only sole alignment for a caller's shared ground. */
   downOffsetY?: number;
+  /** Called once the hit (defeat) art is actually on screen, for callers handing off from another renderer. */
+  onDefeatArtDisplay?: () => void;
 }) {
   const hasPng = !!getPlayerSpriteSource(characterId, 'idle');
   const hasDown = !!getPlayerDownSource(characterId);
@@ -307,6 +315,7 @@ export const PlayerCharacterSprite = memo(function PlayerCharacterSprite({
             pose={pose}
             defeatSettlesDown={defeatSettlesDown}
             downOffsetY={downOffsetY}
+            onDefeatArtDisplay={onDefeatArtDisplay}
           />
         ) : (
           <View style={svgPoseStyle(pose)}>

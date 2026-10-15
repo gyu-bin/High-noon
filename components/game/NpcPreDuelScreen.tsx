@@ -10,6 +10,7 @@ import { WesternButton } from '@/components/ui/western/WesternPrimitives';
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { uiV3Colors } from '@/constants/theme';
 import { scaledArtStyle } from '@/constants/characterArtMetadata';
+import { quickDrawArt, usesNpcQuickDraw } from '@/constants/npcQuickDrawArt';
 import { faceoffStandingArt } from '@/constants/npcFaceoffPoseArt';
 import { npcPreDuelLayout } from '@/constants/npcPreDuelPresentation';
 import {
@@ -48,8 +49,9 @@ export function NpcPreDuelScreen({
   const { t } = useTranslation();
   const labels = useCharacterLabels(playerId as 1 | 2 | 3 | 4);
   const landscape = width > height;
-  const playerAim = faceoffStandingArt('player', playerId, 'aim');
-  const npcAim = faceoffStandingArt('npc', npcId, 'aim');
+  const cinematicPilot = usesNpcQuickDraw(playerId, npcId, !landscape);
+  const playerAim = cinematicPilot ? quickDrawArt('player', playerId, 'ready') : faceoffStandingArt('player', playerId, 'aim');
+  const npcAim = cinematicPilot ? quickDrawArt('npc', npcId, 'ready') : faceoffStandingArt('npc', npcId, 'aim');
   const figures = npcPreDuelLayout({ width, height, playerId, npcId, paddingTop, paddingLeft });
 
   return (
@@ -84,7 +86,7 @@ export function NpcPreDuelScreen({
             source={playerAim.source}
             contentFit="contain"
             transition={0}
-            style={[scaledArtStyle(figures.player.size, figures.player.size, playerAim.artScale), playerAim.flipHorizontal && styles.flipped]}
+            style={[scaledArtStyle(figures.player.size, figures.player.size, playerAim.artScale), cinematicPilot ? { transform: [{ translateY: figures.player.size * (faceoffStandingArt('player', playerId, 'aim').groundFraction - playerAim.groundFraction) }, { scaleX: playerAim.flipHorizontal ? -1 : 1 }] } : playerAim.flipHorizontal && styles.flipped]}
           />
         </View>
         <Text style={[styles.vs, { left: figures.vsLeft, top: figures.vsTop }]}>VS</Text>
@@ -93,7 +95,7 @@ export function NpcPreDuelScreen({
             source={npcAim.source}
             contentFit="contain"
             transition={0}
-            style={[scaledArtStyle(figures.npc.size, figures.npc.size, npcAim.artScale), npcAim.flipHorizontal && styles.flipped]}
+            style={[scaledArtStyle(figures.npc.size, figures.npc.size, npcAim.artScale), cinematicPilot ? { transform: [{ translateY: figures.npc.size * (faceoffStandingArt('npc', npcId, 'aim').groundFraction - npcAim.groundFraction) }, { scaleX: npcAim.flipHorizontal ? -1 : 1 }] } : npcAim.flipHorizontal && styles.flipped]}
           />
         </View>
       </View>

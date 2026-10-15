@@ -33,6 +33,7 @@ function load(file) {
     ?? load(ref.startsWith('@/') ? path.join(root, ref.slice(2)) : path.resolve(path.dirname(file), ref)));
   return module.exports;
 }
+const { quickDrawArt, usesNpcQuickDraw } = load(path.join(root, 'constants/npcQuickDrawArt.ts'));
 const { faceoffStandingArt } = load(path.join(root, 'constants/npcFaceoffPoseArt.ts'));
 const { npcPreDuelLayout, preDuelAimBounds } = load(path.join(root, 'constants/npcPreDuelPresentation.ts'));
 const { NpcPreDuelScreen } = load(path.join(root, 'components/game/NpcPreDuelScreen.tsx'));
@@ -122,8 +123,8 @@ test('VS follows actual actor height on broad pairs while sizes, origins and gro
   }
 });
 test('actual Pre-Duel renderer uses fitted sources and boxes while retaining selected background and CTA', () => {
-  for (const [playerId, npcId] of [[1, 1], [2, 9], [3, 15], [4, 22]]) {
-    const props = { width: 402, height: 874, playerId, npcId, paddingLeft: 12, paddingTop: 64, paddingBottom: 34,
+  for (const [width, height] of [[402, 874], [874, 402]]) for (let playerId = 1; playerId <= 4; playerId++) for (let npcId = 1; npcId <= 22; npcId++) {
+    const props = { width, height, playerId, npcId, paddingLeft: 12, paddingTop: 64, paddingBottom: 34,
       opponentName: 'Opponent', backgroundId: 'town', onBack() {}, onStart() {} };
     const tree = NpcPreDuelScreen(props), positions = npcPreDuelLayout(props), images = [];
     let background, start;
@@ -136,14 +137,17 @@ test('actual Pre-Duel renderer uses fitted sources and boxes while retaining sel
     images.forEach((node, index) => {
       const kind = index === 0 ? 'player' : 'npc', id = index === 0 ? playerId : npcId;
       const actor = index === 0 ? positions.player : positions.npc;
-      const box = flatten(node.props.style), image = node.props.children, art = faceoffStandingArt(kind, id, 'aim');
+      const box = flatten(node.props.style), image = node.props.children;
+      const pilot = usesNpcQuickDraw(playerId, npcId, width <= height);
+      const art = pilot ? quickDrawArt(kind, id, 'ready') : faceoffStandingArt(kind, id, 'aim');
       assert.equal(image.props.source, art.source); assert.equal(image.props.contentFit, 'contain');
       close(box.left, actor.left, 'render left'); close(box.top, actor.top, 'render top');
       close(box.width, actor.size, 'render nominal square');
       const style = flatten(image.props.style);
       close(style.width, actor.size * art.artScale, 'expanded canvas width');
       close(style.marginHorizontal ?? 0, (actor.size - style.width) / 2, 'expanded canvas centered');
-      assert.equal(style.transform?.[0]?.scaleX === -1, art.flipHorizontal);
+      assert.equal(style.transform?.some(transform => transform.scaleX === -1) ?? false, art.flipHorizontal);
+      if (pilot) close(style.transform.find(transform => transform.translateY != null).translateY + actor.size * art.groundFraction, actor.size * faceoffStandingArt(kind, id, 'aim').groundFraction, 'quickdraw IDLE sole follows original Pre-Duel ground');
     });
     assert.equal(background.props.width, props.width); assert.equal(background.props.height, props.height);
     assert.strictEqual(start.props.onPress, props.onStart);
