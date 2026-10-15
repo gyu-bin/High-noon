@@ -10,12 +10,22 @@
     "tapToStart": "タップしてスタート",
     "tagline": "反応速度デュエル"
   },
+  "meta": {
+    "menu": {
+      "tagline": "決闘が待っている",
+      "solo": "1人決闘",
+      "local": "2人プレイ"
+    }
+  },
   "menu": {
     "play": "プレイ",
     "vsNpc": "vs NPC",
     "vsNpcHint": "対戦相手リストへ",
     "localDuel": "2人対戦",
     "localDuelHint": "キャラとラウンド数を選び、同じ端末で2人プレイ",
+    "bountyRanking": "賞金ランキング",
+    "comingSoonTitle": "まもなく公開",
+    "comingSoonBody": "まもなく公開されます",
     "more": "その他",
     "stats": "記録",
     "character": "キャラクター",

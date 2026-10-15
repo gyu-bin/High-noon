@@ -2,6 +2,7 @@ import 'react-native-gesture-handler';
 // i18n은 다른 모듈보다 먼저 평가되어야 한다 — import 위치를 위로 유지할 것
 import i18n, { changeLanguage, i18nInitPromise, languageFromCaptureUrl } from '@/locales';
 
+import { NanumMyeongjo_700Bold } from '@expo-google-fonts/nanum-myeongjo';
 import { Rye_400Regular, useFonts } from '@expo-google-fonts/rye';
 import { Stack, usePathname, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -18,6 +19,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
+import { AnimatedSplash } from '@/components/splash/AnimatedSplash';
 import { AppErrorBoundary } from '@/components/ui/AppErrorBoundary';
 import { OtaUpdatedToast } from '@/components/ui/OtaUpdatedToast';
 import { StoreUpdateModal } from '@/components/ui/StoreUpdateModal';
@@ -127,10 +129,12 @@ function RootLayoutContent() {
   const language = useSettingsStore((s) => s.language);
   const [fontsLoaded, fontError] = useFonts({
     Rye_400Regular,
+    NanumMyeongjo_700Bold,
   });
 
   const ready = fontsLoaded || fontError != null;
   const [appReady, setAppReady] = useState(false);
+  const [splashVisible, setSplashVisible] = useState(true);
   const [otaToastVisible, setOtaToastVisible] = useState(false);
   const [storeUpdateVisible, setStoreUpdateVisible] = useState(false);
 
@@ -278,6 +282,7 @@ function RootLayoutContent() {
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="menu" options={{ headerShown: false }} />
+        <Stack.Screen name="settings" options={{ headerShown: false }} />
         <Stack.Screen
           name="npc-select"
           options={{ title: t('nav.npcSelect'), headerTitleAlign: 'center' }}
@@ -298,6 +303,7 @@ function RootLayoutContent() {
         <Stack.Screen name="capture" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ headerShown: false }} />
       </Stack>
+      {splashVisible ? <AnimatedSplash onComplete={() => setSplashVisible(false)} /> : null}
       <OtaUpdatedToast visible={otaToastVisible} onHidden={hideOtaToast} />
       <StoreUpdateModal visible={storeUpdateVisible} onDismiss={dismissStoreUpdate} />
     </SafeAreaProvider>

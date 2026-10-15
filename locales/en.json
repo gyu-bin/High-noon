@@ -10,12 +10,22 @@
     "tapToStart": "Tap to Start",
     "tagline": "Reaction Duel"
   },
+  "meta": {
+    "menu": {
+      "tagline": "A DUEL AWAITS",
+      "solo": "SOLO DUEL",
+      "local": "2 PLAYERS"
+    }
+  },
   "menu": {
     "play": "Play",
     "vsNpc": "vs NPC",
     "vsNpcHint": "Go to opponent list",
     "localDuel": "2P Duel",
     "localDuelHint": "Pick characters and rounds, then play on one device",
+    "bountyRanking": "Bounty Ranking",
+    "comingSoonTitle": "Coming soon",
+    "comingSoonBody": "Coming soon",
     "more": "More",
     "stats": "Stats",
     "character": "Character",

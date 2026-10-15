@@ -10,12 +10,22 @@
     "tapToStart": "탭하여 시작",
     "tagline": "반응속도 결투"
   },
+  "meta": {
+    "menu": {
+      "tagline": "결투가 기다린다",
+      "solo": "1인 결투",
+      "local": "2인 플레이"
+    }
+  },
   "menu": {
     "play": "플레이",
     "vsNpc": "vs NPC",
     "vsNpcHint": "NPC 목록으로 이동합니다",
     "localDuel": "2인 대결",
     "localDuelHint": "캐릭터·판수를 고른 뒤 같은 기기에서 둘이 플레이합니다",
+    "bountyRanking": "현상금 랭킹",
+    "comingSoonTitle": "곧 출시됩니다",
+    "comingSoonBody": "곧 출시됩니다",
     "more": "더보기",
     "stats": "기록",
     "character": "캐릭터",
