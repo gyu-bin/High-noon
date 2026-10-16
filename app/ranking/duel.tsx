@@ -69,6 +69,7 @@ export default function RankingDuelScreen() {
   const winW = stage.windowWidth;
   const winH = stage.windowHeight;
   const opponent = usePvpStore((s) => s.opponent);
+  const playerCharacterId = useSettingsStore((s) => s.selectedCharacterId);
   const matchId = usePvpStore((s) => s.matchId);
   const [duelBackgroundId, setDuelBackgroundId] = useState(pickDuelBackground);
   const backgroundMatchId = useRef(matchId);
@@ -514,6 +515,7 @@ export default function RankingDuelScreen() {
         pauseDisabled={pauseBlocked}
         opponentName={opponent.display_name}
         opponentCharacterId={opponent.character_id}
+        playerCharacterId={playerCharacterId}
         opponentTierLabel={t(`ranking.tier.${parseRankTier(opponent.rank_tier)}`)}
         recordDuelLabel={t('ranking.recordDuel')}
         heartsMax={PVP_WINS_NEEDED}

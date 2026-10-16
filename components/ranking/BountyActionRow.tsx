@@ -7,7 +7,7 @@ import { colors, uiV3Colors } from '@/constants/theme';
 import { play } from '@/utils/audioService';
 import { trigger } from '@/utils/hapticService';
 
-const leather = require('@/high_noon_terra_asset_pack/output/ui/textures/leather_panel.png');
+const leather = require('@/assets/images/ui/western/ui_leather_texture.png');
 
 type IconName = keyof typeof Ionicons.glyphMap;
 

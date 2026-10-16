@@ -21,7 +21,8 @@ async function storageGet(key: string): Promise<string | null> {
   const secure = await getSecureStore();
   if (secure) {
     try {
-      return await secure.getItemAsync(key);
+      const stored = await secure.getItemAsync(key);
+      if (stored != null) return stored;
     } catch {
       // Expo Go / 구버전 바이너리에서 네이티브 모듈 없을 수 있음
     }
@@ -67,11 +68,24 @@ async function issueDeviceKey(): Promise<string> {
  * 기기 고유 키 (32+ chars). Anonymous Auth 없이도 PvP RPC 호출 가능.
  * Expo Go / 구버전 빌드에서도 크래시하지 않도록 네이티브 모듈은 optional.
  */
-export async function getOrCreateDeviceKey(): Promise<string> {
+async function loadOrCreateDeviceKey(): Promise<string> {
   const existing = await storageGet(DEVICE_KEY_STORAGE);
   if (existing && existing.length >= 32) return existing;
 
   const hex = await issueDeviceKey();
   await storageSet(DEVICE_KEY_STORAGE, hex);
   return hex;
+}
+
+// Startup analytics, board loading and pending submissions can all request the
+// installation identity together. They must share one issued/persisted key.
+let deviceKeyPromise: Promise<string> | null = null;
+export function getOrCreateDeviceKey(): Promise<string> {
+  if (!deviceKeyPromise) {
+    deviceKeyPromise = loadOrCreateDeviceKey().catch((error: unknown) => {
+      deviceKeyPromise = null;
+      throw error;
+    });
+  }
+  return deviceKeyPromise;
 }

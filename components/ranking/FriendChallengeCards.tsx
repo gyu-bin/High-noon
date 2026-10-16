@@ -8,8 +8,8 @@ import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { uiV3Colors } from '@/constants/theme';
 import { formatReactionMs } from '@/utils/formatReactionMs';
 
-// Existing V3 textures only (NEW ART = 0).
-const wantedPaper = require('@/high_noon_terra_asset_pack/output/ui/textures/wanted_paper.png');
+// Reuse the existing paper texture (NEW ART = 0).
+const wantedPaper = require('@/assets/images/ui/western/ui_wanted_paper.png');
 
 const INK = '#2D160E';
 const INK_SOFT = '#5B3521';

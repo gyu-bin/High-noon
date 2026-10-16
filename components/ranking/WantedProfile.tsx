@@ -7,7 +7,7 @@ import { WesternPanel } from '@/components/ui/western/WesternPrimitives';
 import { FONT_RYE, FONT_WESTERN_SERIF } from '@/constants/fonts';
 import type { PvpProfile } from '@/types/pvp';
 
-const wantedPaper = require('@/high_noon_terra_asset_pack/output/ui/textures/wanted_paper.png');
+const wantedPaper = require('@/assets/images/ui/western/ui_wanted_paper.png');
 
 type Props = {
   profile: PvpProfile;

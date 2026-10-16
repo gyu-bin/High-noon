@@ -54,6 +54,8 @@ export default function RankingHubScreen() {
   const [nameDim, setNameDim] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [board, setBoard] = useState<PvpLeaderboardEntry[]>([]);
+  const [boardLoaded, setBoardLoaded] = useState(false);
+  const [boardFailed, setBoardFailed] = useState(false);
   const [meRank, setMeRank] = useState<number | null>(null);
   const [daily, setDaily] = useState<DailyChallenge | null>(null);
   const lastRerollAt = useRef(0);
@@ -76,7 +78,10 @@ export default function RankingHubScreen() {
 
   const applyBoardData = useCallback(
     ({ me, leaderboard: lb, daily: today }: BountyBoardData, { silent }: { silent: boolean }) => {
-      if (!silent) setError(null);
+      // A successful silent retry also recovers an earlier connection error.
+      setError(null);
+      setBoardLoaded(true);
+      setBoardFailed(false);
       setProfile(me);
       void whenRankingRewardsReady().then(() => recordSeasonPeak(me.rank_tier));
       setBoard(lb.entries ?? []);
@@ -135,9 +140,13 @@ export default function RankingHubScreen() {
         }
         applyRef.current(data, meta);
       },
-      onError: (cause) => errorRef.current('ranking refresh failed', cause),
+      onError: (cause) => {
+        setBoardFailed(true);
+        errorRef.current('ranking refresh failed', cause);
+      },
       onSlow: () => {
-        if (!usePvpStore.getState().profile) setError(t('ranking.networkFailed'));
+        setBoardFailed(true);
+        setError(t('ranking.networkFailed'));
       },
     });
     sessionRef.current = session;
@@ -151,6 +160,7 @@ export default function RankingHubScreen() {
   const refresh = useCallback(() => {
     if (!isSupabaseConfigured) return;
     setError(null);
+    setBoardFailed(false);
     sessionRef.current?.refresh();
   }, []);
   useEffect(() => () => {
@@ -231,7 +241,7 @@ export default function RankingHubScreen() {
           <Ionicons name="chevron-back" size={22} color={colors.gold} />
           <Text style={styles.backText}>{t('common.back')}</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('ranking.refresh')} onPress={refresh} disabled={loading} hitSlop={10} style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('ranking.refresh')} onPress={refresh} disabled={loading || !isSupabaseConfigured} hitSlop={10} style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}>
           <Ionicons name="refresh" size={20} color={loading ? colors.sand : colors.gold} />
         </Pressable>
       </View>
@@ -265,13 +275,16 @@ export default function RankingHubScreen() {
           <View style={styles.offlinePanel}>
             <Ionicons name="cloud-offline-outline" size={28} color={colors.gold} />
             <View style={styles.offlineCopy}>
-              <Text style={styles.offlineTitle}>{t('ranking.offlineTitle')}</Text>
-              <Text style={styles.offlineBody}>{t('ranking.offlineBody')}</Text>
+              <Text style={styles.offlineTitle}>{t(isSupabaseConfigured ? 'ranking.leaderboard' : 'ranking.offlineTitle')}</Text>
+              <Text style={styles.offlineBody}>{isSupabaseConfigured ? error ?? t('ranking.networkFailed') : t('ranking.offlineBody')}</Text>
             </View>
           </View>
         )}
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error && profile ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}
+        {error && isSupabaseConfigured ? (
+          <WesternButton title={t('ranking.refresh')} onPress={refresh} disabled={loading} variant="quiet" />
+        ) : null}
 
         <WesternButton
           title={matching ? t('ranking.matching') : t('ranking.duel')}
@@ -305,7 +318,10 @@ export default function RankingHubScreen() {
         <LeaderboardPreview
           title={t('ranking.leaderboard')}
           viewAllLabel={t('ranking.viewAll')}
-          emptyLabel={t('ranking.leaderboardEmpty')}
+          emptyLabel={t(!isSupabaseConfigured ? 'ranking.offlineBody'
+            : loading && !boardLoaded ? 'common.loading'
+              : boardFailed || !boardLoaded ? 'ranking.networkFailed'
+                : 'ranking.leaderboardEmpty')}
           rows={board}
           current={currentEntry}
           tierLabel={(tier) => t(`ranking.tier.${parseRankTier(tier)}`)}
