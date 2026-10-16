@@ -103,7 +103,9 @@ function DuelSpriteStack({
   const artScale = characterArtDisplayScale(mode, id);
   const artStyle = [scaledArtStyle(width, height, artScale), layerStyles.clear];
   const displayPose = spriteDisplayPose(pose);
-  const op = usePoseOpacity(displayPose, layers.down != null && defeatSettlesDown);
+  // Clarity art has distinct HIT and KNEEL/DOWN bodies: cut on landing instead of a ghosting crossfade.
+  const grounded = Boolean(mode === 'player' ? CLARITY_PLAYERS[id] : CLARITY_NPCS[id]);
+  const op = usePoseOpacity(displayPose, layers.down != null && defeatSettlesDown, grounded);
   const showAimLayer = layers.aim != null && layers.aim !== layers.idle;
 
   return (

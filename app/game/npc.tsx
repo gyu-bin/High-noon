@@ -1,4 +1,5 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { pickDuelBackground, type DuelBackgroundId } from '@/utils/duelBackgroundSelection';
 import { StyleSheet, Text, View } from 'react-native';
@@ -39,12 +40,11 @@ import { DEV_UNLOCK_ALL_NPCS } from '@/constants/devFlags';
 import { getNpcById } from '@/constants/npcs';
 import {
   DUEL_DEFEAT_MODAL_DELAY_MS,
-  DUEL_DEFEAT_REVEAL_DELAY_MS,
   DUEL_EARLY_MODAL_DELAY_MS,
   DUEL_HEADSHOT_REVEAL_DELAY_MS,
 } from '@/constants/duelPresentation';
 import { buildDuelStartParams, CHAOS_MODES, type ChaosMode } from '@/utils/npcDuelParams';
-import { useDuelBgmDuck } from '@/hooks/useDuelBgmDuck';
+import { useNpcDuelSoundscape } from '@/hooks/useNpcDuelSoundscape';
 import { useDuelBackgroundPause } from '@/hooks/useDuelBackgroundPause';
 import { useDuelEngine, type DuelOutcome, type DuelPhase } from '@/hooks/useDuelEngine';
 import { useScreenBgm } from '@/hooks/useScreenBgm';
@@ -77,6 +77,8 @@ import { trigger } from '@/utils/hapticService';
 
 const WINS_TO_END = 3;
 const HEARTS = 3;
+// NPC presentation only: impact overlaps the muzzle flash/recoil tail.
+const NPC_SHOT_TO_HIT_MS = 90;
 
 // 네이티브 모듈 미포함 구버전 빌드에서도 동작하도록 lazy 로드
 let ScreenOrientation: typeof import('expo-screen-orientation') | null = null;
@@ -100,7 +102,8 @@ function buildLastStandWinData(
       lastStand: true,
     };
   }
-  const pm = o.reactionMs ?? 0;
+  // No player shot was measured (timeout): keep it null rather than showing a made-up 0 ms.
+  const pm = o.reactionMs ?? null;
   const nm = npcSim.reactionMs;
   return {
     kind: 'win',
@@ -114,11 +117,16 @@ function buildLastStandWinData(
 export default function NpcGameScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const isFocused = useIsFocused();
+  const routeFocusedRef = useRef(isFocused);
+  routeFocusedRef.current = isFocused;
   const insets = useSafeAreaInsets();
   const stage = usePhoneStageMetrics();
   const winW = stage.windowWidth;
   const winH = stage.windowHeight;
-  const reduceMotion = useReducedMotion();
+  const systemReduceMotion = useReducedMotion();
+  const duelCameraMotion = useSettingsStore((s) => s.duelCameraMotion);
+  const reduceMotion = systemReduceMotion || !duelCameraMotion;
 
   const overlayPad = useMemo(
     () => ({
@@ -167,6 +175,8 @@ export default function NpcGameScreen() {
   const currentRound = useGameStore((s) => s.currentRound);
   const playerHearts = useGameStore((s) => s.playerHearts);
   const opponentHearts = useGameStore((s) => s.opponentHearts);
+  const playerScore = useGameStore((s) => s.playerScore);
+  const opponentScore = useGameStore((s) => s.opponentScore);
   const startMatch = useGameStore((s) => s.startMatch);
   const setScores = useGameStore((s) => s.setScores);
   const setHearts = useGameStore((s) => s.setHearts);
@@ -175,14 +185,23 @@ export default function NpcGameScreen() {
   /** Shot presentation follows the engine, which retains tap timing. */
   const [playerWeaponShot, setPlayerWeaponShot] = useState(false);
   const [npcWeaponShot, setNpcWeaponShot] = useState(false);
+  const shotPresentedRef = useRef({ player: false, npc: false });
 
   const firePlayerGunshot = useCallback(() => {
+    if (shotPresentedRef.current.player) return;
+    shotPresentedRef.current.player = true;
     setPlayerWeaponShot(true);
     playGunshot();
   }, []);
   const fireNpcGunshot = useCallback(() => {
+    if (shotPresentedRef.current.npc) return;
+    shotPresentedRef.current.npc = true;
     setNpcWeaponShot(true);
     playGunshot();
+  }, []);
+  const onDefeatGroundContact = useCallback(() => {
+    void play('defeat_thud');
+    void trigger('medium');
   }, []);
 
   const bangHapticDoneRef = useRef(false);
@@ -221,7 +240,6 @@ export default function NpcGameScreen() {
     onOpponentShoot: fireNpcGunshot,
   });
 
-  useDuelBgmDuck(phase);
   useDuelBackgroundPause(phase !== '대기' && phase !== '결과', useCallback(() => {
     pauseTimers();
     setPaused(true);
@@ -229,6 +247,9 @@ export default function NpcGameScreen() {
 
   const startRoundDuel = useCallback(() => {
     if (!npc) return;
+    shotPresentedRef.current = { player: false, npc: false };
+    setPlayerWeaponShot(false);
+    setNpcWeaponShot(false);
     resetNpcRoundSimulation(npcRoundSimRef);
     let chaosMode: ChaosMode | null = null;
     if (npc.id === 21) {
@@ -260,11 +281,13 @@ export default function NpcGameScreen() {
   const [adRevivePending, setAdRevivePending] = useState<null | { ps: number; ns: number }>(null);
   const [adReviveLoading, setAdReviveLoading] = useState(false);
   const adReviveUsedRef = useRef(false);
+  const adReviveInFlightRef = useRef(false);
   const isAdFree = useProgressStore((s) => s.isAdFree);
   const [abilityOverlay, setAbilityOverlay] = useState<AbilityOverlayType>(null);
   const [earlyOverlay, setEarlyOverlay] = useState(false);
   const [defeatedSide, setDefeatedSide] = useState<'player' | 'npc' | null>(null);
   const [paused, setPaused] = useState(false);
+  useNpcDuelSoundscape(phase, paused);
   /** #21 chaos 조합 적용 후 신호판 반영용 */
   const [, setChaosRenderTick] = useState(0);
   const [npcRoundWinBurstId, setNpcRoundWinBurstId] = useState(0);
@@ -298,21 +321,11 @@ export default function NpcGameScreen() {
   const headshotApplyPendingRef = useRef(false);
   const npcRoundSimRef = useRef<NpcReactionSimulation | null>(null);
   const leavingForResultRef = useRef(false);
+  const resultReadyAtRef = useRef(0);
 
   const paleDimStyle = useAnimatedStyle(() => ({
     opacity: paleDimOpacity.value,
   }));
-
-  const revealNpcDefeat = useCallback((withHeartBreak: boolean) => {
-    if (outcomeRevealTimersRef.current.defeat != null) {
-      clearTimeout(outcomeRevealTimersRef.current.defeat);
-      outcomeRevealTimersRef.current.defeat = null;
-    }
-    setDefeatedSide('npc');
-    void play('defeat_thud');
-    void trigger('medium');
-    if (withHeartBreak) void play('heart_break');
-  }, []);
 
   useEffect(() => {
     modalDataRef.current = modal;
@@ -419,6 +432,7 @@ export default function NpcGameScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      routeFocusedRef.current = true;
       if (leavingForResultRef.current) {
         return undefined;
       }
@@ -429,6 +443,7 @@ export default function NpcGameScreen() {
       preloadRewardedAd();
       if (npcIdStr == null) {
         return () => {
+          routeFocusedRef.current = false;
           resetDuel();
         };
       }
@@ -448,7 +463,7 @@ export default function NpcGameScreen() {
         await Promise.all([
           ScreenOrientation?.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {}),
           preloadSceneImages(),
-          npc ? prefetchNpcDuelPresentation(npc.id, npc.tier, battleDayNight) : Promise.resolve(),
+          npc ? prefetchNpcDuelPresentation(npc.id, npc.tier, battleDayNight, useSettingsStore.getState().selectedCharacterId) : Promise.resolve(),
         ]);
         if (cancelled || !npc) return;
         if (npc?.id !== 21) {
@@ -465,6 +480,7 @@ export default function NpcGameScreen() {
         adReviveUsedRef.current = false;
         resetDuel();
         setDefeatedSide(null);
+        shotPresentedRef.current = { player: false, npc: false };
         setPlayerWeaponShot(false);
         setNpcWeaponShot(false);
         setModalVisible(false);
@@ -472,6 +488,7 @@ export default function NpcGameScreen() {
         setPreDuelVisible(true);
       })();
       return () => {
+        routeFocusedRef.current = false;
         cancelled = true;
         setAbilityIntroVisible(false);
         resetDuel();
@@ -615,6 +632,13 @@ export default function NpcGameScreen() {
 
     const effectiveWin = modalData.kind === 'win';
 
+    // The engine remains authoritative. Only fill in missing presentation for
+    // early taps, timeout without an NPC shot, and an ability's reversed result.
+    // Engine callbacks already presented ordinary shots; the refs prevent a
+    // second sound/flash when this result effect runs.
+    if (effectiveWin) firePlayerGunshot();
+    else fireNpcGunshot();
+
     // 광고 부활 등 모달이 사라진 뒤에도 결과 화면에서 반응 ms를 쓸 수 있게 기록
     useGameStore.getState().setLastReaction({
       playerMs: modalData.playerMs,
@@ -656,6 +680,7 @@ export default function NpcGameScreen() {
     const modalDelay = nextDefeatedSide != null
         ? DUEL_DEFEAT_MODAL_DELAY_MS
         : DUEL_EARLY_MODAL_DELAY_MS;
+    resultReadyAtRef.current = Date.now() + modalDelay;
 
     if (outcomeRevealTimersRef.current.defeat != null) {
       clearTimeout(outcomeRevealTimersRef.current.defeat);
@@ -670,18 +695,15 @@ export default function NpcGameScreen() {
       !effectiveWin && !reviveFlip && data.kind === 'loss' && ph > 0;
     const npcLostHeart = effectiveWin && oh > 0;
 
-    if (reviveFlip) {
-      setDefeatedSide('player');
-    } else if (nextDefeatedSide == null) {
+    if (nextDefeatedSide == null) {
       setDefeatedSide(null);
     } else {
       outcomeRevealTimersRef.current.defeat = setTimeout(() => {
         setDefeatedSide(nextDefeatedSide);
-        void play('defeat_thud');
         void trigger('medium');
         if (playerLostHeart || npcLostHeart) void play('heart_break');
         outcomeRevealTimersRef.current.defeat = null;
-      }, DUEL_DEFEAT_REVEAL_DELAY_MS);
+      }, NPC_SHOT_TO_HIT_MS);
     }
 
     const ohAfterWin = effectiveWin && oh > 0 ? oh - 1 : oh;
@@ -745,7 +767,6 @@ export default function NpcGameScreen() {
       deferredModalRef.current = modalData;
       setModalVisible(false);
       setModal(null);
-      revealNpcDefeat(npcLostHeart);
       setAbilityOverlay('last_stand');
       return () => {
         if (outcomeRevealTimersRef.current.defeat != null) {
@@ -778,7 +799,6 @@ export default function NpcGameScreen() {
       headshotApplyPendingRef.current = true;
 
       const revealHeadshot = () => {
-        revealNpcDefeat(npcLostHeart);
         deferredModalRef.current = headshotModalData;
         setModal(null);
         setModalVisible(false);
@@ -828,7 +848,8 @@ export default function NpcGameScreen() {
     setScores,
     setHearts,
     setAbilityUsed,
-    revealNpcDefeat,
+    firePlayerGunshot,
+    fireNpcGunshot,
   ]);
 
   const handleAbilityOverlayComplete = useCallback(() => {
@@ -842,10 +863,8 @@ export default function NpcGameScreen() {
       const deferred = deferredModalRef.current;
       deferredModalRef.current = null;
       if (deferred) {
-        // Extra damage is already authoritative. Let the newly lethal reaction
-        // finish before Continue can navigate away, using the existing reveal window.
-        const delay = opponentHearts <= 1
-          ? DUEL_DEFEAT_MODAL_DELAY_MS - DUEL_DEFEAT_REVEAL_DELAY_MS : 0;
+        // Headshot changes hearts, but the already-running fall must finish.
+        const delay = Math.max(0, resultReadyAtRef.current - Date.now());
         outcomeRevealTimersRef.current.modal = setTimeout(() => {
           setModal(deferred);
           setModalVisible(true);
@@ -854,15 +873,17 @@ export default function NpcGameScreen() {
       }
       return;
     }
-    setDefeatedSide(null);
     const deferred = deferredModalRef.current;
     deferredModalRef.current = null;
     if (deferred) {
       if (deferred.kind === 'win') {
         setDefeatedSide('npc');
       }
-      setModal(deferred);
-      setModalVisible(true);
+      outcomeRevealTimersRef.current.modal = setTimeout(() => {
+        setModal(deferred);
+        setModalVisible(true);
+        outcomeRevealTimersRef.current.modal = null;
+      }, Math.max(0, resultReadyAtRef.current - Date.now()));
     }
   }, [setHearts, setAbilityUsed]);
 
@@ -875,6 +896,7 @@ export default function NpcGameScreen() {
       npcMs: string;
       lossReason: string;
     }) => {
+      if (!routeFocusedRef.current || leavingForResultRef.current) return;
       const completionStamp = String(Date.now());
       leavingForResultRef.current = true;
       rememberNpcMatchResult({
@@ -930,6 +952,11 @@ export default function NpcGameScreen() {
   }, [goToMatchResult, npc]);
 
   const onContinue = useCallback(() => {
+    // Consuming the presentation once protects automatic terminal navigation
+    // and rapid repeated button callbacks from advancing/routing twice.
+    if (!routeFocusedRef.current || leavingForResultRef.current || !modalDataRef.current) return;
+    const m = modalDataRef.current;
+    modalDataRef.current = null;
     if (outcomeRevealTimersRef.current.defeat != null) {
       clearTimeout(outcomeRevealTimersRef.current.defeat);
       outcomeRevealTimersRef.current.defeat = null;
@@ -938,7 +965,6 @@ export default function NpcGameScreen() {
       clearTimeout(outcomeRevealTimersRef.current.modal);
       outcomeRevealTimersRef.current.modal = null;
     }
-    setDefeatedSide(null);
     setModalVisible(false);
     setModal(null);
 
@@ -949,13 +975,12 @@ export default function NpcGameScreen() {
     const abilityUsedNow = useGameStore.getState().abilityUsed;
     const characterIdNow = useSettingsStore.getState().selectedCharacterId;
 
-    const m = modalDataRef.current;
     const lr = useGameStore.getState().lastReaction;
     let playerMsStr = lr.playerMs != null ? String(lr.playerMs) : '';
     let npcMsStr = lr.npcMs != null ? String(lr.npcMs) : '';
     let lossReason = '';
     if (m?.kind === 'win') {
-      playerMsStr = String(m.playerMs);
+      playerMsStr = m.playerMs != null ? String(m.playerMs) : '';
       npcMsStr = m.npcMs != null ? String(m.npcMs) : '';
     } else if (m?.kind === 'loss') {
       lossReason = m.reason;
@@ -1008,11 +1033,24 @@ export default function NpcGameScreen() {
       return;
     }
 
+    setDefeatedSide(null);
     processedOutcomeKey.current = '';
     nextRound();
     resetDuel();
     startRoundDuel();
   }, [npc, nextRound, resetDuel, startRoundDuel, goToMatchResult]);
+
+  const terminalRound = phase === '결과' && (
+    playerHearts <= 0 || opponentHearts <= 0 ||
+    playerScore >= WINS_TO_END || opponentScore >= WINS_TO_END
+  );
+
+  useEffect(() => {
+    // modalVisible becomes true only after the fall/ability presentation. The
+    // final round uses that same completion boundary without a Continue gate.
+    if (!isFocused || !modalVisible || !terminalRound) return;
+    onContinue();
+  }, [isFocused, modalVisible, terminalRound, onContinue]);
 
   /** 뱅 이전에도 탭을 엔진으로 넘겨 얼리 즉시 패배(누르고 있다가 뱅 때 손 떼면 이기는 버그 방지) */
   const shootCapturesEarly =
@@ -1057,13 +1095,16 @@ export default function NpcGameScreen() {
   }, [npc, startRoundDuel]);
 
   const onAdReviveDecline = useCallback(() => {
+    if (!routeFocusedRef.current || leavingForResultRef.current || adReviveInFlightRef.current) return;
     setAdRevivePending(null);
     finishMatchToResult();
   }, [finishMatchToResult]);
 
   const onAdReviveWatchAd = useCallback(async () => {
     const pending = adRevivePending;
-    if (!pending) return;
+    if (!pending || adReviveInFlightRef.current || adReviveUsedRef.current ||
+      !routeFocusedRef.current || leavingForResultRef.current) return;
+    adReviveInFlightRef.current = true;
 
     const adFree = useProgressStore.getState().isAdFree;
     let rewarded = adFree;
@@ -1071,9 +1112,19 @@ export default function NpcGameScreen() {
       // 모달은 유지한 채 loading만 켠다 — 광고 SDK가 위에 뜨고,
       // 실패 시에도 모달이 갑자기 사라져 결과로 튕기는 느낌을 줄인다.
       setAdReviveLoading(true);
-      rewarded = await showRewardedAd();
-      setAdReviveLoading(false);
+      try {
+        rewarded = await showRewardedAd();
+      } catch {
+        rewarded = false;
+      } finally {
+        setAdReviveLoading(false);
+        adReviveInFlightRef.current = false;
+      }
+    } else {
+      adReviveInFlightRef.current = false;
     }
+
+    if (!routeFocusedRef.current || leavingForResultRef.current || adReviveUsedRef.current) return;
 
     setAdRevivePending(null);
 
@@ -1099,7 +1150,7 @@ export default function NpcGameScreen() {
 
   const npcPose = useMemo(() => {
     if (defeatedSide === 'npc') return 'defeat' as const;
-    if (defeatedSide === 'player') return 'idle' as const;
+    if (defeatedSide === 'player') return 'shoot' as const;
     return npcSpritePoseFromPhase(phase, holdResultShoot);
   }, [defeatedSide, phase, holdResultShoot]);
   useEffect(() => {
@@ -1161,7 +1212,7 @@ export default function NpcGameScreen() {
   }, [npc, isChaos, chaosMode]);
 
   useEffect(() => {
-    if (screenShakeIntensity === 0) {
+    if (screenShakeIntensity === 0 || !duelCameraMotion) {
       cancelAnimation(shakeX);
       cancelAnimation(shakeY);
       shakeX.value = 0;
@@ -1205,7 +1256,7 @@ export default function NpcGameScreen() {
       shakeX.value = withTiming(0, { duration: 100, reduceMotion: RM_GAME });
       shakeY.value = withTiming(0, { duration: 100, reduceMotion: RM_GAME });
     }
-  }, [phase, reduceMotion, screenShakeIntensity, shakeX, shakeY]);
+  }, [phase, reduceMotion, duelCameraMotion, screenShakeIntensity, shakeX, shakeY]);
 
   useEffect(() => {
     if (npc?.id !== 22) {
@@ -1309,12 +1360,15 @@ export default function NpcGameScreen() {
             playerCharacterId={selectedCharacterId}
             earlyWarning={earlyOverlay}
             onShootPress={onShootPress}
+            onDefeatGroundContact={onDefeatGroundContact}
+            cameraMotionEnabled={duelCameraMotion}
             onPause={() => {
               // BANG 중 pause→resume은 반응 시계만 밀려 "보고 준비했다 탭" 악용이 가능
               if (phase === '뱅' || phase === '페이크') return;
               setPaused(true);
             }}
             pauseDisabled={phase === '페이크' || phase === '뱅'}
+            pauseHidden={phase === '결과' || modalVisible}
             contentShakeStyle={screenShakeIntensity > 0 ? screenShakeStyle : undefined}
           />
 
@@ -1333,7 +1387,7 @@ export default function NpcGameScreen() {
           />
 
           <NpcRoundModal
-            visible={modalVisible}
+            visible={modalVisible && !terminalRound}
             data={modal}
             onContinue={onContinue}
             onMenu={leaveToMainMenu}
@@ -1342,6 +1396,7 @@ export default function NpcGameScreen() {
           />
 
           <AbilityOverlay
+            groundContactManaged
             abilityType={abilityOverlay}
             onComplete={handleAbilityOverlayComplete}
           />

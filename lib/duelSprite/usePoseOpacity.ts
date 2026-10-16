@@ -14,8 +14,11 @@ import { RM_GAME } from '@/constants/reanimatedGame';
 
 import { DUEL_SPRITE_TIMING } from './poseSpecs';
 
-/** idle / aim / shoot / defeat(→down) 레이어 크로스페이드 */
-export function usePoseOpacity(pose: SpritePose, hasDown = false) {
+/**
+ * idle / aim / shoot / defeat(→down) 레이어 크로스페이드.
+ * hardSwap: defeat→down 을 착지 순간 한 프레임에 교체 — 서로 다른 자세 두 장이 반투명하게 겹치지 않게.
+ */
+export function usePoseOpacity(pose: SpritePose, hasDown = false, hardSwap = false) {
   const T = DUEL_SPRITE_TIMING;
   const idle = useSharedValue(pose === 'idle' ? 1 : 0);
   const aim = useSharedValue(pose === 'aim' ? 1 : 0);
@@ -50,7 +53,7 @@ export function usePoseOpacity(pose: SpritePose, hasDown = false) {
         Math.round(T.defeatToppleMs * T.defeatDownSwapFrac),
       );
       const swapCfg = {
-        duration: T.defeatDownSwapMs,
+        duration: hardSwap ? 0 : T.defeatDownSwapMs,
         easing: Easing.out(Easing.quad),
         reduceMotion: RM_GAME,
       };
@@ -81,6 +84,7 @@ export function usePoseOpacity(pose: SpritePose, hasDown = false) {
   }, [
     pose,
     hasDown,
+    hardSwap,
     idle,
     aim,
     defeat,

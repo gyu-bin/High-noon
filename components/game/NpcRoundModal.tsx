@@ -8,13 +8,15 @@ import { OUTCOME_DEFEAT, OUTCOME_VICTORY, outcomeTextShadow } from '@/constants/
 import { colors } from '@/constants/theme';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { formatReactionMs } from '@/utils/formatReactionMs';
+import { npcRoundResultLine } from '@/utils/npcRoundResultLine';
 
 export type NpcRoundLossReason = 'early' | 'timeout' | 'slower';
 
 export type NpcRoundModalData =
   | {
       kind: 'win';
-      playerMs: number;
+      /** null when the round was won without a measured player shot (e.g. Last Stand after a timeout). */
+      playerMs: number | null;
       npcMs: number | null;
       npcMisfire?: boolean;
       lastStand?: boolean;
@@ -37,10 +39,11 @@ type Props = {
   paddingBottom?: number;
 };
 
-function getLossReasonShortKey(reason: NpcRoundLossReason): string {
+function getLossReasonShortKey(reason: NpcRoundLossReason, npcMs: number | null): string {
   switch (reason) {
     case 'early': return 'lossShort.early';
-    case 'timeout': return 'lossShort.timeout';
+    // A 'timeout' with an NPC shot means the NPC fired before the player tapped.
+    case 'timeout': return npcMs != null ? 'lossShort.shotFirst' : 'lossShort.timeout';
     case 'slower': return 'lossShort.slower';
   }
 }
@@ -58,6 +61,7 @@ export function NpcRoundModal({ visible, data, onContinue, onMenu, paddingBottom
   const frame = { left: 0, top: 0, width: m.windowWidth, height: m.windowHeight };
   const playerTime = data.playerMs == null ? '—' : `${formatReactionMs(data.playerMs)} ms`;
   const npcTime = data.npcMs == null ? '—' : `${formatReactionMs(data.npcMs)} ms`;
+  const resultLine = npcRoundResultLine(data);
 
   return (
     <View style={styles.root}>
@@ -78,7 +82,7 @@ export function NpcRoundModal({ visible, data, onContinue, onMenu, paddingBottom
           >
             {playerWon ? t('result.victory') : t('result.defeat')}
           </Text>
-          {data.kind === 'loss' ? <Text style={styles.reason}>{t(getLossReasonShortKey(data.reason))}</Text> : null}
+          {data.kind === 'loss' ? <Text style={styles.reason}>{t(getLossReasonShortKey(data.reason, data.npcMs))}</Text> : null}
           {data.kind === 'win' && data.headshot ? <Text style={styles.reason}>{t('result.headshot')}</Text> : null}
           {data.kind === 'win' && data.lastStand ? <Text style={styles.reason}>{t('result.lastStand')}</Text> : null}
         </Animated.View>
@@ -90,6 +94,7 @@ export function NpcRoundModal({ visible, data, onContinue, onMenu, paddingBottom
             { bottom: Math.max(paddingBottom, 8) + 8 },
           ]}
         >
+          {resultLine ? <Text style={styles.margin}>{t(resultLine.key, { ms: resultLine.marginMs != null ? formatReactionMs(resultLine.marginMs) : undefined })}</Text> : null}
           <Text style={styles.timing}>
             <Text style={styles.timingLabel}>{t('result.me')} </Text>{playerTime}
             <Text style={styles.timingDivider}>  ·  </Text>
@@ -136,6 +141,7 @@ const styles = StyleSheet.create({
   },
   bottomPanelLandscape: { left: '30%', right: '30%' },
   timing: { color: colors.cream, fontSize: 13, fontWeight: '800', textAlign: 'center', ...outcomeTextShadow },
+  margin: { color: colors.cream, fontSize: 17, fontWeight: '900', textAlign: 'center', ...outcomeTextShadow },
   timingLabel: { color: colors.sand, fontSize: 10, letterSpacing: 0.7 },
   timingDivider: { color: colors.ochre },
   continueHint: { color: 'rgba(245, 230, 200, 0.56)', fontSize: 9, fontWeight: '700', letterSpacing: 1.1 },

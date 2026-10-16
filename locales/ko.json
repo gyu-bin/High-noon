@@ -52,6 +52,8 @@
     "bountyRankingHint": "비동기 기록 결투와 세계 순위를 확인합니다"
   },
   "settings": {
+    "duelCameraMotion": "결투 카메라 움직임",
+    "duelCameraMotionDesc": "NPC 결투의 확대와 화면 흔들림을 사용합니다.",
     "appearance": "언어 및 화면",
     "darkMode": "다크 모드",
     "darkModeDesc": "어두운 가죽 톤으로 화면을 표시합니다",
@@ -112,17 +114,31 @@
     "thisRound": "이번 라운드  ",
     "finalVictory": "최종 승리!",
     "reactionSpeed": "반응 속도",
-    "me": "나"
+    "me": "나",
+    "winner": "승자",
+    "lostDuel": "다음 결투에서 다시 도전하세요",
+    "lastRoundReaction": "마지막 라운드 · 반응 속도",
+    "roundText": {
+      "marginWin": "상대보다 {{ms}}ms 빠르게 승리!",
+      "marginLoss": "상대보다 {{ms}}ms 느렸어요.",
+      "causeEarly": "BANG 전에 쏴서 반칙패예요.",
+      "causeTimeout": "제한 시간 안에 쏘지 못했어요.",
+      "causeShotFirst": "상대가 먼저 쐈어요.",
+      "causeNpcMisfire": "상대가 먼저 실수했어요.",
+      "causeAbility": "능력으로 결과가 바뀌었어요."
+    }
   },
   "loss": {
     "early": "뱅 신호 전에 발사했습니다",
     "timeout": "제한 시간 안에 쏘지 못했습니다",
+    "shotFirst": "상대가 먼저 방아쇠를 당겼습니다",
     "slower": "상대보다 늦게 반응했습니다",
     "opponentEarly": "상대 오발"
   },
   "lossShort": {
     "early": "얼리 탭",
     "timeout": "시간 초과",
+    "shotFirst": "선제 사격 허용",
     "slower": "더 느림"
   },
   "localDuel": {
@@ -294,6 +310,8 @@
       "navigator": "상대 탐색"
     },
     "settings": {
+      "duelCameraMotion": "결투 카메라 움직임",
+      "duelCameraMotionDesc": "NPC 결투의 확대와 화면 흔들림을 사용합니다.",
       "subtitle": "나만의 개척지 설정",
       "audio": "사운드 및 피드백"
     },

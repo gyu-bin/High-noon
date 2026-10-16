@@ -26,6 +26,8 @@ export default function SettingsScreen() {
   const soundEnabled = useSettingsStore((s) => s.soundEnabled);
   const musicEnabled = useSettingsStore((s) => s.musicEnabled);
   const hapticEnabled = useSettingsStore((s) => s.hapticEnabled);
+  const duelCameraMotion = useSettingsStore((s) => s.duelCameraMotion);
+  const setDuelCameraMotion = useSettingsStore((s) => s.setDuelCameraMotion);
   const language = useSettingsStore((s) => s.language);
   const darkMode = useSettingsStore((s) => s.darkMode);
   const setDarkMode = useSettingsStore((s) => s.setDarkMode);
@@ -123,6 +125,7 @@ export default function SettingsScreen() {
           </WesternPanel>
           <WesternPanel>
             <Text style={styles.section}>{t('settings.game')}</Text>
+            <WesternSettingRow label={t('settings.duelCameraMotion')} description={t('settings.duelCameraMotionDesc')}><WesternToggle accessibilityLabel={t('settings.duelCameraMotion')} value={duelCameraMotion} onValueChange={setDuelCameraMotion} /></WesternSettingRow>
             <View style={styles.iapActions}>
               <WesternButton title={t('settings.resetProgress')} variant="quiet" onPress={resetProgress} />
             </View>

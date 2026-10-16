@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { memo, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
@@ -10,29 +11,31 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { RM_GAME } from '@/constants/reanimatedGame';
+import { V3_DUEL_VFX } from '@/constants/v3DuelAssets';
 
-const DUST_MAIN = 'rgba(206, 172, 122, 0.9)';
-const DUST_SOFT = 'rgba(178, 142, 96, 0.8)';
-const DUST_HAZE = 'rgba(228, 202, 158, 0.65)';
+/** vfx_fall_dust.png 안에서 먼지 덩어리 바닥선이 차지하는 높이 비율 (256px 중 약 195px) */
+const DUST_BASE_FRAC = 0.76;
 
 type PuffSpec = {
   xFrac: number;
-  yFrac: number;
+  /** 스프라이트 한 변 길이 (스프라이트 폭 대비) */
   sizeFrac: number;
   driftX: number;
   driftY: number;
   delayMs: number;
-  color: string;
+  mirror: boolean;
+  peakOpacity: number;
 };
 
-/** 착지 지점에서 양옆으로 퍼지는 원샷 흙먼지 */
+/** 착지 지점에서 양옆으로 퍼지는 원샷 흙먼지 — NPC 와 같은 픽셀 먼지 원화 */
 const PUFFS: PuffSpec[] = [
-  { xFrac: 0.38, yFrac: 0.88, sizeFrac: 0.16, driftX: -26, driftY: -10, delayMs: 0, color: DUST_MAIN },
-  { xFrac: 0.62, yFrac: 0.88, sizeFrac: 0.15, driftX: 26, driftY: -12, delayMs: 30, color: DUST_MAIN },
-  { xFrac: 0.5, yFrac: 0.92, sizeFrac: 0.2, driftX: 0, driftY: -6, delayMs: 0, color: DUST_HAZE },
-  { xFrac: 0.3, yFrac: 0.92, sizeFrac: 0.11, driftX: -38, driftY: -4, delayMs: 70, color: DUST_SOFT },
-  { xFrac: 0.7, yFrac: 0.92, sizeFrac: 0.1, driftX: 38, driftY: -5, delayMs: 90, color: DUST_SOFT },
+  { xFrac: 0.5, sizeFrac: 0.78, driftX: 0, driftY: -4, delayMs: 0, mirror: false, peakOpacity: 0.95 },
+  { xFrac: 0.28, sizeFrac: 0.42, driftX: -24, driftY: -6, delayMs: 50, mirror: true, peakOpacity: 0.8 },
+  { xFrac: 0.72, sizeFrac: 0.42, driftX: 24, driftY: -6, delayMs: 70, mirror: false, peakOpacity: 0.8 },
 ];
+
+/** 먼지 바닥선 (스프라이트 높이 대비) */
+const GROUND_FRAC = 0.92;
 
 const ImpactPuff = memo(function ImpactPuff({
   spec,
@@ -58,7 +61,7 @@ const ImpactPuff = memo(function ImpactPuff({
     progress.value = withDelay(
       delayMs + spec.delayMs,
       withTiming(1, {
-        duration: 620,
+        duration: 760,
         easing: Easing.out(Easing.cubic),
         reduceMotion: RM_GAME,
       }),
@@ -67,15 +70,16 @@ const ImpactPuff = memo(function ImpactPuff({
   }, [active, delayMs, progress, spec.delayMs]);
 
   const style = useAnimatedStyle(() => ({
-    opacity: progress.value <= 0 ? 0 : (1 - progress.value) * 0.9,
+    opacity: progress.value <= 0 ? 0 : (1 - progress.value) * spec.peakOpacity,
     transform: [
       { translateX: spec.driftX * progress.value },
       { translateY: spec.driftY * progress.value },
-      { scale: 0.35 + progress.value * 1.25 },
+      { scaleX: (spec.mirror ? -1 : 1) * (0.6 + progress.value * 0.5) },
+      { scaleY: 0.6 + progress.value * 0.5 },
     ],
   }));
 
-  const size = Math.round(Math.min(width, height) * spec.sizeFrac);
+  const size = Math.round(width * spec.sizeFrac);
 
   return (
     <Animated.View
@@ -84,15 +88,17 @@ const ImpactPuff = memo(function ImpactPuff({
         styles.puff,
         {
           left: width * spec.xFrac - size / 2,
-          top: height * spec.yFrac - size / 2,
+          // 원화 속 먼지 바닥이 지면선에 닿도록 배치하고, 바닥을 기준으로 부풀린다.
+          top: height * GROUND_FRAC - size * DUST_BASE_FRAC,
           width: size,
           height: size,
-          borderRadius: size / 2,
-          backgroundColor: spec.color,
+          transformOrigin: `50% ${DUST_BASE_FRAC * 100}%`,
         },
         style,
       ]}
-    />
+    >
+      <Image source={V3_DUEL_VFX.fallDust} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} cachePolicy="memory-disk" />
+    </Animated.View>
   );
 });
 

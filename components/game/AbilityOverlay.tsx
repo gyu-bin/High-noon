@@ -22,6 +22,7 @@ export type AbilityOverlayType = 'last_stand' | 'headshot' | 'revive' | null;
 type Props = {
   abilityType: AbilityOverlayType;
   onComplete: () => void;
+  groundContactManaged?: boolean;
 };
 
 const DURATION_MS = 1100;
@@ -30,7 +31,7 @@ const REVIVE_TOTAL_MS = 2100;
 /**
  * 캐릭터 능력 발동 전면 연출 (NPC 결투 위에 표시)
  */
-export function AbilityOverlay({ abilityType, onComplete }: Props) {
+export function AbilityOverlay({ abilityType, onComplete, groundContactManaged = false }: Props) {
   const { t } = useTranslation();
   const scale = useSharedValue(0.75);
   const opacity = useSharedValue(0);
@@ -56,8 +57,10 @@ export function AbilityOverlay({ abilityType, onComplete }: Props) {
 
       void play('ghost_revive_death');
       const thudTimer = setTimeout(() => {
-        void play('defeat_thud');
-        void trigger('heavy');
+        if (!groundContactManaged) {
+          void play('defeat_thud');
+          void trigger('heavy');
+        }
       }, 120);
 
       deathOpacity.value = withTiming(1, {
@@ -204,7 +207,7 @@ export function AbilityOverlay({ abilityType, onComplete }: Props) {
       clearTimeout(t1);
       if (t2 != null) clearTimeout(t2);
     };
-  }, [abilityType, onComplete, deathOpacity, deathScale, deathY, labelOpacity, opacity, reviveAura, reviveGlow, scale]);
+  }, [abilityType, onComplete, groundContactManaged, deathOpacity, deathScale, deathY, labelOpacity, opacity, reviveAura, reviveGlow, scale]);
 
   const textStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],

@@ -79,7 +79,7 @@ test('ranked opponent uses the same language: non-final holds hit then idle, onl
   assert.match(arena, /pose=\{npcDefeated && npcStage === 'recover' \? 'idle' : npcPose\}/);
   assert.match(arena, /defeatSettlesDown=\{npcHitFinal\}/);
   // The sprite only swaps hit -> down when the hit is final; default keeps every other screen unchanged.
-  assert.match(sprites, /usePoseOpacity\(displayPose, layers\.down != null && defeatSettlesDown\)/);
+  assert.match(sprites, /usePoseOpacity\(displayPose, layers\.down != null && defeatSettlesDown, grounded\)/);
   assert.match(sprites, /defeatSettlesDown = true,/);
   // Ranked hearts: 2 wins needed -> 1 heart left after a non-final loss, 0 after the final one.
   assert.deepEqual(seq(c.npcTimeline(1), [0, 200, 500]), ['hit', 'stagger', 'recover']);

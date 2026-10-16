@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
@@ -17,7 +17,7 @@ import type { NpcDuelArenaProps } from './NpcDuelArenaProps';
 import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
 import { CLARITY_NPCS, CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
 import { faceoffStandingArt } from '@/constants/npcFaceoffPoseArt';
-import { DUEL_SPRITE_TIMING } from '@/lib/duelSprite/poseSpecs';
+import { DUEL_SPRITE_TIMING, defeatLandingMs } from '@/lib/duelSprite/poseSpecs';
 import { NPC_COMBAT_POSES } from '@/constants/combatPoses';
 import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
 import { faceoffContainedLeft, faceoffFlip, faceoffGroundFraction, faceoffMuzzleAnchor, faceoffOutwardPlacement, faceoffPairLayout } from '@/constants/npcFaceoffPresentation';
@@ -50,8 +50,8 @@ export function NpcFaceoffDuelArena({
   specialPresentation, opponentHearts, playerHearts, currentRound,
   shootCapturesEarly, shootActive, playerShotActive, playerCharacterId = 1,
   npcShotActive = false, opponentName, opponentTierLabel, recordDuelLabel,
-  heartsMax = 3, earlyWarning, onShootPress, onPause, pauseDisabled,
-  contentShakeStyle, combatPreview, bossFlag,
+  heartsMax = 3, earlyWarning, onShootPress, onPause, pauseDisabled, pauseHidden = false,
+  contentShakeStyle, combatPreview, bossFlag, onDefeatGroundContact, cameraMotionEnabled = true,
 }: NpcDuelArenaProps) {
   const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
@@ -72,23 +72,21 @@ export function NpcFaceoffDuelArena({
   const [timedPlayerStage, setPlayerStage] = useState<PlayerReactionStage>('none');
   const npcStage = (__DEV__ ? combatPreview?.npcStage : undefined) ?? timedNpcStage;
   const playerStage = (__DEV__ ? combatPreview?.playerStage : undefined) ?? timedPlayerStage;
-  const npcHitLethal = isLethalHit(opponentHearts);
-  const playerHitLethal = isLethalHit(playerHearts);
   const defeatScope = `${npcId}:${playerCharacterId}:${currentRound}`;
   const [finalNpcScope, holdFinalNpc] = useState<string | null>(null);
   const [finalPlayerScope, holdFinalPlayer] = useState<string | null>(null);
-  // Continue clears the reveal flags before navigation. Hold only a defeat
-  // already revealed by the engine, until a new round/identity or restored heart.
+  // Each engine-revealed round loser stays down through the result. Only a
+  // new round/identity or READY resets the presentation; remaining hearts do not.
   useEffect(() => {
-    holdFinalNpc(previous => !isLethalHit(opponentHearts) ? null
-      : npcPose === 'defeat' ? defeatScope : previous === defeatScope ? previous : null);
-  }, [defeatScope, npcPose, opponentHearts]);
+    holdFinalNpc(previous => npcPose === 'defeat' ? defeatScope
+      : signalPhase === '준비' ? null : previous === defeatScope ? previous : null);
+  }, [defeatScope, npcPose, signalPhase]);
   useEffect(() => {
-    holdFinalPlayer(previous => !isLethalHit(playerHearts) ? null
-      : playerDefeated ? defeatScope : previous === defeatScope ? previous : null);
-  }, [defeatScope, playerDefeated, playerHearts]);
-  const npcDefeated = npcPose === 'defeat' || (finalNpcScope === defeatScope && isLethalHit(opponentHearts));
-  const playerDefeatActive = playerDefeated || (finalPlayerScope === defeatScope && isLethalHit(playerHearts));
+    holdFinalPlayer(previous => playerDefeated ? defeatScope
+      : signalPhase === '준비' ? null : previous === defeatScope ? previous : null);
+  }, [defeatScope, playerDefeated, signalPhase]);
+  const npcDefeated = npcPose === 'defeat' || finalNpcScope === defeatScope;
+  const playerDefeatActive = playerDefeated || finalPlayerScope === defeatScope;
   const finalPlayerHit = playerDefeatActive && isLethalHit(playerHearts);
   // Reactions start at the same approved resting origin; only pose containment may shift them.
   const playerStandingLeft = pairLayout.playerLeft;
@@ -98,19 +96,22 @@ export function NpcFaceoffDuelArena({
   // arrive from the engine and this layer never writes them back.
   useEffect(() => {
     if (!npcDefeated) { setNpcStage('none'); return; }
-    const timers = npcTimeline(npcHitLethal ? 0 : 1).map(step => setTimeout(() => setNpcStage(step.stage), reduceMotion ? step.at / 3 : step.at));
+    const timers = npcTimeline(0).map(step => setTimeout(() => setNpcStage(step.stage), reduceMotion ? step.at / 3 : step.at));
     return () => timers.forEach(clearTimeout);
-  }, [npcDefeated, npcHitLethal, defeatScope, reduceMotion]);
+  }, [npcDefeated, defeatScope, reduceMotion]);
   useEffect(() => {
     if (!playerDefeatActive) { setPlayerStage('none'); return; }
-    const timers = playerTimeline(playerHitLethal ? 0 : 1).map(step => setTimeout(() => setPlayerStage(step.stage), step.at));
+    const timers = playerTimeline(0).map(step => setTimeout(() => setPlayerStage(step.stage), step.at));
     return () => timers.forEach(clearTimeout);
-  }, [playerDefeatActive, playerHitLethal, defeatScope]);
+  }, [playerDefeatActive, defeatScope]);
 
-  const aiming = signalPhase === '집중' || signalPhase === '페이크' || signalPhase === '뱅';
+  const aiming = signalPhase === '집중' || signalPhase === '페이크' || signalPhase === '뱅' || signalPhase === '결과';
   const playerStandingArt = faceoffStandingArt('player', playerCharacterId, playerShotActive ? 'fire' : aiming ? 'aim' : 'ready');
   const npcStandingArt = faceoffStandingArt('npc', npcId, npcShotActive ? 'fire' : npcPose === 'aim' || npcPose === 'shoot' || aiming ? 'aim' : 'ready');
   const dedicated = NPC_COMBAT_POSES[npcId];
+  // No rotated stand-in for a fall: rotating standing/HIT art is not a real collapse. Characters without
+  // dedicated FALL/DOWN art end on their own KNEEL frame (clarity `down`) until that art exists.
+  const npcCollapseFallback = false;
   const npcArtPose = npcDefeated
     ? npcPoseForStage(npcStage === 'none' ? 'hit' : npcStage, { fall: dedicated?.fall != null, down: dedicated?.down != null })
     : npcStandingArt.pose === 'faceoff' ? 'fire' : npcStandingArt.pose;
@@ -119,7 +120,7 @@ export function NpcFaceoffDuelArena({
     : npcArtPose === 'down' && dedicated?.down ? dedicated.down
       : npcReactionVisible ? getV3NpcPose(npcId, npcArtPose === 'kneel' ? 'down' : npcArtPose as V3NpcPose) : npcStandingArt.source;
   const playerPose: SpritePose = playerDefeatActive
-    ? !finalPlayerHit && playerStage === 'recover' ? 'idle' : 'defeat'
+    ? 'defeat'
     : playerShotActive ? 'shoot' : aiming ? 'aim' : 'idle';
   const playerReactionVisible = playerDefeatActive && playerPose === 'defeat';
   // Quick-draw actors hand off to a separately mounted reaction renderer whose image loads
@@ -143,6 +144,31 @@ export function NpcFaceoffDuelArena({
   }, [markNpcReactionReady, npcReactionReady, npcReactionVisible]);
   const playerReactionShown = playerReactionVisible && (!cinematicPilot || playerReactionReady);
   const npcReactionShown = npcReactionVisible && (!cinematicPilot || npcReactionReady);
+  const contactScope = useRef({ scope: defeatScope, player: false, npc: false });
+  const groundContact = useRef(onDefeatGroundContact);
+  groundContact.current = onDefeatGroundContact;
+  useEffect(() => {
+    if (contactScope.current.scope !== defeatScope) contactScope.current = { scope: defeatScope, player: false, npc: false };
+    if (!npcDefeated) contactScope.current.npc = false;
+    if (!playerDefeatActive) contactScope.current.player = false;
+    // Thud on the frame that actually reaches the ground: DOWN art, or KNEEL when there is none.
+    if (!npcCollapseFallback && npcReactionShown && npcStage === (dedicated?.down ? 'down' : 'kneel') && !contactScope.current.npc) {
+      contactScope.current.npc = true;
+      groundContact.current?.('npc');
+    }
+  }, [dedicated?.down, defeatScope, npcCollapseFallback, npcDefeated, npcReactionShown, npcStage, playerDefeatActive]);
+  const reportPlayerGround = useCallback(() => {
+    if (contactScope.current.scope !== defeatScope || contactScope.current.player) return;
+    contactScope.current.player = true;
+    groundContact.current?.('player');
+  }, [defeatScope]);
+  // The player sprite swaps HIT -> KNEEL on its own timing (usePoseOpacity); report contact when it lands.
+  useEffect(() => {
+    if (!playerReactionShown) return;
+    const landing = defeatLandingMs(Boolean(CLARITY_PLAYERS[playerCharacterId]));
+    const timer = setTimeout(reportPlayerGround, reduceMotion ? 0 : landing);
+    return () => clearTimeout(timer);
+  }, [playerCharacterId, playerReactionShown, reduceMotion, reportPlayerGround]);
   const playerFlip = playerReactionVisible ? faceoffFlip('player', playerCharacterId, playerPose) : playerStandingArt.flipHorizontal;
   const npcFlip = npcReactionVisible ? faceoffFlip('npc', npcId, npcArtPose) : npcStandingArt.flipHorizontal;
   const playerBoundsPose = playerReactionShown ? playerPose : playerStandingArt.pose === 'draw' ? 'draw' : 'fire';
@@ -155,6 +181,19 @@ export function NpcFaceoffDuelArena({
   const npcAnchor = npcReactionVisible ? faceoffMuzzleAnchor('npc', npcId) : npcStandingArt.muzzle;
   const playerMuzzleX = (playerFlip ? 1 - playerAnchor.x : playerAnchor.x) * size;
   const npcMuzzleX = (npcFlip ? 1 - npcAnchor.x : npcAnchor.x) * size;
+
+  const cameraZoom = useSharedValue(1);
+  const shotKick = useSharedValue(0);
+  const cameraReduced = reduceMotion || !cameraMotionEnabled;
+  useEffect(() => {
+    cameraZoom.value = withTiming(!cameraReduced && (signalPhase === '집중' || signalPhase === '페이크' || signalPhase === '뱅') ? 1.015 : 1, { duration: cameraReduced ? 0 : 650 });
+    return () => cancelAnimation(cameraZoom);
+  }, [cameraReduced, cameraZoom, signalPhase]);
+  useEffect(() => {
+    if (cameraReduced || (!playerShotActive && !npcShotActive)) { shotKick.value = 0; return; }
+    shotKick.value = withSequence(withTiming(1, { duration: 18 }), withTiming(-0.4, { duration: 35 }), withTiming(0, { duration: 65 }));
+    return () => cancelAnimation(shotKick);
+  }, [cameraReduced, npcShotActive, playerShotActive, shotKick]);
 
   const playerRecoil = useSharedValue(0);
   const npcRecoil = useSharedValue(0);
@@ -206,10 +245,10 @@ export function NpcFaceoffDuelArena({
   useEffect(() => {
     if (playerStage === 'none' || playerStage === 'recover') { kick.value = 0; vignette.value = withTiming(0, { duration: 200 }); return; }
     if (playerStage === 'impact') {
-      if (!reduceMotion) kick.value = withSequence(withTiming(1, { duration: 45 }), withTiming(0, { duration: 180 }));
+      if (!cameraReduced) kick.value = withSequence(withTiming(1, { duration: 45 }), withTiming(0, { duration: 180 }));
       vignette.value = withSequence(withTiming(finalPlayerHit ? 0.6 : 0.42, { duration: 60 }), withTiming(0, { duration: 360 }));
     }
-  }, [finalPlayerHit, kick, playerStage, reduceMotion, vignette]);
+  }, [cameraReduced, finalPlayerHit, kick, playerStage, vignette]);
 
   const specialFxActive = (specialPresentation === 'thunderbolt' && (signalPhase === '페이크' || signalPhase === '뱅')) || (specialPresentation === 'void' && signalPhase === '뱅') || (specialPresentation === 'redEye' && (signalPhase === '집중' || signalPhase === '페이크'));
   useEffect(() => {
@@ -223,10 +262,10 @@ export function NpcFaceoffDuelArena({
   const npcFlashStyle = useAnimatedStyle(() => ({ opacity: npcFlash.value }));
   const playerSmokeStyle = useAnimatedStyle(() => ({ opacity: playerSmoke.value, transform: [{ translateY: -16 * playerSmoke.value }, { scale: 0.85 + playerSmoke.value * 0.3 }] }));
   const npcSmokeStyle = useAnimatedStyle(() => ({ opacity: npcSmoke.value, transform: [{ translateY: -16 * npcSmoke.value }, { scale: 0.85 + npcSmoke.value * 0.3 }] }));
-  const npcReactionStyle = useAnimatedStyle(() => ({ transformOrigin: 'center bottom', transform: [{ translateX: knockX.value * size }, { translateY: knockY.value * size }, { rotate: `${knockRot.value}deg` }] }));
+  const npcReactionStyle = useAnimatedStyle(() => npcCollapseFallback ? {} : ({ transformOrigin: 'center bottom', transform: [{ translateX: knockX.value * size }, { translateY: knockY.value * size }, { rotate: `${knockRot.value}deg` }] }));
   const impactStyle = useAnimatedStyle(() => ({ opacity: impact.value }));
   const dustStyle = useAnimatedStyle(() => ({ opacity: dust.value }));
-  const kickStyle = useAnimatedStyle(() => ({ transform: [{ translateX: -4 * kick.value }, { translateY: 5 * kick.value }] }));
+  const kickStyle = useAnimatedStyle(() => ({ transform: [{ scale: cameraZoom.value }, { translateX: cameraReduced ? 0 : -2 * kick.value + 2 * shotKick.value }, { translateY: cameraReduced ? 0 : 2 * kick.value - shotKick.value }] }));
   const vignetteStyle = useAnimatedStyle(() => ({ opacity: vignette.value }));
   const specialStyle = useAnimatedStyle(() => ({ opacity: specialFx.value }));
   const flashStyle = useAnimatedStyle(() => ({ opacity: cinematicPilot ? 0 : playerFlash.value * 0.2 }));
@@ -245,7 +284,7 @@ export function NpcFaceoffDuelArena({
         <DuelCoverImage source={APPROVED_DUEL_BACKGROUNDS[backgroundId ?? fallbackBackgroundId]} width={width} height={height} bleed={1.18} />
         <View style={[styles.lane, { left: playerLeft, top: playerTop, width: size, height: size }]}>
           {cinematicPilot ? <View style={StyleSheet.absoluteFillObject}><NpcCinematicActor readyArt={quickDrawArt('player', playerCharacterId, 'ready')} preparationArt={quickDrawArt('player', playerCharacterId, 'preparation')} drawArt={quickDrawArt('player', playerCharacterId, 'draw')} aimArt={quickDrawArt('player', playerCharacterId, 'aim')} fireArt={quickDrawArt('player', playerCharacterId, 'fire')} size={size} groundFraction={faceoffGroundFraction('player', playerCharacterId)} preparation={signalPhase === '집중' || signalPhase === '페이크'} bang={signalPhase === '뱅'} holding={signalPhase === '결과'} shotActive={playerShotActive} scope={defeatScope} direction="right" hidden={playerReactionShown} /></View> : null}
-          {playerReactionVisible ? <View style={!playerReactionShown && styles.reactionLoading}><PlayerCharacterSprite characterId={playerCharacterId} width={size} height={size} pose={playerPose} flipHorizontal={playerFlip} defeatSettlesDown={finalPlayerHit} defeatDropPx={0} muzzleFlashEnabled={false} downOffsetY={playerCharacterId === 2 ? size * (1221 / 1254 - 0.9378) : 0} onDefeatArtDisplay={cinematicPilot ? markPlayerReactionReady : undefined} /></View> : !cinematicPilot ? (
+          {playerReactionVisible ? <View style={!playerReactionShown && styles.reactionLoading}><PlayerCharacterSprite characterId={playerCharacterId} width={size} height={size} pose={playerPose} flipHorizontal={playerFlip} defeatSettlesDown defeatDropPx={0} muzzleFlashEnabled={false} downOffsetY={playerCharacterId === 2 ? size * (1221 / 1254 - 0.9378) : 0} onDefeatArtDisplay={cinematicPilot ? markPlayerReactionReady : undefined} /></View> : !cinematicPilot ? (
             <Animated.View style={[{ width: size, height: size }, playerRecoilStyle]}>
               <View style={[{ width: size, height: size }, playerFlip && styles.flipped]}>
                 <Image source={playerStandingArt.source} style={playerStandingStyle} contentFit="contain" cachePolicy="memory-disk" priority="high" transition={0} />
@@ -265,7 +304,7 @@ export function NpcFaceoffDuelArena({
           </Animated.View> : null}
           {!cinematicPilot ? <><Animated.View style={[styles.effect, flashBox(npcMuzzleX, npcAnchor.y + npcGroundOffset), npcFlashStyle]}><Image source={V3_DUEL_VFX.muzzleFlash} style={[StyleSheet.absoluteFillObject, styles.flipped]} contentFit="contain" transition={0} /></Animated.View>
           <Animated.View style={[styles.effect, smokeBox(npcMuzzleX, npcAnchor.y + npcGroundOffset), npcSmokeStyle]}><Image source={V3_DUEL_VFX.gunSmoke} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View></> : null}
-          {npcDefeated ? <><Animated.View style={[styles.impact, impactStyle]}><Image source={V3_DUEL_VFX.bulletImpact} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View><Animated.View style={[styles.dust, dustStyle]}><Image source={V3_DUEL_VFX.fallDust} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View></> : null}
+          {npcDefeated ? <><Animated.View style={[styles.impact, impactStyle]}><Image source={V3_DUEL_VFX.bulletImpact} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View><Animated.View style={[styles.dust, dustStyle, npcCollapseFallback && styles.reactionLoading]}><Image source={V3_DUEL_VFX.fallDust} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={0} /></Animated.View></> : null}
         </Animated.View>
       </Animated.View>
       {specialFxActive ? <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFillObject, styles.specialFx, specialStyle]}><Image source={specialAsset} style={styles.specialImage} contentFit="contain" transition={0} /></Animated.View> : null}
@@ -277,8 +316,10 @@ export function NpcFaceoffDuelArena({
         <View style={[styles.hudSide, styles.hudInfoRow]}><Portrait kind="player" id={playerCharacterId} /><View style={styles.hudText}><Text numberOfLines={1} style={styles.hudLabel}>YOU · {playerLabels.name}</Text><Hearts value={playerHearts} max={heartsMax} /></View></View>
         <View style={styles.roundBlock}><Text style={styles.roundLabel}>ROUND</Text><Text style={styles.roundValue}>{currentRound}</Text></View>
         <View style={[styles.hudSide, styles.hudInfoRow]}><View style={[styles.hudText, styles.hudRight]}>{opponentTierLabel ? <Text style={styles.tierLabel}>{opponentTierLabel}</Text> : null}<Text numberOfLines={1} style={[styles.hudLabel, { fontFamily: usesCjkFont(npcName) ? FONT_WESTERN_SERIF : FONT_RYE }]}>{npcName}</Text><Hearts value={opponentHearts} max={heartsMax} /></View><Portrait kind="npc" id={npcId} /></View>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('game.pause')} disabled={pauseDisabled} onPress={onPause} style={[styles.pause, pauseDisabled && styles.pauseDisabled]}><Ionicons color={uiV3Colors.cream} name="pause" size={16} /></Pressable>
       </View>
+      {/* Outside the 52pt HUD row: a child drawn below its parent's bounds never receives touches on iOS,
+          so the tap fell through to the shoot area. Hidden while the round/match result is shown. */}
+      {pauseHidden ? null : <Pressable accessibilityRole="button" accessibilityLabel={t('game.pause')} disabled={pauseDisabled} hitSlop={8} onPress={onPause} style={[styles.pause, { top: paddingTop + 58, right: paddingRight }, pauseDisabled && styles.pauseDisabled]}><Ionicons color={uiV3Colors.cream} name="pause" size={16} /></Pressable>}
       {recordDuelLabel ? <View pointerEvents="none" style={[styles.recordTag, { top: paddingTop + 58 }]}><Text style={styles.recordTagText}>{recordDuelLabel}</Text></View> : null}
       <View pointerEvents="none" style={[styles.cue, { top: Math.max(paddingTop + 90, height * (landscape ? 0.20 : 0.24)) }]}><DuelSignalBoard phase={signalPhase} variant="cinematic" blindBangText={blindBangText} hideBangText={hideBangText} voidShroud={voidShroud} echoBangMiddle={echoBangMiddleSignal} /></View>
       {bossFlag ? <View pointerEvents="none" style={styles.bossRule} /> : null}
@@ -300,7 +341,7 @@ const styles = StyleSheet.create({
   hudInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 5 }, hudText: { flexShrink: 1 }, portrait: { width: 24, height: 30, overflow: 'hidden' }, portraitArt: { position: 'absolute', left: -31, top: -1 },
   hudLabel: { color: uiV3Colors.cream, fontSize: 10, fontWeight: '800', letterSpacing: 1.4 }, tierLabel: { color: uiV3Colors.gold, fontSize: 7, fontWeight: '800', letterSpacing: 1.5, textTransform: 'uppercase' }, hearts: { marginTop: 2, color: '#D45342', fontSize: 15, letterSpacing: 1 },
   roundBlock: { alignItems: 'center', minWidth: 64, paddingVertical: 3, paddingHorizontal: 8, backgroundColor: 'rgba(16, 10, 6, 0.72)', borderBottomWidth: 1, borderColor: 'rgba(201, 166, 107, 0.42)' }, roundLabel: { color: uiV3Colors.cream, fontSize: 9, fontWeight: '800', letterSpacing: 2 }, roundValue: { color: uiV3Colors.gold, fontFamily: FONT_RYE, fontSize: 25, lineHeight: 28 },
-  pause: { position: 'absolute', right: 0, top: 58, padding: 9, borderWidth: 1, borderColor: 'rgba(255, 215, 0, 0.4)', backgroundColor: 'rgba(26, 12, 6, 0.60)' }, pauseDisabled: { opacity: 0.35 },
+  pause: { position: 'absolute', padding: 9, borderWidth: 1, borderColor: 'rgba(255, 215, 0, 0.4)', backgroundColor: 'rgba(26, 12, 6, 0.60)' }, pauseDisabled: { opacity: 0.35 },
   recordTag: { position: 'absolute', alignSelf: 'center', paddingHorizontal: 11, paddingVertical: 4, borderWidth: 1, borderColor: 'rgba(201, 166, 107, 0.4)', backgroundColor: 'rgba(16, 10, 6, 0.68)' }, recordTagText: { color: uiV3Colors.ochre, fontFamily: FONT_RYE, fontSize: 8, letterSpacing: 1.8 },
   cue: { position: 'absolute', left: '8%', right: '8%', height: 76, alignItems: 'center', justifyContent: 'center' }, bossRule: { position: 'absolute', left: '35%', right: '35%', top: 0, height: 2, backgroundColor: uiV3Colors.gold, opacity: 0.68 },
 });

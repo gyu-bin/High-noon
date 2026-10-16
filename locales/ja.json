@@ -52,6 +52,8 @@
     "bountyRankingHint": "非同期の記録デュエルと世界ランキングを開きます"
   },
   "settings": {
+    "duelCameraMotion": "決闘カメラの動き",
+    "duelCameraMotionDesc": "NPC決闘でズームと画面の揺れを有効にします。",
     "appearance": "言語と表示",
     "darkMode": "ダークモード",
     "darkModeDesc": "暗いレザーカラーで表示します",
@@ -112,17 +114,31 @@
     "thisRound": "このラウンド  ",
     "finalVictory": "最終勝利！",
     "reactionSpeed": "反応速度",
-    "me": "自分"
+    "me": "自分",
+    "winner": "勝者",
+    "lostDuel": "次の決闘で再挑戦",
+    "lastRoundReaction": "最終ラウンド · 反応速度",
+    "roundText": {
+      "marginWin": "相手より{{ms}}ms速く勝利！",
+      "marginLoss": "相手より{{ms}}ms遅かった。",
+      "causeEarly": "BANG前に撃ったので反則負け。",
+      "causeTimeout": "制限時間内に撃てなかった。",
+      "causeShotFirst": "相手が先に撃った。",
+      "causeNpcMisfire": "相手が先にミスした。",
+      "causeAbility": "能力で結果が変わった。"
+    }
   },
   "loss": {
     "early": "バン前に撃ちました",
     "timeout": "制限時間内に撃てませんでした",
+    "shotFirst": "相手が先に撃ちました",
     "slower": "相手より反応が遅かったです",
     "opponentEarly": "相手の誤射"
   },
   "lossShort": {
     "early": "早打ち",
     "timeout": "タイムアウト",
+    "shotFirst": "先手を取られた",
     "slower": "遅かった"
   },
   "localDuel": {
@@ -294,6 +310,8 @@
       "navigator": "相手の選択"
     },
     "settings": {
+      "duelCameraMotion": "決闘カメラの動き",
+      "duelCameraMotionDesc": "NPC決闘でズームと画面の揺れを有効にします。",
       "subtitle": "自分だけの開拓地設定",
       "audio": "サウンドとフィードバック"
     },

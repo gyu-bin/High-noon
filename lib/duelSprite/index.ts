@@ -7,6 +7,7 @@ export {
   DUEL_POSE_SPECS,
   DUEL_SPRITE_TIMING,
   defeatImpactDelayMs,
+  defeatLandingMs,
   type DuelDefeatMotion,
 } from './poseSpecs';
 export { resolveDuelSpriteLayers, type DuelSpriteLayers, type DuelSpriteMode } from './resolveLayers';

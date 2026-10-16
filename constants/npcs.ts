@@ -139,7 +139,7 @@ export const NPCS: readonly NpcDefinition[] = [
       'funeral black suit, coffin motif, skull-topped cane, final judgment energy',
   }),
 
-  npc(22, 182, 'hidden', true, false, DT(4000, 12000), 'paleSilence', 0, {
+  npc(22, 170, 'hidden', true, false, DT(4000, 12000), 'paleSilence', 0, {
     secret: true,
     designKeywords:
       'white horse skull motif, bleached bone armor, no face, absolute silence, death incarnate',

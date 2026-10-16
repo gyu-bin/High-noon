@@ -508,7 +508,10 @@ export function NpcFirstPersonDuelArena({
               characterId={opponentCharacterId}
               width={npcSize}
               height={npcSize}
-              flipHorizontal
+              // Shared player FIRE already points left. Mirror only the
+              // right-facing preparation poses (and preserve defeat orientation).
+              // The sprite's muzzle overlay shares this outer transform.
+              flipHorizontal={npcPose !== 'shoot'}
               // Same combat language as NPC duels: a non-final hit holds the hit
               // frame and returns to idle (RECOVER); only a final hit settles down.
               pose={npcDefeated && npcStage === 'recover' ? 'idle' : npcPose}

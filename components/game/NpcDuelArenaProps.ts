@@ -42,9 +42,14 @@ export type NpcDuelArenaProps = {
   heartsMax?: number;
   earlyWarning: boolean;
   onShootPress: () => void;
+  /** NPC face-off presentation contact, independent of engine outcome timing. */
+  onDefeatGroundContact?: (side: 'player' | 'npc') => void;
   onPause: () => void;
   pauseDisabled: boolean;
+  /** Hide the pause control while a round or match result is on screen. */
+  pauseHidden?: boolean;
   contentShakeStyle?: StyleProp<ViewStyle>;
+  cameraMotionEnabled?: boolean;
   /** Development-only renderer replay; ignored by release builds. */
   combatPreview?: {
     scale?: number;

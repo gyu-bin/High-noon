@@ -37,6 +37,8 @@ type SettingsStoreState = {
   soundEnabled: boolean;
   musicEnabled: boolean;
   hapticEnabled: boolean;
+  duelCameraMotion: boolean;
+  setDuelCameraMotion: (value: boolean) => void;
   localMatchPreset: LocalMatchPreset;
   /** 플레이어 선택 캐릭터 id (1~4) */
   selectedCharacterId: number;
@@ -69,6 +71,8 @@ export const useSettingsStore = create<SettingsStoreState>()(
       soundEnabled: true,
       musicEnabled: true,
       hapticEnabled: true,
+      duelCameraMotion: true,
+      setDuelCameraMotion: (duelCameraMotion) => set({ duelCameraMotion }),
       localMatchPreset: 'bo5',
       selectedCharacterId: 1,
       localP1Skin: DEFAULT_LOCAL_P1_SKIN,
@@ -106,6 +110,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
         soundEnabled: s.soundEnabled,
         musicEnabled: s.musicEnabled,
         hapticEnabled: s.hapticEnabled,
+        duelCameraMotion: s.duelCameraMotion,
         localMatchPreset: s.localMatchPreset,
         selectedCharacterId: s.selectedCharacterId,
         localP1Skin: s.localP1Skin,
@@ -122,6 +127,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
           ...current,
           ...p,
           musicEnabled: p?.musicEnabled ?? true,
+          duelCameraMotion: p?.duelCameraMotion ?? true,
           selectedCharacterId: p?.selectedCharacterId ?? 1,
           localP1Skin: normalizeLocalDuelSkin(p?.localP1Skin, DEFAULT_LOCAL_P1_SKIN),
           localP2Skin: normalizeLocalDuelSkin(p?.localP2Skin, DEFAULT_LOCAL_P2_SKIN),

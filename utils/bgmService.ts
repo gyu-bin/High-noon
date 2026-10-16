@@ -35,6 +35,7 @@ type BgmRuntime = {
   fadeTimer: ReturnType<typeof setInterval> | null;
   playChain: Promise<void>;
   playGeneration: number;
+  heldDuck?: boolean;
 };
 
 const runtimeKey = '__highNoonBgmRuntime';
@@ -156,7 +157,7 @@ async function startTrack(track: BgmTrack, opts?: { fadeIn?: boolean }): Promise
   if (!musicOn() || gen !== rt.playGeneration) return;
 
   if (rt.activeTrack === track && player.playing) {
-    setPlayerVolume(player, BASE_VOLUME[track]);
+    setPlayerVolume(player, rt.heldDuck && track !== 'menu' ? DUCK_VOLUME : BASE_VOLUME[track]);
     return;
   }
 
@@ -191,7 +192,7 @@ async function startTrack(track: BgmTrack, opts?: { fadeIn?: boolean }): Promise
     return;
   }
 
-  const target = BASE_VOLUME[track];
+  const target = rt.heldDuck && track !== 'menu' ? DUCK_VOLUME : BASE_VOLUME[track];
   if (opts?.fadeIn === false) {
     setPlayerVolume(player, target);
   } else {
@@ -273,8 +274,10 @@ export function stopBgm(): void {
 }
 
 /** 뱅·페이크 순간 BGM ducking */
-export function duckBgm(active = true): void {
+export function duckBgm(active = true, durationMs: number | null = DUCK_MS): void {
   const rt = getRuntime();
+  rt.heldDuck = active && durationMs === null;
+  clearFadeTimer();
   if (!musicOn() || rt.activeTrack == null) return;
   const player = rt.players.get(rt.activeTrack);
   if (!player) return;
@@ -286,6 +289,7 @@ export function duckBgm(active = true): void {
 
   if (active) {
     setPlayerVolume(player, DUCK_VOLUME);
+    if (durationMs === null) return;
     const track = rt.activeTrack;
     rt.duckTimer = setTimeout(() => {
       rt.duckTimer = null;
@@ -293,7 +297,7 @@ export function duckBgm(active = true): void {
         const p = rt.players.get(rt.activeTrack);
         if (p) fadePlayerTo(p, BASE_VOLUME[track]);
       }
-    }, DUCK_MS);
+    }, durationMs);
     return;
   }
 

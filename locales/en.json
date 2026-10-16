@@ -52,6 +52,8 @@
     "bountyRankingHint": "Open asynchronous record duels and global rankings"
   },
   "settings": {
+    "duelCameraMotion": "Duel camera motion",
+    "duelCameraMotionDesc": "Enable zoom and screen shake in NPC duels.",
     "appearance": "LANGUAGE & DISPLAY",
     "darkMode": "Dark Mode",
     "darkModeDesc": "Use the darker leather color scheme",
@@ -112,17 +114,31 @@
     "thisRound": "This Round  ",
     "finalVictory": "Final Victory!",
     "reactionSpeed": "Reaction Time",
-    "me": "Me"
+    "me": "Me",
+    "winner": "WINNER",
+    "lostDuel": "Another duel awaits",
+    "lastRoundReaction": "LAST ROUND · REACTION TIME",
+    "roundText": {
+      "marginWin": "Won by {{ms}}ms over your opponent!",
+      "marginLoss": "{{ms}}ms slower than your opponent.",
+      "causeEarly": "Foul — you fired before BANG.",
+      "causeTimeout": "You didn't fire in time.",
+      "causeShotFirst": "Your opponent fired first.",
+      "causeNpcMisfire": "Your opponent slipped first.",
+      "causeAbility": "An ability changed the outcome."
+    }
   },
   "loss": {
     "early": "You fired before BANG",
     "timeout": "You didn't fire in time",
+    "shotFirst": "Your opponent fired first",
     "slower": "You reacted slower than your opponent",
     "opponentEarly": "Opponent misfired"
   },
   "lossShort": {
     "early": "Early tap",
     "timeout": "Timeout",
+    "shotFirst": "Outdrawn",
     "slower": "Too slow"
   },
   "localDuel": {
@@ -294,6 +310,8 @@
       "navigator": "Opponent navigation"
     },
     "settings": {
+      "duelCameraMotion": "Duel camera motion",
+      "duelCameraMotionDesc": "Enable zoom and screen shake in NPC duels.",
       "subtitle": "YOUR FRONTIER, YOUR RULES",
       "audio": "AUDIO & FEEDBACK"
     },

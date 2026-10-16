@@ -52,3 +52,10 @@ export function defeatImpactDelayMs(motion: DuelDefeatMotion): number {
     ? Math.round(T.defeatToppleMs * T.defeatDownSwapFrac)
     : Math.round(T.defeatCollapseMs * T.defeatCollapseLandFrac);
 }
+
+/** defeat 시작 → down(또는 kneel) 아트가 완전히 보이는 착지 시점 ms (usePoseOpacity 와 동일 계산) */
+export function defeatLandingMs(hardSwap: boolean): number {
+  const T = DUEL_SPRITE_TIMING;
+  const swapDelay = Math.max(T.defeatCrossfadeMs, Math.round(T.defeatToppleMs * T.defeatDownSwapFrac));
+  return swapDelay + (hardSwap ? 0 : T.defeatDownSwapMs);
+}

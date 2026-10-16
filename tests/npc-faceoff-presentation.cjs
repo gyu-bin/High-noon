@@ -18,6 +18,7 @@ function load(file) {
   return module.exports;
 }
 const layout = load(path.join(root, 'constants/npcFaceoffPresentation.ts'));
+const { quickDrawArt } = load(path.join(root, 'constants/npcQuickDrawArt.ts'));
 const { NPC_FACEOFF_ART_BOUNDS: frames } = load(path.join(root, 'constants/npcFaceoffArtBounds.ts'));
 const art = load(path.join(root, 'constants/characterArtMetadata.ts'));
 let count = 0;
@@ -202,7 +203,7 @@ function createArenaReplay(overrides = {}) {
     './NpcCinematicActor': { NpcCinematicActor: 'PilotActor' },
     './CharacterSprites': { PlayerCharacterSprite: 'PlayerSprite' }, './DuelCoverImage': { DuelCoverImage: 'Background' }, './DuelSignalBoard': { DuelSignalBoard: 'Signal' },
     '@/constants/fonts': { FONT_RYE: 'rye', FONT_WESTERN_SERIF: 'serif', usesCjkFont: () => false },
-    '@/constants/clarityCharacterAssets': { CLARITY_NPCS: {}, CLARITY_PLAYERS: {} },
+    '@/constants/clarityCharacterAssets': { CLARITY_NPCS: {}, CLARITY_PLAYERS: { 1: {}, 2: {}, 3: {}, 4: {} } },
     '@/constants/theme': { uiV3Colors: {} },
     '@/constants/v3DuelAssets': { APPROVED_DUEL_BACKGROUNDS: {}, getV3NpcPose: (id, pose) => `npc${id}-${pose}`, V3_DUEL_VFX: { muzzleFlash: 'runtime-flash', gunSmoke: 'runtime-smoke' } },
     '@/utils/characterLabels': { getCharacterLabels: () => ({ name: 'Player' }) },
@@ -273,7 +274,7 @@ test('quickdraw hit hand-off keeps the standing pose until the reaction art is d
     assert.equal(actor().hidden, true, 'actor hides in the same commit the reaction appears');
     assert.equal(visibleOf(replay.nodes(), node => node.type === 'PlayerSprite'), 1);
     // A reaction whose display event never arrives still takes over after the bounded wait
-    // (lethal hit: the survive timeline already recovers at 220ms, keeping the standing pose).
+    // Every round loss now completes the down sequence, even with hearts remaining.
     const slow = createArenaReplay({ playerCharacterId, npcId, signalPhase: '뱅' });
     slow.update({ playerDefeated: true, playerHearts: 0, signalPhase: '결과' });
     slow.advance(249); assert.equal(slow.pilotActors().find(item => item.direction === 'right').hidden, false);
@@ -292,17 +293,18 @@ test('quickdraw hit hand-off keeps the standing pose until the reaction art is d
     npc.update({ npcPose: 'idle', opponentHearts: 2, currentRound: 2, signalPhase: '준비' }); npc.advance(3000);
     assert.equal(npcActor().hidden, false, 'next round shows the standing actor');
   }
-  // Non-quickdraw pairs keep the immediate legacy hand-off and receive no display callback.
+  // Every pair now uses the quick-draw renderer, so expanded-canvas pairs share the decode-safe hand-off.
   const legacy = createArenaReplay({ playerCharacterId: 4, npcId: 9 });
   legacy.update({ playerDefeated: true, playerHearts: 2, signalPhase: '결과' });
-  assert.equal(legacy.player().onDefeatArtDisplay, undefined);
+  assert.equal(typeof legacy.player().onDefeatArtDisplay, 'function');
 });
-test('delayed fatal headshot promotes the already-revealed surviving reaction to DOWN', () => {
+test('late lethal headshot preserves the already-revealed round DOWN without restarting HIT', () => {
   const replay = createArenaReplay({ playerCharacterId: 3 });
   replay.update({ npcPose: 'defeat', opponentHearts: 1, signalPhase: '결과' });
   replay.advance(1400);
-  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'initial ordinary damage recovers');
+  assert.match(replay.npcSource(), /combat\/npc\/01\/down\.png$/, 'ordinary round damage settles DOWN');
   replay.update({ opponentHearts: 0 });
+  assert.match(replay.npcSource(), /combat\/npc\/01\/down\.png$/, 'heart change must not restart HIT');
   replay.advance(1000);
   assert.match(replay.npcSource(), /combat\/npc\/01\/down\.png$/, 'late lethal damage must promote the timeline');
   replay.update({ npcPose: 'idle' }); replay.advance(2000);
@@ -323,10 +325,10 @@ test('new round cancels the delayed lethal sequence before an old DOWN callback 
   replay.update({ currentRound: 2, opponentHearts: 3, npcPose: 'idle' }); replay.advance(3000);
   assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/);
   replay.update({ npcPose: 'defeat', opponentHearts: 2 }); replay.advance(1000);
-  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'surviving next round must still recover');
+  assert.match(replay.npcSource(), /combat\/npc\/01\/down\.png$/, 'each round loss must settle DOWN');
 });
 
-test('final revealed NPC defeat persists through Continue and resets for new rounds, identities, or restored hearts', () => {
+test('final revealed NPC defeat persists through Continue and resets for new rounds, identities, or READY', () => {
   const replay = createArenaReplay();
   replay.update({ opponentHearts: 0, signalPhase: '결과' });
   assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'zero hearts must not start the reveal early');
@@ -334,8 +336,8 @@ test('final revealed NPC defeat persists through Continue and resets for new rou
   assert.match(replay.npcSource(), /combat\/npc\/01\/down\.png$/);
   replay.update({ npcPose: 'idle' }); replay.advance(2000);
   assert.match(replay.npcSource(), /combat\/npc\/01\/down\.png$/, 'Continue must not stand the final loser up');
-  replay.update({ opponentHearts: 1 });
-  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'restored heart releases the terminal pose');
+  replay.update({ opponentHearts: 1, signalPhase: '준비' });
+  assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'READY releases the terminal pose');
   replay.update({ opponentHearts: 0, npcPose: 'defeat' }); replay.advance(1000);
   replay.update({ npcPose: 'idle', currentRound: 2 });
   assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'new round clears the previous terminal pose');
@@ -351,15 +353,15 @@ test('final revealed NPC defeat persists through Continue and resets for new rou
   replay.update({ npcId: 1 });
   assert.match(replay.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/, 'NPC A→B→A must not restore an old terminal pose');
 });
-test('final player pose persists through cleared reveal while ordinary hit reactions recover', () => {
+test('every player round loss persists through cleared reveal until READY', () => {
   const replay = createArenaReplay();
   replay.update({ playerHearts: 0, signalPhase: '결과' });
   assert.equal(replay.player(), null, 'zero hearts must not reveal player defeat early');
   replay.update({ playerDefeated: true }); replay.advance(1650);
-  assert.equal(replay.player().pose, 'defeat'); assert.equal(replay.player().defeatSettlesDown, true);
+  assert.equal(replay.player().characterId, 1); assert.equal(replay.player().pose, 'defeat');
   replay.update({ playerDefeated: false }); replay.advance(2000);
-  assert.equal(replay.player().pose, 'defeat'); assert.equal(replay.player().defeatSettlesDown, true);
-  replay.update({ playerHearts: 1 });
+  assert.equal(replay.player().characterId, 1); assert.equal(replay.player().pose, 'defeat');
+  replay.update({ playerHearts: 1, signalPhase: '준비' });
   assert.equal(replay.player(), null);
   replay.update({ playerHearts: 0, playerDefeated: true }); replay.advance(1650);
   replay.update({ playerDefeated: false, npcId: 2 });
@@ -376,41 +378,94 @@ test('final player pose persists through cleared reveal while ordinary hit react
   assert.equal(replay.player(), null, 'round A→B→A must not restore an old player terminal pose');
   const surviving = createArenaReplay({ signalPhase: '결과', opponentHearts: 1, playerHearts: 1 });
   surviving.update({ npcPose: 'defeat', playerDefeated: true }); surviving.advance(1000);
-  assert.match(surviving.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/); assert.equal(surviving.player(), null);
+  assert.match(surviving.npcSource(), /combat\/npc\/01\/down\.png$/); assert.equal(surviving.player().pose, 'defeat');
   surviving.update({ npcPose: 'idle', playerDefeated: false });
-  assert.match(surviving.npcSource(), /npc_01_left|clarity\/npc\/01\/idle\.png$/); assert.equal(surviving.player(), null);
+  assert.match(surviving.npcSource(), /combat\/npc\/01\/down\.png$/); assert.equal(surviving.player().pose, 'defeat');
 });
 
-test('legacy landscape standing art keeps its existing actual-shot-only recoil outside the portrait pilot', () => {
+test('all 22 NPC round losers settle into real DOWN art, or their KNEEL frame when none exists, and hold until next READY', () => {
+  const { CLARITY_NPCS, CLARITY_PLAYERS } = load(path.join(root, 'constants/clarityCharacterAssets.ts'));
+  const { NPC_COMBAT_POSES } = load(path.join(root, 'constants/combatPoses.ts'));
+  for (let npcId = 1; npcId <= 22; npcId++) {
+    assert.ok(fs.existsSync(CLARITY_NPCS[npcId].down), `NPC${npcId} has fallback DOWN art`);
+    const replay = createArenaReplay({ npcId, signalPhase: '뱅' });
+    replay.update({ npcPose: 'defeat', opponentHearts: 2, signalPhase: '결과' });
+    replay.advance(1200);
+    const dedicated = NPC_COMBAT_POSES[npcId];
+    const expected = dedicated?.down ?? dedicated?.fall ?? `npc${npcId}-down`;
+    // No rotated stand-in: without dedicated DOWN art the loser rests on its own KNEEL frame.
+    const hasDown = () => replay.sources().includes(expected);
+    assert.ok(hasDown(), `NPC${npcId} settles down with two hearts left`);
+    replay.update({ npcPose: 'idle' }); replay.advance(3000);
+    assert.ok(hasDown(), `NPC${npcId} holds DOWN behind the result`);
+    replay.update({ currentRound: 2, signalPhase: '준비' });
+    assert.ok(!hasDown(), `NPC${npcId} clears DOWN for next READY`);
+  }
+  for (let playerCharacterId = 1; playerCharacterId <= 4; playerCharacterId++) {
+    assert.ok(fs.existsSync(CLARITY_PLAYERS[playerCharacterId].down), `P${playerCharacterId} has DOWN art`);
+    const replay = createArenaReplay({ playerCharacterId, signalPhase: '뱅' });
+    replay.update({ playerDefeated: true, playerHearts: 2, signalPhase: '결과' }); replay.advance(1800);
+    assert.equal(replay.player().characterId, playerCharacterId);
+    replay.update({ playerDefeated: false }); replay.advance(2000);
+    assert.equal(replay.player().characterId, playerCharacterId);
+    replay.update({ currentRound: 2, signalPhase: '준비' });
+    assert.equal(replay.player(), null);
+  }
+});
+test('ground contact sound follows landing once, survives rerenders, and resets each round', () => {
+  const contacts = [];
+  const replay = createArenaReplay({ playerCharacterId: 4, npcId: 9, signalPhase: '뱅', onDefeatGroundContact: side => contacts.push(side) });
+  replay.update({ npcPose: 'defeat', opponentHearts: 2, signalPhase: '결과' });
+  replay.advance(999); assert.deepEqual(contacts, [], 'HIT must not play a landing thud');
+  replay.advance(1); assert.deepEqual(contacts, ['npc']);
+  replay.update({}); replay.advance(2000); assert.deepEqual(contacts, ['npc']);
+  replay.update({ currentRound: 2, signalPhase: '준비', npcPose: 'idle' });
+  replay.update({ playerDefeated: true, playerHearts: 2, signalPhase: '결과' });
+  replay.player().onDefeatArtDisplay(); replay.update({});
+  // Clarity player HIT -> KNEEL is a hard cut at max(280, 1100 * .44) = 484ms (usePoseOpacity hardSwap).
+  replay.advance(483); assert.deepEqual(contacts, ['npc'], 'HIT must not play a landing thud');
+  replay.advance(1); assert.deepEqual(contacts, ['npc', 'player']);
+  replay.update({}); replay.advance(2000); assert.deepEqual(contacts, ['npc', 'player'], 'one thud per landing');
+  assert.equal(replay.player().defeatSettlesDown, true, 'every round loss settles to the ground frame');
+  replay.update({ playerDefeated: false }); replay.advance(2000);
+  assert.deepEqual(contacts, ['npc', 'player']);
+  replay.update({ currentRound: 3, signalPhase: '준비' });
+  replay.update({ playerDefeated: true, signalPhase: '결과' }); replay.advance(100);
+  replay.update({ currentRound: 4, playerDefeated: false, signalPhase: '준비' }); replay.advance(2000);
+  assert.deepEqual(contacts, ['npc', 'player'], 'canceled old round cannot play a late impact');
+});
+
+test('landscape uses the same actual-shot-only compositor and preserves source directions', () => {
   const replay = createArenaReplay({ width: 874, height: 402 });
   for (const signalPhase of ['준비', '집중', '뱅']) {
     replay.update({ signalPhase }); replay.advance(0);
-    assert.equal(replay.player(), null, 'standing art must not invoke PlayerSprite shoot choreography');
-    assert.ok(replay.sources().some(source => /player_01_right/.test(source)));
-    assert.ok(replay.sources().some(source => /npc_01_left/.test(source)));
-    assert.ok(!replay.recoilYs().some(y => y < -.1), 'held aim must not trigger recoil');
+    assert.equal(replay.player(), null);
+    const actors = replay.pilotActors();
+    assert.equal(actors.length, 2);
+    assert.deepEqual(actors[0].aimArt, quickDrawArt('player', 1, 'aim'));
+    assert.deepEqual(actors[1].aimArt, quickDrawArt('npc', 1, 'aim'));
+    assert.ok(actors.every(actor => !actor.shotActive));
+    assert.deepEqual(replay.shotEffectOpacities(), [], 'no duplicate legacy effects');
   }
   replay.update({ playerShotActive: true, npcShotActive: true }); replay.advance(0);
-  assert.ok(replay.recoilYs().filter(y => Math.abs(y + .7) < .001).length >= 2, 'both actual shots use the existing grounded recoil basis');
-  assert.ok(replay.sources().some(source => /player_01_right/.test(source)));
-  assert.ok(replay.sources().some(source => /npc_01_left/.test(source)));
+  assert.ok(replay.pilotActors().every(actor => actor.shotActive));
   replay.update({ playerShotActive: false, npcShotActive: false }); replay.advance(0);
-  assert.ok(!replay.recoilYs().some(y => y < -.1), 'cleared shots stop recoil while aim art remains');
+  assert.ok(replay.pilotActors().every(actor => !actor.shotActive));
 });
 
 test('BANG pose alone keeps baked-flash NPCs in clean aim until their actual shot event', () => {
-  const { faceoffStandingArt } = load(path.join(root, 'constants/npcFaceoffPoseArt.ts'));
+  const { CLARITY_NPCS } = load(path.join(root, 'constants/clarityCharacterAssets.ts'));
   for (const npcId of [15, 19, 20, 22]) {
     const replay = createArenaReplay({ npcId, npcPose: 'shoot', signalPhase: '뱅', npcShotActive: false });
     replay.advance(0);
-    const held = faceoffStandingArt('npc', npcId, 'aim').source;
-    const fired = faceoffStandingArt('npc', npcId, 'fire').source;
-    assert.notEqual(held, fired, 'held clean aim must differ from baked fire');
-    assert.ok(replay.sources().includes(held)); assert.ok(!replay.sources().includes(fired));
-    assert.ok(!replay.recoilYs().some(y => y < -.1));
+    const actor = () => replay.pilotActors().find(item => item.direction === 'left');
+    assert.notEqual(actor().aimArt.source, CLARITY_NPCS[npcId].fire, 'held aim cannot include a baked flash');
+    assert.equal(actor().aimArt.source, actor().fireArt.source, 'actual shot uses the same clean source plus runtime FX');
+    assert.equal(actor().shotActive, false);
+    assert.deepEqual(replay.shotEffectOpacities(), []);
     replay.update({ npcShotActive: true }); replay.advance(0);
-    assert.ok(replay.sources().includes(fired));
-    assert.ok(replay.recoilYs().some(y => Math.abs(y + .7) < .001));
+    assert.equal(actor().shotActive, true);
+    assert.notEqual(actor().fireArt.source, CLARITY_NPCS[npcId].fire, 'runtime effect cannot duplicate a baked flash');
   }
 });
 
@@ -428,12 +483,15 @@ test('generic NPC STEADY holds existing clean torso FIRE with shot effects off a
     assert.deepEqual(held, fired, 'holding clean FIRE must not introduce source/ground/anchor differences');
     assert.equal(held.groundFraction, layout.faceoffGroundFraction('npc', npcId));
     assert.deepEqual(held.muzzle, layout.faceoffMuzzleAnchor('npc', npcId));
-    // P04 keeps the legacy standing renderer for every NPC (no quick-draw registry entry).
+    // P04 now uses the full-roster compositor; STEADY receives preparation, not a shot.
     const replay = createArenaReplay({ npcId, playerCharacterId: 4, npcPose: 'aim', signalPhase: '집중', npcShotActive: false });
     replay.advance(0);
-    assert.ok(replay.sources().includes(held.source), `NPC${npcId} must hold its production FIRE in STEADY`);
-    assert.ok(!replay.recoilYs().some(y => y < -.1));
-    assert.deepEqual(replay.shotEffectOpacities(), [0, 0, 0, 0], 'held aim has no runtime flash or smoke');
+    const actor = replay.pilotActors().find(item => item.direction === 'left');
+    assert.equal(actor.preparation, true);
+    assert.deepEqual(actor.preparationArt, quickDrawArt('npc', npcId, 'preparation'));
+    assert.deepEqual(actor.aimArt, quickDrawArt('npc', npcId, 'aim'));
+    assert.equal(actor.shotActive, false);
+    assert.deepEqual(replay.shotEffectOpacities(), [], 'held aim has no duplicate legacy flash or smoke');
   }
   for (const npcId of [20]) {
     assert.equal(faceoffStandingArt('npc', npcId, 'aim').source, getV3NpcPose(npcId, 'draw'), `NPC${npcId} keeps existing clean DRAW`);
@@ -529,8 +587,10 @@ test('corrected P02/P03 FIRE is confined to NPC art selection while shared Local
       assert.equal(selected.flipHorizontal, true);
     }
     const replay = createArenaReplay({ playerCharacterId: id, npcId: 9, signalPhase: '집중' }); replay.advance(0);
-    assert.ok(replay.sources().includes(faceoffStandingArt('player', id, 'aim').source));
-    assert.ok(!replay.sources().includes(CLARITY_PLAYERS[id].fire));
+    const actor = replay.pilotActors().find(item => item.direction === 'right');
+    assert.deepEqual(actor.aimArt, quickDrawArt('player', id, 'aim'));
+    assert.notEqual(actor.fireArt.source, CLARITY_PLAYERS[id].fire);
+    assert.equal(actor.shotActive, undefined);
   }
   assert.deepEqual(faceoffStandingArt('player', 2, 'fire').muzzle, { x: 37 / 1254, y: 199 / 1254 });
   assert.deepEqual(faceoffStandingArt('player', 3, 'fire').muzzle, { x: 14 / 1254, y: 216 / 1254 });
@@ -550,9 +610,11 @@ test('corrected NPC15/19/22 DRAW is exclusive to NPC aim hold with shared READY 
     assert.equal(held.groundFraction, layout.faceoffGroundFraction('npc', npcId));
     assert.deepEqual(held.muzzle, layout.faceoffMuzzleAnchor('npc', npcId));
     const replay = createArenaReplay({ npcId, npcPose: 'aim', signalPhase: '집중' }); replay.advance(0);
-    assert.ok(replay.sources().includes(held.source));
-    assert.ok(!replay.sources().includes(CLARITY_NPCS[npcId].draw));
-    assert.deepEqual(replay.shotEffectOpacities(), [0, 0, 0, 0]);
+    const actor = replay.pilotActors().find(item => item.direction === 'left');
+    assert.equal(actor.aimArt.source, held.source);
+    assert.equal(actor.fireArt.source, held.source);
+    assert.equal(actor.preparation, true);
+    assert.deepEqual(replay.shotEffectOpacities(), []);
   }
   assert.doesNotMatch(fs.readFileSync(path.join(root, 'constants/clarityCharacterAssets.ts'), 'utf8'), /draw-faceoff/);
 });
@@ -568,12 +630,13 @@ test('accepted replacement aim sources stay NPC-only, inward and effect-free unt
     assert.match(getV3NpcPose(id, 'fire'), new RegExp(`clarity/npc/${String(id).padStart(2, '0')}/fire\\.png$`));
     const replay = createArenaReplay({ playerCharacterId: 4, npcId: id, npcPose: 'aim', signalPhase: '집중', npcShotActive: false });
     replay.advance(0);
-    assert.ok(replay.sources().includes(held.source));
-    assert.deepEqual(replay.shotEffectOpacities(), [0, 0, 0, 0]);
-    assert.ok(!replay.recoilYs().some(y => y < -.1));
+    const actor = () => replay.pilotActors().find(item => item.direction === 'left');
+    assert.deepEqual(actor().aimArt, quickDrawArt('npc', id, 'aim'));
+    assert.deepEqual(actor().fireArt, quickDrawArt('npc', id, 'fire'));
+    assert.equal(actor().shotActive, false);
+    assert.deepEqual(replay.shotEffectOpacities(), []);
     replay.update({ npcShotActive: true }); replay.advance(0);
-    assert.ok(replay.sources().includes(held.source));
-    assert.ok(replay.recoilYs().some(y => Math.abs(y + .7) < .001));
+    assert.equal(actor().shotActive, true);
   }
   assert.match(getV3NpcPose(1, 'fire'), /clarity\/npc\/01\/fire\.png$/, 'NPC-only art must preserve shared NPC01 FIRE');
   assert.deepEqual(faceoffStandingArt('npc', 1, 'ready'), faceoffStandingArt('npc', 1, 'aim'));
@@ -627,11 +690,11 @@ test('corrected PNG opaque bounds fit locked actor lanes across all 22 opponents
 
 console.log(`\n${count} NPC faceoff checks passed`);
 
-test('quickdraw compositor is limited to the 24 registry portrait pairs and passes only actual shot flags', () => {
+test('quickdraw compositor covers all 88 roster pairs and passes only actual shot flags', () => {
   for (const playerCharacterId of [1, 2, 3, 4]) for (let npcId = 1; npcId <= 22; npcId++) {
     const replay = createArenaReplay({ playerCharacterId, npcId, signalPhase: '뱅', npcPose: 'shoot', playerShotActive: false, npcShotActive: false });
     const actors = replay.pilotActors();
-    assert.equal(actors.length, [1, 2, 3].includes(playerCharacterId) && [1, 2, 3, 4, 5, 6, 7, 8].includes(npcId) ? 2 : 0);
+    assert.equal(actors.length, 2);
     if (actors.length) {
       assert.ok(actors.every(actor => actor.shotActive === false && actor.bang && !actor.preparation));
       assert.ok(actors.every(actor => !('nonOverlappingTransition' in actor)), 'every actor uses the exclusive pose switch');
@@ -644,5 +707,5 @@ test('quickdraw compositor is limited to the 24 registry portrait pairs and pass
       assert.equal(replay.pilotActors()[1].shotActive, false);
     }
   }
-  assert.equal(createArenaReplay({ width: 874, height: 402 }).pilotActors().length, 0, 'landscape remains legacy');
+  assert.equal(createArenaReplay({ width: 874, height: 402 }).pilotActors().length, 2, 'landscape shares the shot-gated compositor');
 });
