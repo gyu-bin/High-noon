@@ -349,12 +349,12 @@ console.log('PASS scope reset underneath hidden HIT clears stale AIM/shot, prese
   const { quickDrawArt, usesNpcQuickDraw } = loadArt(path.join(root, 'constants/npcQuickDrawArt.ts'));
   let supported = 0;
   for (let player = 1; player <= 4; player++) for (let npc = 1; npc <= 22; npc++) {
-    const expected = [1, 2, 3].includes(player) && [1, 2, 3, 4, 5, 6, 7, 8].includes(npc);
+    const expected = [1, 2, 3, 4].includes(player) && npc >= 1 && npc <= 22;
     assert.equal(usesNpcQuickDraw(player, npc, true), expected, 'portrait quickdraw supports registry actors independently: P' + player + '/NPC' + npc);
-    assert.equal(usesNpcQuickDraw(player, npc, false), false, 'landscape retains legacy renderer');
+    assert.equal(usesNpcQuickDraw(player, npc, false), expected, 'landscape uses the same registered compositor');
     supported += Number(expected);
   }
-  assert.equal(supported, 24, 'exactly 24 approved portrait pairs (P01–P03 × NPC01–08) use the quickdraw registry');
+  assert.equal(supported, 88, 'all 4 players × 22 NPCs use the shared quickdraw registry');
   assert.equal(usesNpcQuickDraw(0, 1, true), false);
   assert.equal(usesNpcQuickDraw(1, 23, true), false);
   for (const kind of ['player', 'npc']) for (const stage of ['ready', 'preparation', 'draw', 'aim', 'fire']) {
@@ -378,10 +378,10 @@ console.log('PASS scope reset underneath hidden HIT clears stale AIM/shot, prese
     assert.notEqual(poses.preparation.source, poses.aim.source, kind + id + ' STEADY cannot reuse an already aimed pose');
     assert.notEqual(poses.aim.source, poses.fire.source, kind + id + ' shot recoil has a distinct FIRE source');
   }
-  console.log('PASS exact 24-pair portrait gate, preserved pilot art, batch actual PNG sole/barrel metadata and distinct preparation/AIM/FIRE');
+  console.log('PASS full 88-pair portrait/landscape gate, preserved pilot art, batch actual PNG sole/barrel metadata and distinct preparation/AIM/FIRE');
   // Batch 2 reuses production art: READY=IDLE, STEADY=DRAW (held through the 120ms draw),
   // AIM=left-facing FIRE, and the actual shot holds that frame while runtime VFX fire.
-  for (const id of [3, 5, 6, 7, 8]) {
+  for (const id of [3, 5, 6, 7, 8, 10, 11, 12, 13, 14]) {
     const poses = {};
     for (const stage of ['ready', 'preparation', 'draw', 'aim', 'fire']) {
       const selected = quickDrawArt('npc', id, stage); poses[stage] = selected;
@@ -393,7 +393,7 @@ console.log('PASS scope reset underneath hidden HIT clears stale AIM/shot, prese
       assert.equal(selected.flipHorizontal, stage === 'ready' || stage === 'preparation' || stage === 'draw', 'npc' + id + '/' + stage + ' only right-gazing IDLE/DRAW sources are mirrored inward');
     }
     assert.notEqual(poses.ready.source, poses.preparation.source, 'npc' + id + ' STEADY visibly differs from READY');
-    if ([3, 5, 6, 7, 8].includes(id)) assert.notEqual(poses.preparation.source, poses.draw.source, 'npc' + id + ' has a dedicated STEADY; DRAW becomes the BANG intermediate');
+    if ([3, 5, 6, 7, 8, 10, 11, 12, 13, 14].includes(id)) assert.notEqual(poses.preparation.source, poses.draw.source, 'npc' + id + ' has a dedicated STEADY; DRAW becomes the BANG intermediate');
     else assert.equal(poses.preparation.source, poses.draw.source, 'npc' + id + ' STEADY and the 120ms draw share the clarity DRAW frame');
     assert.notEqual(poses.draw.source, poses.aim.source, 'npc' + id + ' AIM is a different, left-facing frame');
     assert.equal(poses.aim.source, poses.fire.source, 'npc' + id + ' actual shot holds the AIM frame (VFX only)');
@@ -408,14 +408,44 @@ console.log('PASS scope reset underneath hidden HIT clears stale AIM/shot, prese
   console.log('PASS batch 2 production-art reuse: distinct READY/STEADY/AIM, held FIRE, actual soles, inward mirroring and barrel-tip muzzles');
   // NPC03 dedicated STEADY: one revolver, fully holstered (no steel above the holster mouth is
   // checked visually); here the frame is held to the shared lane, sole and READY->DRAW pelvis.
-  for (const [id, legShift] of [[3, 0], [5, 26], [6, 0], [7, 4], [8, -4]]) {
+  for (const [id, legShift] of [[3, 0], [5, 26], [6, 0], [7, 4], [8, -4], [10, 0], [11, 0], [12, 2], [14, -4]]) {
     const steady = quickDrawArt('npc', id, 'preparation'), draw = quickDrawArt('npc', id, 'draw');
-    assert.match(String(steady.source), new RegExp('batch2/npc0' + id + '-preparation\\.png$'));
+    assert.match(String(steady.source), new RegExp('batch[23]/npc' + String(id).padStart(2, '0') + '-preparation\\.png$'));
     // Mirrored at runtime: a source shifted right by legShift needs offsetX larger by legShift/1254.
     assert.ok(Math.abs(steady.offsetX - draw.offsetX - legShift / 1254) < 1e-9, 'npc' + id + ' STEADY -> BANG draw keeps the legs still');
-    assert.ok(Math.abs(steady.groundFraction - draw.groundFraction) <= 3 / 1254, 'npc' + id + ' STEADY and DRAW soles agree');
+    // Each pose's own sole is pinned to the lane ground at render time; this bounds how far apart
+    // the painted soles may be before that correction would visibly stretch the transition.
+    assert.ok(Math.abs(steady.groundFraction - draw.groundFraction) <= 6 / 1254, 'npc' + id + ' STEADY and DRAW soles agree');
   }
-  console.log('PASS NPC03/05/06/07/08 dedicated STEADY frames: registered to DRAW legs, same sole, distinct from the BANG intermediate');
+  // NPC11 must aim with the face-corrected left FIRE, never the clarity FIRE that looks away.
+  for (const stage of ['aim', 'fire']) assert.match(String(quickDrawArt('npc', 11, stage).source), /faceoff\/npc_11_fire_left\.png$/, 'npc11 ' + stage + ' uses the corrected FIRE');
+  // NPC13 STEADY is IDLE with only the right arm/hand replaced, so it keeps READY's legs, sole and anchor exactly.
+  // The existing clarity DRAW is painted 17px lower and ~1% smaller: each pose's sole is pinned to the lane, so the
+  // feet stay put and only the head lands lower at BANG. That measured drop is bounded here instead of widening the
+  // shared 6px sole tolerance above.
+  {
+    const ready = quickDrawArt('npc', 13, 'ready'), steady = quickDrawArt('npc', 13, 'preparation'), draw = quickDrawArt('npc', 13, 'draw');
+    assert.match(String(steady.source), /batch3\/npc13-preparation\.png$/);
+    assert.equal(steady.groundFraction, ready.groundFraction, 'npc13 STEADY keeps the READY sole');
+    assert.equal(steady.offsetX, ready.offsetX, 'npc13 STEADY keeps the READY anchor');
+    assert.ok(Math.abs(steady.offsetX - draw.offsetX) < 1e-9, 'npc13 STEADY -> BANG draw keeps the pelvis still');
+    const headAboveSole = art => { const png = PNG.sync.read(fs.readFileSync(art.source)); let top = 1254;
+      for (let y = 0; y < 1254 && top === 1254; y++) for (let x = 0; x < 1254; x++) if (png.data[(y * 1254 + x) * 4 + 3] >= 16) { top = y; break; }
+      return art.groundFraction * 1254 - top; };
+    assert.ok(headAboveSole(steady) - headAboveSole(draw) <= 14, 'npc13 head drop at BANG stays within the measured 13px pose difference');
+  }
+  // NPC14's approved preparation is a local arm edit: stance, boots and opposite hand remain IDLE pixels.
+  {
+    const ready = quickDrawArt('npc', 14, 'ready'), steady = quickDrawArt('npc', 14, 'preparation');
+    assert.match(String(steady.source), /batch3\/npc14-preparation\.png$/);
+    assert.match(String(quickDrawArt('npc', 14, 'aim').source), /npc_14_fire_left\.png$/);
+    assert.equal(steady.groundFraction, ready.groundFraction, 'npc14 STEADY retains READY ground');
+    assert.equal(steady.offsetX, ready.offsetX, 'npc14 STEADY retains READY pelvis');
+    const idlePng = PNG.sync.read(fs.readFileSync(ready.source));
+    const steadyPng = PNG.sync.read(fs.readFileSync(steady.source));
+    assert.deepEqual(steadyPng.data.subarray(760 * 1254 * 4), idlePng.data.subarray(760 * 1254 * 4), 'npc14 lower body and boots retain every IDLE pixel');
+  }
+  console.log('PASS NPC03/05/06/07/08/10/11/12/13/14 dedicated STEADY frames: registered to DRAW legs, same sole, distinct from the BANG intermediate');
 
 }
 

@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import { Animated, StyleSheet, type ImageSourcePropType } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
@@ -39,6 +39,7 @@ export function NpcCinematicActor({ readyArt, preparationArt, drawArt, aimArt, f
   const flash = useRef(new Animated.Value(0)).current;
   const smoke = useRef(new Animated.Value(0)).current;
   const smokeTravel = useRef(new Animated.Value(0)).current;
+  const recoil = useRef(new Animated.Value(0)).current;
   const latch = useRef<ShotLatch>({ scope, active: false });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -90,19 +91,21 @@ export function NpcCinematicActor({ readyArt, preparationArt, drawArt, aimArt, f
       if (timer.current) clearTimeout(timer.current);
       timer.current = null;
       setFiring(false);
-      for (const value of [flash, smoke, smokeTravel]) { value.stopAnimation(); value.setValue(0); }
+      for (const value of [flash, smoke, smokeTravel, recoil]) { value.stopAnimation(); value.setValue(0); }
     }
     if (!edge.fire) return;
     if (timer.current) clearTimeout(timer.current);
     if (drawTimer.current) clearTimeout(drawTimer.current);
     drawTimer.current = null;
-    for (const value of [flash, smoke, smokeTravel]) value.stopAnimation();
+    for (const value of [flash, smoke, smokeTravel, recoil]) value.stopAnimation();
     // A fast input interrupts the draw immediately. FIRE and its measured
     // barrel appear in the same commit; combat never waits on presentation.
     hasDrawn.current = true;
     setHeld('aim');
     setFiring(true);
     flash.setValue(1); smoke.setValue(.32); smokeTravel.setValue(0);
+    recoil.setValue(reducedMotion ? 0 : 1);
+    Animated.timing(recoil, { toValue: 0, duration: 110, useNativeDriver: true }).start();
     Animated.timing(flash, { toValue: 0, duration: 115, useNativeDriver: true }).start();
     Animated.timing(smoke, { toValue: 0, duration: CINEMATIC_TIMING.smoke, useNativeDriver: true }).start();
     Animated.timing(smokeTravel, { toValue: reducedMotion ? 0 : 1, duration: CINEMATIC_TIMING.smoke, useNativeDriver: true }).start();
@@ -110,12 +113,12 @@ export function NpcCinematicActor({ readyArt, preparationArt, drawArt, aimArt, f
       timer.current = null;
       setFiring(false);
     }, CINEMATIC_TIMING.fireEnter + CINEMATIC_TIMING.fireHold + (reducedMotion ? 0 : CINEMATIC_TIMING.recover));
-  }, [scope, hidden, shotActive, reducedMotion, flash, smoke, smokeTravel]);
+  }, [scope, hidden, shotActive, reducedMotion, flash, smoke, smokeTravel, recoil]);
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
     if (drawTimer.current) clearTimeout(drawTimer.current);
-    for (const value of [flash, smoke, smokeTravel]) value.stopAnimation();
-  }, [flash, smoke, smokeTravel]);
+    for (const value of [flash, smoke, smokeTravel, recoil]) value.stopAnimation();
+  }, [flash, smoke, smokeTravel, recoil]);
   const visible = firing ? 'fire' : held;
   const muzzleX = size * ((fireArt.offsetX ?? 0) + (fireArt.flipHorizontal ? 1 - fireArt.muzzle.x : fireArt.muzzle.x));
   const muzzleY = cinematicLayerTop(size, groundFraction, fireArt.groundFraction) + size * fireArt.muzzle.y;
@@ -126,7 +129,7 @@ export function NpcCinematicActor({ readyArt, preparationArt, drawArt, aimArt, f
       <Image source={art.source} style={scaledArtStyle(size, size, art.artScale)} contentFit="contain" cachePolicy="memory-disk" priority="high" transition={0} />
     </Animated.View>
   );
-  return <View pointerEvents="none" style={{ width: size, height: size, opacity: hidden ? 0 : 1 }}>
+  return <Animated.View pointerEvents="none" style={{ width: size, height: size, opacity: hidden ? 0 : 1, transform: [{ translateX: recoil.interpolate({ inputRange: [0, 1], outputRange: [0, (right ? -1 : 1) * size * .014] }) }, { translateY: recoil.interpolate({ inputRange: [0, 1], outputRange: [0, -size * .006] }) }] }}>
     {layer(readyArt, 'ready')}
     {layer(preparationArt, 'preparation')}
     {layer(drawArt, 'draw')}
@@ -139,6 +142,6 @@ export function NpcCinematicActor({ readyArt, preparationArt, drawArt, aimArt, f
     <Animated.View style={[styles.layer, { left: muzzleX - size * .07, top: muzzleY - size * .08, width: size * .16, height: size * .16, opacity: smoke, transform: [{ translateX: smokeTravel.interpolate({ inputRange: [0, 1], outputRange: [0, (right ? 1 : -1) * size * .045] }) }, { translateY: smokeTravel.interpolate({ inputRange: [0, 1], outputRange: [0, -size * .035] }) }] }]}>
       <Image source={V3_DUEL_VFX.gunSmoke} style={styles.smoke} contentFit="contain" transition={0} cachePolicy="memory-disk" />
     </Animated.View>
-  </View>;
+  </Animated.View>;
 }
 const styles = StyleSheet.create({ layer: { position: 'absolute', left: 0, top: 0 }, glow: { position: 'absolute', backgroundColor: '#F7B34D' }, smoke: { width: '100%', height: '100%' } });
