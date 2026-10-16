@@ -202,7 +202,8 @@ export default function NpcResultScreen() {
   }, [nextNpc, router]);
 
   const onNpcSelect = useCallback(() => {
-    router.replace('/npc-select');
+    // The result replaced the duel above NPC select: pop back to it.
+    router.dismissTo('/npc-select');
   }, [router]);
 
 

@@ -29,7 +29,8 @@ export default function StatsScreen() {
   const clearedCount = NPCS.filter((npc) => npcById[npc.id]?.cleared).length;
   const average = aggregate.count ? aggregate.sumMs / aggregate.count : null;
   useScreenBgm('menu');
-  const back = useCallback(() => router.replace('/menu'), [router]);
+  // Back to the menu already in the stack: pop transition, no second menu pushed on top.
+  const back = useCallback(() => router.dismissTo('/menu'), [router]);
 
   return (
     <>

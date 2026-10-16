@@ -1075,13 +1075,14 @@ export default function NpcGameScreen() {
   const leaveToNpcSelect = useCallback(() => {
     setPaused(false);
     resetDuel();
-    router.replace('/npc-select');
+    // Leaving is a back navigation: pop to the screens already in the stack.
+    router.dismissTo('/npc-select');
   }, [resetDuel, router]);
 
   const leaveToMainMenu = useCallback(() => {
     setPaused(false);
     resetDuel();
-    router.replace('/menu');
+    router.dismissTo('/menu');
   }, [resetDuel, router]);
 
   const beginMatchFromPreDuel = useCallback(() => {

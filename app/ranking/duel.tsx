@@ -118,7 +118,7 @@ export default function RankingDuelScreen() {
   );
 
   const leave = useCallback(() => {
-    router.replace('/ranking' as Href);
+    router.dismissTo('/ranking' as Href);
   }, [router]);
 
   const fireGunshot = useCallback(() => {
@@ -544,7 +544,7 @@ export default function RankingDuelScreen() {
           setPaused(false);
           reset();
           forfeitIfActive();
-          router.replace('/menu');
+          router.dismissTo('/menu');
         }}
       />
     </>

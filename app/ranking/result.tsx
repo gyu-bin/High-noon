@@ -261,7 +261,7 @@ export default function RankingResultScreen() {
       });
       router.replace('/ranking/duel' as Href);
     } catch {
-      router.replace('/ranking' as Href);
+      router.dismissTo('/ranking' as Href);
     }
   }, [beginMatch, router]);
 
@@ -460,7 +460,7 @@ export default function RankingResultScreen() {
           ) : (
             <WesternButton
               title={t('ranking.backHub')}
-              onPress={() => router.replace('/ranking' as Href)}
+              onPress={() => router.dismissTo('/ranking' as Href)}
               variant="quiet"
             />
           )}

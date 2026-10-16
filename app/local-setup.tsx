@@ -62,7 +62,7 @@ export default function LocalSetupScreen() {
   };
   const back = () => {
     if (step === 'rounds') setStep('characters');
-    else router.replace('/menu');
+    else router.dismissTo('/menu');
   };
   const start = () => {
     const matchType = String(LOCAL_MATCH_PRESETS[preset].maxRounds);

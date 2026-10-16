@@ -57,7 +57,8 @@ export default function SettingsScreen() {
     return () => { cancelled = true; };
   }, [adFree, iapAvailable]);
 
-  const onBack = useCallback(() => router.replace('/menu'), [router]);
+  // Back to the menu already in the stack: pop transition, no second menu pushed on top.
+  const onBack = useCallback(() => router.dismissTo('/menu'), [router]);
   const onMusic = useCallback((value: boolean) => {
     setMusicEnabled(value);
     syncBgmWithSettings();

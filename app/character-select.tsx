@@ -46,7 +46,8 @@ export default function CharacterSelectScreen() {
     if (!unlocked) return;
     setSelectedCharacterId(character.id);
   }, [character.id, setSelectedCharacterId, unlocked]);
-  const back = useCallback(() => router.replace('/menu'), [router]);
+  // Back to the menu already in the stack: pop transition, no second menu pushed on top.
+  const back = useCallback(() => router.dismissTo('/menu'), [router]);
 
   return (
     <>

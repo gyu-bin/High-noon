@@ -495,7 +495,8 @@ export default function LocalGameScreen() {
 
   const exitMatch = useCallback(() => {
     setModalStep(null);
-    router.replace('/local-setup');
+    // Leaving is a back navigation: pop to the screens already in the stack.
+    router.dismissTo('/local-setup');
   }, [router]);
 
   const rematch = useCallback(() => {
@@ -524,7 +525,7 @@ export default function LocalGameScreen() {
   const leaveLocalDuel = useCallback(() => {
     setPaused(false);
     reset();
-    router.replace('/local-setup');
+    router.dismissTo('/local-setup');
   }, [reset, router]);
 
   useFocusEffect(
@@ -542,7 +543,7 @@ export default function LocalGameScreen() {
   const leaveToMainMenu = useCallback(() => {
     setPaused(false);
     reset();
-    router.replace('/menu');
+    router.dismissTo('/menu');
   }, [reset, router]);
 
   const p1Pose = useMemo(() => {
