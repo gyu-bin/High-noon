@@ -1,11 +1,18 @@
-import { Modal, Pressable, StyleSheet, Text } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useReducedMotion } from 'react-native-reanimated';
 
+import { WesternButton, WesternHeader, WesternPanel } from '@/components/ui/western/WesternPrimitives';
 import type { PlayerCharacterId } from '@/constants/characters';
-import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
-import { colors } from '@/constants/theme';
+import { FONT_WESTERN_SERIF } from '@/constants/fonts';
+import { uiV3Colors } from '@/constants/theme';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { useCharacterLabels } from '@/utils/characterLabels';
+import { keepHangulWords } from '@/utils/keepHangulWords';
+
+/** Korean wraps at word boundaries on both platforms. */
+const wrap = (text: string) => (Platform.OS === 'android' ? keepHangulWords(text) : text);
 
 type Props = {
   visible: boolean;
@@ -17,133 +24,40 @@ type Props = {
 export function CharacterAbilityModal({ visible, characterId, unlocked, onClose }: Props) {
   const { t } = useTranslation();
   const m = usePhoneStageMetrics();
-  const landscape = m.windowWidth > m.windowHeight;
+  const insets = useSafeAreaInsets();
+  const reducedMotion = useReducedMotion();
   const labels = useCharacterLabels(characterId ?? 1);
-
   if (characterId == null) return null;
-
-  const cardWidth = landscape
-    ? Math.min(480, Math.max(300, m.windowWidth * 0.44))
-    : Math.min(380, Math.max(260, m.stageWidth - 40));
-
-  return (
-    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable
-          style={[styles.card, landscape && styles.cardLandscape, { width: cardWidth }]}
-          onPress={(e) => e.stopPropagation()}
-        >
-          <Text style={styles.eyebrow}>{t('character.abilityIntro.title')}</Text>
-          <Text style={[styles.name, usesCjkFont(labels.name) ? styles.nameCjk : styles.nameWestern]}>{labels.name}</Text>
-          {labels.abilityName ? (
-            <>
-              <Text style={styles.abilityName}>「{labels.abilityName}」</Text>
-              <Text style={styles.description}>{labels.abilityDescription}</Text>
-            </>
-          ) : (
-            <Text style={styles.noAbility}>{t('character.noAbility')}</Text>
-          )}
-          {!unlocked ? (
-            <Text style={styles.lockHint}>{labels.unlockCondition}</Text>
-          ) : null}
-          <Pressable
-            accessibilityLabel={t('common.confirm')}
-            accessibilityRole="button"
-            onPress={onClose}
-            style={styles.btn}
-          >
-            <Text style={styles.btnText}>{t('common.confirm')}</Text>
-          </Pressable>
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
+  const cardWidth = Math.min(400, m.windowWidth - Math.max(insets.left, 20) - Math.max(insets.right, 20));
+  return <Modal transparent visible={visible} animationType={reducedMotion ? 'none' : 'fade'} onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
+    <View style={styles.backdrop} accessibilityViewIsModal onAccessibilityEscape={onClose}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 20), paddingBottom: Math.max(insets.bottom, 20) }]}>
+        {/* Inside the scroll content: an iOS ScrollView swallows taps meant for a backdrop behind it. */}
+        <Pressable accessible={false} style={StyleSheet.absoluteFill} onPress={onClose} />
+        <WesternPanel style={{ width: cardWidth }}>
+          <View style={styles.inner}>
+            <Text style={styles.eyebrow}>{t('character.abilityIntro.title')}</Text>
+            <WesternHeader title={labels.name} />
+            {labels.abilityName ? <View style={styles.descriptionPanel}>
+              <Text style={styles.abilityName} lineBreakStrategyIOS="hangul-word">{wrap(labels.abilityName)}</Text>
+              <Text style={styles.description} lineBreakStrategyIOS="hangul-word">{wrap(labels.abilityDescription ?? '')}</Text>
+            </View> : <Text style={styles.description} lineBreakStrategyIOS="hangul-word">{wrap(t('character.noAbility'))}</Text>}
+            {!unlocked ? <Text style={styles.lockHint} lineBreakStrategyIOS="hangul-word">{wrap(labels.unlockCondition)}</Text> : null}
+            <WesternButton title={t('common.confirm')} onPress={onClose} variant="primary" />
+          </View>
+        </WesternPanel>
+      </ScrollView>
+    </View>
+  </Modal>;
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(8, 6, 4, 0.72)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  card: {
-    backgroundColor: '#2C1A0E',
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#C8860A',
-    paddingHorizontal: 22,
-    paddingTop: 22,
-    paddingBottom: 18,
-    gap: 10,
-  },
-  cardLandscape: {
-    paddingHorizontal: 28,
-    paddingTop: 24,
-    paddingBottom: 20,
-  },
-  eyebrow: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.sand,
-    letterSpacing: 1.2,
-    opacity: 0.85,
-    textAlign: 'center',
-  },
-  name: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.ochre,
-    textAlign: 'center',
-    letterSpacing: 0.5,
-  },
-  nameWestern: { fontFamily: FONT_RYE },
-  nameCjk: { fontFamily: FONT_WESTERN_SERIF, fontWeight: '700', letterSpacing: 0.8 },
-  abilityName: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#F5E6C8',
-    textAlign: 'center',
-    letterSpacing: 0.4,
-  },
-  description: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.sand,
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 6,
-  },
-  noAbility: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.sand,
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 6,
-    opacity: 0.9,
-  },
-  lockHint: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: colors.sand,
-    textAlign: 'center',
-    opacity: 0.85,
-    marginTop: 2,
-  },
-  btn: {
-    marginTop: 4,
-    alignSelf: 'stretch',
-    backgroundColor: colors.ochre,
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  btnText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#2C1A0E',
-    letterSpacing: 0.5,
-  },
+  backdrop: { flex: 1, backgroundColor: 'rgba(8,5,3,.78)' },
+  content: { flexGrow: 1, alignItems: 'center', justifyContent: 'center' },
+  inner: { gap: 16, paddingVertical: 6 },
+  eyebrow: { color: uiV3Colors.gold, fontSize: 11, fontWeight: '800', letterSpacing: 1.5, textAlign: 'center' },
+  descriptionPanel: { paddingHorizontal: 12, paddingVertical: 15, backgroundColor: 'rgba(0,0,0,.22)', borderWidth: 1, borderColor: '#695038', gap: 9 },
+  abilityName: { fontFamily: FONT_WESTERN_SERIF, color: uiV3Colors.cream, fontSize: 19, fontWeight: '700', textAlign: 'center' },
+  description: { color: uiV3Colors.cream, fontSize: 15, lineHeight: 23, textAlign: 'center' },
+  lockHint: { color: uiV3Colors.ochre, fontSize: 13, lineHeight: 20, textAlign: 'center' },
 });

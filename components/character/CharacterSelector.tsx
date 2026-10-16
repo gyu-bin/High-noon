@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
@@ -37,12 +38,23 @@ export function CharacterSelector({
   previousLabel: string;
   nextLabel: string;
 }) {
+  const { t } = useTranslation();
+  const abilityLabel = t('character.abilityIntro.title');
   const { width, height } = useWindowDimensions();
   const landscape = width > height;
   const artSize = Math.min(landscape ? height * 0.62 : width * 0.78, 340);
   return (
     <View style={[styles.root, landscape && styles.rootLandscape]}>
-      <View style={[styles.artStage, landscape && styles.artStageLandscape]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${name} · ${abilityLabel}`}
+        accessibilityHint={t('character.holdForAbility')}
+        onPress={onLongPress}
+        onLongPress={onLongPress}
+        delayLongPress={420}
+        style={[styles.artStage, landscape && styles.artStageLandscape]}
+      >
+        <View pointerEvents="none" style={styles.artContents}>
         {unlocked ? (
           <Image source={V3_PLAYER_IDENTITIES[character.id]} contentFit="contain" transition={0} style={scaledArtStyle(artSize, artSize, characterArtDisplayScale('player', character.id))} />
         ) : (
@@ -51,7 +63,8 @@ export function CharacterSelector({
             <Ionicons name="lock-closed" size={26} color={uiV3Colors.dustGray} />
           </View>
         )}
-      </View>
+        </View>
+      </Pressable>
       <View style={styles.info}>
         <View style={styles.pager}>
           <Pressable accessibilityRole="button" accessibilityLabel={previousLabel} hitSlop={12} onPress={onPrevious} style={styles.arrow}><Ionicons name="chevron-back" size={25} color={uiV3Colors.cream} /></Pressable>
@@ -60,6 +73,10 @@ export function CharacterSelector({
         </View>
         <Text style={[styles.name, unlocked && usesCjkFont(name) && styles.nameCjk]}>{unlocked ? name : '???'}</Text>
         <Text style={styles.ability}>{unlocked ? (ability || unlockHint) : unlockHint}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel={abilityLabel} onPress={onLongPress} style={({ pressed }) => [styles.abilityAction, pressed && styles.selectPressed]}>
+          <Ionicons name="information-circle-outline" size={18} color={uiV3Colors.gold} />
+          <Text style={styles.abilityActionLabel}>{abilityLabel}</Text>
+        </Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={unlocked ? selectLabel : unlockHint}
@@ -67,6 +84,7 @@ export function CharacterSelector({
           disabled={!unlocked}
           onPress={onSelect}
           onLongPress={onLongPress}
+          delayLongPress={420}
           style={({ pressed }) => [styles.select, selected && styles.selectSelected, !unlocked && styles.selectLocked, pressed && unlocked && styles.selectPressed]}
         >
           <Text style={styles.selectLabel}>{unlocked ? (selected ? `${selectLabel}  ✓` : selectLabel) : unlockHint}</Text>
@@ -80,6 +98,9 @@ const styles = StyleSheet.create({
   root: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   rootLandscape: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 28 },
   artStage: { alignItems: 'center', justifyContent: 'flex-end', minHeight: 280, width: '100%', overflow: 'hidden' },
+  artContents: { alignItems: 'center', justifyContent: 'flex-end' },
+  abilityAction: { minHeight: 44, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderWidth: 1, borderColor: '#695038', borderRadius: 3, backgroundColor: '#17100D' },
+  abilityActionLabel: { color: uiV3Colors.cream, fontFamily: FONT_WESTERN_SERIF, fontSize: 13, fontWeight: '700' },
   artStageLandscape: { flex: 1, minHeight: 0 },
   halo: { position: 'absolute', width: 190, height: 190, borderRadius: 999, backgroundColor: uiV3Colors.gold, opacity: 0.17, borderWidth: 1, borderColor: uiV3Colors.ochre },
   lockedSilhouette: { alignItems: 'center', justifyContent: 'center', borderBottomWidth: 8, borderBottomColor: uiV3Colors.voidBlack, backgroundColor: uiV3Colors.background, borderRadius: 70, opacity: 0.88 },

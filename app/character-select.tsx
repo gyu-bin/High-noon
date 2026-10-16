@@ -76,14 +76,14 @@ export default function CharacterSelectScreen() {
             previousLabel={t('meta.character.previous')}
             nextLabel={t('meta.character.next')}
           />
-          <CharacterAbilityModal
-            visible={abilityModalId != null}
-            characterId={abilityModalId}
-            unlocked={unlocked}
-            onClose={() => setAbilityModalId(null)}
-          />
         </ScrollView>
       </MetaScreenShell>
+      <CharacterAbilityModal
+        visible={abilityModalId != null}
+        characterId={abilityModalId}
+        unlocked={DEV_UNLOCK_ALL_CHARACTERS || (abilityModalId != null && unlockedIds.includes(abilityModalId))}
+        onClose={() => setAbilityModalId(null)}
+      />
     </>
   );
 }

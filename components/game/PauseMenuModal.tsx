@@ -1,157 +1,56 @@
-import { useEffect } from 'react';
-import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useReducedMotion } from 'react-native-reanimated';
 
-import { colors } from '@/constants/theme';
+import { WesternButton, WesternHeader, WesternPanel } from '@/components/ui/western/WesternPrimitives';
+import { FONT_RYE } from '@/constants/fonts';
+import { uiV3Colors } from '@/constants/theme';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 
 type Props = {
   visible: boolean;
   onResume: () => void;
-  /** NPC 모드: 선택 화면 복귀 등 */
   onSecondaryExit?: () => void;
   secondaryLabel?: string;
-  /** Optional one-line warning under the title (e.g. ranked forfeit). */
+  /** Ranked forfeiture warning remains visible before either exit action. */
   notice?: string;
   onMainMenu: () => void;
 };
 
-export function PauseMenuModal({
-  visible,
-  onResume,
-  onSecondaryExit,
-  secondaryLabel,
-  notice,
-  onMainMenu,
-}: Props) {
+/** Native modal isolates touch/accessibility focus from the paused arena.
+ * Its Android back action resumes, exactly like the explicit primary button. */
+export function PauseMenuModal({ visible, onResume, onSecondaryExit, secondaryLabel, notice, onMainMenu }: Props) {
   const { t } = useTranslation();
   const m = usePhoneStageMetrics();
-  const landscape = m.windowWidth > m.windowHeight;
-
-  useEffect(() => {
-    if (!visible) return;
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      onResume();
-      return true;
-    });
-    return () => sub.remove();
-  }, [visible, onResume]);
-
-  if (!visible) return null;
-
-  const cardWidth = landscape
-    ? Math.min(480, Math.max(300, m.windowWidth * 0.44))
-    : Math.min(380, Math.max(260, m.stageWidth - 40));
-
-  return (
-    <View style={styles.root} pointerEvents="box-none">
-      <View style={styles.backdrop}>
-        <View
-          style={[
-            styles.card,
-            landscape && styles.cardLandscape,
-            { width: cardWidth, alignSelf: 'center' },
-          ]}
-        >
-          <Text style={[styles.title, landscape && styles.titleLandscape]}>{t('game.pause')}</Text>
-          {notice ? <Text style={styles.notice}>{notice}</Text> : null}
-          <Pressable
-            accessibilityLabel={t('game.continue')}
-            accessibilityRole="button"
-            onPress={onResume}
-            style={styles.btnPrimary}
-          >
-            <Text style={styles.btnPrimaryText}>{t('game.continue')}</Text>
-          </Pressable>
-          {onSecondaryExit != null && secondaryLabel != null ? (
-            <Pressable
-              accessibilityLabel={secondaryLabel}
-              accessibilityRole="button"
-              onPress={onSecondaryExit}
-              style={styles.btn}
-            >
-              <Text style={styles.btnText}>{secondaryLabel}</Text>
-            </Pressable>
-          ) : null}
-          <Pressable
-            accessibilityLabel={t('game.mainMenu')}
-            accessibilityRole="button"
-            onPress={onMainMenu}
-            style={styles.btn}
-          >
-            <Text style={styles.btnText}>{t('game.mainMenu')}</Text>
-          </Pressable>
-        </View>
-      </View>
+  const insets = useSafeAreaInsets();
+  const reducedMotion = useReducedMotion();
+  const cardWidth = Math.min(400, m.windowWidth - Math.max(insets.left, 20) - Math.max(insets.right, 20));
+  return <Modal transparent visible={visible} animationType={reducedMotion ? 'none' : 'fade'} onRequestClose={onResume} supportedOrientations={['portrait', 'landscape']}>
+    <View style={styles.backdrop} accessibilityViewIsModal onAccessibilityEscape={onResume}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 20), paddingBottom: Math.max(insets.bottom, 20) }]}>
+        <WesternPanel style={{ width: cardWidth }}>
+          <View style={styles.inner}>
+            <Text style={styles.eyebrow}>HIGH NOON</Text>
+            <WesternHeader title={t('game.pause')} />
+            {notice ? <Text accessibilityRole="alert" style={styles.notice}>{notice}</Text> : null}
+            <View style={styles.actions}>
+              <WesternButton title={t('game.continue')} onPress={onResume} variant="primary" />
+              {onSecondaryExit != null && secondaryLabel != null ? <WesternButton title={secondaryLabel} onPress={onSecondaryExit} variant="secondary" /> : null}
+              <WesternButton title={t('game.mainMenu')} onPress={onMainMenu} variant="secondary" />
+            </View>
+          </View>
+        </WesternPanel>
+      </ScrollView>
     </View>
-  );
+  </Modal>;
 }
 
 const styles = StyleSheet.create({
-  root: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 50,
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.72)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  card: {
-    borderRadius: 16,
-    padding: 22,
-    backgroundColor: '#3D2414',
-    borderWidth: 2,
-    borderColor: colors.sand,
-    gap: 12,
-  },
-  cardLandscape: {
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    gap: 10,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.ochre,
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-  notice: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: colors.sand,
-    textAlign: 'center',
-    marginTop: -4,
-    marginBottom: 2,
-  },
-  titleLandscape: {
-    fontSize: 20,
-    marginBottom: 4,
-  },
-  btnPrimary: {
-    paddingVertical: 14,
-    borderRadius: 10,
-    backgroundColor: colors.ochre,
-  },
-  btnPrimaryText: {
-    textAlign: 'center',
-    fontWeight: '800',
-    color: colors.darkBrown,
-    fontSize: 16,
-  },
-  btn: {
-    paddingVertical: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.sand,
-  },
-  btnText: {
-    textAlign: 'center',
-    fontWeight: '700',
-    color: colors.cream,
-    fontSize: 15,
-  },
+  backdrop: { flex: 1, backgroundColor: 'rgba(8,5,3,.78)' },
+  content: { flexGrow: 1, alignItems: 'center', justifyContent: 'center' },
+  inner: { gap: 15, paddingVertical: 5 },
+  eyebrow: { fontFamily: FONT_RYE, color: uiV3Colors.gold, fontSize: 11, letterSpacing: 3, textAlign: 'center' },
+  notice: { color: uiV3Colors.cream, fontSize: 13, lineHeight: 20, textAlign: 'center', paddingHorizontal: 6 },
+  actions: { gap: 10, marginTop: 4 },
 });

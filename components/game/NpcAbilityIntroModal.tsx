@@ -1,12 +1,23 @@
-import { Modal, Pressable, StyleSheet, Text } from 'react-native';
+import { Image } from 'expo-image';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useReducedMotion } from 'react-native-reanimated';
 
-import { colors } from '@/constants/theme';
-import { FONT_RYE, FONT_WESTERN_SERIF, usesCjkFont } from '@/constants/fonts';
+import { WesternButton, WesternHeader, WesternPanel } from '@/components/ui/western/WesternPrimitives';
+import { FONT_WESTERN_SERIF } from '@/constants/fonts';
+import { uiV3Colors } from '@/constants/theme';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
 import { getNpcDisplayName } from '@/utils/npcLabels';
 import { getNpcSpecialAbilityLabels } from '@/utils/npcAbilityLabels';
+import { keepHangulWords } from '@/utils/keepHangulWords';
 import type { NpcDefinition } from '@/types/npc';
+
+/** Korean wraps at word boundaries on both platforms. */
+const wrap = (text: string) => (Platform.OS === 'android' ? keepHangulWords(text) : text);
+
+// Same aged paper as the NPC Wanted card.
+const wantedPaper = require('@/assets/images/ui/western/ui_wanted_paper.png');
 
 type Props = {
   visible: boolean;
@@ -14,118 +25,64 @@ type Props = {
   onConfirm: () => void;
 };
 
+/** Leather panel like the Pause / character-ability modals, with the ability on a Wanted-paper plate.
+ * Backdrop tap and Android back confirm, exactly as before. */
 export function NpcAbilityIntroModal({ visible, npc, onConfirm }: Props) {
   const { t } = useTranslation();
   const m = usePhoneStageMetrics();
-  const landscape = m.windowWidth > m.windowHeight;
+  const insets = useSafeAreaInsets();
+  const reducedMotion = useReducedMotion();
 
   if (!npc) return null;
 
   const ability = getNpcSpecialAbilityLabels(t, npc.specialAbility);
   if (!ability) return null;
   const opponentName = getNpcDisplayName(t, npc.id);
-
-  const cardWidth = landscape
-    ? Math.min(480, Math.max(300, m.windowWidth * 0.44))
-    : Math.min(380, Math.max(260, m.stageWidth - 40));
+  const cardWidth = Math.min(400, m.windowWidth - Math.max(insets.left, 20) - Math.max(insets.right, 20));
 
   return (
     <Modal
       transparent
       visible={visible}
-      animationType="fade"
+      animationType={reducedMotion ? 'none' : 'fade'}
       onRequestClose={onConfirm}
+      supportedOrientations={['portrait', 'landscape']}
     >
-      <Pressable style={styles.backdrop} onPress={onConfirm}>
-        <Pressable
-          style={[styles.card, landscape && styles.cardLandscape, { width: cardWidth }]}
-          onPress={(e) => e.stopPropagation()}
-        >
-          <Text style={styles.eyebrow}>{t('npcs.abilityIntro.title')}</Text>
-          <Text style={[styles.opponent, usesCjkFont(opponentName) ? styles.opponentCjk : styles.opponentWestern]}>{opponentName}</Text>
-          <Text style={styles.abilityName}>「{ability.name}」</Text>
-          <Text style={styles.description}>{ability.description}</Text>
-          <Pressable
-            accessibilityLabel={t('npcs.abilityIntro.confirm')}
-            accessibilityRole="button"
-            onPress={onConfirm}
-            style={styles.btn}
-          >
-            <Text style={styles.btnText}>{t('npcs.abilityIntro.confirm')}</Text>
-          </Pressable>
-        </Pressable>
-      </Pressable>
+      <View style={styles.backdrop} accessibilityViewIsModal onAccessibilityEscape={onConfirm}>
+        <ScrollView contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 20), paddingBottom: Math.max(insets.bottom, 20) }]}>
+          {/* Inside the scroll content: an iOS ScrollView swallows taps meant for a backdrop behind it. */}
+          <Pressable accessible={false} style={StyleSheet.absoluteFill} onPress={onConfirm} />
+          <WesternPanel style={{ width: cardWidth }}>
+            <View style={styles.inner}>
+              <Text style={styles.eyebrow}>{t('npcs.abilityIntro.title')}</Text>
+              <WesternHeader title={opponentName} />
+              <View style={styles.plate}>
+                <Image source={wantedPaper} contentFit="cover" style={styles.paper} />
+                <View pointerEvents="none" style={styles.paperEdge} />
+                <Text style={styles.abilityName} lineBreakStrategyIOS="hangul-word">{wrap(ability.name)}</Text>
+                <View style={styles.rule} />
+                <Text style={styles.description} lineBreakStrategyIOS="hangul-word">{wrap(ability.description)}</Text>
+              </View>
+              <WesternButton title={t('npcs.abilityIntro.confirm')} onPress={onConfirm} variant="primary" />
+            </View>
+          </WesternPanel>
+        </ScrollView>
+      </View>
     </Modal>
   );
 }
 
+const INK = '#2D160E';
+
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(8, 6, 4, 0.72)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  card: {
-    backgroundColor: '#2C1A0E',
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#C8860A',
-    paddingHorizontal: 22,
-    paddingTop: 22,
-    paddingBottom: 18,
-    gap: 10,
-  },
-  cardLandscape: {
-    paddingHorizontal: 28,
-    paddingTop: 24,
-    paddingBottom: 20,
-  },
-  eyebrow: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.sand,
-    letterSpacing: 1.2,
-    opacity: 0.85,
-    textAlign: 'center',
-  },
-  opponent: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.ochre,
-    textAlign: 'center',
-    letterSpacing: 0.5,
-  },
-  opponentWestern: { fontFamily: FONT_RYE },
-  opponentCjk: { fontFamily: FONT_WESTERN_SERIF, fontWeight: '700', letterSpacing: 0.8 },
-  abilityName: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#F5E6C8',
-    textAlign: 'center',
-    letterSpacing: 0.4,
-  },
-  description: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.sand,
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 6,
-  },
-  btn: {
-    marginTop: 4,
-    alignSelf: 'stretch',
-    backgroundColor: colors.ochre,
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  btnText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#2C1A0E',
-    letterSpacing: 0.5,
-  },
+  backdrop: { flex: 1, backgroundColor: 'rgba(8,5,3,.78)' },
+  content: { flexGrow: 1, alignItems: 'center', justifyContent: 'center' },
+  inner: { gap: 16, paddingVertical: 6 },
+  eyebrow: { color: uiV3Colors.gold, fontSize: 11, fontWeight: '800', letterSpacing: 1.5, textAlign: 'center' },
+  plate: { overflow: 'hidden', paddingHorizontal: 16, paddingVertical: 16, gap: 10, backgroundColor: '#D9C29A', borderWidth: 1, borderColor: '#695038' },
+  paper: { ...StyleSheet.absoluteFillObject, opacity: 0.74 },
+  paperEdge: { ...StyleSheet.absoluteFillObject, borderWidth: 3, borderColor: 'rgba(83,42,16,0.16)' },
+  abilityName: { fontFamily: FONT_WESTERN_SERIF, color: '#6A291C', fontSize: 20, fontWeight: '700', textAlign: 'center' },
+  rule: { alignSelf: 'center', width: 64, height: 1, backgroundColor: 'rgba(83,42,16,0.45)' },
+  description: { color: INK, fontSize: 15, lineHeight: 23, textAlign: 'center' },
 });
