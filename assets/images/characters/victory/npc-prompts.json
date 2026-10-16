@@ -1,0 +1,163 @@
+{
+  "tool": "built-in image_gen__imagegen",
+  "date": "2026-10-16",
+  "method": "Each canonical idle PNG inspected, then supplied as one referenced_image_paths item. transparent_background:true. One independent image edit per NPC, concurrency at most 3. Original assets untouched. Generated PNG copied without processing.",
+  "prompt_note": "Normalized record of shared prompt intent and per-character constraints. Early batches vary wording and requested 5% margins; exact generated originals retained at listed paths.",
+  "common_prompt": "Use case: identity-preserve. Edit target: reference HIGH NOON NPC {id} idle sprite. Produce one full-body VICTORY pose sprite of EXACTLY this same character. Preserve face/mask, hat, costume, weapons, worn materials, original detailed Western game illustration style, colors, proportions and identity. Change only pose: one empty closed gloved fist with entire arm raised HIGH above head in clear triumphant victory; other arm naturally lowered. Revolvers holstered, no shooting. Whole raised fist, hat, boots, coat visible, clear transparent margins, centered square composition. True transparent alpha background, clean crisp silhouette. No environment, floor, shadow plane, added glow/halo, text, UI, extra limbs or muzzle flash.",
+  "assets": [
+    {
+      "id": 1,
+      "reference": "assets/images/characters/clarity/npc/01/idle.png",
+      "output": "assets/images/characters/victory/npc-01.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-af47d2a7-34bd-4252-8b20-906c081ce1db.png",
+      "identity_constraints": "Match original costume, face/head shape, gender and distinctive accessories."
+    },
+    {
+      "id": 2,
+      "reference": "assets/images/characters/clarity/npc/02/idle.png",
+      "output": "assets/images/characters/victory/npc-02.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-b2802c76-fbd6-4f2f-8b6b-60bcb6cde53e.png",
+      "identity_constraints": "Match original costume, face/head shape, gender and distinctive accessories."
+    },
+    {
+      "id": 3,
+      "reference": "assets/images/characters/clarity/npc/03/idle.png",
+      "output": "assets/images/characters/victory/npc-03.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-ae8aa41c-8371-4843-896d-95cbf6ea5952.png",
+      "identity_constraints": "Match original costume, face/head shape, gender and distinctive accessories."
+    },
+    {
+      "id": 4,
+      "reference": "assets/images/characters/clarity/npc/04/idle.png",
+      "output": "assets/images/characters/victory/npc-04.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-e196eae5-196f-4b30-b4ef-19d49bc009a7.png",
+      "identity_constraints": "Match original costume, face/head shape, gender and distinctive accessories."
+    },
+    {
+      "id": 5,
+      "reference": "assets/images/characters/clarity/npc/05/idle.png",
+      "output": "assets/images/characters/victory/npc-05.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-7c0af838-b514-4de1-98c8-0fe0d7e1f72b.png",
+      "identity_constraints": "Match original costume, face/head shape, gender and distinctive accessories."
+    },
+    {
+      "id": 6,
+      "reference": "assets/images/characters/clarity/npc/06/idle.png",
+      "output": "assets/images/characters/victory/npc-06.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-ebc8c13a-91c9-4da1-bc5f-e617b90b9755.png",
+      "identity_constraints": "Match original costume, face/head shape, gender and distinctive accessories."
+    },
+    {
+      "id": 7,
+      "reference": "assets/images/characters/clarity/npc/07/idle.png",
+      "output": "assets/images/characters/victory/npc-07.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-10681e17-0ccd-49b0-a6d6-dc291e1819c9.png",
+      "identity_constraints": "Match original costume, face/head shape, gender and distinctive accessories."
+    },
+    {
+      "id": 8,
+      "reference": "assets/images/characters/clarity/npc/08/idle.png",
+      "output": "assets/images/characters/victory/npc-08.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-cf086309-3a94-49b1-b420-b48c6583fe1e.png",
+      "identity_constraints": "Match original costume, face/head shape, gender and distinctive accessories."
+    },
+    {
+      "id": 9,
+      "reference": "assets/images/characters/clarity/npc/09-v2/idle.png",
+      "output": "assets/images/characters/victory/npc-09.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-a4b70163-7c75-4879-917c-0b6c45798eed.png",
+      "identity_constraints": "Retain skeletal identity, never humanize."
+    },
+    {
+      "id": 10,
+      "reference": "assets/images/characters/clarity/npc/10/idle.png",
+      "output": "assets/images/characters/victory/npc-10.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-c1535a17-5998-4ce6-8c42-ef0f3765833a.png",
+      "identity_constraints": "Retain face covering/beard/goggles exactly as reference."
+    },
+    {
+      "id": 11,
+      "reference": "assets/images/characters/clarity/npc/11/idle.png",
+      "output": "assets/images/characters/victory/npc-11.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-6c6112fd-4efe-45bf-bdfa-21973bec2c46.png",
+      "identity_constraints": "Retain face covering/beard/goggles exactly as reference."
+    },
+    {
+      "id": 12,
+      "reference": "assets/images/characters/clarity/npc/12/idle.png",
+      "output": "assets/images/characters/victory/npc-12.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-587fb51c-bca5-4a41-9c63-3e5aa55a510d.png",
+      "identity_constraints": "Retain face covering/beard/goggles exactly as reference."
+    },
+    {
+      "id": 13,
+      "reference": "assets/images/characters/clarity/npc/13/idle.png",
+      "output": "assets/images/characters/victory/npc-13.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-48176422-0173-4d7a-b566-26c5bc147b2a.png",
+      "identity_constraints": "Preserve exact vertical ivory/black split of hat, full mask, poncho and trousers, diamond motifs and fully covered face."
+    },
+    {
+      "id": 14,
+      "reference": "assets/images/characters/clarity/npc/14/idle.png",
+      "output": "assets/images/characters/victory/npc-14.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-7d514f27-1044-4f9f-9661-94709a1c74dd.png",
+      "identity_constraints": "Preserve dark navy coat, electric blue piping and lightning motif, black bandana and gold belt buckle."
+    },
+    {
+      "id": 15,
+      "reference": "assets/images/characters/clarity/npc/15-v2/idle.png",
+      "output": "assets/images/characters/victory/npc-15.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-d7873ba3-482d-46a2-bcd8-4c84a025d2f2.png",
+      "identity_constraints": "Preserve shadow-faced identity, tiny white eye highlights, tattered black coat and intrinsic dark wisps; no new fog/background gradient."
+    },
+    {
+      "id": 16,
+      "reference": "assets/images/characters/clarity/npc/16/idle.png",
+      "output": "assets/images/characters/victory/npc-16.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-335734b4-de06-4d4f-af51-79af7e7be335.png",
+      "identity_constraints": "Preserve violet bandana, violet geometric poncho symbols, violet wrist/shin wraps and hat ornament."
+    },
+    {
+      "id": 17,
+      "reference": "assets/images/characters/clarity/npc/17/idle.png",
+      "output": "assets/images/characters/victory/npc-17.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-45996988-4c82-4b36-acf4-9b1ae965bf0c.png",
+      "identity_constraints": "Preserve pale serious clean-shaven face, tall brown hat, long plain brown duster, black scarf, gold pendant and pocket-watch chain."
+    },
+    {
+      "id": 18,
+      "reference": "assets/images/characters/clarity/npc/18-v2/idle.png",
+      "output": "assets/images/characters/victory/npc-18.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-9ce48db0-ab02-412f-ab96-1f00a9a2de1c.png",
+      "identity_constraints": "Preserve supernatural red-eyed shadow face, red/black tattered robes, ivory rune panels, red beads, ornamental metallic circular headpiece behind hat."
+    },
+    {
+      "id": 19,
+      "reference": "assets/images/characters/clarity/npc/19-v2/idle.png",
+      "output": "assets/images/characters/victory/npc-19.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-15d00bd9-534a-425f-b828-7db355dcdf6c.png",
+      "identity_constraints": "Retain circular violet void face/cosmic interior, shattered stone costume edges, violet starfield body and floating fragments."
+    },
+    {
+      "id": 20,
+      "reference": "assets/images/characters/clarity/npc/20-v2/idle.png",
+      "output": "assets/images/characters/victory/npc-20.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-25369874-dfac-4f46-8372-cecf46824bf9.png",
+      "identity_constraints": "Preserve spectral blue eyes, pale blue torn coat trails, dark ornate costume; original faint spectral afterimage motif remains subordinate to primary raised-fist figure."
+    },
+    {
+      "id": 21,
+      "reference": "assets/images/characters/clarity/npc/21/idle.png",
+      "output": "assets/images/characters/victory/npc-21.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-c8cda0e4-854c-4e31-8d2f-607789ef24b9.png",
+      "identity_constraints": "Preserve black-and-gold formal long coat, faceless dark mask, white collar, ornate waistcoat, gold hat ornament and skull-topped cane; cane in lowered hand."
+    },
+    {
+      "id": 22,
+      "reference": "assets/images/characters/clarity/npc/22-v2/idle.png",
+      "output": "assets/images/characters/victory/npc-22.png",
+      "generated_original": "/Users/mungyubin/.codex/generated_images/01a14304-1c8a-7e82-bc90-d55682b2c49d/exec-22eb5469-7712-4511-9ba0-baaa45861ca4.png",
+      "identity_constraints": "Preserve faceless ivory head, white hat/wispy white hair, ivory tattered lacy long coat, pale gloves/boots, skull belt/cross pendants and subordinate original ghostly horse-head motif."
+    }
+  ]
+}

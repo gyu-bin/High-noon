@@ -15,7 +15,7 @@ export function ReactionStatsCard({ playerMs, npcMs, faster }: Props) {
   const { t } = useTranslation();
   return (
     <View style={styles.card}>
-      <Text style={styles.heading}>{t('result.reactionSpeed')}</Text>
+      <Text style={styles.heading}>{t('result.lastRoundReaction')}</Text>
       <View style={styles.row}>
         <View style={[styles.col, faster === 'player' && styles.colWin]}>
           <Text style={styles.label}>{t('result.me')}</Text>
@@ -41,13 +41,13 @@ export function ReactionStatsCard({ playerMs, npcMs, faster }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    paddingVertical: 16,
+    paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: OUTCOME_PANEL.borderRadius,
     backgroundColor: OUTCOME_PANEL.background,
     borderWidth: 1,
     borderColor: OUTCOME_PANEL.border,
-    gap: 12,
+    gap: 6,
   },
   heading: {
     textAlign: 'center',
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     gap: 2,
-    paddingVertical: 6,
+    paddingVertical: 2,
     borderRadius: 10,
   },
   colWin: {
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   value: {
-    fontSize: 26,
+    fontSize: 23,
     fontWeight: '800',
     color: colors.cream,
     ...outcomeTextShadow,

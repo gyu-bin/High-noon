@@ -1,15 +1,16 @@
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
-import { Image } from 'expo-image';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import Animated, {
   Easing,
-  FadeInDown,
+  FadeIn,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSequence,
   withTiming,
@@ -18,6 +19,9 @@ import { useTranslation } from 'react-i18next';
 
 import { OutcomeBackdrop } from '@/components/result/OutcomeBackdrop';
 import { ReactionStatsCard } from '@/components/result/ReactionStatsCard';
+import { DuelResultFaceoff } from '@/components/result/DuelResultFaceoff';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PhoneStageShell } from '@/components/layout/PhoneStageShell';
 import { WoodButton } from '@/components/ui/WoodButton';
 import {
@@ -29,9 +33,6 @@ import { RM_GAME } from '@/constants/reanimatedGame';
 import { colors } from '@/constants/theme';
 import { FONT_RYE, FONT_WESTERN_SERIF } from '@/constants/fonts';
 import { getNpcById } from '@/constants/npcs';
-import { characterArtDisplayScale, scaledArtStyle } from '@/constants/characterArtMetadata';
-import { CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
-import { getV3NpcPose } from '@/constants/v3DuelAssets';
 import { getNpcDisplayName } from '@/utils/npcLabels';
 import { DUEL_BACKGROUND_IDS, type DuelBackgroundId } from '@/utils/duelBackgroundSelection';
 import { usePhoneStageMetrics } from '@/hooks/usePhoneStageMetrics';
@@ -47,82 +48,13 @@ import {
 
 type LossReason = 'early' | 'timeout' | 'slower' | '';
 
-function hashSeed(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i += 1) {
-    h = (h * 31 + s.charCodeAt(i)) | 0;
-  }
-  return Math.abs(h) || 1;
-}
-
-function Sparkle({
-  left,
-  delay,
-  top,
-}: {
-  left: number;
-  delay: number;
-  top: number;
-}) {
-  const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.6);
-
-  useEffect(() => {
-    opacity.value = 0;
-    scale.value = 0.6;
-    opacity.value = withSequence(
-      withTiming(0, { duration: delay, reduceMotion: RM_GAME }),
-      withTiming(1, { duration: 280, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME }),
-      withTiming(0, { duration: 700, easing: Easing.in(Easing.quad), reduceMotion: RM_GAME }),
-    );
-    scale.value = withSequence(
-      withTiming(0.6, { duration: delay, reduceMotion: RM_GAME }),
-      withTiming(1.1, { duration: 400, easing: Easing.out(Easing.back(1.2)), reduceMotion: RM_GAME }),
-      withTiming(0.8, { duration: 580, reduceMotion: RM_GAME }),
-    );
-  }, [delay, opacity, scale]);
-
-  const anim = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ scale: scale.value }],
-  }));
-
-  return (
-    <Animated.Text style={[styles.sparkle, { left, top }, anim]} pointerEvents="none">
-      ✦
-    </Animated.Text>
-  );
-}
-
-function VictorySparkles({ width, seed }: { width: number; seed: string }) {
-  const h = hashSeed(seed);
-  const items = useMemo(() => {
-    return Array.from({ length: 8 }, (_, i) => {
-      const t = h * (i + 5) * 7919;
-      return {
-        id: i,
-        left: 12 + (t % Math.max(1, width - 36)),
-        top: 48 + ((t >> 4) % 120),
-        delay: (t % 500) + i * 80,
-      };
-    });
-  }, [h, width]);
-
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {items.map((s) => (
-        <Sparkle key={s.id} left={s.left} top={s.top} delay={s.delay} />
-      ))}
-    </View>
-  );
-}
-
-function getLossReasonKey(reason: LossReason): string | null {
+function getLossReasonKey(reason: LossReason, npcMs: number | null): string | null {
   switch (reason) {
     case 'early':
       return 'loss.early';
     case 'timeout':
-      return 'loss.timeout';
+      // A 'timeout' with an NPC shot means the NPC fired before the player tapped.
+      return npcMs != null ? 'loss.shotFirst' : 'loss.timeout';
     case 'slower':
       return 'loss.slower';
     default:
@@ -145,12 +77,14 @@ export default function NpcResultScreen() {
   const router = useRouter();
   useScreenBgm(null, true);
   const { windowWidth: winW, windowHeight: winH } = usePhoneStageMetrics();
+  const insets = useSafeAreaInsets();
+  const reducedMotion = useReducedMotion();
+  const heroHeight = Math.max(180, Math.min(320, winH * 0.33));
   const {
     npcId,
     won,
     playerWins,
     npcWins,
-    completionStamp,
     playerMs: playerMsParam,
     npcMs: npcMsParam,
     lossReason: lossReasonParam,
@@ -180,8 +114,6 @@ export default function NpcResultScreen() {
   const npcWinsStr =
     firstSearchParam(npcWins) ??
     (remembered != null ? String(remembered.npcWins) : undefined);
-  const completionStampStr =
-    firstSearchParam(completionStamp) ?? remembered?.completionStamp;
   const playerMsStr = firstSearchParam(playerMsParam) ?? remembered?.playerMs;
   const npcMsStr = firstSearchParam(npcMsParam) ?? remembered?.npcMs;
   const lossReasonStr = firstSearchParam(lossReasonParam) ?? remembered?.lossReason ?? '';
@@ -199,7 +131,6 @@ export default function NpcResultScreen() {
   const theme = victory ? OUTCOME_VICTORY : OUTCOME_DEFEAT;
   const highestUnlocked = useProgressStore((s) => s.highestUnlockedNpcId);
   const selectedCharacterId = useSettingsStore((s) => s.selectedCharacterId);
-  const playerPoses = CLARITY_PLAYERS[selectedCharacterId] ?? CLARITY_PLAYERS[1]!;
 
   const nextNpc = useMemo(() => {
     if (!victory || !Number.isFinite(id)) return null;
@@ -212,18 +143,20 @@ export default function NpcResultScreen() {
   const playerMsRaw =
     playerMsStr != null && playerMsStr !== '' ? Number(playerMsStr) : NaN;
   const npcMsRaw = npcMsStr != null && npcMsStr !== '' ? Number(npcMsStr) : NaN;
-  const playerMs = Number.isFinite(playerMsRaw) ? playerMsRaw : null;
-  const npcMs = Number.isFinite(npcMsRaw) ? npcMsRaw : null;
+  const playerMs = lossReasonStr === 'early' || lossReasonStr === 'timeout'
+    ? null
+    : Number.isFinite(playerMsRaw) && playerMsRaw >= 0 ? playerMsRaw : null;
+  const npcMs = Number.isFinite(npcMsRaw) && npcMsRaw >= 0 ? npcMsRaw : null;
   const lossReason = lossReasonStr as LossReason;
-  const faster = whoFaster(playerMs, npcMs);
+  const faster = lossReason === 'early' || lossReason === 'timeout' ? 'unknown' : whoFaster(playerMs, npcMs);
 
-  const [adFlowComplete] = useState(true);
 
-  const titleScale = useSharedValue(victory ? 0.85 : 1);
+  const titleScale = useSharedValue(victory && !reducedMotion ? 0.85 : 1);
   const fxStartedRef = useRef(false);
 
   useEffect(() => {
-    if (!adFlowComplete || !outcomeKnown || !victory) return;
+    if (reducedMotion) { titleScale.value = 1; return; }
+    if (!outcomeKnown || !victory) return;
     titleScale.value = 0.85;
     titleScale.value = withSequence(
       withTiming(1.08, {
@@ -233,10 +166,10 @@ export default function NpcResultScreen() {
       }),
       withTiming(1, { duration: 200, easing: Easing.out(Easing.quad), reduceMotion: RM_GAME }),
     );
-  }, [adFlowComplete, outcomeKnown, victory, titleScale]);
+  }, [outcomeKnown, victory, titleScale, reducedMotion]);
 
   useEffect(() => {
-    if (!adFlowComplete || !outcomeKnown) return;
+    if (!outcomeKnown) return;
     if (fxStartedRef.current) return;
     fxStartedRef.current = true;
     if (victory) {
@@ -246,7 +179,7 @@ export default function NpcResultScreen() {
       void bgmPlay('result_lose');
       void trigger('error');
     }
-  }, [adFlowComplete, outcomeKnown, victory]);
+  }, [outcomeKnown, victory]);
 
   const titleAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: titleScale.value }],
@@ -272,267 +205,65 @@ export default function NpcResultScreen() {
     router.replace('/npc-select');
   }, [router]);
 
-  const showContent = adFlowComplete;
 
   return (
     <PhoneStageShell edgeToEdge>
       <OutcomeBackdrop variant={dayNight} backgroundId={backgroundId} width={winW} height={winH}>
-        <View pointerEvents="none" style={styles.duelistStage}>
-          <View style={styles.playerArt}>
-            <Image
-              source={victory ? playerPoses.fire : playerPoses.down}
-              contentFit="contain"
-              transition={0}
-              style={scaledArtStyle(winW * 0.54, winH * 0.31, characterArtDisplayScale('player', selectedCharacterId))}
-            />
-          </View>
-          {npc ? <View style={styles.opponentArt}>
-            <Image
-              source={getV3NpcPose(npc.id, victory ? 'down' : 'idle')}
-              contentFit="contain"
-              transition={0}
-              style={scaledArtStyle(winW * 0.5, winH * 0.3, characterArtDisplayScale('npc', npc.id))}
-            />
-          </View> : null}
-        </View>
-        {showContent && outcomeKnown && victory ? (
-          <VictorySparkles width={winW} seed={completionStampStr ?? 'win'} />
-        ) : null}
-
-        <View style={[styles.content, !showContent && styles.contentHidden]}>
-          {outcomeKnown ? (
-          <Animated.View
-            entering={FadeInDown.duration(420).springify().damping(18)}
-            style={[styles.panel, { borderColor: theme.badgeBorder }]}
-          >
-            <View style={[styles.accentBar, { backgroundColor: theme.accent }]} />
-
-            {victory ? (
-              <Animated.Text
-                style={[
-                  styles.title,
-                  { fontFamily: FONT_RYE, color: theme.title },
-                  titleAnimatedStyle,
-                ]}
-              >
-                YOU WIN
-              </Animated.Text>
-            ) : (
-              <Animated.Text
-                entering={FadeInDown.duration(380)}
-                style={[styles.title, { fontFamily: FONT_RYE, color: theme.title }]}
-              >
-                OUTDRAWN
-              </Animated.Text>
-            )}
-
-            {!victory && lossReason ? (
-              <Text style={styles.lossReason}>{t(getLossReasonKey(lossReason) ?? '')}</Text>
-            ) : victory ? (
-              <Text style={styles.winSubtitle}>{t('result.wonDuel')}</Text>
-            ) : null}
-
-            {npc ? (
-              <View style={styles.opponentRow}>
-                <Text style={styles.opponentLabel}>{t('result.opponent')}</Text>
-                <Text style={styles.opponentName}>
-                  {getNpcDisplayName(t, npc.id)}
-                </Text>
-              </View>
-            ) : null}
-
-            <View style={styles.scorePill}>
-              <Text style={styles.scoreLabel}>{t('result.finalScore')}</Text>
-              <Text style={[styles.scoreValue, { fontFamily: FONT_RYE }]}>
-                {playerWinsStr ?? '0'} — {npcWinsStr ?? '0'}
-              </Text>
-            </View>
-
-            <ReactionStatsCard playerMs={playerMs} npcMs={npcMs} faster={faster} />
-
-            <View style={styles.btnCol}>
-              {nextNpc ? (
-                <WoodButton
-                  title={t('result.nextNpc', {
-                    name: getNpcDisplayName(t, nextNpc.id),
-                  })}
-                  onPress={onNextNpc}
-                  style={styles.btn}
-                />
-              ) : null}
-              {!nextNpc ? (
-                <WoodButton
-                  title={t('result.retry')}
-                  onPress={onRetry}
-                  style={styles.btn}
-                />
-              ) : null}
-              <WoodButton
-                title={t('result.toOpponentSelect')}
-                onPress={onNpcSelect}
-                style={styles.btnSecondary}
-                textStyle={styles.btnSecondaryText}
-              />
-            </View>
+        <LinearGradient pointerEvents="none" colors={['rgba(12,7,5,.25)', 'rgba(12,7,5,.12)', 'rgba(12,7,5,.94)']} style={StyleSheet.absoluteFill} />
+        {outcomeKnown ? <ScrollView showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.content, { paddingTop: insets.top + 10, paddingBottom: Math.max(18, insets.bottom) }]}>
+          <Animated.View entering={reducedMotion ? undefined : FadeIn.duration(180)} style={styles.header}>
+            <Text style={styles.eyebrow}>— DUEL RESULT —</Text>
+            <Animated.Text accessibilityRole="header" style={[styles.title, { color: theme.title }, titleAnimatedStyle]}>
+              {victory ? 'YOU WIN' : 'DEFEAT'}
+            </Animated.Text>
+            <Text style={styles.subtitle}>{victory ? t('result.wonDuel') : t(getLossReasonKey(lossReason, npcMs) ?? 'result.lostDuel')}</Text>
           </Animated.View>
-          ) : null}
-        </View>
+          <View style={styles.hero}>
+            <DuelResultFaceoff playerId={selectedCharacterId} npcId={npc?.id ?? 1}
+              playerWon={victory} width={Math.min(winW - 44, 430)} height={heroHeight} />
+          </View>
+          <View style={styles.details}>
+            <View style={styles.scoreboard}>
+              <Text style={styles.scoreLabel}>{t('result.finalScore')}</Text>
+              <View style={styles.scoreRow}>
+                <View style={styles.scoreSide}><Text numberOfLines={1} style={styles.name}>{t('result.me')}</Text><Text style={[styles.scoreValue, victory && styles.gold]}>{playerWinsStr ?? '0'}</Text></View>
+                <Text style={styles.scoreDash}>—</Text>
+                <View style={styles.scoreSide}><Text numberOfLines={1} style={styles.name}>{npc ? getNpcDisplayName(t, npc.id) : 'NPC'}</Text><Text style={[styles.scoreValue, !victory && styles.gold]}>{npcWinsStr ?? '0'}</Text></View>
+              </View>
+            </View>
+            <ReactionStatsCard playerMs={playerMs} npcMs={npcMs} faster={faster} />
+            <View style={styles.btnCol}>
+              <WoodButton title={nextNpc ? t('result.nextNpc', { name: getNpcDisplayName(t, nextNpc.id) }) : t('result.retry')}
+                onPress={nextNpc ? onNextNpc : onRetry} style={styles.btn} />
+              <WoodButton title={t('result.toOpponentSelect')} onPress={onNpcSelect}
+                style={styles.btnSecondary} textStyle={styles.btnSecondaryText} />
+            </View>
+          </View>
+        </ScrollView> : null}
       </OutcomeBackdrop>
     </PhoneStageShell>
   );
 }
 
 const styles = StyleSheet.create({
-  adLoading: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 30,
-    backgroundColor: 'rgba(8, 4, 2, 0.45)',
-  },
-  adLoadingText: {
-    marginTop: 12,
-    color: colors.sand,
-    fontSize: 14,
-    fontWeight: '600',
-    ...outcomeTextShadow,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingHorizontal: 22,
-    paddingTop: 28,
-    paddingBottom: 24,
-    zIndex: 6,
-  },
-  contentHidden: {
-    opacity: 0,
-  },
-  sparkle: {
-    position: 'absolute',
-    fontSize: 18,
-    color: OUTCOME_VICTORY.title,
-    textShadowColor: 'rgba(255, 220, 120, 0.85)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-  },
-  panel: {
-    width: '100%',
-    maxWidth: 430,
-    alignSelf: 'center',
-    borderRadius: 3,
-    backgroundColor: 'rgba(13, 7, 4, 0.82)',
-    borderWidth: 1,
-    borderColor: 'rgba(212, 165, 116, 0.52)',
-    paddingHorizontal: 20,
-    paddingTop: 0,
-    paddingBottom: 18,
-    gap: 10,
-    overflow: 'hidden',
-  },
-  duelistStage: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: '13%',
-    height: '34%',
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-  },
-  playerArt: {
-    flex: 1,
-    alignItems: 'flex-end',
-    justifyContent: 'flex-end',
-  },
-  opponentArt: {
-    flex: 1,
-    alignItems: 'flex-start',
-    justifyContent: 'flex-end',
-  },
-  accentBar: {
-    height: 3,
-    marginHorizontal: -20,
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 40,
-    textAlign: 'center',
-    letterSpacing: 3,
-    marginTop: 8,
-    ...outcomeTextShadow,
-  },
-  winSubtitle: {
-    textAlign: 'center',
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.sand,
-    letterSpacing: 0.4,
-    ...outcomeTextShadow,
-  },
-  lossReason: {
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#E8C4C4',
-    lineHeight: 21,
-    ...outcomeTextShadow,
-  },
-  opponentRow: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  opponentLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: colors.sand,
-    letterSpacing: 1.4,
-    opacity: 0.85,
-  },
-  opponentName: {
-    fontFamily: FONT_WESTERN_SERIF,
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.cream,
-    textAlign: 'center',
-    ...outcomeTextShadow,
-  },
-  scorePill: {
-    alignSelf: 'center',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 22,
-    borderRadius: 999,
-    backgroundColor: 'rgba(0, 0, 0, 0.28)',
-    borderWidth: 1,
-    borderColor: 'rgba(212, 165, 116, 0.3)',
-    gap: 2,
-  },
-  scoreLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: colors.sand,
-    letterSpacing: 1.2,
-  },
-  scoreValue: {
-    fontSize: 24,
-    color: colors.gold,
-    letterSpacing: 2,
-    ...outcomeTextShadow,
-  },
-  btnCol: {
-    marginTop: 4,
-    gap: 10,
-  },
-  btn: {
-    paddingVertical: 14,
-  },
-  btnSecondary: {
-    paddingVertical: 14,
-    backgroundColor: 'rgba(28, 16, 8, 0.95)',
-    borderColor: 'rgba(212, 165, 116, 0.45)',
-  },
-  btnSecondaryText: {
-    color: colors.cream,
-    fontSize: 16,
-  },
+  content: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 22 },
+  header: { alignItems: 'center', gap: 6, width: '100%' },
+  eyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 3, color: '#D7B57B' },
+  title: { fontFamily: FONT_RYE, fontSize: 42, letterSpacing: 2, textAlign: 'center', ...outcomeTextShadow },
+  subtitle: { fontFamily: FONT_WESTERN_SERIF, color: colors.cream, fontSize: 14, textAlign: 'center', ...outcomeTextShadow },
+  hero: { alignItems: 'center', marginTop: 8, marginBottom: 14 },
+  details: { width: '100%', maxWidth: 430, gap: 10 },
+  scoreboard: { borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(212,165,116,.34)', paddingVertical: 9, backgroundColor: 'rgba(17,9,5,.72)' },
+  scoreLabel: { color: colors.sand, textAlign: 'center', fontSize: 10, fontWeight: '700', letterSpacing: 1.6 },
+  scoreRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 5 },
+  scoreSide: { flex: 1, alignItems: 'center', gap: 3, paddingHorizontal: 8 },
+  name: { color: colors.cream, fontSize: 11, fontWeight: '700' },
+  scoreValue: { fontFamily: FONT_RYE, fontSize: 30, color: '#BAA48C' },
+  scoreDash: { color: '#876746', fontSize: 22 },
+  gold: { color: OUTCOME_VICTORY.title },
+  btnCol: { gap: 8, marginTop: 2 },
+  btn: { paddingVertical: 12 },
+  btnSecondary: { paddingVertical: 11, backgroundColor: 'rgba(28,16,8,.85)', borderColor: 'rgba(212,165,116,.4)' },
+  btnSecondaryText: { color: colors.cream, fontSize: 14 },
 });

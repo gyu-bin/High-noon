@@ -1,6 +1,9 @@
 import { Image } from 'expo-image';
 import { Image as RNImage, type ImageSourcePropType } from 'react-native';
 
+import { duelVictoryArt } from '@/constants/duelVictoryArt';
+import { quickDrawArt } from '@/constants/npcQuickDrawArt';
+import { CLARITY_PLAYERS } from '@/constants/clarityCharacterAssets';
 import { faceoffStandingArt } from '@/constants/npcFaceoffPoseArt';
 import type { LocalDuelSkin } from '@/constants/localDuelSkin';
 import { APPROVED_DUEL_BACKGROUNDS, getV3NpcDuelPreloadSources } from '@/constants/v3DuelAssets';
@@ -23,6 +26,7 @@ function assetUri(src: ImageSourcePropType): string | null {
 const POSES: SpritePose[] = ['idle', 'aim', 'shoot', 'defeat'];
 
 function collectSkinUris(skin: LocalDuelSkin, push: (src: ImageSourcePropType | undefined) => void) {
+  push(duelVictoryArt(skin));
   if (skin.kind === 'npc') {
     for (const pose of POSES) push(getNpcSpriteSource(skin.id, pose));
     push(getNpcDownSource(skin.id));
@@ -54,11 +58,16 @@ export async function prefetchNpcDuelPresentation(
   npcId: number,
   tier: NpcTier,
   dayNight: 'day' | 'night',
+  characterId = 1,
 ): Promise<void> {
   const seen = new Set<string>();
   const uris = [
     ...getV3NpcDuelPreloadSources(tier, npcId, dayNight),
     ...(['ready', 'aim', 'fire'] as const).map(stage => faceoffStandingArt('npc', npcId, stage).source),
+    ...(['ready', 'preparation', 'draw', 'aim', 'fire'] as const).flatMap(stage => [quickDrawArt('npc', npcId, stage).source, quickDrawArt('player', characterId, stage).source]),
+    ...Object.values(CLARITY_PLAYERS[characterId] ?? {}),
+    duelVictoryArt({ kind: 'player', id: characterId }),
+    duelVictoryArt({ kind: 'npc', id: npcId }),
   ]
     .map(assetUri)
     .filter((uri): uri is string => uri != null)

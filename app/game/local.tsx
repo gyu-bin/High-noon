@@ -53,6 +53,7 @@ import { preloadSceneImages } from '@/utils/preloadSceneImages';
 import { RM_GAME } from '@/constants/reanimatedGame';
 import {
   parseLocalDuelSkin,
+  encodeLocalDuelSkin,
 } from '@/constants/localDuelSkin';
 import { play, playGunshot } from '@/utils/audioService';
 import { speakDuelCue, stopDuelSignalSpeech, warmupDuelSpeech } from '@/utils/duelSignalSpeech';
@@ -131,7 +132,6 @@ export default function LocalGameScreen() {
   const [modalStep, setModalStep] = useState<'round' | 'match' | null>(null);
   const [matchWinner, setMatchWinner] = useState<'p1' | 'p2' | null>(null);
   const [paused, setPaused] = useState(false);
-  const [fxBurstId, setFxBurstId] = useState(0);
   const [p1ShootFlash, setP1ShootFlash] = useState(false);
   const [p2ShootFlash, setP2ShootFlash] = useState(false);
   const [p1LiveMs, setP1LiveMs] = useState<number | null>(null);
@@ -382,10 +382,6 @@ export default function LocalGameScreen() {
     // 섞였고, 여기에 걸려 있는 페일 라이더 해금(평균 ≤200ms)이 누구와 플레이했느냐로
     // 갈렸다.
 
-    if (outcome.winner === 'p1' || outcome.winner === 'p2') {
-      setFxBurstId((n) => n + 1);
-    }
-
     if (outcome.p1.earlyTap || outcome.p2.earlyTap) {
       void play('early_tap');
       void trigger('error');
@@ -448,10 +444,11 @@ export default function LocalGameScreen() {
       useMatchHistoryStore.getState().record({ id: `local-${Date.now()}`, mode: 'local', winner, at: Date.now() });
     }
 
-    // 매치 종료 포함 — 라운드 결과 먼저 → 탭 후 매치 결과(LocalMatchModal)
+    // Preserve the defeat reveal; a decisive round opens the match result directly.
+    const nextModalStep = matchOver ? 'match' : 'round';
     if (nextRoundDefeated == null) {
       setRoundDefeated(null);
-      setModalStep('round');
+      setModalStep(nextModalStep);
     } else {
       defeatRevealTimerRef.current = setTimeout(() => {
         setRoundDefeated(nextRoundDefeated);
@@ -471,13 +468,14 @@ export default function LocalGameScreen() {
         defeatRevealTimerRef.current = null;
       }, DUEL_DEFEAT_REVEAL_DELAY_MS);
       roundModalTimerRef.current = setTimeout(() => {
-        setModalStep('round');
+        setModalStep(nextModalStep);
         roundModalTimerRef.current = null;
       }, DUEL_DEFEAT_MODAL_DELAY_MS);
     }
   }, [phase, outcome, winsNeeded, p1Hearts, p2Hearts]);
 
   const continueAfterRound = useCallback(() => {
+    if (matchWinner != null) return;
     if (defeatRevealTimerRef.current != null) {
       clearTimeout(defeatRevealTimerRef.current);
       defeatRevealTimerRef.current = null;
@@ -488,11 +486,6 @@ export default function LocalGameScreen() {
     }
     setModalStep(null);
     setRoundDefeated(null);
-
-    if (matchWinner != null) {
-      setModalStep('match');
-      return;
-    }
 
     roundIdx.current += 1;
     processedKey.current = '';
@@ -611,23 +604,25 @@ export default function LocalGameScreen() {
         visible={modalStep === 'round'}
         outcome={outcome}
         onContinue={continueAfterRound}
-        fxBurstId={fxBurstId}
+        paddingTop={overlayPad.top}
+        paddingBottom={insets.bottom}
+        p1Wins={p1Wins}
+        p2Wins={p2Wins}
         width={winW}
         height={winH}
-        paddingBottom={insets.bottom}
-        paddingTop={overlayPad.top}
       />
 
       <LocalMatchModal
         visible={modalStep === 'match' && matchWinner != null}
         matchWinner={matchWinner ?? 'p1'}
+        winnerSkinId={encodeLocalDuelSkin(matchWinner === 'p2' ? p2Skin : p1Skin)}
         p1Wins={p1Wins}
         p2Wins={p2Wins}
         winsNeeded={winsNeeded}
         onExit={exitMatch}
         onRematch={rematch}
-        fxBurstId={fxBurstId}
         backgroundVariant={battleDayNight}
+        backgroundId={duelBackgroundId}
         width={winW}
         height={winH}
         paddingBottom={insets.bottom}

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
 import type { StyleProp, ViewStyle } from 'react-native';
@@ -18,6 +18,7 @@ import type { LocalDuelSkin } from '@/constants/localDuelSkin';
 import { colors, uiV3Colors } from '@/constants/theme';
 import type { DuelPhase } from '@/hooks/useDuelEngine';
 import type { LocalPlayerId } from '@/hooks/useLocalDuelEngine';
+import { localResultLayout } from '@/utils/localResultLayout';
 
 type Props = {
   width: number;
@@ -76,6 +77,7 @@ function PlayerHalf({
   figureHeight,
   paddingOuter,
   tapAckStyle,
+  showHud,
 }: {
   player: LocalPlayerId;
   skin: LocalDuelSkin;
@@ -88,12 +90,13 @@ function PlayerHalf({
   figureHeight: number;
   paddingOuter: number;
   tapAckStyle: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
+  showHud: boolean;
 }) {
   return (
     <View pointerEvents="none" style={styles.playerHalfContent}>
       {/* Background lighting is authored into the approved scene; HUD has its own backing. */}
 
-      <View style={[styles.hud, { top: paddingOuter + 8 }]}>
+      {showHud ? <View style={[styles.hud, { top: paddingOuter + 8 }]}>
         <View>
           <Text style={styles.playerLabel}>{player.toUpperCase()}</Text>
           <Text style={styles.winLabel}>{wins} WIN</Text>
@@ -102,7 +105,7 @@ function PlayerHalf({
           <CompactHearts filled={hearts} max={winsNeeded} />
           {liveMs == null ? null : <Text style={styles.liveMs}>{Math.round(liveMs)} ms</Text>}
         </View>
-      </View>
+      </View> : null}
 
       <View style={[styles.figureZone, { paddingBottom: Math.max(34, paddingOuter + 16) }]}>
         <DuelFigureSlot corner="bottomLeft" pose={pose} figW={figureWidth} figH={figureHeight}>
@@ -156,7 +159,13 @@ export function LocalDuelArenaLayout({
   const boardPhase = signalPhase ?? enginePhaseToSignalBoardPhase(phase);
   const label = signalLabel(boardPhase);
   const halfHeight = height / 2;
-  const maxFigureHeight = Math.max(190, halfHeight - 124);
+  const { fontScale } = useWindowDimensions();
+  const resultLayout = localResultLayout({ width, height, fontScale, paddingTop, paddingBottom });
+  // Reserve the actual text-scaled card height beside the center seam.
+  // Keep the original outer-edge feet and P2 orientation; only the figure
+  // size changes once input has finished and the result becomes visible.
+  const resultFigureHeight = Math.max(72, halfHeight - Math.max(34, paddingTop + 16, paddingBottom + 16) - resultLayout.reserve);
+  const maxFigureHeight = hideBottomHud ? resultFigureHeight : Math.max(190, halfHeight - 124);
   const figureWidth = Math.min(width * 0.61, maxFigureHeight / 1.08, 270);
   const figureHeight = figureWidth * 1.08;
   const bandHeight = Math.min(96, Math.max(88, height * 0.1));
@@ -179,6 +188,7 @@ export function LocalDuelArenaLayout({
             figureHeight={figureHeight}
             paddingOuter={paddingTop}
             tapAckStyle={p2TapAckStyle}
+            showHud={!hideBottomHud}
           />
         </View>
       </View>
@@ -196,10 +206,11 @@ export function LocalDuelArenaLayout({
           figureHeight={figureHeight}
           paddingOuter={paddingBottom}
           tapAckStyle={p1TapAckStyle}
+          showHud={!hideBottomHud}
         />
       </View>
 
-      <View pointerEvents="none" style={[styles.signalBand, { top: halfHeight - bandHeight / 2, height: bandHeight }]}>
+      {!hideBottomHud ? <View pointerEvents="none" style={[styles.signalBand, { top: halfHeight - bandHeight / 2, height: bandHeight }]}>
         <LinearGradient
           colors={['rgba(12,7,4,0.94)', 'rgba(55,31,16,0.97)', 'rgba(12,7,4,0.94)']}
           style={StyleSheet.absoluteFill}
@@ -208,7 +219,7 @@ export function LocalDuelArenaLayout({
         <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.signalText, styles.signalP2]}>{label}</Text>
         <View style={styles.signalDiamond} />
         <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.signalText, styles.signalP1]}>{label}</Text>
-      </View>
+      </View> : null}
 
       {showInstruction ? (
         <View pointerEvents="none" style={[styles.instruction, { top: halfHeight + bandHeight / 2 + 7 }]}>
@@ -229,7 +240,7 @@ export function LocalDuelArenaLayout({
         style={[styles.tapHalf, styles.tapBottom, { height: halfHeight }]}
       />
 
-      <MenuBackButton
+      {!hideBottomHud ? <><MenuBackButton
         variant="overlay"
         onPress={onBack}
         style={[styles.back, { top: halfHeight + bandHeight / 2 + 10, left: paddingLeft + 10 }]}
@@ -244,7 +255,7 @@ export function LocalDuelArenaLayout({
         style={[styles.pause, { top: halfHeight + bandHeight / 2 + 10, right: paddingRight + 10 }]}
       >
         <Ionicons name="pause" size={18} color={uiV3Colors.cream} />
-      </Pressable>
+      </Pressable></> : null}
     </View>
   );
 }
