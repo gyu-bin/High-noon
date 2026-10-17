@@ -2,7 +2,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { pickDuelBackground, type DuelBackgroundId } from '@/utils/duelBackgroundSelection';
-import { StyleSheet, Text, View } from 'react-native';
+import { BackHandler, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -1084,6 +1084,24 @@ export default function NpcGameScreen() {
     resetDuel();
     router.dismissTo('/menu');
   }, [resetDuel, router]);
+
+  // Android back during a duel opens the pause menu instead of leaving silently.
+  // Pre-duel and round/final results keep the default back. BANG/FAKE swallows it,
+  // matching the disabled pause button (pause→resume there would shift the reaction clock).
+  // While paused, PauseMenuModal's onRequestClose receives back first and resumes.
+  useFocusEffect(
+    useCallback(() => {
+      const onHardwareBack = () => {
+        if (preDuelVisible || phase === '결과' || modalVisible) return false;
+        if (paused) return true;
+        if (phase === '뱅' || phase === '페이크') return true;
+        setPaused(true);
+        return true;
+      };
+      const sub = BackHandler.addEventListener('hardwareBackPress', onHardwareBack);
+      return () => sub.remove();
+    }, [preDuelVisible, phase, modalVisible, paused]),
+  );
 
   const beginMatchFromPreDuel = useCallback(() => {
     if (!npc) return;
